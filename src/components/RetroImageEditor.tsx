@@ -12,6 +12,10 @@ interface HistoryState {
   scaling: ScalingMode;
 }
 
+// Maximum dimensions to prevent memory issues
+const MAX_IMAGE_SIZE = 2048;
+const MAX_CANVAS_SIZE = 4096;
+
 export const RetroImageEditor = () => {
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
@@ -47,90 +51,120 @@ export const RetroImageEditor = () => {
         }
       });
       
+      // Validate image size to prevent memory issues
+      if (img.width > MAX_IMAGE_SIZE || img.height > MAX_IMAGE_SIZE) {
+        toast.error(`Image too large! Maximum size is ${MAX_IMAGE_SIZE}x${MAX_IMAGE_SIZE}px`);
+        return;
+      }
+      
       setOriginalImage(img);
       setProcessedImageData(null);
+      
+      // Reset settings when loading new image
+      setSelectedPalette('original');
+      setSelectedResolution('original');
+      setScalingMode('fit');
+      
       toast.success('Image loaded successfully!');
       
-      // Save initial state to history
-      saveToHistory({
-        imageData: null,
-        palette: 'original',
-        resolution: 'original',
-        scaling: 'fit'
-      });
+      // Clear history when loading new image
+      setHistory([]);
+      setHistoryIndex(-1);
       
     } catch (error) {
       toast.error('Failed to load image');
       console.error('Image loading error:', error);
     }
-  }, [saveToHistory]);
+  }, []);
 
   const processImage = useCallback(() => {
-    if (!originalImage || !canvasRef.current) return;
+    if (!originalImage) return;
 
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    // Set canvas dimensions based on resolution
-    let targetWidth = originalImage.width;
-    let targetHeight = originalImage.height;
-
-    if (selectedResolution !== 'original') {
-      const [width, height] = selectedResolution.split('x').map(Number);
-      targetWidth = width;
-      targetHeight = height;
-    }
-
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-
-    // Clear canvas with black background
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, targetWidth, targetHeight);
-
-    // Draw image based on scaling mode
-    if (selectedResolution !== 'original') {
-      switch (scalingMode) {
-        case 'stretch':
-          ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
-          break;
-        case 'center':
-          const centerX = (targetWidth - originalImage.width) / 2;
-          const centerY = (targetHeight - originalImage.height) / 2;
-          ctx.drawImage(originalImage, centerX, centerY);
-          break;
-        case 'fit':
-          const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
-          const scaledWidth = originalImage.width * scale;
-          const scaledHeight = originalImage.height * scale;
-          const fitX = (targetWidth - scaledWidth) / 2;
-          const fitY = (targetHeight - scaledHeight) / 2;
-          ctx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
-          break;
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        toast.error('Canvas not supported');
+        return;
       }
-    } else {
-      ctx.drawImage(originalImage, 0, 0);
+
+      // Set canvas dimensions based on resolution
+      let targetWidth = originalImage.width;
+      let targetHeight = originalImage.height;
+
+      if (selectedResolution !== 'original') {
+        const [width, height] = selectedResolution.split('x').map(Number);
+        targetWidth = width;
+        targetHeight = height;
+      }
+
+      // Additional safety check for canvas size
+      if (targetWidth > MAX_CANVAS_SIZE || targetHeight > MAX_CANVAS_SIZE) {
+        toast.error(`Target resolution too large! Maximum is ${MAX_CANVAS_SIZE}px`);
+        return;
+      }
+
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+
+      // Clear canvas with black background
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+      // Draw image based on scaling mode
+      if (selectedResolution !== 'original') {
+        switch (scalingMode) {
+          case 'stretch':
+            ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+            break;
+          case 'center':
+            const centerX = (targetWidth - originalImage.width) / 2;
+            const centerY = (targetHeight - originalImage.height) / 2;
+            ctx.drawImage(originalImage, centerX, centerY);
+            break;
+          case 'fit':
+            const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
+            const scaledWidth = originalImage.width * scale;
+            const scaledHeight = originalImage.height * scale;
+            const fitX = (targetWidth - scaledWidth) / 2;
+            const fitY = (targetHeight - scaledHeight) / 2;
+            ctx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
+            break;
+        }
+      } else {
+        ctx.drawImage(originalImage, 0, 0);
+      }
+
+      // Get image data for palette processing with error handling
+      let imageData: ImageData;
+      try {
+        imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+      } catch (error) {
+        toast.error('Image too large to process. Try a smaller image or resolution.');
+        console.error('getImageData error:', error);
+        return;
+      }
+      
+      // Apply palette conversion (simplified for now)
+      if (selectedPalette !== 'original') {
+        applyPaletteConversion(imageData, selectedPalette);
+        ctx.putImageData(imageData, 0, 0);
+      }
+
+      setProcessedImageData(imageData);
+      
+      // Save to history
+      saveToHistory({
+        imageData: imageData,
+        palette: selectedPalette,
+        resolution: selectedResolution,
+        scaling: scalingMode
+      });
+
+    } catch (error) {
+      toast.error('Error processing image');
+      console.error('processImage error:', error);
     }
-
-    // Get image data for palette processing
-    const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-    
-    // Apply palette conversion (simplified for now)
-    if (selectedPalette !== 'original') {
-      applyPaletteConversion(imageData, selectedPalette);
-    }
-
-    setProcessedImageData(imageData);
-    
-    // Save to history
-    saveToHistory({
-      imageData: imageData,
-      palette: selectedPalette,
-      resolution: selectedResolution,
-      scaling: scalingMode
-    });
-
   }, [originalImage, selectedPalette, selectedResolution, scalingMode, saveToHistory]);
 
   const applyPaletteConversion = (imageData: ImageData, palette: PaletteType) => {
@@ -173,16 +207,24 @@ export const RetroImageEditor = () => {
   };
 
   const downloadImage = useCallback(() => {
-    if (!canvasRef.current) return;
+    if (!processedImageData) return;
     
-    const canvas = canvasRef.current;
+    // Create a new canvas for download
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    canvas.width = processedImageData.width;
+    canvas.height = processedImageData.height;
+    ctx.putImageData(processedImageData, 0, 0);
+    
     const link = document.createElement('a');
     link.download = `retro-image-${selectedPalette}-${selectedResolution}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
     
     toast.success('Image downloaded!');
-  }, [selectedPalette, selectedResolution]);
+  }, [processedImageData, selectedPalette, selectedResolution]);
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -209,13 +251,17 @@ export const RetroImageEditor = () => {
   // Process image when settings change
   useEffect(() => {
     if (originalImage) {
-      processImage();
+      const timeoutId = setTimeout(() => {
+        processImage();
+      }, 100); // Debounce to prevent rapid calls
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [originalImage, selectedPalette, selectedResolution, scalingMode, processImage]);
+  }, [originalImage, selectedPalette, selectedResolution, scalingMode]);
 
   return (
     <div className="min-h-screen bg-background">
-      <canvas ref={canvasRef} className="hidden" />
+      {/* Remove the hidden canvas ref since we're not using it anymore */}
       
       {/* Header */}
       <header className="border-b border-pixel-grid bg-card px-6 py-4">
