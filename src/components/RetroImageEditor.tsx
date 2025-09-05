@@ -3,6 +3,7 @@ import { ImageUpload } from './ImageUpload';
 import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
 import { ResolutionSelector, ResolutionType, ScalingMode } from './ResolutionSelector';
 import { ImagePreview } from './ImagePreview';
+import { PaletteViewer } from './PaletteViewer';
 import { toast } from 'sonner';
 
 interface HistoryState {
@@ -191,6 +192,42 @@ export const RetroImageEditor = () => {
         }
         break;
         
+      case 'megadrive-single':
+        // Mega Drive 9-bit color (3-3-3)
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = Math.round(data[i] / 36) * 36;     // R (0-7 levels * 36)
+          data[i + 1] = Math.round(data[i + 1] / 36) * 36; // G
+          data[i + 2] = Math.round(data[i + 2] / 36) * 36; // B
+        }
+        break;
+        
+      case 'megadrive-multi':
+        // Similar to single but with more color reduction
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = Math.round(data[i] / 36) * 36;
+          data[i + 1] = Math.round(data[i + 1] / 36) * 36;
+          data[i + 2] = Math.round(data[i + 2] / 36) * 36;
+        }
+        break;
+        
+      case 'neogeo-single':
+        // Neo Geo 15-bit color (5-5-5)
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = Math.round(data[i] / 8) * 8;     // R (0-31 levels * 8)
+          data[i + 1] = Math.round(data[i + 1] / 8) * 8; // G
+          data[i + 2] = Math.round(data[i + 2] / 8) * 8; // B
+        }
+        break;
+        
+      case 'neogeo-multi':
+        // Similar to single but with more palettes available
+        for (let i = 0; i < data.length; i += 4) {
+          data[i] = Math.round(data[i] / 8) * 8;
+          data[i + 1] = Math.round(data[i + 1] / 8) * 8;
+          data[i + 2] = Math.round(data[i + 2] / 8) * 8;
+        }
+        break;
+        
       case 'zx-spectrum':
         // ZX Spectrum 4-bit color reduction
         for (let i = 0; i < data.length; i += 4) {
@@ -200,7 +237,6 @@ export const RetroImageEditor = () => {
         }
         break;
         
-      // Add more palette conversions here
       default:
         break;
     }
@@ -290,6 +326,11 @@ export const RetroImageEditor = () => {
               onRedo={redo}
               canUndo={historyIndex > 0}
               canRedo={historyIndex < history.length - 1}
+            />
+            
+            <PaletteViewer
+              selectedPalette={selectedPalette}
+              imageData={processedImageData}
             />
             
             <ResolutionSelector
