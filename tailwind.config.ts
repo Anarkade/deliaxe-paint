@@ -52,13 +52,13 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
-				// Retro gaming colors
-				'neon-green': 'hsl(var(--neon-green))',
-				'neon-cyan': 'hsl(var(--neon-cyan))',
-				'neon-pink': 'hsl(var(--neon-pink))',
-				'retro-purple': 'hsl(var(--retro-purple))',
-				'console-bg': 'hsl(var(--console-bg))',
-				'pixel-grid': 'hsl(var(--pixel-grid))',
+				// Elegant theme colors
+				'bone-white': 'hsl(var(--bone-white))',
+				'blood-red': 'hsl(var(--blood-red))',
+				'blood-red-hover': 'hsl(var(--blood-red-hover))',
+				'blood-red-light': 'hsl(var(--blood-red-light))',
+				'elegant-bg': 'hsl(var(--elegant-bg))',
+				'elegant-border': 'hsl(var(--elegant-border))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

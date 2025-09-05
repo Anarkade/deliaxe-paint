@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -130,19 +130,21 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
   }, [imageData, paletteColors.length, onPaletteUpdate]);
 
   // Update palette when type changes
-  useState(() => {
-    setPaletteColors(getDefaultPalette(selectedPalette));
-  });
+  useEffect(() => {
+    const newPalette = getDefaultPalette(selectedPalette);
+    setPaletteColors(newPalette);
+    onPaletteUpdate?.(newPalette);
+  }, [selectedPalette, onPaletteUpdate]);
 
   if (selectedPalette === 'original') {
     return null;
   }
 
   return (
-    <Card className="p-6 border-pixel-grid bg-card">
+    <Card className="p-6 border-elegant-border bg-card">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-neon-cyan flex items-center">
+          <h3 className="text-lg font-bold text-blood-red flex items-center">
             <Eye className="mr-2 h-5 w-5" />
             Palette Viewer
           </h3>
@@ -161,7 +163,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
         
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-foreground">
+            <span className="text-sm font-medium text-bone-white">
               Colors ({paletteColors.length})
             </span>
             <Badge variant="outline" className="text-xs">
@@ -180,7 +182,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
                 className="relative group cursor-move"
               >
                 <div
-                  className="w-8 h-8 border border-pixel-grid rounded cursor-pointer transition-transform hover:scale-110"
+                  className="w-8 h-8 border border-elegant-border rounded cursor-pointer transition-transform hover:scale-110"
                   style={{
                     backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                     opacity: color.transparent ? 0.5 : 1

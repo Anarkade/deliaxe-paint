@@ -4,6 +4,9 @@ import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
 import { ResolutionSelector, ResolutionType, ScalingMode } from './ResolutionSelector';
 import { ImagePreview } from './ImagePreview';
 import { PaletteViewer } from './PaletteViewer';
+import { LanguageSelector } from './LanguageSelector';
+import { useTranslation } from '@/hooks/useTranslation';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
 interface HistoryState {
@@ -18,11 +21,13 @@ const MAX_IMAGE_SIZE = 2048;
 const MAX_CANVAS_SIZE = 4096;
 
 export const RetroImageEditor = () => {
+  const { t } = useTranslation();
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
   const [selectedPalette, setSelectedPalette] = useState<PaletteType>('original');
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
   const [scalingMode, setScalingMode] = useState<ScalingMode>('fit');
+  const [currentPaletteColors, setCurrentPaletteColors] = useState<any[]>([]);
   
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -54,7 +59,7 @@ export const RetroImageEditor = () => {
       
       // Validate image size to prevent memory issues
       if (img.width > MAX_IMAGE_SIZE || img.height > MAX_IMAGE_SIZE) {
-        toast.error(`Image too large! Maximum size is ${MAX_IMAGE_SIZE}x${MAX_IMAGE_SIZE}px`);
+        toast.error(t('imageTooLarge'));
         return;
       }
       
@@ -66,14 +71,14 @@ export const RetroImageEditor = () => {
       setSelectedResolution('original');
       setScalingMode('fit');
       
-      toast.success('Image loaded successfully!');
+      toast.success(t('imageLoaded'));
       
       // Clear history when loading new image
       setHistory([]);
       setHistoryIndex(-1);
       
     } catch (error) {
-      toast.error('Failed to load image');
+      toast.error(t('imageLoadError'));
       console.error('Image loading error:', error);
     }
   }, []);
@@ -259,7 +264,7 @@ export const RetroImageEditor = () => {
     link.href = canvas.toDataURL('image/png');
     link.click();
     
-    toast.success('Image downloaded!');
+    toast.success(t('imageDownloaded'));
   }, [processedImageData, selectedPalette, selectedResolution]);
 
   const undo = useCallback(() => {
@@ -296,57 +301,95 @@ export const RetroImageEditor = () => {
   }, [originalImage, selectedPalette, selectedResolution, scalingMode]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Remove the hidden canvas ref since we're not using it anymore */}
-      
+    <div className="min-h-screen bg-elegant-bg">
       {/* Header */}
-      <header className="border-b border-pixel-grid bg-card px-6 py-4">
+      <header className="border-b border-elegant-border bg-card px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-neon-cyan">Retro Image Editor</h1>
-            <p className="text-sm text-muted-foreground">Convert images for classic consoles and computers</p>
+            <h1 className="text-2xl font-bold text-blood-red">{t('appTitle')}</h1>
+            <p className="text-sm text-muted-foreground">{t('appSubtitle')}</p>
           </div>
           <div className="text-xs text-muted-foreground font-mono">
-            <div>© Alex Roca</div>
-            <div>Anarkade</div>
+            <div>{t('copyright')}</div>
+            <div>{t('company')}</div>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto p-6 space-y-6">
-        <ImageUpload onImageLoad={loadImage} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <ColorPaletteSelector
-              selectedPalette={selectedPalette}
-              onPaletteChange={setSelectedPalette}
-              onUndo={undo}
-              onRedo={redo}
-              canUndo={historyIndex > 0}
-              canRedo={historyIndex < history.length - 1}
-            />
+      <div className="container mx-auto p-6">
+        <Tabs defaultValue="load-image" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5 bg-card border border-elegant-border">
+            <TabsTrigger value="load-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white">
+              {t('loadImage')}
+            </TabsTrigger>
+            <TabsTrigger value="color-palette" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white">
+              {t('colorPalette')}
+            </TabsTrigger>
+            <TabsTrigger value="palette-viewer" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white">
+              {t('paletteViewer')}
+            </TabsTrigger>
+            <TabsTrigger value="resolution" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white">
+              {t('resolution')}
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white">
+              {t('settings')}
+            </TabsTrigger>
+          </TabsList>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <TabsContent value="load-image" className="mt-0">
+                <ImageUpload onImageLoad={loadImage} />
+              </TabsContent>
+
+              <TabsContent value="color-palette" className="mt-0">
+                <ColorPaletteSelector
+                  selectedPalette={selectedPalette}
+                  onPaletteChange={setSelectedPalette}
+                  onUndo={undo}
+                  onRedo={redo}
+                  canUndo={historyIndex > 0}
+                  canRedo={historyIndex < history.length - 1}
+                />
+              </TabsContent>
+
+              <TabsContent value="palette-viewer" className="mt-0">
+                <PaletteViewer
+                  selectedPalette={selectedPalette}
+                  imageData={processedImageData}
+                  onPaletteUpdate={setCurrentPaletteColors}
+                />
+              </TabsContent>
+
+              <TabsContent value="resolution" className="mt-0">
+                <ResolutionSelector
+                  selectedResolution={selectedResolution}
+                  scalingMode={scalingMode}
+                  onResolutionChange={setSelectedResolution}
+                  onScalingModeChange={setScalingMode}
+                />
+              </TabsContent>
+
+              <TabsContent value="settings" className="mt-0">
+                <div className="bg-card rounded-lg p-6 border border-elegant-border">
+                  <LanguageSelector />
+                </div>
+              </TabsContent>
+            </div>
             
-            <PaletteViewer
-              selectedPalette={selectedPalette}
-              imageData={processedImageData}
-            />
-            
-            <ResolutionSelector
-              selectedResolution={selectedResolution}
-              scalingMode={scalingMode}
-              onResolutionChange={setSelectedResolution}
-              onScalingModeChange={setScalingMode}
-            />
+            <div className="lg:col-span-1">
+              <div className="bg-card rounded-lg p-4 border border-elegant-border">
+                <h3 className="text-lg font-bold text-blood-red mb-4">{t('preview')}</h3>
+                <ImagePreview
+                  originalImage={originalImage}
+                  processedImageData={processedImageData}
+                  onDownload={downloadImage}
+                />
+              </div>
+            </div>
           </div>
-          
-          <ImagePreview
-            originalImage={originalImage}
-            processedImageData={processedImageData}
-            onDownload={downloadImage}
-          />
-        </div>
+        </Tabs>
       </div>
     </div>
   );
