@@ -1,0 +1,103 @@
+import { useCallback } from 'react';
+import { Upload, Camera, Link } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+
+interface ImageUploadProps {
+  onImageLoad: (file: File | string) => void;
+}
+
+export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      onImageLoad(file);
+    }
+  }, [onImageLoad]);
+
+  const handleUrlUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const url = event.target.value.trim();
+    if (url) {
+      onImageLoad(url);
+    }
+  }, [onImageLoad]);
+
+  const handleCameraCapture = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.play();
+      
+      video.addEventListener('loadedmetadata', () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(video, 0, 0);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], 'camera-capture.png', { type: 'image/png' });
+            onImageLoad(file);
+          }
+        });
+        
+        stream.getTracks().forEach(track => track.stop());
+      });
+    } catch (error) {
+      console.error('Camera access denied:', error);
+    }
+  }, [onImageLoad]);
+
+  return (
+    <Card className="p-6 border-pixel-grid bg-card">
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold text-neon-cyan">Load Image</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              <Upload className="inline mr-2 h-4 w-4" />
+              Upload File
+            </label>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="bg-console-bg border-pixel-grid"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              <Link className="inline mr-2 h-4 w-4" />
+              From URL
+            </label>
+            <Input
+              type="url"
+              placeholder="https://..."
+              onChange={handleUrlUpload}
+              className="bg-console-bg border-pixel-grid"
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              <Camera className="inline mr-2 h-4 w-4" />
+              Camera
+            </label>
+            <Button 
+              onClick={handleCameraCapture}
+              variant="secondary"
+              className="w-full"
+            >
+              Capture
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+};
