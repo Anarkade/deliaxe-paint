@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { PaletteType } from './ColorPaletteSelector';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Eye, Palette, GripVertical } from 'lucide-react';
 
 interface PaletteColor {
@@ -69,6 +70,7 @@ const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
 };
 
 export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: PaletteViewerProps) => {
+  const { t } = useTranslation();
   const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() => 
     getDefaultPalette(selectedPalette)
   );
@@ -144,11 +146,6 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
     <Card className="p-6 border-elegant-border bg-card">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-blood-red flex items-center">
-            <Eye className="mr-2 h-5 w-5" />
-            Palette Viewer
-          </h3>
-          
           <Button
             variant="secondary"
             size="sm"
@@ -157,21 +154,23 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
             className="flex items-center gap-2"
           >
             <Palette className="h-4 w-4" />
-            Extract Colors
+            {t('extractColors')}
           </Button>
         </div>
         
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-bone-white">
-              Colors ({paletteColors.length})
+              {t('paletteColors')} ({paletteColors.length})
             </span>
             <Badge variant="outline" className="text-xs">
-              Drag to reorder
+              {t('dragToReorder')}
             </Badge>
           </div>
           
-          <div className="grid grid-cols-8 gap-2 max-h-64 overflow-y-auto">
+          <div className="grid gap-2" style={{ 
+            gridTemplateColumns: `repeat(${Math.min(16, Math.ceil(Math.sqrt(paletteColors.length)))}, minmax(0, 1fr))` 
+          }}>
             {paletteColors.map((color, index) => (
               <div
                 key={index}
@@ -182,7 +181,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
                 className="relative group cursor-move"
               >
                 <div
-                  className="w-8 h-8 border border-elegant-border rounded cursor-pointer transition-transform hover:scale-110"
+                  className="w-12 h-12 border border-elegant-border rounded cursor-pointer transition-transform hover:scale-105"
                   style={{
                     backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                     opacity: color.transparent ? 0.5 : 1
@@ -192,12 +191,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
                 >
                   {color.transparent && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full opacity-75" />
+                      <div className="w-3 h-3 bg-white rounded-full opacity-75" />
                     </div>
                   )}
                 </div>
                 <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                <span className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-xs text-muted-foreground">
+                <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-muted-foreground">
                   {index}
                 </span>
               </div>
@@ -206,7 +205,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
         </div>
         
         <div className="text-xs text-muted-foreground">
-          Click colors to toggle transparency. Drag to reorder palette.
+          {t('toggleTransparency')}
         </div>
       </div>
     </Card>

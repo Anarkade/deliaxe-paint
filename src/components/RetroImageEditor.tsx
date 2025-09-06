@@ -1,9 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { ImageUpload } from './ImageUpload';
+import { LoadImage } from './LoadImage';
 import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
 import { ResolutionSelector, ResolutionType, ScalingMode } from './ResolutionSelector';
 import { ImagePreview } from './ImagePreview';
 import { PaletteViewer } from './PaletteViewer';
+import { ExportImage } from './ExportImage';
 import { LanguageSelector } from './LanguageSelector';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -319,7 +320,7 @@ export const RetroImageEditor = () => {
       {/* Main Content */}
       <div className="container mx-auto p-6">
         <Tabs defaultValue="load-image" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-card border border-elegant-border">
+          <TabsList className="grid w-full grid-cols-6 bg-card border border-elegant-border">
             <TabsTrigger value="load-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white">
               {t('loadImage')}
             </TabsTrigger>
@@ -332,6 +333,9 @@ export const RetroImageEditor = () => {
             <TabsTrigger value="resolution" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white">
               {t('resolution')}
             </TabsTrigger>
+            <TabsTrigger value="export-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white">
+              {t('exportImage')}
+            </TabsTrigger>
             <TabsTrigger value="settings" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white">
               {t('settings')}
             </TabsTrigger>
@@ -340,7 +344,7 @@ export const RetroImageEditor = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <TabsContent value="load-image" className="mt-0">
-                <ImageUpload onImageLoad={loadImage} />
+                <LoadImage onImageLoad={loadImage} />
               </TabsContent>
 
               <TabsContent value="color-palette" className="mt-0">
@@ -368,6 +372,14 @@ export const RetroImageEditor = () => {
                   scalingMode={scalingMode}
                   onResolutionChange={setSelectedResolution}
                   onScalingModeChange={setScalingMode}
+                />
+              </TabsContent>
+
+              <TabsContent value="export-image" className="mt-0">
+                <ExportImage
+                  processedImageData={processedImageData}
+                  selectedPalette={selectedPalette}
+                  selectedResolution={selectedResolution}
                 />
               </TabsContent>
 
