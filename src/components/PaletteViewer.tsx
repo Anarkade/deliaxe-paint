@@ -96,39 +96,59 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
     setDraggedIndex(null);
   }, [draggedIndex, paletteColors, onPaletteUpdate]);
 
-  const toggleTransparency = useCallback((index: number) => {
-    const newColors = [...paletteColors];
-    newColors[index] = { ...newColors[index], transparent: !newColors[index].transparent };
-    setPaletteColors(newColors);
-    onPaletteUpdate?.(newColors);
+  const selectNewColor = useCallback((index: number) => {
+    // Open color picker to select new color for this slot
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = `#${paletteColors[index].r.toString(16).padStart(2, '0')}${paletteColors[index].g.toString(16).padStart(2, '0')}${paletteColors[index].b.toString(16).padStart(2, '0')}`;
+    
+    input.addEventListener('change', (e) => {
+      const target = e.target as HTMLInputElement;
+      const hex = target.value;
+      const r = parseInt(hex.substr(1, 2), 16);
+      const g = parseInt(hex.substr(3, 2), 16);
+      const b = parseInt(hex.substr(5, 2), 16);
+      
+      const newColors = [...paletteColors];
+      newColors[index] = { ...newColors[index], r, g, b };
+      setPaletteColors(newColors);
+      onPaletteUpdate?.(newColors);
+    });
+    
+    input.click();
   }, [paletteColors, onPaletteUpdate]);
 
   const extractColorsFromImage = useCallback(() => {
     if (!imageData) return;
     
-    // Simple color extraction - get unique colors
-    const colors = new Set<string>();
+    // Extract actual colors from the processed image
+    const colors = new Map<string, number>();
     const data = imageData.data;
     
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-      colors.add(`${r},${g},${b}`);
+      const colorKey = `${r},${g},${b}`;
+      colors.set(colorKey, (colors.get(colorKey) || 0) + 1);
     }
     
-    const uniqueColors = Array.from(colors).slice(0, paletteColors.length).map(color => {
-      const [r, g, b] = color.split(',').map(Number);
-      return { r, g, b };
-    });
+    // Sort by frequency and take the most common colors
+    const sortedColors = Array.from(colors.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, paletteColors.length)
+      .map(([color]) => {
+        const [r, g, b] = color.split(',').map(Number);
+        return { r, g, b };
+      });
     
-    // Fill remaining slots with black
-    while (uniqueColors.length < paletteColors.length) {
-      uniqueColors.push({ r: 0, g: 0, b: 0 });
+    // Fill remaining slots with black if needed
+    while (sortedColors.length < paletteColors.length) {
+      sortedColors.push({ r: 0, g: 0, b: 0 });
     }
     
-    setPaletteColors(uniqueColors);
-    onPaletteUpdate?.(uniqueColors);
+    setPaletteColors(sortedColors);
+    onPaletteUpdate?.(sortedColors);
   }, [imageData, paletteColors.length, onPaletteUpdate]);
 
   // Update palette when type changes
@@ -143,7 +163,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
   }
 
   return (
-    <Card className="p-6 border-elegant-border bg-card">
+    <Card className="p-6 border-elegant-border bg-card rounded-xl">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Button
@@ -151,25 +171,27 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
             size="sm"
             onClick={extractColorsFromImage}
             disabled={!imageData}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 rounded-lg"
           >
             <Palette className="h-4 w-4" />
             {t('extractColors')}
           </Button>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-bone-white">
               {t('paletteColors')} ({paletteColors.length})
             </span>
-            <Badge variant="outline" className="text-xs">
-              {t('dragToReorder')}
-            </Badge>
           </div>
           
-          <div className="grid gap-2" style={{ 
-            gridTemplateColumns: `repeat(${Math.min(16, Math.ceil(Math.sqrt(paletteColors.length)))}, minmax(0, 1fr))` 
+          <div className="space-y-2 text-xs text-muted-foreground">
+            <p>• {t('dragToReorder')}</p>
+            <p>• Click colors to change them</p>
+          </div>
+          
+          <div className="grid gap-3 w-full" style={{ 
+            gridTemplateColumns: `repeat(${Math.min(8, Math.ceil(Math.sqrt(paletteColors.length)))}, minmax(0, 1fr))` 
           }}>
             {paletteColors.map((color, index) => (
               <div
@@ -181,31 +203,27 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
                 className="relative group cursor-move"
               >
                 <div
-                  className="w-12 h-12 border border-elegant-border rounded cursor-pointer transition-transform hover:scale-105"
+                  className="w-16 h-16 border border-elegant-border rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-lg relative"
                   style={{
                     backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                     opacity: color.transparent ? 0.5 : 1
                   }}
-                  onClick={() => toggleTransparency(index)}
-                  title={`RGB(${color.r}, ${color.g}, ${color.b})${color.transparent ? ' - Transparent' : ''}`}
+                  onClick={() => selectNewColor(index)}
+                  title={`RGB(${color.r}, ${color.g}, ${color.b})${color.transparent ? ' - Transparent' : ''} - Click to change`}
                 >
                   {color.transparent && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-3 h-3 bg-white rounded-full opacity-75" />
+                      <div className="w-4 h-4 bg-white rounded-full opacity-75" />
                     </div>
                   )}
+                  <span className="absolute bottom-1 right-1 text-xs font-mono bg-black/70 text-white px-1 rounded">
+                    {index}
+                  </span>
                 </div>
                 <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                <span className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-muted-foreground">
-                  {index}
-                </span>
               </div>
             ))}
           </div>
-        </div>
-        
-        <div className="text-xs text-muted-foreground">
-          {t('toggleTransparency')}
         </div>
       </div>
     </Card>

@@ -27,14 +27,14 @@ export const LoadImage = ({ onImageLoad }: LoadImageProps) => {
     <div className="space-y-4">
       <ImageUpload onImageLoad={onImageLoad} />
       
-      <Card className="p-4 border-elegant-border bg-card">
+      <Card className="p-4 border-elegant-border bg-card rounded-xl">
         <div className="space-y-3">
           <p className="text-sm text-bone-white font-medium">Import from cloud storage:</p>
           <div className="grid grid-cols-2 gap-2">
             <Button
               onClick={loadFromDropbox}
               variant="outline"
-              className="flex items-center justify-center gap-2"
+              className="flex items-center justify-center gap-2 rounded-lg"
             >
               <Cloud className="h-4 w-4" />
               {t('loadFromDropbox')}
@@ -43,7 +43,7 @@ export const LoadImage = ({ onImageLoad }: LoadImageProps) => {
             <Button
               onClick={loadFromGoogleDrive}
               variant="outline"
-              className="flex items-center justify-center gap-2"
+              className="flex items-center justify-center gap-2 rounded-lg"
             >
               <Upload className="h-4 w-4" />
               {t('loadFromGoogleDrive')}

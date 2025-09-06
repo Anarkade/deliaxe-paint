@@ -48,10 +48,10 @@ interface Translation {
   paletteColors: string;
   extractColors: string;
   dragToReorder: string;
-  toggleTransparency: string;
+  clickToChange: string;
   
   // Resolution
-  selectResolution: string;
+  changeResolution: string;
   scalingMode: string;
   stretch: string;
   center: string;
@@ -92,7 +92,7 @@ const baseTranslation: Translation = {
   settings: 'Settings',
   exportImage: 'Export Image',
   preview: 'Preview',
-  appTitle: 'Retro Image Editor',
+  appTitle: 'PixelRex',
   appSubtitle: 'Convert images for classic consoles and computers',
   copyright: '© Alex Roca',
   company: 'Anarkade',
@@ -118,8 +118,8 @@ const baseTranslation: Translation = {
   paletteColors: 'Palette Colors',
   extractColors: 'Extract Colors',
   dragToReorder: 'Drag to reorder',
-  toggleTransparency: 'Click colors to toggle transparency. Drag to reorder palette.',
-  selectResolution: 'Select Resolution',
+  clickToChange: 'Click colors to change them',
+  changeResolution: 'Change Resolution',
   scalingMode: 'Scaling Mode',
   stretch: 'Stretch',
   center: 'Center',
@@ -171,7 +171,7 @@ const translations: Record<Language, Translation> = {
     settings: 'Configuración',
     exportImage: 'Exportar Imagen',
     preview: 'Vista Previa',
-    appTitle: 'Editor de Imágenes Retro',
+    appTitle: 'PixelRex',
     appSubtitle: 'Convierte imágenes para consolas y ordenadores clásicos',
     uploadImage: 'Subir Imagen',
     dragDropText: 'Arrastra y suelta una imagen aquí, o haz clic para seleccionar',
@@ -195,8 +195,8 @@ const translations: Record<Language, Translation> = {
     paletteColors: 'Colores de la Paleta',
     extractColors: 'Extraer Colores',
     dragToReorder: 'Arrastra para reordenar',
-    toggleTransparency: 'Haz clic en los colores para alternar transparencia. Arrastra para reordenar la paleta.',
-    selectResolution: 'Seleccionar Resolución',
+    clickToChange: 'Haz clic en los colores para cambiarlos',
+    changeResolution: 'Cambiar Resolución',
     scalingMode: 'Modo de Escalado',
     stretch: 'Estirar',
     center: 'Centrar',

@@ -1,17 +1,23 @@
 import { useRef, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Eye } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Download, Eye, ZoomIn } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ImagePreviewProps {
   originalImage: HTMLImageElement | null;
   processedImageData: ImageData | null;
-  onDownload: () => void;
+  onDownload?: () => void;
 }
 
 export const ImagePreview = ({ originalImage, processedImageData, onDownload }: ImagePreviewProps) => {
+  const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showOriginal, setShowOriginal] = useState(false);
+  const [zoom, setZoom] = useState([100]);
+  const [fitToWidth, setFitToWidth] = useState(true);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -38,47 +44,70 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload }: 
   const hasProcessedImage = processedImageData !== null;
 
   return (
-    <Card className="p-6 border-pixel-grid bg-card">
+    <Card className="p-6 border-elegant-border bg-card rounded-xl">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-neon-cyan">Preview</h3>
-          
-          <div className="flex gap-2">
-            {hasProcessedImage && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowOriginal(!showOriginal)}
-                className="flex items-center gap-2"
-              >
-                <Eye className="h-4 w-4" />
-                {showOriginal ? 'Show Processed' : 'Show Original'}
-              </Button>
-            )}
-            
+          {hasProcessedImage && (
             <Button
-              onClick={onDownload}
-              disabled={!originalImage}
-              className="flex items-center gap-2"
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowOriginal(!showOriginal)}
+              className="flex items-center gap-2 rounded-lg"
             >
-              <Download className="h-4 w-4" />
-              Download PNG
+              <Eye className="h-4 w-4" />
+              {showOriginal ? t('processed') : t('original')}
             </Button>
-          </div>
+          )}
         </div>
         
-        <div className="relative bg-console-bg rounded border border-pixel-grid p-4 min-h-[400px] flex items-center justify-center">
+        {originalImage && (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 flex-1">
+                <ZoomIn className="h-4 w-4 text-muted-foreground" />
+                <Slider
+                  value={zoom}
+                  onValueChange={setZoom}
+                  max={500}
+                  min={10}
+                  step={10}
+                  className="flex-1"
+                />
+                <span className="text-sm text-muted-foreground min-w-[60px]">{zoom[0]}%</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="fit-width"
+                checked={fitToWidth}
+                onCheckedChange={(checked) => setFitToWidth(checked === true)}
+              />
+              <label htmlFor="fit-width" className="text-sm text-bone-white">
+                Fit to width
+              </label>
+            </div>
+          </div>
+        )}
+        
+        <div className="relative bg-elegant-bg rounded-lg border border-elegant-border p-4 min-h-[400px] flex items-center justify-center overflow-auto">
           {originalImage ? (
             <div className="relative">
               <canvas
                 ref={canvasRef}
-                className="max-w-full max-h-[600px] object-contain border border-pixel-grid"
-                style={{ imageRendering: 'pixelated' }}
+                className={`border border-elegant-border rounded-lg ${fitToWidth ? 'max-w-full' : ''}`}
+                style={{ 
+                  imageRendering: 'pixelated',
+                  transform: `scale(${zoom[0] / 100})`,
+                  transformOrigin: 'center',
+                  width: fitToWidth ? '100%' : 'auto',
+                  height: 'auto'
+                }}
               />
               
               {hasProcessedImage && (
-                <div className="absolute top-2 left-2 bg-background/80 px-2 py-1 rounded text-xs font-mono">
-                  {showOriginal ? 'Original' : 'Processed'}
+                <div className="absolute top-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-mono">
+                  {showOriginal ? t('original') : t('processed')}
                 </div>
               )}
             </div>
@@ -94,11 +123,11 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload }: 
         {originalImage && (
           <div className="grid grid-cols-2 gap-4 text-sm font-mono text-muted-foreground">
             <div>
-              <span className="text-neon-cyan">Original:</span> {originalImage.width}×{originalImage.height}
+              <span className="text-blood-red">Original:</span> {originalImage.width}×{originalImage.height}
             </div>
             {processedImageData && (
               <div>
-                <span className="text-neon-pink">Processed:</span> {processedImageData.width}×{processedImageData.height}
+                <span className="text-blood-red">Processed:</span> {processedImageData.width}×{processedImageData.height}
               </div>
             )}
           </div>

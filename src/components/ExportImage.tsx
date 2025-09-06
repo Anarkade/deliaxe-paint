@@ -67,23 +67,18 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
     const dataURL = getImageDataURL();
     if (!dataURL) return;
     
-    const text = encodeURIComponent(`Check out my retro-style image created with the Retro Image Editor! #RetroGaming #PixelArt`);
+    // Create a temporary download for the image to attach
+    const link = document.createElement('a');
+    link.download = `pixelrex-${selectedPalette}-${selectedResolution}.png`;
+    link.href = dataURL;
+    link.click();
+    
+    // Open Twitter with text
+    const text = encodeURIComponent(`Check out my retro-style image created with PixelRex! #RetroGaming #PixelArt #PixelRex`);
     const url = `https://twitter.com/intent/tweet?text=${text}`;
     window.open(url, '_blank', 'width=600,height=400');
-  }, [getImageDataURL]);
+  }, [getImageDataURL, selectedPalette, selectedResolution]);
 
-  const shareOnFacebook = useCallback(() => {
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`;
-    window.open(url, '_blank', 'width=600,height=400');
-  }, []);
-
-  const shareOnInstagram = useCallback(() => {
-    // Instagram doesn't have direct web sharing, so we'll just copy the image
-    const dataURL = getImageDataURL();
-    if (!dataURL) return;
-    
-    toast.info('Save the image and upload it to Instagram manually');
-  }, [getImageDataURL]);
 
   if (!processedImageData) {
     return (
@@ -96,12 +91,12 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
   }
 
   return (
-    <Card className="p-6 border-elegant-border bg-card">
+    <Card className="p-6 border-elegant-border bg-card rounded-xl">
       <div className="space-y-4">
         <div className="grid grid-cols-1 gap-3">
           <Button
             onClick={downloadPNG}
-            className="flex items-center justify-center gap-2 w-full"
+            className="flex items-center justify-center gap-2 w-full rounded-lg"
             variant="default"
           >
             <Download className="h-4 w-4" />
@@ -112,7 +107,7 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
             <Button
               onClick={saveToDropbox}
               variant="outline"
-              className="flex items-center justify-center gap-2"
+              className="flex items-center justify-center gap-2 rounded-lg"
             >
               <Cloud className="h-4 w-4" />
               {t('saveToDropbox')}
@@ -121,7 +116,7 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
             <Button
               onClick={saveToGoogleDrive}
               variant="outline"
-              className="flex items-center justify-center gap-2"
+              className="flex items-center justify-center gap-2 rounded-lg"
             >
               <Upload className="h-4 w-4" />
               {t('saveToGoogleDrive')}
@@ -130,35 +125,15 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
           
           <div className="border-t pt-3">
             <p className="text-sm text-muted-foreground mb-2 text-center">Share on social media</p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="flex justify-center">
               <Button
                 onClick={shareOnTwitter}
                 variant="outline"
                 size="sm"
-                className="flex items-center justify-center gap-1"
+                className="flex items-center justify-center gap-2 rounded-lg"
               >
                 <Share className="h-3 w-3" />
                 Twitter
-              </Button>
-              
-              <Button
-                onClick={shareOnFacebook}
-                variant="outline"
-                size="sm"
-                className="flex items-center justify-center gap-1"
-              >
-                <Share className="h-3 w-3" />
-                Facebook
-              </Button>
-              
-              <Button
-                onClick={shareOnInstagram}
-                variant="outline"
-                size="sm"
-                className="flex items-center justify-center gap-1"
-              >
-                <Share className="h-3 w-3" />
-                Instagram
               </Button>
             </div>
           </div>
