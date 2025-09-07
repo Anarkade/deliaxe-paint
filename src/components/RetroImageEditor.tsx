@@ -316,8 +316,17 @@ export const RetroImageEditor = () => {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto p-6">
-        <Tabs defaultValue="load-image" className="space-y-6">
+      <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
+        {/* Preview Section */}
+        <div className="w-full">
+          <ImagePreview
+            originalImage={originalImage}
+            processedImageData={processedImageData}
+            onDownload={downloadImage}
+          />
+        </div>
+
+        <Tabs defaultValue="load-image" className="space-y-4 md:space-y-6">
           <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 bg-card border border-elegant-border rounded-xl gap-1 p-1">
             <TabsTrigger value="load-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
               <Upload className="h-4 w-4 flex-shrink-0" />
@@ -341,56 +350,46 @@ export const RetroImageEditor = () => {
             </TabsTrigger>
           </TabsList>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <TabsContent value="load-image" className="mt-0">
-                <LoadImage onImageLoad={loadImage} />
-              </TabsContent>
+          <div className="w-full max-w-4xl mx-auto">
+            <TabsContent value="load-image" className="mt-0">
+              <LoadImage onImageLoad={loadImage} />
+            </TabsContent>
 
-              <TabsContent value="color-palette" className="mt-0">
-                <ColorPaletteSelector
-                  selectedPalette={selectedPalette}
-                  onPaletteChange={setSelectedPalette}
-                  onUndo={undo}
-                  onRedo={redo}
-                  canUndo={historyIndex > 0}
-                  canRedo={historyIndex < history.length - 1}
-                />
-              </TabsContent>
-
-              <TabsContent value="palette-viewer" className="mt-0">
-                <PaletteViewer
-                  selectedPalette={selectedPalette}
-                  imageData={processedImageData}
-                  onPaletteUpdate={setCurrentPaletteColors}
-                />
-              </TabsContent>
-
-              <TabsContent value="resolution" className="mt-0">
-                <ResolutionSelector
-                  selectedResolution={selectedResolution}
-                  scalingMode={scalingMode}
-                  onResolutionChange={setSelectedResolution}
-                  onScalingModeChange={setScalingMode}
-                />
-              </TabsContent>
-
-              <TabsContent value="export-image" className="mt-0">
-                <ExportImage
-                  processedImageData={processedImageData}
-                  selectedPalette={selectedPalette}
-                  selectedResolution={selectedResolution}
-                />
-              </TabsContent>
-            </div>
-            
-            <div className="lg:col-span-1">
-              <ImagePreview
-                originalImage={originalImage}
-                processedImageData={processedImageData}
-                onDownload={downloadImage}
+            <TabsContent value="color-palette" className="mt-0">
+              <ColorPaletteSelector
+                selectedPalette={selectedPalette}
+                onPaletteChange={setSelectedPalette}
+                onUndo={undo}
+                onRedo={redo}
+                canUndo={historyIndex > 0}
+                canRedo={historyIndex < history.length - 1}
               />
-            </div>
+            </TabsContent>
+
+            <TabsContent value="palette-viewer" className="mt-0">
+              <PaletteViewer
+                selectedPalette={selectedPalette}
+                imageData={processedImageData}
+                onPaletteUpdate={setCurrentPaletteColors}
+              />
+            </TabsContent>
+
+            <TabsContent value="resolution" className="mt-0">
+              <ResolutionSelector
+                selectedResolution={selectedResolution}
+                scalingMode={scalingMode}
+                onResolutionChange={setSelectedResolution}
+                onScalingModeChange={setScalingMode}
+              />
+            </TabsContent>
+
+            <TabsContent value="export-image" className="mt-0">
+              <ExportImage
+                processedImageData={processedImageData}
+                selectedPalette={selectedPalette}
+                selectedResolution={selectedResolution}
+              />
+            </TabsContent>
           </div>
         </Tabs>
       </div>
