@@ -77,6 +77,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     getDefaultPalette(selectedPalette)
   );
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [isOriginalPNG, setIsOriginalPNG] = useState<boolean>(false);
 
   const handleDragStart = useCallback((index: number) => {
     setDraggedIndex(index);
@@ -174,19 +175,13 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   // Extract unique colors from the current image data and update when it changes
   useEffect(() => {
     const extractColors = async () => {
-      if (!imageData && !originalImageSource) {
-        const defaultPalette = getDefaultPalette(selectedPalette);
-        setPaletteColors(defaultPalette);
-        onPaletteUpdate?.(defaultPalette);
-        return;
-      }
-
       // First try to extract from PNG PLTE chunk if it's an indexed PNG
       if (originalImageSource) {
         try {
           const pngPalette = await extractPNGPalette(originalImageSource);
           if (pngPalette && pngPalette.length > 0) {
-            setPaletteColors(pngPalette);
+            setIsOriginalPNG(true);
+            setPaletteColors(pngPalette); // Keep original order
             onPaletteUpdate?.(pngPalette);
             return;
           }
@@ -194,10 +189,17 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           console.log('Could not extract PNG palette, falling back to image analysis');
         }
       }
+      
+      setIsOriginalPNG(false);
+
+      if (!imageData) {
+        const defaultPalette = getDefaultPalette(selectedPalette);
+        setPaletteColors(defaultPalette);
+        onPaletteUpdate?.(defaultPalette);
+        return;
+      }
 
       // Fallback to analyzing processed image data
-      if (!imageData) return;
-
       const colors = new Map<string, number>();
       const data = imageData.data;
       
@@ -230,7 +232,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     extractColors();
   }, [imageData, selectedPalette, originalImageSource, onPaletteUpdate]);
 
-  if (selectedPalette === 'original') {
+  if (selectedPalette === 'original' && !isOriginalPNG) {
     return (
       <Card className="p-6 border-elegant-border bg-card rounded-xl">
         <div className="text-center space-y-4">
@@ -246,26 +248,28 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
   return (
     <Card className="p-6 border-elegant-border bg-card rounded-xl">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={extractColorsFromImage}
-            disabled={!imageData}
-            className="flex items-center gap-2 rounded-lg"
-          >
-            <Palette className="h-4 w-4" />
-            {t('extractColors')}
-          </Button>
-        </div>
-        
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-bone-white">
-              {t('paletteColors')} ({paletteColors.length})
-            </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={extractColorsFromImage}
+              disabled={!imageData && !originalImageSource}
+              className="flex items-center gap-2 rounded-lg"
+            >
+              <Palette className="h-4 w-4" />
+              {isOriginalPNG && selectedPalette === 'original' ? t('originalPalette') : t('extractColors')}
+            </Button>
           </div>
+          
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-bone-white">
+                {isOriginalPNG && selectedPalette === 'original' 
+                  ? `${t('originalPalette')} (${paletteColors.length})` 
+                  : `${t('paletteColors')} (${paletteColors.length})`}
+              </span>
+            </div>
           
           <div className="space-y-2 text-xs text-muted-foreground">
             <p>• {t('dragToReorder')}</p>
