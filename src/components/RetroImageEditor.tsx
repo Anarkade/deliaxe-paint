@@ -80,6 +80,20 @@ export const RetroImageEditor = () => {
     setHistoryIndex(newHistory.length - 1);
   }, [history, historyIndex]);
 
+  const resetEditor = useCallback(() => {
+    setOriginalImage(null);
+    setProcessedImageData(null);
+    setOriginalImageSource(null);
+    setSelectedPalette('original');
+    setSelectedResolution('original');
+    setScalingMode('fit');
+    setCurrentPaletteColors([]);
+    setShowCameraPreview(false);
+    setHistory([]);
+    setHistoryIndex(-1);
+    setActiveTab('load-image');
+  }, []);
+
   const loadImage = useCallback(async (source: File | string) => {
     try {
       const img = new Image();
@@ -122,6 +136,12 @@ export const RetroImageEditor = () => {
       console.error('Image loading error:', error);
     }
   }, []);
+
+  const handleLoadImageClick = useCallback((source: File | string) => {
+    // Reset everything first, then load the new image
+    resetEditor();
+    setTimeout(() => loadImage(source), 50); // Small delay to ensure state is reset
+  }, [resetEditor, loadImage]);
 
   const processImage = useCallback(() => {
     if (!originalImage) return;
@@ -356,17 +376,17 @@ export const RetroImageEditor = () => {
       {/* Main Content */}
       <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
         <div className="w-full">
-          <ImagePreview
-            originalImage={originalImage}
-            processedImageData={processedImageData}
-            onDownload={downloadImage}
-            onLoadImageClick={loadImage}
-            originalImageSource={originalImageSource}
-            selectedPalette={selectedPalette}
-            onPaletteUpdate={setCurrentPaletteColors}
-            showCameraPreview={showCameraPreview}
-            onCameraPreviewChange={setShowCameraPreview}
-          />
+        <ImagePreview 
+          originalImage={originalImage}
+          processedImageData={processedImageData}
+          onDownload={downloadImage}
+          onLoadImageClick={handleLoadImageClick}
+          originalImageSource={originalImageSource}
+          selectedPalette={selectedPalette}
+          onPaletteUpdate={setCurrentPaletteColors}
+          showCameraPreview={showCameraPreview}
+          onCameraPreviewChange={setShowCameraPreview}
+        />
         </div>
 
         {/* Sections Menu */}
@@ -414,12 +434,12 @@ export const RetroImageEditor = () => {
 
           {/* Content Sections */}
           <div className="w-full max-w-4xl mx-auto">
-            {activeTab === 'load-image' && (
-              <LoadImage 
-                onImageLoad={loadImage}
-                onCameraPreviewRequest={() => setShowCameraPreview(true)}
-              />
-            )}
+          {activeTab === 'load-image' && (
+            <LoadImage 
+              onImageLoad={handleLoadImageClick}
+              onCameraPreviewRequest={() => setShowCameraPreview(true)}
+            />
+          )}
 
             {activeTab === 'palette-selector' && originalImage && (
               <ColorPaletteSelector
