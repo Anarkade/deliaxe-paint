@@ -6,6 +6,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Eye, ZoomIn } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { analyzePNGFile, ImageFormatInfo } from '@/lib/pngAnalyzer';
+import { PaletteViewer } from './PaletteViewer';
+import { PaletteType } from './ColorPaletteSelector';
 
 // Helper function to analyze image format and properties
 const analyzeImageFormat = (image: HTMLImageElement): Promise<string> => {
@@ -100,9 +102,11 @@ interface ImagePreviewProps {
   onDownload?: () => void;
   onLoadImageClick?: () => void;
   originalImageSource?: File | string; // Add source for PNG analysis
+  selectedPalette?: PaletteType;
+  onPaletteUpdate?: (colors: any[]) => void;
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -113,20 +117,24 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [previewHeight, setPreviewHeight] = useState(400);
   const [originalFormat, setOriginalFormat] = useState<string>('');
   const [processedFormat, setProcessedFormat] = useState<string>('');
+  const [isIndexedPNG, setIsIndexedPNG] = useState<boolean>(false);
 
   // Analyze original image format with proper PNG analysis
   useEffect(() => {
     if (originalImage && originalImageSource) {
       analyzePNGFile(originalImageSource).then(info => {
         setOriginalFormat(info.format);
+        setIsIndexedPNG(info.format.includes('Indexed'));
       });
     } else if (originalImage) {
       // Fallback to basic analysis for URLs or when source is not available
       analyzeImageFormat(originalImage).then(format => {
         setOriginalFormat(format);
+        setIsIndexedPNG(format.includes('Indexed'));
       });
     } else {
       setOriginalFormat('');
+      setIsIndexedPNG(false);
     }
   }, [originalImage, originalImageSource]);
 
@@ -322,6 +330,18 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
               <span className="text-sm text-muted-foreground min-w-[50px] flex-shrink-0">{zoom[0]}%</span>
             </div>
           </div>
+        </div>
+      )}
+      
+      {/* Palette Viewer - only shown for indexed PNG images */}
+      {isIndexedPNG && originalImage && originalImageSource && (
+        <div className="mt-4">
+          <PaletteViewer
+            selectedPalette={selectedPalette}
+            imageData={processedImageData}
+            onPaletteUpdate={onPaletteUpdate}
+            originalImageSource={originalImageSource}
+          />
         </div>
       )}
     </div>

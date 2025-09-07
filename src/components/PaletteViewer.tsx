@@ -233,43 +233,32 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   }, [imageData, selectedPalette, originalImageSource, onPaletteUpdate]);
 
   if (selectedPalette === 'original' && !isOriginalPNG) {
-    return (
-      <Card className="p-6 border-elegant-border bg-card rounded-xl">
-        <div className="text-center space-y-4">
-          <div className="text-muted-foreground">
-            <Palette className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <h3 className="text-lg font-medium mb-2">{t('paletteViewer')}</h3>
-            <p className="text-sm">{t('selectPalette')} {t('consolePlatform').toLowerCase()} to view and edit colors.</p>
-          </div>
-        </div>
-      </Card>
-    );
+    return null; // Don't show anything if not an indexed PNG
   }
 
   return (
-    <Card className="p-6 border-elegant-border bg-card rounded-xl">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={extractColorsFromImage}
-              disabled={!imageData && !originalImageSource}
-              className="flex items-center gap-2 rounded-lg"
-            >
-              <Palette className="h-4 w-4" />
-              {isOriginalPNG && selectedPalette === 'original' ? t('originalPalette') : t('extractColors')}
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-bone-white">
-                {isOriginalPNG && selectedPalette === 'original' 
-                  ? `${t('originalPalette')} (${paletteColors.length})` 
-                  : `${t('paletteColors')} (${paletteColors.length})`}
-              </span>
-            </div>
+    <div className="space-y-4 p-4 border border-elegant-border bg-card/50 rounded-lg">
+      <div className="flex items-center justify-between">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={extractColorsFromImage}
+          disabled={!imageData && !originalImageSource}
+          className="flex items-center gap-2 rounded-lg"
+        >
+          <Palette className="h-4 w-4" />
+          {isOriginalPNG && selectedPalette === 'original' ? t('originalPalette') : t('extractColors')}
+        </Button>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-bone-white">
+            {isOriginalPNG && selectedPalette === 'original' 
+              ? `Color palette (${paletteColors.length})` 
+              : `${t('paletteColors')} (${paletteColors.length})`}
+          </span>
+        </div>
           
           <div className="space-y-2 text-xs text-muted-foreground">
             <p>• {t('dragToReorder')}</p>
@@ -328,7 +317,6 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             })}
           </div>
         </div>
-      </div>
-    </Card>
+    </div>
   );
 };

@@ -362,12 +362,14 @@ export const RetroImageEditor = () => {
             onDownload={downloadImage}
             onLoadImageClick={() => handleTabClick('load-image')}
             originalImageSource={originalImageSource}
+            selectedPalette={selectedPalette}
+            onPaletteUpdate={setCurrentPaletteColors}
           />
         </div>
 
         {/* Sections Menu */}
         <div className="w-full space-y-4 md:space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 p-2 bg-card border border-elegant-border rounded-xl">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 bg-card border border-elegant-border rounded-xl">
             <Button
               variant={getButtonVariant('load-image')}
               onClick={() => handleTabClick('load-image')}
@@ -385,16 +387,6 @@ export const RetroImageEditor = () => {
             >
               <Palette className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{t('selectPalette')}</span>
-            </Button>
-            
-            <Button
-              variant={getButtonVariant('palette-viewer')}
-              onClick={() => handleTabClick('palette-viewer')}
-              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
-              disabled={!originalImage}
-            >
-              <Eye className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{t('paletteViewer')}</span>
             </Button>
             
             <Button
@@ -435,14 +427,6 @@ export const RetroImageEditor = () => {
               />
             )}
 
-            {activeTab === 'palette-viewer' && originalImage && (
-              <PaletteViewer
-                selectedPalette={selectedPalette}
-                imageData={processedImageData}
-                onPaletteUpdate={setCurrentPaletteColors}
-                originalImageSource={originalImageSource}
-              />
-            )}
 
             {activeTab === 'resolution' && originalImage && (
               <ResolutionSelector
