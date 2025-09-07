@@ -121,6 +121,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
+  const programmaticZoomChange = useRef(false);
 
   // Analyze original image format with proper PNG analysis
   useEffect(() => {
@@ -167,73 +168,58 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
 
   // Set default fit to width and calculate zoom when image loads
   useEffect(() => {
-    console.log('Image load effect:', { originalImage: !!originalImage, containerWidth });
     if (originalImage && containerWidth > 0) {
       setFitToWidth(true);
       const fitZoom = Math.floor((containerWidth / originalImage.width) * 100);
       const newZoom = Math.max(1, Math.min(1600, fitZoom));
-      console.log('Setting initial zoom:', newZoom);
+      programmaticZoomChange.current = true;
       setZoom([newZoom]);
     }
   }, [originalImage, containerWidth]);
 
   // Handle fit to width checkbox changes
   useEffect(() => {
-    console.log('Fit to width effect:', { fitToWidth, originalImage: !!originalImage, containerWidth });
     if (fitToWidth && originalImage && containerWidth > 0) {
       const fitZoom = Math.floor((containerWidth / originalImage.width) * 100);
       const newZoom = Math.max(1, Math.min(1600, fitZoom));
-      console.log('Updating zoom for fit to width:', newZoom);
+      programmaticZoomChange.current = true;
       setZoom([newZoom]);
     }
   }, [fitToWidth, originalImage, containerWidth]);
 
-  // Calculate adaptive height based on image and zoom - run after zoom changes
+  // Disable fit to width when user manually changes zoom
   useEffect(() => {
-    console.log('Height calculation effect running', { 
-      originalImage: !!originalImage, 
-      containerWidth, 
-      showOriginal, 
-      processedImageData: !!processedImageData,
-      zoom: zoom[0],
-      fitToWidth 
-    });
-    
-    // Add a small delay to ensure all state updates are complete
+    if (!programmaticZoomChange.current && fitToWidth) {
+      setFitToWidth(false);
+    }
+    programmaticZoomChange.current = false;
+  }, [zoom, fitToWidth]);
+
+  // Calculate adaptive height based on image and zoom
+  useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (originalImage && containerWidth > 0) {
         const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
         const currentZoom = zoom[0] / 100;
         
-        console.log('Current image dimensions:', { 
-          width: currentImage.width, 
-          height: currentImage.height, 
-          zoom: currentZoom,
-          containerWidth 
-        });
-        
         let displayHeight: number;
         
         if (fitToWidth) {
           displayHeight = (currentImage.height * containerWidth) / currentImage.width;
+          // Limit maximum height when fit to width is enabled to prevent excessive heights
+          const maxFitHeight = Math.min(window.innerHeight * 0.7, 800);
+          displayHeight = Math.min(displayHeight, maxFitHeight);
         } else {
           displayHeight = currentImage.height * currentZoom;
         }
         
-        console.log('Display height calculated:', displayHeight);
-        
-        // Use minimal padding and calculate height based on actual image display size
         const padding = 40;
         const minHeight = 150;
-        
         const calculatedHeight = Math.max(minHeight, displayHeight + padding);
-        console.log('Final calculated height:', calculatedHeight);
         
         setPreviewHeight(calculatedHeight);
-      } else {
-        console.log('Height calculation skipped - missing requirements');
       }
-    }, 100); // Small delay to ensure state consistency
+    }, 100);
 
     return () => clearTimeout(timeoutId);
   }, [originalImage, processedImageData, zoom, fitToWidth, containerWidth, showOriginal]);
