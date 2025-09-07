@@ -190,7 +190,17 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
   }, [imageData, selectedPalette, onPaletteUpdate]);
 
   if (selectedPalette === 'original') {
-    return null;
+    return (
+      <Card className="p-6 border-elegant-border bg-card rounded-xl">
+        <div className="text-center space-y-4">
+          <div className="text-muted-foreground">
+            <Palette className="h-12 w-12 mx-auto mb-3 opacity-50" />
+            <h3 className="text-lg font-medium mb-2">{t('paletteViewer')}</h3>
+            <p className="text-sm">{t('selectPalette')} {t('consolePlatform').toLowerCase()} to view and edit colors.</p>
+          </div>
+        </div>
+      </Card>
+    );
   }
 
   return (
