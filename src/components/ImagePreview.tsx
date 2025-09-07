@@ -188,24 +188,17 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
       const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
       const currentZoom = zoom[0] / 100;
       
-      let displayWidth: number;
       let displayHeight: number;
       
       if (fitToWidth) {
-        displayWidth = containerWidth;
         displayHeight = (currentImage.height * containerWidth) / currentImage.width;
       } else {
-        displayWidth = currentImage.width * currentZoom;
         displayHeight = currentImage.height * currentZoom;
       }
       
-      // For vertical images (height > width), use minimal padding
-      // For horizontal/square images, maintain minimum height
-      const aspectRatio = currentImage.height / currentImage.width;
-      const isVertical = aspectRatio > 1.2; // Consider vertical if height is 20% more than width
-      
-      const padding = isVertical ? 32 : 64; // Less padding for vertical images
-      const minHeight = isVertical ? 200 : 400; // Lower minimum for vertical images
+      // Use minimal padding and calculate height based on actual image display size
+      const padding = 40; // Small consistent padding for all images
+      const minHeight = 150; // Very minimal minimum height to prevent collapse
       
       const calculatedHeight = Math.max(minHeight, displayHeight + padding);
       setPreviewHeight(calculatedHeight);
@@ -326,12 +319,6 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 pointerEvents: 'none'
               }}
             />
-            
-            {hasProcessedImage && (
-              <div className="absolute top-2 left-2 bg-background/90 px-2 py-1 rounded text-xs font-mono">
-                {showOriginal ? t('original') : t('processed')}
-              </div>
-            )}
           </div>
         ) : (
           <div 
