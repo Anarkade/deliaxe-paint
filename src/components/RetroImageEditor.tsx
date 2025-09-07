@@ -9,7 +9,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Upload, Palette, Eye, Monitor, Download, Settings, Gamepad2 } from 'lucide-react';
+import { Upload, Palette, Eye, Monitor, Download, Gamepad2 } from 'lucide-react';
 
 interface HistoryState {
   imageData: ImageData | null;
@@ -318,7 +318,7 @@ export const RetroImageEditor = () => {
       {/* Main Content */}
       <div className="container mx-auto p-6">
         <Tabs defaultValue="load-image" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 bg-card border border-elegant-border rounded-xl gap-1 p-1">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 bg-card border border-elegant-border rounded-xl gap-1 p-1">
             <TabsTrigger value="load-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
               <Upload className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{t('loadImage')}</span>
@@ -338,10 +338,6 @@ export const RetroImageEditor = () => {
             <TabsTrigger value="export-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
               <Download className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{t('exportImage')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
-              <Settings className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{t('settings')}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -385,12 +381,6 @@ export const RetroImageEditor = () => {
                   selectedPalette={selectedPalette}
                   selectedResolution={selectedResolution}
                 />
-              </TabsContent>
-
-              <TabsContent value="settings" className="mt-0">
-                <div className="bg-card rounded-xl p-6 border border-elegant-border">
-                  <p className="text-bone-white text-center">No additional settings available</p>
-                </div>
               </TabsContent>
             </div>
             
