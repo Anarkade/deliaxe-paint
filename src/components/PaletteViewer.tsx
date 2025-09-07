@@ -254,15 +254,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm font-medium text-bone-white">
-            {isOriginalPNG && selectedPalette === 'original' 
-              ? `Color palette (${paletteColors.length})` 
-              : `${t('paletteColors')} (${paletteColors.length})`}
+            {t('colorPalette')} ({paletteColors.length})
           </span>
         </div>
           
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <p>• {t('dragToReorder')}</p>
-            <p>• {t('clickToChange')}</p>
+          <div className="text-xs text-muted-foreground">
+            <p>{t('dragAndClickInstructions')}</p>
           </div>
           
           <div className="grid gap-4 w-full" style={{ 
