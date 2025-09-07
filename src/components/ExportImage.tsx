@@ -69,12 +69,12 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
     
     // Create a temporary download for the image to attach
     const link = document.createElement('a');
-    link.download = `pixelrex-${selectedPalette}-${selectedResolution}.png`;
+    link.download = `viejunizer-${selectedPalette}-${selectedResolution}.png`;
     link.href = dataURL;
     link.click();
     
     // Open Twitter with text
-    const text = encodeURIComponent(`Check out my retro-style image created with PixelRex! #RetroGaming #PixelArt #PixelRex`);
+    const text = encodeURIComponent(`Check out my retro-style image created with Viejunizer! #RetroGaming #PixelArt #Viejunizer`);
     const url = `https://twitter.com/intent/tweet?text=${text}`;
     window.open(url, '_blank', 'width=600,height=400');
   }, [getImageDataURL, selectedPalette, selectedResolution]);
@@ -102,41 +102,6 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
             <Download className="h-4 w-4" />
             {t('downloadPng')}
           </Button>
-          
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              onClick={saveToDropbox}
-              variant="outline"
-              className="flex items-center justify-center gap-2 rounded-lg"
-            >
-              <Cloud className="h-4 w-4" />
-              {t('saveToDropbox')}
-            </Button>
-            
-            <Button
-              onClick={saveToGoogleDrive}
-              variant="outline"
-              className="flex items-center justify-center gap-2 rounded-lg"
-            >
-              <Upload className="h-4 w-4" />
-              {t('saveToGoogleDrive')}
-            </Button>
-          </div>
-          
-          <div className="border-t pt-3">
-            <p className="text-sm text-muted-foreground mb-2 text-center">Share on social media</p>
-            <div className="flex justify-center">
-              <Button
-                onClick={shareOnTwitter}
-                variant="outline"
-                size="sm"
-                className="flex items-center justify-center gap-2 rounded-lg"
-              >
-                <Share className="h-3 w-3" />
-                Twitter
-              </Button>
-            </div>
-          </div>
         </div>
       </div>
     </Card>

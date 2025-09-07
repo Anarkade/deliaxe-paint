@@ -151,12 +151,43 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
     onPaletteUpdate?.(sortedColors);
   }, [imageData, paletteColors.length, onPaletteUpdate]);
 
-  // Update palette when type changes
+  // Extract unique colors from the current image data and update when it changes
   useEffect(() => {
-    const newPalette = getDefaultPalette(selectedPalette);
-    setPaletteColors(newPalette);
-    onPaletteUpdate?.(newPalette);
-  }, [selectedPalette, onPaletteUpdate]);
+    if (!imageData) {
+      const defaultPalette = getDefaultPalette(selectedPalette);
+      setPaletteColors(defaultPalette);
+      onPaletteUpdate?.(defaultPalette);
+      return;
+    }
+
+    const colors = new Map<string, number>();
+    const data = imageData.data;
+    
+    // Count color frequency
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+      
+      if (a > 0) { // Only include non-transparent pixels
+        const colorKey = `${r},${g},${b}`;
+        colors.set(colorKey, (colors.get(colorKey) || 0) + 1);
+      }
+    }
+    
+    // Sort by frequency and convert to array
+    const sortedColors = Array.from(colors.entries())
+      .sort((a, b) => b[1] - a[1]) // Sort by frequency (most used first)
+      .slice(0, 256) // Limit to 256 colors max
+      .map(([colorKey], index) => {
+        const [r, g, b] = colorKey.split(',').map(Number);
+        return { r, g, b };
+      });
+    
+    setPaletteColors(sortedColors);
+    onPaletteUpdate?.(sortedColors);
+  }, [imageData, selectedPalette, onPaletteUpdate]);
 
   if (selectedPalette === 'original') {
     return null;

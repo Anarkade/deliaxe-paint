@@ -309,45 +309,39 @@ export const RetroImageEditor = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Gamepad2 className="h-8 w-8 text-blood-red" />
-            <div>
-              <h1 className="text-2xl font-bold text-blood-red">{t('appTitle')}</h1>
-              <p className="text-sm text-muted-foreground">{t('appSubtitle')}</p>
-            </div>
+            <h1 className="text-2xl font-bold text-blood-red">{t('appTitle')}</h1>
           </div>
-          <div className="text-xs text-muted-foreground font-mono">
-            <div>{t('copyright')}</div>
-            <div>{t('company')}</div>
-          </div>
+          <LanguageSelector />
         </div>
       </header>
 
       {/* Main Content */}
       <div className="container mx-auto p-6">
         <Tabs defaultValue="load-image" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 bg-card border border-elegant-border rounded-xl">
-            <TabsTrigger value="load-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              {t('loadImage')}
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 bg-card border border-elegant-border rounded-xl gap-1 p-1">
+            <TabsTrigger value="load-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+              <Upload className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{t('loadImage')}</span>
             </TabsTrigger>
-            <TabsTrigger value="color-palette" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-2">
-              <Palette className="h-4 w-4" />
-              {t('colorPalette')}
+            <TabsTrigger value="color-palette" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+              <Palette className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{t('colorPalette')}</span>
             </TabsTrigger>
-            <TabsTrigger value="palette-viewer" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-2">
-              <Eye className="h-4 w-4" />
-              {t('paletteViewer')}
+            <TabsTrigger value="palette-viewer" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+              <Eye className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{t('paletteViewer')}</span>
             </TabsTrigger>
-            <TabsTrigger value="resolution" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-2">
-              <Monitor className="h-4 w-4" />
-              {t('changeResolution')}
+            <TabsTrigger value="resolution" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+              <Monitor className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{t('changeResolution')}</span>
             </TabsTrigger>
-            <TabsTrigger value="export-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              {t('exportImage')}
+            <TabsTrigger value="export-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+              <Download className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{t('exportImage')}</span>
             </TabsTrigger>
-            <TabsTrigger value="settings" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              {t('settings')}
+            <TabsTrigger value="settings" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+              <Settings className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{t('settings')}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -395,19 +389,17 @@ export const RetroImageEditor = () => {
 
               <TabsContent value="settings" className="mt-0">
                 <div className="bg-card rounded-xl p-6 border border-elegant-border">
-                  <LanguageSelector />
+                  <p className="text-bone-white text-center">No additional settings available</p>
                 </div>
               </TabsContent>
             </div>
             
             <div className="lg:col-span-1">
-              <div className="bg-card rounded-xl p-4 border border-elegant-border">
-                <ImagePreview
-                  originalImage={originalImage}
-                  processedImageData={processedImageData}
-                  onDownload={downloadImage}
-                />
-              </div>
+              <ImagePreview
+                originalImage={originalImage}
+                processedImageData={processedImageData}
+                onDownload={downloadImage}
+              />
             </div>
           </div>
         </Tabs>

@@ -23,12 +23,12 @@ interface ColorPaletteSelectorProps {
 
 const paletteOptions = [
   { value: 'original' as const, label: 'Original', colors: 'Unlimited' },
-  { value: 'megadrive-single' as const, label: 'Mega Drive Single', colors: '16 colors (9-bit)' },
-  { value: 'megadrive-multi' as const, label: 'Mega Drive Multi', colors: '64 colors (4×16)' },
-  { value: 'neogeo-single' as const, label: 'Neo Geo Single', colors: '16 colors (15-bit)' },
-  { value: 'neogeo-multi' as const, label: 'Neo Geo Multi', colors: '4096 colors (16×256)' },
-  { value: 'zx-spectrum' as const, label: 'ZX Spectrum', colors: '16 colors (4-bit)' },
   { value: 'gameboy' as const, label: 'Game Boy', colors: '4 colors (green)' },
+  { value: 'megadrive-multi' as const, label: 'Mega Drive Multi', colors: '64 colors (4×16)' },
+  { value: 'megadrive-single' as const, label: 'Mega Drive Single', colors: '16 colors (9-bit)' },
+  { value: 'neogeo-multi' as const, label: 'Neo Geo Multi', colors: '4096 colors (16×256)' },
+  { value: 'neogeo-single' as const, label: 'Neo Geo Single', colors: '16 colors (15-bit)' },
+  { value: 'zx-spectrum' as const, label: 'ZX Spectrum', colors: '16 colors (4-bit)' },
 ];
 
 export const ColorPaletteSelector = ({
