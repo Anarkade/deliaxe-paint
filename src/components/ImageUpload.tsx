@@ -3,12 +3,15 @@ import { Upload, Camera, Link } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface ImageUploadProps {
   onImageLoad: (file: File | string) => void;
 }
 
 export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
+  const { t } = useTranslation();
+
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -54,13 +57,13 @@ export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
   return (
     <Card className="p-6 border-pixel-grid bg-card">
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-neon-cyan">Load Image</h3>
+        <h3 className="text-lg font-bold text-neon-cyan">{t('loadImage')}</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
             <label className="block text-sm font-medium text-foreground">
               <Upload className="inline mr-2 h-4 w-4" />
-              Upload File
+              {t('uploadFile')}
             </label>
             <Input
               type="file"
@@ -73,7 +76,7 @@ export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
           <div className="space-y-2">
             <label className="block text-sm font-medium text-foreground">
               <Link className="inline mr-2 h-4 w-4" />
-              From URL
+              {t('fromUrl')}
             </label>
             <Input
               type="url"
@@ -86,14 +89,14 @@ export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
           <div className="space-y-2">
             <label className="block text-sm font-medium text-foreground">
               <Camera className="inline mr-2 h-4 w-4" />
-              Camera
+              {t('camera')}
             </label>
             <Button 
               onClick={handleCameraCapture}
               variant="secondary"
               className="w-full"
             >
-              Capture
+              {t('capture')}
             </Button>
           </div>
         </div>
