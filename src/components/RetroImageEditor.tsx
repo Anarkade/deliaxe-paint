@@ -350,6 +350,7 @@ export const RetroImageEditor = () => {
             originalImage={originalImage}
             processedImageData={processedImageData}
             onDownload={downloadImage}
+            onLoadImageClick={() => handleTabClick('load-image')}
           />
         </div>
 

@@ -77,6 +77,7 @@ interface Translation {
   imageDownloaded: string;
   imageTooLarge: string;
   exportSuccess: string;
+  loadImageToStart: string;
   
   // Language names
   languageNames: Record<Language, string>;
@@ -135,6 +136,7 @@ const baseTranslation: Translation = {
   imageDownloaded: 'Image downloaded!',
   imageTooLarge: 'Image too large! Maximum size is 2048x2048px',
   exportSuccess: 'Export completed successfully!',
+  loadImageToStart: 'Load an image to start editing',
   languageNames: {
     'en': 'English',
     'es-ES': 'Español (España)',
@@ -205,6 +207,7 @@ const translations: Record<Language, Translation> = {
     imageDownloaded: '¡Imagen descargada!',
     imageTooLarge: '¡Imagen demasiado grande! El tamaño máximo es 2048x2048px',
     exportSuccess: '¡Exportación completada con éxito!',
+    loadImageToStart: 'Carga una imagen para empezar a editar',
     languageNames: {
       'en': 'English (Inglés)',
       'es-ES': 'Español (España)',
@@ -270,7 +273,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Error al cargar la imagen',
     imageDownloaded: '¡Imagen descargada!',
     imageTooLarge: '¡Imagen demasiado grande! El tamaño máximo es 2048x2048px',
-    exportSuccess: '¡Exportación completada con éxito!'
+    exportSuccess: '¡Exportación completada con éxito!',
+    loadImageToStart: 'Cargá una imagen para empezar a editar',
   },
   'ca': { 
     ...baseTranslation,
@@ -317,7 +321,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Error al carregar la imatge',
     imageDownloaded: 'Imatge descarregada!',
     imageTooLarge: 'Imatge massa gran! La mida màxima és 2048x2048px',
-    exportSuccess: 'Exportació completada amb èxit!'
+    exportSuccess: 'Exportació completada amb èxit!',
+    loadImageToStart: 'Carrega una imatge per començar a editar',
   },
   'fr': { 
     ...baseTranslation,
@@ -364,7 +369,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Erreur lors du chargement de l\'image',
     imageDownloaded: 'Image téléchargée!',
     imageTooLarge: 'Image trop grande! Taille maximum 2048x2048px',
-    exportSuccess: 'Exportation terminée avec succès!'
+    exportSuccess: 'Exportation terminée avec succès!',
+    loadImageToStart: 'Chargez une image pour commencer l\'édition',
   },
   'de': { 
     ...baseTranslation,
@@ -411,7 +417,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Fehler beim Laden des Bildes',
     imageDownloaded: 'Bild heruntergeladen!',
     imageTooLarge: 'Bild zu groß! Maximale Größe ist 2048x2048px',
-    exportSuccess: 'Export erfolgreich abgeschlossen!'
+    exportSuccess: 'Export erfolgreich abgeschlossen!',
+    loadImageToStart: 'Laden Sie ein Bild, um mit der Bearbeitung zu beginnen',
   },
   'it': { 
     ...baseTranslation,
@@ -458,7 +465,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Errore nel caricamento dell\'immagine',
     imageDownloaded: 'Immagine scaricata!',
     imageTooLarge: 'Immagine troppo grande! Dimensione massima 2048x2048px',
-    exportSuccess: 'Esportazione completata con successo!'
+    exportSuccess: 'Esportazione completata con successo!',
+    loadImageToStart: 'Carica un\'immagine per iniziare a modificare',
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -505,7 +513,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Erro ao carregar a imagem',
     imageDownloaded: 'Imagem descarregada!',
     imageTooLarge: 'Imagem demasiado grande! Tamanho máximo é 2048x2048px',
-    exportSuccess: 'Exportação concluída com sucesso!'
+    exportSuccess: 'Exportação concluída com sucesso!',
+    loadImageToStart: 'Carregue uma imagem para começar a editar',
   },
   'pt-BR': { 
     ...baseTranslation,
@@ -552,7 +561,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Erro ao carregar a imagem',
     imageDownloaded: 'Imagem baixada!',
     imageTooLarge: 'Imagem muito grande! Tamanho máximo é 2048x2048px',
-    exportSuccess: 'Exportação concluída com sucesso!'
+    exportSuccess: 'Exportação concluída com sucesso!',
+    loadImageToStart: 'Carregue uma imagem para começar a editar',
   },
   'ru': { 
     ...baseTranslation,
@@ -599,7 +609,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Ошибка загрузки изображения',
     imageDownloaded: 'Изображение скачано!',
     imageTooLarge: 'Изображение слишком большое! Максимальный размер 2048x2048px',
-    exportSuccess: 'Экспорт завершен успешно!'
+    exportSuccess: 'Экспорт завершен успешно!',
+    loadImageToStart: 'Загрузите изображение для начала редактирования',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -787,7 +798,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Błąd wczytywania obrazu',
     imageDownloaded: 'Obraz pobrany!',
     imageTooLarge: 'Obraz za duży! Maksymalny rozmiar to 2048x2048px',
-    exportSuccess: 'Eksport zakończony pomyślnie!'
+    exportSuccess: 'Eksport zakończony pomyślnie!',
+    loadImageToStart: 'Wczytaj obraz, aby rozpocząć edycję',
   },
   'tr': { 
     ...baseTranslation,
@@ -834,7 +846,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Resim yükleme hatası',
     imageDownloaded: 'Resim indirildi!',
     imageTooLarge: 'Resim çok büyük! Maksimum boyut 2048x2048px',
-    exportSuccess: 'Dışa aktarma başarıyla tamamlandı!'
+    exportSuccess: 'Dışa aktarma başarıyla tamamlandı!',
+    loadImageToStart: 'Düzenlemeye başlamak için bir resim yükleyin',
   },
   'eu': { 
     ...baseTranslation,
@@ -881,7 +894,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Errorea irudia kargatzean',
     imageDownloaded: 'Irudia deskargatu da!',
     imageTooLarge: 'Irudia handiegia! Gehienezko tamaina 2048x2048px da',
-    exportSuccess: 'Esportazioa arrakastaz osatu da!'
+    exportSuccess: 'Esportazioa arrakastaz osatu da!',
+    loadImageToStart: 'Editatzen hasteko irudi bat kargatu',
   },
   'oc': { 
     ...baseTranslation,
@@ -928,7 +942,8 @@ const translations: Record<Language, Translation> = {
     imageLoadError: 'Error en cargar l\'imatge',
     imageDownloaded: 'Imatge descargada!',
     imageTooLarge: 'Imatge tròp granda! La talha maxima ei 2048x2048px',
-    exportSuccess: 'Exportacion acabada damb succès!'
+    exportSuccess: 'Exportacion acabada damb succès!',
+    loadImageToStart: 'Carga ua imatge tà començar a editar',
   }
 };
 

@@ -10,9 +10,10 @@ interface ImagePreviewProps {
   originalImage: HTMLImageElement | null;
   processedImageData: ImageData | null;
   onDownload?: () => void;
+  onLoadImageClick?: () => void;
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [showOriginal, setShowOriginal] = useState(false);
@@ -67,10 +68,13 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload }: 
             )}
           </div>
         ) : (
-          <div className="text-center text-muted-foreground">
+          <div 
+            className="text-center text-muted-foreground cursor-pointer hover:bg-accent/10 rounded-lg p-8 transition-colors border border-dashed border-muted-foreground/30 hover:border-muted-foreground/50"
+            onClick={onLoadImageClick}
+          >
             <div className="text-4xl mb-4">🖼️</div>
             <p>No image loaded</p>
-            <p className="text-sm">Upload an image to start editing</p>
+            <p className="text-sm">{t('loadImageToStart')}</p>
           </div>
         )}
       </div>
