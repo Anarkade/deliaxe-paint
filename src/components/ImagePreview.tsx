@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Download, Eye, ZoomIn } from 'lucide-react';
+import { Download, Eye, ZoomIn, Camera, RotateCcw, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { analyzePNGFile, ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { LoadImage } from './LoadImage';
@@ -442,35 +442,41 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
               muted
               playsInline
             />
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3">
               <Button
                 onClick={capturePhoto}
-                variant="modern3d"
+                variant="secondary"
                 size="sm"
+                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
               >
-                {t('capture')}
+                <Camera className="h-5 w-5" />
               </Button>
               {availableCameras.length > 1 && (
                 <Button
                   onClick={switchCamera}
                   variant="secondary"
                   size="sm"
+                  className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
                 >
-                  {t('switchCamera')}
+                  <RotateCcw className="h-4 w-4" />
                 </Button>
               )}
               <Button
                 onClick={stopCameraPreview}
                 variant="secondary"
                 size="sm"
+                className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
               >
-                {t('close')}
+                <X className="h-4 w-4" />
               </Button>
             </div>
           </div>
         ) : (
           <div className="w-full">
-            <LoadImage onImageLoad={onLoadImageClick} />
+            <LoadImage 
+              onImageLoad={onLoadImageClick}
+              onCameraPreviewRequest={() => onCameraPreviewChange?.(true)}
+            />
           </div>
         )}
       </div>

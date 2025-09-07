@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import { Upload, Camera, Link, Eye } from 'lucide-react';
+import { Upload, Camera, Link, Eye, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -156,9 +156,9 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
                   onClick={stopCameraPreview}
                   variant="secondary"
                   size="sm"
-                  className="absolute top-2 right-2"
+                  className="absolute top-2 right-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
                 >
-                  <Eye className="h-4 w-4" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
             )}
@@ -176,10 +176,10 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
               ) : (
                 <Button 
                   onClick={handleCameraCapture}
-                  variant="modern3d"
-                  className="flex-1"
+                  variant="secondary"
+                  className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
                 >
-                  {t('capture')}
+                  <Camera className="h-5 w-5" />
                 </Button>
               )}
             </div>
