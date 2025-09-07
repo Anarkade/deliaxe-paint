@@ -374,6 +374,15 @@ export const RetroImageEditor = () => {
               <span className="truncate">{t('loadImage')}</span>
             </Button>
             
+            <Button
+              variant={getButtonVariant('palette-selector')}
+              onClick={() => handleTabClick('palette-selector')}
+              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
+              disabled={!originalImage}
+            >
+              <Palette className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{t('selectPalette')}</span>
+            </Button>
             
             <Button
               variant={getButtonVariant('palette-viewer')}
@@ -412,6 +421,16 @@ export const RetroImageEditor = () => {
               <LoadImage onImageLoad={loadImage} />
             )}
 
+            {activeTab === 'palette-selector' && originalImage && (
+              <ColorPaletteSelector
+                selectedPalette={selectedPalette}
+                onPaletteChange={setSelectedPalette}
+                onUndo={undo}
+                onRedo={redo}
+                canUndo={historyIndex > 0}
+                canRedo={historyIndex < history.length - 1}
+              />
+            )}
 
             {activeTab === 'palette-viewer' && originalImage && (
               <PaletteViewer
