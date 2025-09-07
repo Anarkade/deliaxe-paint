@@ -21,6 +21,7 @@ const buttonVariants = cva(
         highlighted: "bg-blood-red text-bone-white hover:bg-blood-red/90",
         blocked: "bg-slate-700 text-slate-400 cursor-not-allowed opacity-60",
         plum: "bg-dark-plum text-bone-white hover:bg-dark-plum/80",
+        modern3d: "bg-gradient-to-b from-secondary/80 to-secondary border border-border shadow-lg hover:shadow-xl hover:from-secondary/90 hover:to-secondary/80 transform hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0 active:shadow-md",
       },
       size: {
         default: "h-10 px-4 py-2",

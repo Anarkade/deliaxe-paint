@@ -72,7 +72,7 @@ export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
                 onChange={handleFileUpload}
                 className="bg-console-bg border-pixel-grid opacity-0 absolute inset-0 w-full h-full cursor-pointer"
               />
-              <div className="bg-console-bg border border-pixel-grid rounded-md px-3 py-2 text-sm text-foreground cursor-pointer hover:bg-accent/10 transition-colors">
+              <div className="bg-gradient-to-b from-secondary/80 to-secondary border border-border shadow-lg hover:shadow-xl hover:from-secondary/90 hover:to-secondary/80 transform hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0 active:shadow-md rounded-md px-3 py-2 text-sm text-foreground cursor-pointer">
                 {t('chooseFile')}
               </div>
             </div>
@@ -98,7 +98,7 @@ export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
             </label>
             <Button 
               onClick={handleCameraCapture}
-              variant="secondary"
+              variant="modern3d"
               className="w-full"
             >
               {t('capture')}
