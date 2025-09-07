@@ -42,14 +42,22 @@ export const RetroImageEditor = () => {
       return 'blocked';
     }
     
-    if (originalImage && tabId === 'export-image') {
-      return activeTab === tabId ? 'highlighted' : 'highlighted';
-    }
-    
-    if (activeTab === tabId) {
+    // When no image is loaded, only load-image is highlighted
+    if (!originalImage && tabId === 'load-image') {
       return 'highlighted';
     }
     
+    // When image is loaded, export-image becomes highlighted (always)
+    if (originalImage && tabId === 'export-image') {
+      return 'highlighted';
+    }
+    
+    // Active tab is highlighted (except load-image when image is loaded)
+    if (activeTab === tabId && !(originalImage && tabId === 'load-image')) {
+      return 'highlighted';
+    }
+    
+    // When image is loaded, all other buttons (including load-image) are plum
     if (originalImage) {
       return 'plum';
     }

@@ -21,6 +21,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [zoom, setZoom] = useState([100]);
   const [fitToWidth, setFitToWidth] = useState(false);
   const [containerWidth, setContainerWidth] = useState(0);
+  const [previewHeight, setPreviewHeight] = useState(400);
 
   // Calculate container width and fit-to-width zoom
   useEffect(() => {
@@ -53,6 +54,29 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     }
   }, [fitToWidth, originalImage, containerWidth]);
 
+  // Calculate adaptive height based on image and zoom
+  useEffect(() => {
+    if (originalImage && containerWidth > 0) {
+      const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
+      const currentZoom = zoom[0] / 100;
+      
+      let displayWidth: number;
+      let displayHeight: number;
+      
+      if (fitToWidth) {
+        displayWidth = containerWidth;
+        displayHeight = (currentImage.height * containerWidth) / currentImage.width;
+      } else {
+        displayWidth = currentImage.width * currentZoom;
+        displayHeight = currentImage.height * currentZoom;
+      }
+      
+      // Add padding and ensure minimum height
+      const calculatedHeight = Math.max(400, displayHeight + 64); // 64px for padding
+      setPreviewHeight(calculatedHeight);
+    }
+  }, [originalImage, processedImageData, zoom, fitToWidth, containerWidth, showOriginal]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -81,7 +105,8 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     <div className="bg-card rounded-xl p-6 border border-elegant-border space-y-4">
       <div 
         ref={containerRef}
-        className="relative bg-elegant-bg rounded-lg border border-elegant-border p-4 min-h-[400px] flex items-center justify-center overflow-auto"
+        className="relative bg-elegant-bg rounded-lg border border-elegant-border p-4 flex items-center justify-center overflow-hidden"
+        style={{ height: `${previewHeight}px` }}
       >
         {originalImage ? (
           <div className="relative">

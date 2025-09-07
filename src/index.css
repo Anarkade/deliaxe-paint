@@ -44,6 +44,7 @@ All colors MUST be HSL.
     --blood-red-light: 0 65% 65%;
     --elegant-bg: 225 15% 5%;
     --elegant-border: 225 15% 18%;
+    --dark-plum: 338 61% 19%;
 
     /* Gradients */
     --gradient-retro: linear-gradient(135deg, hsl(var(--neon-cyan)), hsl(var(--neon-pink)));

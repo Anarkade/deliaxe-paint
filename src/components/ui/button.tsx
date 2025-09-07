@@ -20,7 +20,7 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         highlighted: "bg-blood-red text-bone-white hover:bg-blood-red/90",
         blocked: "bg-slate-700 text-slate-400 cursor-not-allowed opacity-60",
-        plum: "bg-purple-600 text-bone-white hover:bg-purple-700",
+        plum: "bg-dark-plum text-bone-white hover:bg-dark-plum/80",
       },
       size: {
         default: "h-10 px-4 py-2",
