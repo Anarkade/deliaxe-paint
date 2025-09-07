@@ -16,9 +16,42 @@ interface ImagePreviewProps {
 export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [showOriginal, setShowOriginal] = useState(false);
   const [zoom, setZoom] = useState([100]);
-  const [fitToWidth, setFitToWidth] = useState(true);
+  const [fitToWidth, setFitToWidth] = useState(false);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  // Calculate container width and fit-to-width zoom
+  useEffect(() => {
+    const updateContainerWidth = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.clientWidth - 32; // Account for padding
+        setContainerWidth(width);
+      }
+    };
+
+    updateContainerWidth();
+    window.addEventListener('resize', updateContainerWidth);
+    return () => window.removeEventListener('resize', updateContainerWidth);
+  }, []);
+
+  // Set default fit to width and calculate zoom when image loads
+  useEffect(() => {
+    if (originalImage && containerWidth > 0) {
+      setFitToWidth(true);
+      const fitZoom = Math.floor((containerWidth / originalImage.width) * 100);
+      setZoom([Math.max(1, Math.min(1000, fitZoom))]);
+    }
+  }, [originalImage, containerWidth]);
+
+  // Handle fit to width checkbox changes
+  useEffect(() => {
+    if (fitToWidth && originalImage && containerWidth > 0) {
+      const fitZoom = Math.floor((containerWidth / originalImage.width) * 100);
+      setZoom([Math.max(1, Math.min(1000, fitZoom))]);
+    }
+  }, [fitToWidth, originalImage, containerWidth]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -46,7 +79,10 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
 
   return (
     <div className="bg-card rounded-xl p-6 border border-elegant-border space-y-4">
-      <div className="relative bg-elegant-bg rounded-lg border border-elegant-border p-4 min-h-[400px] flex items-center justify-center overflow-auto">
+      <div 
+        ref={containerRef}
+        className="relative bg-elegant-bg rounded-lg border border-elegant-border p-4 min-h-[400px] flex items-center justify-center overflow-auto"
+      >
         {originalImage ? (
           <div className="relative">
             <canvas
@@ -80,24 +116,24 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
       </div>
       
       {originalImage && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 flex-1">
-                <ZoomIn className="h-4 w-4 text-muted-foreground" />
-                <Slider
-                  value={zoom}
-                  onValueChange={setZoom}
-                  max={500}
-                  min={10}
-                  step={10}
-                  className="flex-1"
-                />
-                <span className="text-sm text-muted-foreground min-w-[60px]">{zoom[0]}%</span>
+        <div className="space-y-3">
+          {/* Single line with all controls */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            {/* Left side - Resolutions */}
+            <div className="flex items-center gap-6 text-sm font-mono text-muted-foreground">
+              <div>
+                <span className="text-blood-red">Original:</span> {originalImage.width}×{originalImage.height}
               </div>
+              {processedImageData && (
+                <div>
+                  <span className="text-blood-red">Processed:</span> {processedImageData.width}×{processedImageData.height}
+                </div>
+              )}
             </div>
             
-            <div className="flex items-center space-x-4">
+            {/* Right side - Controls */}
+            <div className="flex items-center gap-4 flex-wrap">
+              {/* Original/Processed toggle button */}
               {hasProcessedImage && (
                 <Button
                   variant="secondary"
@@ -110,28 +146,32 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 </Button>
               )}
               
+              {/* Fit to width checkbox */}
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="fit-width"
                   checked={fitToWidth}
                   onCheckedChange={(checked) => setFitToWidth(checked === true)}
                 />
-                <label htmlFor="fit-width" className="text-sm text-bone-white">
+                <label htmlFor="fit-width" className="text-sm text-bone-white whitespace-nowrap">
                   Fit to width
                 </label>
               </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 text-sm font-mono text-muted-foreground">
-            <div>
-              <span className="text-blood-red">Original:</span> {originalImage.width}×{originalImage.height}
-            </div>
-            {processedImageData && (
-              <div>
-                <span className="text-blood-red">Processed:</span> {processedImageData.width}×{processedImageData.height}
+              
+              {/* Zoom slider */}
+              <div className="flex items-center space-x-2 min-w-[200px]">
+                <ZoomIn className="h-4 w-4 text-muted-foreground" />
+                <Slider
+                  value={zoom}
+                  onValueChange={setZoom}
+                  max={1000}
+                  min={0}
+                  step={1}
+                  className="flex-1"
+                />
+                <span className="text-sm text-muted-foreground min-w-[50px]">{zoom[0]}%</span>
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
