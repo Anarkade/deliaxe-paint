@@ -7,7 +7,7 @@ import { PaletteViewer } from './PaletteViewer';
 import { ExportImage } from './ExportImage';
 import { LanguageSelector } from './LanguageSelector';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Upload, Palette, Eye, Monitor, Download, Gamepad2 } from 'lucide-react';
 
@@ -30,11 +30,39 @@ export const RetroImageEditor = () => {
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
   const [scalingMode, setScalingMode] = useState<ScalingMode>('fit');
   const [currentPaletteColors, setCurrentPaletteColors] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<string>('load-image');
   
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const getButtonVariant = (tabId: string) => {
+    if (!originalImage && tabId !== 'load-image') {
+      return 'blocked';
+    }
+    
+    if (originalImage && tabId === 'export-image') {
+      return activeTab === tabId ? 'highlighted' : 'highlighted';
+    }
+    
+    if (activeTab === tabId) {
+      return 'highlighted';
+    }
+    
+    if (originalImage) {
+      return 'plum';
+    }
+    
+    return 'blocked';
+  };
+
+  const handleTabClick = (tabId: string) => {
+    if (!originalImage && tabId !== 'load-image') {
+      return; // Don't allow clicking blocked tabs
+    }
+    setActiveTab(tabId);
+  };
 
   const saveToHistory = useCallback((state: HistoryState) => {
     const newHistory = history.slice(0, historyIndex + 1);
@@ -317,7 +345,6 @@ export const RetroImageEditor = () => {
 
       {/* Main Content */}
       <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
-        {/* Preview Section */}
         <div className="w-full">
           <ImagePreview
             originalImage={originalImage}
@@ -326,36 +353,66 @@ export const RetroImageEditor = () => {
           />
         </div>
 
-        <Tabs defaultValue="load-image" className="space-y-4 md:space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-5 bg-card border border-elegant-border rounded-xl gap-1 p-1">
-            <TabsTrigger value="load-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+        {/* Sections Menu */}
+        <div className="w-full space-y-4 md:space-y-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 p-2 bg-card border border-elegant-border rounded-xl">
+            <Button
+              variant={getButtonVariant('load-image')}
+              onClick={() => handleTabClick('load-image')}
+              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
+            >
               <Upload className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{t('loadImage')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="color-palette" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('color-palette')}
+              onClick={() => handleTabClick('color-palette')}
+              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
+              disabled={!originalImage}
+            >
               <Palette className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{t('colorPalette')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="palette-viewer" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('palette-viewer')}
+              onClick={() => handleTabClick('palette-viewer')}
+              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
+              disabled={!originalImage}
+            >
               <Eye className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{t('paletteViewer')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="resolution" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('resolution')}
+              onClick={() => handleTabClick('resolution')}
+              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
+              disabled={!originalImage}
+            >
               <Monitor className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{t('changeResolution')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="export-image" className="text-bone-white data-[state=active]:bg-blood-red data-[state=active]:text-bone-white rounded-lg flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('export-image')}
+              onClick={() => handleTabClick('export-image')}
+              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
+              disabled={!originalImage}
+            >
               <Download className="h-4 w-4 flex-shrink-0" />
               <span className="truncate">{t('exportImage')}</span>
-            </TabsTrigger>
-          </TabsList>
+            </Button>
+          </div>
 
+          {/* Content Sections */}
           <div className="w-full max-w-4xl mx-auto">
-            <TabsContent value="load-image" className="mt-0">
+            {activeTab === 'load-image' && (
               <LoadImage onImageLoad={loadImage} />
-            </TabsContent>
+            )}
 
-            <TabsContent value="color-palette" className="mt-0">
+            {activeTab === 'color-palette' && originalImage && (
               <ColorPaletteSelector
                 selectedPalette={selectedPalette}
                 onPaletteChange={setSelectedPalette}
@@ -364,34 +421,34 @@ export const RetroImageEditor = () => {
                 canUndo={historyIndex > 0}
                 canRedo={historyIndex < history.length - 1}
               />
-            </TabsContent>
+            )}
 
-            <TabsContent value="palette-viewer" className="mt-0">
+            {activeTab === 'palette-viewer' && originalImage && (
               <PaletteViewer
                 selectedPalette={selectedPalette}
                 imageData={processedImageData}
                 onPaletteUpdate={setCurrentPaletteColors}
               />
-            </TabsContent>
+            )}
 
-            <TabsContent value="resolution" className="mt-0">
+            {activeTab === 'resolution' && originalImage && (
               <ResolutionSelector
                 selectedResolution={selectedResolution}
                 scalingMode={scalingMode}
                 onResolutionChange={setSelectedResolution}
                 onScalingModeChange={setScalingMode}
               />
-            </TabsContent>
+            )}
 
-            <TabsContent value="export-image" className="mt-0">
+            {activeTab === 'export-image' && originalImage && (
               <ExportImage
                 processedImageData={processedImageData}
                 selectedPalette={selectedPalette}
                 selectedResolution={selectedResolution}
               />
-            </TabsContent>
+            )}
           </div>
-        </Tabs>
+        </div>
       </div>
     </div>
   );
