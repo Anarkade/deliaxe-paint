@@ -105,14 +105,14 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     <div className="bg-card rounded-xl p-6 border border-elegant-border space-y-4">
       <div 
         ref={containerRef}
-        className="relative bg-elegant-bg rounded-lg border border-elegant-border p-4 flex items-center justify-center overflow-hidden"
+        className="relative bg-elegant-bg rounded-lg border border-elegant-border px-1 flex items-center justify-center overflow-hidden"
         style={{ height: `${previewHeight}px` }}
       >
         {originalImage ? (
           <div className="relative">
             <canvas
               ref={canvasRef}
-              className={`border border-elegant-border rounded-lg ${fitToWidth ? 'max-w-full' : ''}`}
+              className={`${fitToWidth ? 'max-w-full' : ''}`}
               style={{ 
                 imageRendering: 'pixelated',
                 transform: `scale(${zoom[0] / 100})`,

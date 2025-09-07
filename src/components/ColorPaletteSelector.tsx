@@ -48,7 +48,7 @@ export const ColorPaletteSelector = ({
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-neon-cyan flex items-center">
             <Palette className="mr-2 h-5 w-5" />
-            {t('colorPalette')}
+            {t('selectPalette')}
           </h3>
           
           <div className="flex gap-2">

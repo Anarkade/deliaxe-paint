@@ -8,7 +8,6 @@ export type Language =
 interface Translation {
   // Tabs
   loadImage: string;
-  colorPalette: string;
   paletteViewer: string;
   changeResolution: string;
   settings: string;
@@ -85,7 +84,6 @@ interface Translation {
 
 const baseTranslation: Translation = {
   loadImage: 'Load Image',
-  colorPalette: 'Color Palette',
   paletteViewer: 'Palette Viewer',
   changeResolution: 'Change Resolution',
   settings: 'Settings',
@@ -163,7 +161,6 @@ const translations: Record<Language, Translation> = {
   'es-ES': { 
     ...baseTranslation,
     loadImage: 'Cargar Imagen',
-    colorPalette: 'Paleta de Colores',
     paletteViewer: 'Visor de Paleta',
     changeResolution: 'Cambiar Resolución',
     settings: 'Configuración',
@@ -231,7 +228,6 @@ const translations: Record<Language, Translation> = {
   'es-LA': { 
     ...baseTranslation,
     loadImage: 'Cargar Imagen',
-    colorPalette: 'Paleta de Colores',
     paletteViewer: 'Visor de Paleta',
     changeResolution: 'Cambiar Resolución',
     settings: 'Configuración',
@@ -279,7 +275,6 @@ const translations: Record<Language, Translation> = {
   'ca': { 
     ...baseTranslation,
     loadImage: 'Carregar Imatge',
-    colorPalette: 'Paleta de Colors',
     paletteViewer: 'Visor de Paleta',
     changeResolution: 'Canviar Resolució',
     settings: 'Configuració',
@@ -327,7 +322,6 @@ const translations: Record<Language, Translation> = {
   'fr': { 
     ...baseTranslation,
     loadImage: 'Charger Image',
-    colorPalette: 'Palette de Couleurs',
     paletteViewer: 'Visionneuse de Palette',
     changeResolution: 'Changer Résolution',
     settings: 'Paramètres',
@@ -375,7 +369,6 @@ const translations: Record<Language, Translation> = {
   'de': { 
     ...baseTranslation,
     loadImage: 'Bild Laden',
-    colorPalette: 'Farbpalette',
     paletteViewer: 'Palette Betrachter',
     changeResolution: 'Auflösung Ändern',
     settings: 'Einstellungen',
@@ -423,7 +416,6 @@ const translations: Record<Language, Translation> = {
   'it': { 
     ...baseTranslation,
     loadImage: 'Carica Immagine',
-    colorPalette: 'Tavolozza Colori',
     paletteViewer: 'Visualizzatore Tavolozza',
     changeResolution: 'Cambia Risoluzione',
     settings: 'Impostazioni',
@@ -471,7 +463,6 @@ const translations: Record<Language, Translation> = {
   'pt-PT': { 
     ...baseTranslation,
     loadImage: 'Carregar Imagem',
-    colorPalette: 'Paleta de Cores',
     paletteViewer: 'Visualizador de Paleta',
     changeResolution: 'Alterar Resolução',
     settings: 'Definições',
@@ -519,7 +510,6 @@ const translations: Record<Language, Translation> = {
   'pt-BR': { 
     ...baseTranslation,
     loadImage: 'Carregar Imagem',
-    colorPalette: 'Paleta de Cores',
     paletteViewer: 'Visualizador de Paleta',
     changeResolution: 'Alterar Resolução',
     settings: 'Configurações',
@@ -567,7 +557,6 @@ const translations: Record<Language, Translation> = {
   'ru': { 
     ...baseTranslation,
     loadImage: 'Загрузить Изображение',
-    colorPalette: 'Цветовая Палитра',
     paletteViewer: 'Просмотр Палитры',
     changeResolution: 'Изменить Разрешение',
     settings: 'Настройки',
@@ -615,7 +604,6 @@ const translations: Record<Language, Translation> = {
   'zh-CN': { 
     ...baseTranslation,
     loadImage: '加载图像',
-    colorPalette: '调色板',
     paletteViewer: '调色板查看器',
     changeResolution: '更改分辨率',
     settings: '设置',
@@ -662,7 +650,6 @@ const translations: Record<Language, Translation> = {
   'zh-TW': { 
     ...baseTranslation,
     loadImage: '載入圖像',
-    colorPalette: '調色盤',
     paletteViewer: '調色盤檢視器',
     changeResolution: '更改解析度',
     settings: '設定',
@@ -709,7 +696,6 @@ const translations: Record<Language, Translation> = {
   'ja': { 
     ...baseTranslation,
     loadImage: '画像を読み込み',
-    colorPalette: 'カラーパレット',
     paletteViewer: 'パレットビューア',
     changeResolution: '解像度を変更',
     settings: '設定',
@@ -756,7 +742,6 @@ const translations: Record<Language, Translation> = {
   'pl': { 
     ...baseTranslation,
     loadImage: 'Wczytaj Obraz',
-    colorPalette: 'Paleta Kolorów',
     paletteViewer: 'Przeglądarka Palety',
     changeResolution: 'Zmień Rozdzielczość',
     settings: 'Ustawienia',
@@ -804,7 +789,6 @@ const translations: Record<Language, Translation> = {
   'tr': { 
     ...baseTranslation,
     loadImage: 'Resim Yükle',
-    colorPalette: 'Renk Paleti',
     paletteViewer: 'Palet Görüntüleyici',
     changeResolution: 'Çözünürlüğü Değiştir',
     settings: 'Ayarlar',
@@ -852,7 +836,6 @@ const translations: Record<Language, Translation> = {
   'eu': { 
     ...baseTranslation,
     loadImage: 'Irudia Kargatu',
-    colorPalette: 'Kolore Paleta',
     paletteViewer: 'Paleta Ikustailea',
     changeResolution: 'Bereizmena Aldatu',
     settings: 'Ezarpenak',
@@ -900,7 +883,6 @@ const translations: Record<Language, Translation> = {
   'oc': { 
     ...baseTranslation,
     loadImage: 'Cargar Imatge',
-    colorPalette: 'Paleta de Colors',
     paletteViewer: 'Visualizaire de Paleta',
     changeResolution: 'Cambiar Resolucion',
     settings: 'Configuracion',
