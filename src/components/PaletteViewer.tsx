@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { PaletteType } from './ColorPaletteSelector';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Eye, Palette, GripVertical } from 'lucide-react';
+import { extractPNGPalette } from '@/lib/pngAnalyzer';
 
 interface PaletteColor {
   r: number;
@@ -17,6 +18,7 @@ interface PaletteViewerProps {
   selectedPalette: PaletteType;
   imageData: ImageData | null;
   onPaletteUpdate?: (colors: PaletteColor[]) => void;
+  originalImageSource?: File | string | null;
 }
 
 const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
@@ -69,7 +71,7 @@ const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
   }
 };
 
-export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: PaletteViewerProps) => {
+export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource }: PaletteViewerProps) => {
   const { t } = useTranslation();
   const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() => 
     getDefaultPalette(selectedPalette)
@@ -118,7 +120,25 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
     input.click();
   }, [paletteColors, onPaletteUpdate]);
 
-  const extractColorsFromImage = useCallback(() => {
+  const extractColorsFromImage = useCallback(async () => {
+    if (!imageData && !originalImageSource) return;
+    
+    // First try to extract from PNG PLTE chunk if it's an indexed PNG
+    if (originalImageSource) {
+      try {
+        const pngPalette = await extractPNGPalette(originalImageSource);
+        if (pngPalette && pngPalette.length > 0) {
+          const colors = pngPalette.slice(0, paletteColors.length || 256);
+          setPaletteColors(colors);
+          onPaletteUpdate?.(colors);
+          return;
+        }
+      } catch (error) {
+        console.log('Could not extract PNG palette, falling back to image analysis');
+      }
+    }
+    
+    // Fallback to analyzing processed image data
     if (!imageData) return;
     
     // Extract actual colors from the processed image
@@ -149,45 +169,66 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
     
     setPaletteColors(sortedColors);
     onPaletteUpdate?.(sortedColors);
-  }, [imageData, paletteColors.length, onPaletteUpdate]);
+  }, [imageData, originalImageSource, paletteColors.length, onPaletteUpdate]);
 
   // Extract unique colors from the current image data and update when it changes
   useEffect(() => {
-    if (!imageData) {
-      const defaultPalette = getDefaultPalette(selectedPalette);
-      setPaletteColors(defaultPalette);
-      onPaletteUpdate?.(defaultPalette);
-      return;
-    }
-
-    const colors = new Map<string, number>();
-    const data = imageData.data;
-    
-    // Count color frequency
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      const a = data[i + 3];
-      
-      if (a > 0) { // Only include non-transparent pixels
-        const colorKey = `${r},${g},${b}`;
-        colors.set(colorKey, (colors.get(colorKey) || 0) + 1);
+    const extractColors = async () => {
+      if (!imageData && !originalImageSource) {
+        const defaultPalette = getDefaultPalette(selectedPalette);
+        setPaletteColors(defaultPalette);
+        onPaletteUpdate?.(defaultPalette);
+        return;
       }
-    }
-    
-    // Sort by frequency and convert to array
-    const sortedColors = Array.from(colors.entries())
-      .sort((a, b) => b[1] - a[1]) // Sort by frequency (most used first)
-      .slice(0, 256) // Limit to 256 colors max
-      .map(([colorKey], index) => {
-        const [r, g, b] = colorKey.split(',').map(Number);
-        return { r, g, b };
-      });
-    
-    setPaletteColors(sortedColors);
-    onPaletteUpdate?.(sortedColors);
-  }, [imageData, selectedPalette, onPaletteUpdate]);
+
+      // First try to extract from PNG PLTE chunk if it's an indexed PNG
+      if (originalImageSource) {
+        try {
+          const pngPalette = await extractPNGPalette(originalImageSource);
+          if (pngPalette && pngPalette.length > 0) {
+            setPaletteColors(pngPalette);
+            onPaletteUpdate?.(pngPalette);
+            return;
+          }
+        } catch (error) {
+          console.log('Could not extract PNG palette, falling back to image analysis');
+        }
+      }
+
+      // Fallback to analyzing processed image data
+      if (!imageData) return;
+
+      const colors = new Map<string, number>();
+      const data = imageData.data;
+      
+      // Count color frequency
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+        
+        if (a > 0) { // Only include non-transparent pixels
+          const colorKey = `${r},${g},${b}`;
+          colors.set(colorKey, (colors.get(colorKey) || 0) + 1);
+        }
+      }
+      
+      // Sort by frequency and convert to array
+      const sortedColors = Array.from(colors.entries())
+        .sort((a, b) => b[1] - a[1]) // Sort by frequency (most used first)
+        .slice(0, 256) // Limit to 256 colors max
+        .map(([colorKey], index) => {
+          const [r, g, b] = colorKey.split(',').map(Number);
+          return { r, g, b };
+        });
+      
+      setPaletteColors(sortedColors);
+      onPaletteUpdate?.(sortedColors);
+    };
+
+    extractColors();
+  }, [imageData, selectedPalette, originalImageSource, onPaletteUpdate]);
 
   if (selectedPalette === 'original') {
     return (

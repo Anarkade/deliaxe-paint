@@ -31,6 +31,7 @@ export const RetroImageEditor = () => {
   const [scalingMode, setScalingMode] = useState<ScalingMode>('fit');
   const [currentPaletteColors, setCurrentPaletteColors] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<string>('load-image');
+  const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
   
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -103,6 +104,7 @@ export const RetroImageEditor = () => {
       
       setOriginalImage(img);
       setProcessedImageData(null);
+      setOriginalImageSource(source); // Store the source for PNG analysis
       
       // Reset settings when loading new image
       setSelectedPalette('original');
@@ -359,6 +361,7 @@ export const RetroImageEditor = () => {
             processedImageData={processedImageData}
             onDownload={downloadImage}
             onLoadImageClick={() => handleTabClick('load-image')}
+            originalImageSource={originalImageSource}
           />
         </div>
 
@@ -437,6 +440,7 @@ export const RetroImageEditor = () => {
                 selectedPalette={selectedPalette}
                 imageData={processedImageData}
                 onPaletteUpdate={setCurrentPaletteColors}
+                originalImageSource={originalImageSource}
               />
             )}
 

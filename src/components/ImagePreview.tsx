@@ -5,6 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Eye, ZoomIn } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { analyzePNGFile, ImageFormatInfo } from '@/lib/pngAnalyzer';
 
 // Helper function to analyze image format and properties
 const analyzeImageFormat = (image: HTMLImageElement): Promise<string> => {
@@ -98,9 +99,10 @@ interface ImagePreviewProps {
   processedImageData: ImageData | null;
   onDownload?: () => void;
   onLoadImageClick?: () => void;
+  originalImageSource?: File | string; // Add source for PNG analysis
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -112,16 +114,21 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [originalFormat, setOriginalFormat] = useState<string>('');
   const [processedFormat, setProcessedFormat] = useState<string>('');
 
-  // Analyze original image format
+  // Analyze original image format with proper PNG analysis
   useEffect(() => {
-    if (originalImage) {
+    if (originalImage && originalImageSource) {
+      analyzePNGFile(originalImageSource).then(info => {
+        setOriginalFormat(info.format);
+      });
+    } else if (originalImage) {
+      // Fallback to basic analysis for URLs or when source is not available
       analyzeImageFormat(originalImage).then(format => {
         setOriginalFormat(format);
       });
     } else {
       setOriginalFormat('');
     }
-  }, [originalImage]);
+  }, [originalImage, originalImageSource]);
 
   // Analyze processed image format
   useEffect(() => {
