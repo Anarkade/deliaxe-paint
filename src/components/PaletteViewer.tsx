@@ -218,7 +218,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate }: P
           
           <div className="space-y-2 text-xs text-muted-foreground">
             <p>• {t('dragToReorder')}</p>
-            <p>• Click colors to change them</p>
+            <p>• {t('clickToChange')}</p>
           </div>
           
           <div className="grid gap-3 w-full" style={{ 

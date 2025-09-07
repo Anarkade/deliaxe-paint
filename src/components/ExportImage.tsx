@@ -84,7 +84,7 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
     return (
       <Card className="p-6 border-elegant-border bg-card">
         <div className="text-center text-muted-foreground">
-          Process an image first to enable export options
+          {t('processImageFirst')}
         </div>
       </Card>
     );
