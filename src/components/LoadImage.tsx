@@ -8,9 +8,10 @@ import { toast } from 'sonner';
 
 interface LoadImageProps {
   onImageLoad: (source: File | string) => void;
+  onCameraPreviewRequest?: () => void;
 }
 
-export const LoadImage = ({ onImageLoad }: LoadImageProps) => {
+export const LoadImage = ({ onImageLoad, onCameraPreviewRequest }: LoadImageProps) => {
   const { t } = useTranslation();
 
   const loadFromDropbox = useCallback(() => {
@@ -24,6 +25,9 @@ export const LoadImage = ({ onImageLoad }: LoadImageProps) => {
   }, []);
 
   return (
-    <ImageUpload onImageLoad={onImageLoad} />
+    <ImageUpload 
+      onImageLoad={onImageLoad}
+      onCameraPreviewRequest={onCameraPreviewRequest}
+    />
   );
 };

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -105,11 +105,15 @@ interface ImagePreviewProps {
   originalImageSource?: File | string; // Add source for PNG analysis
   selectedPalette?: PaletteType;
   onPaletteUpdate?: (colors: any[]) => void;
+  showCameraPreview?: boolean;
+  onCameraPreviewChange?: (show: boolean) => void;
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showOriginal, setShowOriginal] = useState(false);
   const [zoom, setZoom] = useState([100]);
@@ -122,9 +126,98 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [currentCameraId, setCurrentCameraId] = useState<string>('');
   const programmaticZoomChange = useRef(false);
 
-  // Analyze original image format with proper PNG analysis
+  // Get available cameras
+  useEffect(() => {
+    const getCameras = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter(device => device.kind === 'videoinput');
+        setAvailableCameras(cameras);
+        if (cameras.length > 0 && !currentCameraId) {
+          setCurrentCameraId(cameras[0].deviceId);
+        }
+      } catch (error) {
+        console.error('Error getting cameras:', error);
+      }
+    };
+    
+    getCameras();
+  }, [currentCameraId]);
+
+  // Start camera preview
+  const startCameraPreview = useCallback(async () => {
+    try {
+      const constraints = {
+        video: currentCameraId ? { deviceId: { exact: currentCameraId } } : true
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+      
+      onCameraPreviewChange?.(true);
+    } catch (error) {
+      console.error('Camera access denied:', error);
+    }
+  }, [currentCameraId, onCameraPreviewChange]);
+
+  // Stop camera preview
+  const stopCameraPreview = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    onCameraPreviewChange?.(false);
+  }, [onCameraPreviewChange]);
+
+  // Capture photo from camera
+  const capturePhoto = useCallback(() => {
+    if (!videoRef.current) return;
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx?.drawImage(videoRef.current, 0, 0);
+    
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], 'camera-capture.png', { type: 'image/png' });
+        onLoadImageClick?.(file);
+        stopCameraPreview();
+      }
+    });
+  }, [onLoadImageClick, stopCameraPreview]);
+
+  // Switch camera
+  const switchCamera = useCallback(() => {
+    const currentIndex = availableCameras.findIndex(camera => camera.deviceId === currentCameraId);
+    const nextIndex = (currentIndex + 1) % availableCameras.length;
+    const nextCameraId = availableCameras[nextIndex]?.deviceId;
+    
+    if (nextCameraId && showCameraPreview) {
+      setCurrentCameraId(nextCameraId);
+      // Restart preview with new camera
+      stopCameraPreview();
+      setTimeout(() => startCameraPreview(), 100);
+    }
+  }, [availableCameras, currentCameraId, showCameraPreview, stopCameraPreview, startCameraPreview]);
+
+  // Start camera preview when prop changes
+  useEffect(() => {
+    if (showCameraPreview) {
+      startCameraPreview();
+    } else {
+      stopCameraPreview();
+    }
+  }, [showCameraPreview, startCameraPreview, stopCameraPreview]);
   useEffect(() => {
     if (originalImage && originalImageSource) {
       analyzePNGFile(originalImageSource).then(info => {
@@ -339,6 +432,41 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 pointerEvents: 'none'
               }}
             />
+          </div>
+        ) : showCameraPreview ? (
+          <div className="relative w-full">
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover rounded-md"
+              autoPlay
+              muted
+              playsInline
+            />
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+              <Button
+                onClick={capturePhoto}
+                variant="modern3d"
+                size="sm"
+              >
+                {t('capture')}
+              </Button>
+              {availableCameras.length > 1 && (
+                <Button
+                  onClick={switchCamera}
+                  variant="secondary"
+                  size="sm"
+                >
+                  Switch
+                </Button>
+              )}
+              <Button
+                onClick={stopCameraPreview}
+                variant="secondary"
+                size="sm"
+              >
+                Close
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="w-full">

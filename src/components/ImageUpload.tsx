@@ -7,9 +7,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 interface ImageUploadProps {
   onImageLoad: (file: File | string) => void;
+  onCameraPreviewRequest?: () => void;
 }
 
-export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
+export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUploadProps) => {
   const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -111,13 +112,13 @@ export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
               {t('uploadFile')}
             </label>
             <div className="relative">
-              <Input
+              <input
                 type="file"
                 accept="image/*"
                 onChange={handleFileUpload}
-                className="bg-console-bg border-pixel-grid opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
-              <div className="bg-gradient-to-b from-secondary/80 to-secondary border border-border shadow-lg hover:shadow-xl hover:from-secondary/90 hover:to-secondary/80 transform hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0 active:shadow-md rounded-md px-3 py-2 text-sm text-foreground cursor-pointer">
+              <div className="bg-gradient-to-b from-secondary/80 to-secondary border border-border shadow-lg hover:shadow-xl hover:from-secondary/90 hover:to-secondary/80 transform hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0 active:shadow-md rounded-md px-3 py-2 text-sm text-foreground cursor-pointer text-center">
                 {t('chooseFile')}
               </div>
             </div>
@@ -165,7 +166,7 @@ export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
             <div className="flex gap-2">
               {!showCameraPreview ? (
                 <Button 
-                  onClick={startCameraPreview}
+                  onClick={onCameraPreviewRequest || startCameraPreview}
                   variant="modern3d"
                   className="flex-1"
                 >

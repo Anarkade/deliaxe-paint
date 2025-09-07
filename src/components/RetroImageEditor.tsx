@@ -31,6 +31,7 @@ export const RetroImageEditor = () => {
   const [currentPaletteColors, setCurrentPaletteColors] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<string>('load-image');
   const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
+  const [showCameraPreview, setShowCameraPreview] = useState(false);
   
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -363,6 +364,8 @@ export const RetroImageEditor = () => {
             originalImageSource={originalImageSource}
             selectedPalette={selectedPalette}
             onPaletteUpdate={setCurrentPaletteColors}
+            showCameraPreview={showCameraPreview}
+            onCameraPreviewChange={setShowCameraPreview}
           />
         </div>
 
@@ -412,7 +415,10 @@ export const RetroImageEditor = () => {
           {/* Content Sections */}
           <div className="w-full max-w-4xl mx-auto">
             {activeTab === 'load-image' && (
-              <LoadImage onImageLoad={loadImage} />
+              <LoadImage 
+                onImageLoad={loadImage}
+                onCameraPreviewRequest={() => setShowCameraPreview(true)}
+              />
             )}
 
             {activeTab === 'palette-selector' && originalImage && (
