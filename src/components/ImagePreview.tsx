@@ -358,11 +358,11 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             {/* Left side - Resolutions */}
             <div className="flex items-center gap-6 text-sm font-mono text-muted-foreground">
               <div>
-                <span className="text-blood-red">Original:</span> {originalImage.width}×{originalImage.height} {originalFormat}
+                <span className="text-blood-red">{t('originalLabel')}</span> {originalImage.width}×{originalImage.height} {originalFormat}
               </div>
               {processedImageData && (
                 <div>
-                  <span className="text-blood-red">Processed:</span> {processedImageData.width}×{processedImageData.height} {processedFormat}
+                  <span className="text-blood-red">{t('processedLabel')}</span> {processedImageData.width}×{processedImageData.height} {processedFormat}
                 </div>
               )}
             </div>

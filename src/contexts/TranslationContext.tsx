@@ -106,6 +106,19 @@ interface Translation {
   exportSuccess: string;
   loadImageToStart: string;
   
+  // Image preview labels
+  originalLabel: string;
+  processedLabel: string;
+  
+  // Palette descriptions
+  unlimitedColors: string;
+  gameBoyColors: string;
+  megaDriveMultiColors: string;
+  megaDriveSingleColors: string;
+  neoGeoMultiColors: string;
+  neoGeoSingleColors: string;
+  zxSpectrumColors: string;
+
   // Language names
   languageNames: Record<Language, string>;
 }
@@ -185,6 +198,15 @@ const baseTranslation: Translation = {
   imageTooLarge: 'Image too large! Maximum size is 2048x2048px',
   exportSuccess: 'Export completed successfully!',
   loadImageToStart: 'Load an image to start editing',
+  originalLabel: 'Original:',
+  processedLabel: 'Processed:',
+  unlimitedColors: 'Unlimited',
+  gameBoyColors: '4 colors (green)',
+  megaDriveMultiColors: '64 colors (4×16)',
+  megaDriveSingleColors: '16 colors (9-bit)',
+  neoGeoMultiColors: '4096 colors (16×256)',
+  neoGeoSingleColors: '16 colors (15-bit)',
+  zxSpectrumColors: '16 colors (4-bit)',
   languageNames: {
     'en': 'English',
     'es-ES': 'Español (España)',
@@ -277,6 +299,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: '¡Imagen demasiado grande! El tamaño máximo es 2048x2048px',
     exportSuccess: '¡Exportación completada con éxito!',
     loadImageToStart: 'Carga una imagen para empezar a editar',
+    originalLabel: 'Original:',
+    processedLabel: 'Procesada:',
+    unlimitedColors: 'Ilimitados',
+    gameBoyColors: '4 colores (verde)',
+    megaDriveMultiColors: '64 colores (4×16)',
+    megaDriveSingleColors: '16 colores (9-bit)',
+    neoGeoMultiColors: '4096 colores (16×256)',
+    neoGeoSingleColors: '16 colores (15-bit)',
+    zxSpectrumColors: '16 colores (4-bit)',
     languageNames: {
       'en': 'English (Inglés)',
       'es-ES': 'Español (España)',
@@ -348,6 +379,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: '¡Imagen demasiado grande! El tamaño máximo es 2048x2048px',
     exportSuccess: '¡Exportación completada con éxito!',
     loadImageToStart: 'Cargá una imagen para empezar a editar',
+    originalLabel: 'Original:',
+    processedLabel: 'Procesada:',
+    unlimitedColors: 'Ilimitados',
+    gameBoyColors: '4 colores (verde)',
+    megaDriveMultiColors: '64 colores (4×16)',
+    megaDriveSingleColors: '16 colores (9-bit)',
+    neoGeoMultiColors: '4096 colores (16×256)',
+    neoGeoSingleColors: '16 colores (15-bit)',
+    zxSpectrumColors: '16 colores (4-bit)',
   },
   'ca': { 
     ...baseTranslation,
@@ -417,6 +457,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Imatge massa gran! La mida màxima és 2048x2048px',
     exportSuccess: 'Exportació completada amb èxit!',
     loadImageToStart: 'Carrega una imatge per començar a editar',
+    originalLabel: 'Original:',
+    processedLabel: 'Processada:',
+    unlimitedColors: 'Il·limitats',
+    gameBoyColors: '4 colors (verd)',
+    megaDriveMultiColors: '64 colors (4×16)',
+    megaDriveSingleColors: '16 colors (9-bit)',
+    neoGeoMultiColors: '4096 colors (16×256)',
+    neoGeoSingleColors: '16 colors (15-bit)',
+    zxSpectrumColors: '16 colors (4-bit)',
   },
   'fr': { 
     ...baseTranslation,
@@ -486,6 +535,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Image trop grande! Taille maximum 2048x2048px',
     exportSuccess: 'Exportation terminée avec succès!',
     loadImageToStart: 'Chargez une image pour commencer l\'édition',
+    originalLabel: 'Original:',
+    processedLabel: 'Traitée:',
+    unlimitedColors: 'Illimités',
+    gameBoyColors: '4 couleurs (vert)',
+    megaDriveMultiColors: '64 couleurs (4×16)',
+    megaDriveSingleColors: '16 couleurs (9-bit)',
+    neoGeoMultiColors: '4096 couleurs (16×256)',
+    neoGeoSingleColors: '16 couleurs (15-bit)',
+    zxSpectrumColors: '16 couleurs (4-bit)',
   },
   'de': { 
     ...baseTranslation,
@@ -555,6 +613,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Bild zu groß! Maximale Größe ist 2048x2048px',
     exportSuccess: 'Export erfolgreich abgeschlossen!',
     loadImageToStart: 'Laden Sie ein Bild, um mit der Bearbeitung zu beginnen',
+    originalLabel: 'Original:',
+    processedLabel: 'Bearbeitet:',
+    unlimitedColors: 'Unbegrenzt',
+    gameBoyColors: '4 Farben (grün)',
+    megaDriveMultiColors: '64 Farben (4×16)',
+    megaDriveSingleColors: '16 Farben (9-bit)',
+    neoGeoMultiColors: '4096 Farben (16×256)',
+    neoGeoSingleColors: '16 Farben (15-bit)',
+    zxSpectrumColors: '16 Farben (4-bit)',
   },
   'it': { 
     ...baseTranslation,
@@ -624,6 +691,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Immagine troppo grande! Dimensione massima 2048x2048px',
     exportSuccess: 'Esportazione completata con successo!',
     loadImageToStart: 'Carica un\'immagine per iniziare a modificare',
+    originalLabel: 'Originale:',
+    processedLabel: 'Elaborata:',
+    unlimitedColors: 'Illimitati',
+    gameBoyColors: '4 colori (verde)',
+    megaDriveMultiColors: '64 colori (4×16)',
+    megaDriveSingleColors: '16 colori (9-bit)',
+    neoGeoMultiColors: '4096 colori (16×256)',
+    neoGeoSingleColors: '16 colori (15-bit)',
+    zxSpectrumColors: '16 colori (4-bit)',
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -693,6 +769,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Imagem demasiado grande! Tamanho máximo é 2048x2048px',
     exportSuccess: 'Exportação concluída com sucesso!',
     loadImageToStart: 'Carregue uma imagem para começar a editar',
+    originalLabel: 'Original:',
+    processedLabel: 'Processada:',
+    unlimitedColors: 'Ilimitadas',
+    gameBoyColors: '4 cores (verde)',
+    megaDriveMultiColors: '64 cores (4×16)',
+    megaDriveSingleColors: '16 cores (9-bit)',
+    neoGeoMultiColors: '4096 cores (16×256)',
+    neoGeoSingleColors: '16 cores (15-bit)',
+    zxSpectrumColors: '16 cores (4-bit)',
   },
   'pt-BR': { 
     ...baseTranslation,
@@ -762,6 +847,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Imagem muito grande! Tamanho máximo é 2048x2048px',
     exportSuccess: 'Exportação concluída com sucesso!',
     loadImageToStart: 'Carregue uma imagem para começar a editar',
+    originalLabel: 'Original:',
+    processedLabel: 'Processada:',
+    unlimitedColors: 'Ilimitadas',
+    gameBoyColors: '4 cores (verde)',
+    megaDriveMultiColors: '64 cores (4×16)',
+    megaDriveSingleColors: '16 cores (9-bit)',
+    neoGeoMultiColors: '4096 cores (16×256)',
+    neoGeoSingleColors: '16 cores (15-bit)',
+    zxSpectrumColors: '16 cores (4-bit)',
   },
   'ru': { 
     ...baseTranslation,
@@ -831,6 +925,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Изображение слишком большое! Максимальный размер 2048x2048px',
     exportSuccess: 'Экспорт завершен успешно!',
     loadImageToStart: 'Загрузите изображение для начала редактирования',
+    originalLabel: 'Оригинал:',
+    processedLabel: 'Обработанное:',
+    unlimitedColors: 'Неограниченные',
+    gameBoyColors: '4 цвета (зелёные)',
+    megaDriveMultiColors: '64 цвета (4×16)',
+    megaDriveSingleColors: '16 цветов (9-бит)',
+    neoGeoMultiColors: '4096 цветов (16×256)',
+    neoGeoSingleColors: '16 цветов (15-бит)',
+    zxSpectrumColors: '16 цветов (4-бит)',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -899,7 +1002,16 @@ const translations: Record<Language, Translation> = {
     imageDownloaded: '图像已下载！',
     imageTooLarge: '图像太大！最大尺寸为2048x2048px',
     exportSuccess: '导出成功完成！',
-    loadImageToStart: '加载图像开始编辑'
+    loadImageToStart: '加载图像开始编辑',
+    originalLabel: '原始:',
+    processedLabel: '已处理:',
+    unlimitedColors: '无限制',
+    gameBoyColors: '4色 (绿色)',
+    megaDriveMultiColors: '64色 (4×16)',
+    megaDriveSingleColors: '16色 (9位)',
+    neoGeoMultiColors: '4096色 (16×256)',
+    neoGeoSingleColors: '16色 (15位)',
+    zxSpectrumColors: '16色 (4位)',
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -968,7 +1080,16 @@ const translations: Record<Language, Translation> = {
     imageDownloaded: '圖像已下載！',
     imageTooLarge: '圖像太大！最大尺寸為2048x2048px',
     exportSuccess: '匯出成功完成！',
-    loadImageToStart: '載入圖像開始編輯'
+    loadImageToStart: '載入圖像開始編輯',
+    originalLabel: '原始:',
+    processedLabel: '已處理:',
+    unlimitedColors: '無限制',
+    gameBoyColors: '4色 (綠色)',
+    megaDriveMultiColors: '64色 (4×16)',
+    megaDriveSingleColors: '16色 (9位)',
+    neoGeoMultiColors: '4096色 (16×256)',
+    neoGeoSingleColors: '16色 (15位)',
+    zxSpectrumColors: '16色 (4位)',
   },
   'ja': { 
     ...baseTranslation,
@@ -1037,7 +1158,16 @@ const translations: Record<Language, Translation> = {
     imageDownloaded: '画像がダウンロードされました！',
     imageTooLarge: '画像が大きすぎます！最大サイズは2048x2048pxです',
     exportSuccess: 'エクスポートが正常に完了しました！',
-    loadImageToStart: '編集を開始するには画像を読み込んでください'
+    loadImageToStart: '編集を開始するには画像を読み込んでください',
+    originalLabel: 'オリジナル:',
+    processedLabel: '処理済み:',
+    unlimitedColors: '無制限',
+    gameBoyColors: '4色 (グリーン)',
+    megaDriveMultiColors: '64色 (4×16)',
+    megaDriveSingleColors: '16色 (9ビット)',
+    neoGeoMultiColors: '4096色 (16×256)',
+    neoGeoSingleColors: '16色 (15ビット)',
+    zxSpectrumColors: '16色 (4ビット)',
   },
   'pl': { 
     ...baseTranslation,
@@ -1107,6 +1237,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Obraz za duży! Maksymalny rozmiar to 2048x2048px',
     exportSuccess: 'Eksport zakończony pomyślnie!',
     loadImageToStart: 'Wczytaj obraz, aby rozpocząć edycję',
+    originalLabel: 'Oryginał:',
+    processedLabel: 'Przetworzone:',
+    unlimitedColors: 'Nieograniczone',
+    gameBoyColors: '4 kolory (zielone)',
+    megaDriveMultiColors: '64 kolory (4×16)',
+    megaDriveSingleColors: '16 kolorów (9-bit)',
+    neoGeoMultiColors: '4096 kolorów (16×256)',
+    neoGeoSingleColors: '16 kolorów (15-bit)',
+    zxSpectrumColors: '16 kolorów (4-bit)',
   },
   'tr': { 
     ...baseTranslation,
@@ -1176,6 +1315,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Resim çok büyük! Maksimum boyut 2048x2048px',
     exportSuccess: 'Dışa aktarma başarıyla tamamlandı!',
     loadImageToStart: 'Düzenlemeye başlamak için bir resim yükleyin',
+    originalLabel: 'Orijinal:',
+    processedLabel: 'İşlenmiş:',
+    unlimitedColors: 'Sınırsız',
+    gameBoyColors: '4 renk (yeşil)',
+    megaDriveMultiColors: '64 renk (4×16)',
+    megaDriveSingleColors: '16 renk (9-bit)',
+    neoGeoMultiColors: '4096 renk (16×256)',
+    neoGeoSingleColors: '16 renk (15-bit)',
+    zxSpectrumColors: '16 renk (4-bit)',
   },
   'eu': { 
     ...baseTranslation,
@@ -1245,6 +1393,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Irudia handiegia! Gehienezko tamaina 2048x2048px da',
     exportSuccess: 'Esportazioa arrakastaz osatu da!',
     loadImageToStart: 'Editatzen hasteko irudi bat kargatu',
+    originalLabel: 'Jatorrizkoa:',
+    processedLabel: 'Prozesatua:',
+    unlimitedColors: 'Mugarik gabe',
+    gameBoyColors: '4 kolore (berdea)',
+    megaDriveMultiColors: '64 kolore (4×16)',
+    megaDriveSingleColors: '16 kolore (9-bit)',
+    neoGeoMultiColors: '4096 kolore (16×256)',
+    neoGeoSingleColors: '16 kolore (15-bit)',
+    zxSpectrumColors: '16 kolore (4-bit)',
   },
   'oc': { 
     ...baseTranslation,
@@ -1314,6 +1471,15 @@ const translations: Record<Language, Translation> = {
     imageTooLarge: 'Imatge tròp granda! La talha maxima ei 2048x2048px',
     exportSuccess: 'Exportacion acabada damb succès!',
     loadImageToStart: 'Carga ua imatge tà començar a editar',
+    originalLabel: 'Original:',
+    processedLabel: 'Processada:',
+    unlimitedColors: 'Pas limitat',
+    gameBoyColors: '4 colors (verd)',
+    megaDriveMultiColors: '64 colors (4×16)',
+    megaDriveSingleColors: '16 colors (9-bit)',
+    neoGeoMultiColors: '4096 colors (16×256)',
+    neoGeoSingleColors: '16 colors (15-bit)',
+    zxSpectrumColors: '16 colors (4-bit)',
   }
 };
 

@@ -33,13 +33,13 @@ export const ColorPaletteSelector = ({
   const { t } = useTranslation();
 
   const paletteOptions = [
-    { value: 'original' as const, label: t('originalPalette'), colors: 'Unlimited' },
-    { value: 'gameboy' as const, label: t('gameBoy'), colors: '4 colors (green)' },
-    { value: 'megadrive-multi' as const, label: t('megaDriveMulti'), colors: '64 colors (4×16)' },
-    { value: 'megadrive-single' as const, label: t('megaDriveSingle'), colors: '16 colors (9-bit)' },
-    { value: 'neogeo-multi' as const, label: t('neoGeoMulti'), colors: '4096 colors (16×256)' },
-    { value: 'neogeo-single' as const, label: t('neoGeoSingle'), colors: '16 colors (15-bit)' },
-    { value: 'zx-spectrum' as const, label: t('zxSpectrum'), colors: '16 colors (4-bit)' },
+    { value: 'original' as const, label: t('originalPalette'), colors: t('unlimitedColors') },
+    { value: 'gameboy' as const, label: t('gameBoy'), colors: t('gameBoyColors') },
+    { value: 'megadrive-multi' as const, label: t('megaDriveMulti'), colors: t('megaDriveMultiColors') },
+    { value: 'megadrive-single' as const, label: t('megaDriveSingle'), colors: t('megaDriveSingleColors') },
+    { value: 'neogeo-multi' as const, label: t('neoGeoMulti'), colors: t('neoGeoMultiColors') },
+    { value: 'neogeo-single' as const, label: t('neoGeoSingle'), colors: t('neoGeoSingleColors') },
+    { value: 'zx-spectrum' as const, label: t('zxSpectrum'), colors: t('zxSpectrumColors') },
   ];
 
   return (
