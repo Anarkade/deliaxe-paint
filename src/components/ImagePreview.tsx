@@ -118,6 +118,9 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [originalFormat, setOriginalFormat] = useState<string>('');
   const [processedFormat, setProcessedFormat] = useState<string>('');
   const [isIndexedPNG, setIsIndexedPNG] = useState<boolean>(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
 
   // Analyze original image format with proper PNG analysis
   useEffect(() => {
@@ -167,7 +170,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     if (originalImage && containerWidth > 0) {
       setFitToWidth(true);
       const fitZoom = Math.floor((containerWidth / originalImage.width) * 100);
-      setZoom([Math.max(1, Math.min(1000, fitZoom))]);
+      setZoom([Math.max(1, Math.min(1600, fitZoom))]);
     }
   }, [originalImage, containerWidth]);
 
@@ -175,7 +178,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   useEffect(() => {
     if (fitToWidth && originalImage && containerWidth > 0) {
       const fitZoom = Math.floor((containerWidth / originalImage.width) * 100);
-      setZoom([Math.max(1, Math.min(1000, fitZoom))]);
+      setZoom([Math.max(1, Math.min(1600, fitZoom))]);
     }
   }, [fitToWidth, originalImage, containerWidth]);
 
@@ -209,6 +212,71 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     }
   }, [originalImage, processedImageData, zoom, fitToWidth, containerWidth, showOriginal]);
 
+  // Reset scroll position when zoom or image changes
+  useEffect(() => {
+    setScrollPosition({ x: 0, y: 0 });
+  }, [zoom, showOriginal, originalImage, processedImageData]);
+
+  // Calculate scroll bounds to prevent scrolling beyond image limits
+  const getScrollBounds = () => {
+    if (!originalImage || !containerRef.current) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+    
+    const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
+    const currentZoom = zoom[0] / 100;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    
+    let displayWidth: number;
+    let displayHeight: number;
+    
+    if (fitToWidth) {
+      displayWidth = containerWidth;
+      displayHeight = (currentImage.height * containerWidth) / currentImage.width;
+    } else {
+      displayWidth = currentImage.width * currentZoom;
+      displayHeight = currentImage.height * currentZoom;
+    }
+    
+    const maxScrollX = Math.max(0, (displayWidth - containerRect.width) / 2);
+    const maxScrollY = Math.max(0, (displayHeight - containerRect.height) / 2);
+    
+    return {
+      minX: -maxScrollX,
+      maxX: maxScrollX,
+      minY: -maxScrollY,
+      maxY: maxScrollY
+    };
+  };
+
+  // Mouse event handlers for drag functionality
+  const handleMouseDown = (e: React.MouseEvent) => {
+    const bounds = getScrollBounds();
+    const isZoomedBeyondView = bounds.maxX > 0 || bounds.maxY > 0;
+    
+    if (isZoomedBeyondView && e.button === 0) { // Left mouse button only
+      setIsDragging(true);
+      setDragStart({ x: e.clientX - scrollPosition.x, y: e.clientY - scrollPosition.y });
+      e.preventDefault();
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    const bounds = getScrollBounds();
+    const newX = Math.max(bounds.minX, Math.min(bounds.maxX, e.clientX - dragStart.x));
+    const newY = Math.max(bounds.minY, Math.min(bounds.maxY, e.clientY - dragStart.y));
+    
+    setScrollPosition({ x: newX, y: newY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -237,8 +305,12 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     <div className="bg-card rounded-xl p-6 border border-elegant-border space-y-4">
       <div 
         ref={containerRef}
-        className="relative bg-elegant-bg flex items-center justify-center overflow-hidden"
+        className={`relative bg-elegant-bg flex items-center justify-center overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ height: `${previewHeight}px` }}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
       >
         {originalImage ? (
           <div className="relative">
@@ -247,10 +319,11 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
               className={`${fitToWidth ? 'max-w-full' : ''}`}
               style={{ 
                 imageRendering: 'pixelated',
-                transform: `scale(${zoom[0] / 100})`,
+                transform: `scale(${zoom[0] / 100}) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
                 transformOrigin: 'center',
                 width: fitToWidth ? '100%' : 'auto',
-                height: 'auto'
+                height: 'auto',
+                pointerEvents: 'none'
               }}
             />
             
@@ -322,7 +395,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
               <Slider
                 value={zoom}
                 onValueChange={setZoom}
-                max={1000}
+                max={1600}
                 min={0}
                 step={1}
                 className="flex-1"
