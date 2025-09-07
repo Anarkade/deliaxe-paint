@@ -247,17 +247,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           className="flex items-center gap-2 rounded-lg"
         >
           <Palette className="h-4 w-4" />
-          {t('extractColors')}
+          {paletteColors.length > 0 ? `${paletteColors.length} colors palette` : t('extractColors')}
         </Button>
       </div>
       
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-bone-white">
-            {t('colorPalette')} ({paletteColors.length})
-          </span>
-        </div>
-          
           <div className="text-xs text-muted-foreground">
             <p>{t('paletteInstructions')}</p>
           </div>
