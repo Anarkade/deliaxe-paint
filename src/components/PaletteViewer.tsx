@@ -276,39 +276,56 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             <p>• {t('clickToChange')}</p>
           </div>
           
-          <div className="grid gap-3 w-full" style={{ 
-            gridTemplateColumns: `repeat(${Math.min(8, Math.ceil(Math.sqrt(paletteColors.length)))}, minmax(0, 1fr))` 
+          <div className="grid gap-4 w-full" style={{ 
+            gridTemplateColumns: `repeat(${Math.min(4, Math.ceil(Math.sqrt(paletteColors.length)))}, minmax(0, 1fr))` 
           }}>
-            {paletteColors.map((color, index) => (
-              <div
-                key={index}
-                draggable
-                onDragStart={() => handleDragStart(index)}
-                onDragOver={handleDragOver}
-                onDrop={() => handleDrop(index)}
-                className="relative group cursor-move"
-              >
+            {paletteColors.map((color, index) => {
+              const hexColor = `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`.toUpperCase();
+              const alpha = color.transparent ? 0 : 100;
+              
+              return (
                 <div
-                  className="w-16 h-16 border border-elegant-border rounded-lg cursor-pointer transition-all hover:scale-105 hover:shadow-lg relative"
-                  style={{
-                    backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
-                    opacity: color.transparent ? 0.5 : 1
-                  }}
-                  onClick={() => selectNewColor(index)}
-                  title={`RGB(${color.r}, ${color.g}, ${color.b})${color.transparent ? ' - Transparent' : ''} - Click to change`}
+                  key={index}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(index)}
+                  className="relative group cursor-move bg-card border border-elegant-border rounded-lg p-3 hover:shadow-lg transition-all"
                 >
-                  {color.transparent && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-4 h-4 bg-white rounded-full opacity-75" />
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <div
+                        className="w-full h-12 border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"
+                        style={{
+                          backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
+                          opacity: color.transparent ? 0.5 : 1
+                        }}
+                        onClick={() => selectNewColor(index)}
+                        title="Click to change color"
+                      >
+                        {color.transparent && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="w-3 h-3 bg-white rounded-full opacity-75" />
+                          </div>
+                        )}
+                        <span className="absolute top-1 right-1 text-xs font-mono bg-black/70 text-white px-1 rounded">
+                          {index}
+                        </span>
+                      </div>
+                      <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
-                  )}
-                  <span className="absolute bottom-1 right-1 text-xs font-mono bg-black/70 text-white px-1 rounded">
-                    {index}
-                  </span>
+                    
+                    <div className="text-xs font-mono space-y-0.5 text-muted-foreground">
+                      <div className="font-semibold text-foreground">{hexColor}</div>
+                      <div>Red: {color.r}</div>
+                      <div>Green: {color.g}</div>
+                      <div>Blue: {color.b}</div>
+                      <div>Alpha: {alpha}%</div>
+                    </div>
+                  </div>
                 </div>
-                <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
