@@ -456,7 +456,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                   variant="secondary"
                   size="sm"
                 >
-                  Switch
+                  {t('switchCamera')}
                 </Button>
               )}
               <Button
@@ -464,7 +464,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 variant="secondary"
                 size="sm"
               >
-                Close
+                {t('close')}
               </Button>
             </div>
           </div>

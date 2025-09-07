@@ -32,6 +32,8 @@ interface Translation {
   fromUrl: string;
   camera: string;
   capture: string;
+  switchCamera: string;
+  close: string;
   
   // Color Palette
   selectPalette: string;
@@ -160,6 +162,8 @@ const baseTranslation: Translation = {
   fromUrl: 'From URL',
   camera: 'Camera',
   capture: 'Capture',
+  switchCamera: 'Switch Camera',
+  close: 'Close',
   selectPalette: 'Select Color Palette',
   originalPalette: 'Original',
   gameBoy: 'Game Boy (4 colors)',
@@ -275,6 +279,8 @@ const translations: Record<Language, Translation> = {
     fromUrl: 'Desde URL',
     camera: 'Cámara',
     capture: 'Capturar',
+    switchCamera: 'Cambiar Cámara',
+    close: 'Cerrar',
     selectPalette: 'Seleccionar Paleta de Colores',
     originalPalette: 'Original',
     gameBoy: 'Game Boy (4 colores)',
@@ -385,6 +391,8 @@ const translations: Record<Language, Translation> = {
     fromUrl: 'Desde URL',
     camera: 'Cámara',
     capture: 'Capturar',
+    switchCamera: 'Cambiar Cámara',
+    close: 'Cerrar',
     selectPalette: 'Seleccionar Paleta de Colores',
     originalPalette: 'Original',
     gameBoy: 'Game Boy (4 colores)',
@@ -458,7 +466,9 @@ const translations: Record<Language, Translation> = {
     uploadFile: 'Pujar Arxiu',
     fromUrl: 'Des d\'URL',
     camera: 'Càmera',
-    capture: 'Capturar',
+    capture: 'Captura',
+    switchCamera: 'Canvia Càmera',
+    close: 'Tancar',
     selectPalette: 'Seleccionar Paleta de Colors',
     originalPalette: 'Original',
     gameBoy: 'Game Boy (4 colors)',
@@ -550,6 +560,8 @@ const translations: Record<Language, Translation> = {
     fromUrl: 'Depuis URL',
     camera: 'Caméra',
     capture: 'Capturer',
+    switchCamera: 'Changer Caméra',
+    close: 'Fermer',
     selectPalette: 'Sélectionner Palette de Couleurs',
     originalPalette: 'Original',
     gameBoy: 'Game Boy (4 couleurs)',
@@ -728,6 +740,8 @@ const translations: Record<Language, Translation> = {
     fromUrl: 'Da URL',
     camera: 'Fotocamera',
     capture: 'Cattura',
+    switchCamera: 'Cambia Fotocamera',
+    close: 'Chiudi',
     selectPalette: 'Seleziona Tavolozza Colori',
     originalPalette: 'Originale',
     gameBoy: 'Game Boy (4 colori)',
@@ -1688,7 +1702,12 @@ export const TranslationProvider: React.FC<{ children: ReactNode }> = ({ childre
   });
 
   const t = useCallback((key: keyof Translation): string => {
-    return translations[currentLanguage][key] as string;
+    const result = translations[currentLanguage]?.[key] as string;
+    if (!result) {
+      console.error('Missing translation for key:', key, 'in language:', currentLanguage);
+      return key.toString();
+    }
+    return result;
   }, [currentLanguage]);
 
   const changeLanguage = useCallback((language: Language) => {
@@ -1697,7 +1716,7 @@ export const TranslationProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, []);
 
   const getLanguageName = useCallback((language: Language): string => {
-    return translations[currentLanguage].languageNames[language];
+    return translations[currentLanguage]?.languageNames?.[language] || language;
   }, [currentLanguage]);
 
   return (
