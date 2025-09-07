@@ -65,12 +65,17 @@ export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
               <Upload className="inline mr-2 h-4 w-4" />
               {t('uploadFile')}
             </label>
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={handleFileUpload}
-              className="bg-console-bg border-pixel-grid"
-            />
+            <div className="relative">
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="bg-console-bg border-pixel-grid opacity-0 absolute inset-0 w-full h-full cursor-pointer"
+              />
+              <div className="bg-console-bg border border-pixel-grid rounded-md px-3 py-2 text-sm text-foreground cursor-pointer hover:bg-accent/10 transition-colors">
+                {t('chooseFile')}
+              </div>
+            </div>
           </div>
           
           <div className="space-y-2">

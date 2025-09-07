@@ -129,7 +129,7 @@ export const RetroImageEditor = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) {
-        toast.error('Canvas not supported');
+        toast.error(t('canvasNotSupported'));
         return;
       }
 
@@ -145,7 +145,7 @@ export const RetroImageEditor = () => {
 
       // Additional safety check for canvas size
       if (targetWidth > MAX_CANVAS_SIZE || targetHeight > MAX_CANVAS_SIZE) {
-        toast.error(`Target resolution too large! Maximum is ${MAX_CANVAS_SIZE}px`);
+        toast.error(t('targetResolutionTooLarge'));
         return;
       }
 
@@ -185,7 +185,7 @@ export const RetroImageEditor = () => {
       try {
         imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
       } catch (error) {
-        toast.error('Image too large to process. Try a smaller image or resolution.');
+        toast.error(t('imageTooLargeToProcess'));
         console.error('getImageData error:', error);
         return;
       }
@@ -207,7 +207,7 @@ export const RetroImageEditor = () => {
       });
 
     } catch (error) {
-      toast.error('Error processing image');
+      toast.error(t('errorProcessingImage'));
       console.error('processImage error:', error);
     }
   }, [originalImage, selectedPalette, selectedResolution, scalingMode, saveToHistory]);
