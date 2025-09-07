@@ -3,7 +3,6 @@ import { LoadImage } from './LoadImage';
 import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
 import { ResolutionSelector, ResolutionType, ScalingMode } from './ResolutionSelector';
 import { ImagePreview } from './ImagePreview';
-import { PaletteViewer } from './PaletteViewer';
 import { ExportImage } from './ExportImage';
 import { LanguageSelector } from './LanguageSelector';
 import { useTranslation } from '@/hooks/useTranslation';
