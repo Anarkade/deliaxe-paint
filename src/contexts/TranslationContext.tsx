@@ -69,6 +69,29 @@ interface Translation {
   original: string;
   processed: string;
   fitToWidth: string;
+  noImageLoaded: string;
+  
+  // Resolution
+  resolution: string;
+  targetResolution: string;
+  originalSize: string;
+  keepOriginalSize: string;
+  
+  // Resolution descriptions
+  gameBoyRes: string;
+  amstradCpc0: string;
+  megaDriveNtscH32: string;
+  megaDrivePalH32: string;
+  neoGeoCd: string;
+  amstradCpc1: string;
+  megaDriveNtscH40: string;
+  megaDrivePalH40: string;
+  amstradCpc2: string;
+  
+  // Scaling modes
+  stretchToFit: string;
+  centerWithBars: string;
+  scaleToFit: string;
   
   // Messages
   imageLoaded: string;
@@ -129,6 +152,23 @@ const baseTranslation: Translation = {
   original: 'Original',
   processed: 'Processed',
   fitToWidth: 'Fit to width',
+  noImageLoaded: 'No image loaded',
+  resolution: 'Resolution',
+  targetResolution: 'Target Resolution',
+  originalSize: 'Original',
+  keepOriginalSize: 'Keep original size',
+  gameBoyRes: 'Game Boy',
+  amstradCpc0: 'Amstrad CPC mode 0',
+  megaDriveNtscH32: 'Mega Drive NTSC H32, SNES, NES',
+  megaDrivePalH32: 'Mega Drive PAL H32, NES',
+  neoGeoCd: 'Neo Geo CD',
+  amstradCpc1: 'Amstrad CPC mode 1',
+  megaDriveNtscH40: 'Mega Drive NTSC H40, Neo Geo',
+  megaDrivePalH40: 'Mega Drive PAL H40',
+  amstradCpc2: 'Amstrad CPC mode 2',
+  stretchToFit: 'Stretch to fit',
+  centerWithBars: 'Center with black bars',
+  scaleToFit: 'Scale to fit',
   imageLoaded: 'Image loaded successfully!',
   imageLoadError: 'Failed to load image',
   imageDownloaded: 'Image downloaded!',
@@ -199,6 +239,23 @@ const translations: Record<Language, Translation> = {
     original: 'Original',
     processed: 'Procesada',
     fitToWidth: 'Ajustar al ancho',
+    noImageLoaded: 'No hay imagen cargada',
+    resolution: 'Resolución',
+    targetResolution: 'Resolución Objetivo',
+    originalSize: 'Original',
+    keepOriginalSize: 'Mantener tamaño original',
+    gameBoyRes: 'Game Boy',
+    amstradCpc0: 'Amstrad CPC modo 0',
+    megaDriveNtscH32: 'Mega Drive NTSC H32, SNES, NES',
+    megaDrivePalH32: 'Mega Drive PAL H32, NES',
+    neoGeoCd: 'Neo Geo CD',
+    amstradCpc1: 'Amstrad CPC modo 1',
+    megaDriveNtscH40: 'Mega Drive NTSC H40, Neo Geo',
+    megaDrivePalH40: 'Mega Drive PAL H40',
+    amstradCpc2: 'Amstrad CPC modo 2',
+    stretchToFit: 'Estirar para ajustar',
+    centerWithBars: 'Centrar con barras negras',
+    scaleToFit: 'Escalar para ajustar',
     imageLoaded: '¡Imagen cargada con éxito!',
     imageLoadError: 'Error al cargar la imagen',
     imageDownloaded: '¡Imagen descargada!',

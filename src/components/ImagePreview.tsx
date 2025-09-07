@@ -244,7 +244,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             onClick={onLoadImageClick}
           >
             <div className="text-4xl mb-4">🖼️</div>
-            <p>No image loaded</p>
+            <p>{t('noImageLoaded')}</p>
             <p className="text-sm">{t('loadImageToStart')}</p>
           </div>
         )}
@@ -290,7 +290,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 onCheckedChange={(checked) => setFitToWidth(checked === true)}
               />
               <label htmlFor="fit-width" className="text-sm text-bone-white whitespace-nowrap">
-                Fit to width
+                {t('fitToWidth')}
               </label>
             </div>
             
