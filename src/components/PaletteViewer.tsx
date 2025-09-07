@@ -247,7 +247,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           className="flex items-center gap-2 rounded-lg"
         >
           <Palette className="h-4 w-4" />
-          {paletteColors.length > 0 ? `${paletteColors.length} ${t('colorsPalette')}` : t('extractColors')}
+          {paletteColors.length > 0 ? t('paletteWithCount').replace('{count}', paletteColors.length.toString()) : t('extractColors')}
         </Button>
       </div>
       
