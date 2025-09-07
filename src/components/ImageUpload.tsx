@@ -1,5 +1,5 @@
-import { useCallback } from 'react';
-import { Upload, Camera, Link } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
+import { Upload, Camera, Link, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -11,6 +11,9 @@ interface ImageUploadProps {
 
 export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
   const { t } = useTranslation();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [showCameraPreview, setShowCameraPreview] = useState(false);
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -26,33 +29,75 @@ export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
     }
   }, [onImageLoad]);
 
-  const handleCameraCapture = useCallback(async () => {
+  const startCameraPreview = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      const video = document.createElement('video');
-      video.srcObject = stream;
-      video.play();
+      streamRef.current = stream;
       
-      video.addEventListener('loadedmetadata', () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(video, 0, 0);
-        
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], 'camera-capture.png', { type: 'image/png' });
-            onImageLoad(file);
-          }
-        });
-        
-        stream.getTracks().forEach(track => track.stop());
-      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setShowCameraPreview(true);
+      }
     } catch (error) {
       console.error('Camera access denied:', error);
     }
-  }, [onImageLoad]);
+  }, []);
+
+  const stopCameraPreview = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setShowCameraPreview(false);
+  }, []);
+
+  const handleCameraCapture = useCallback(async () => {
+    if (!videoRef.current || !streamRef.current) {
+      // If no preview is active, start camera and capture immediately
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const video = document.createElement('video');
+        video.srcObject = stream;
+        video.play();
+        
+        video.addEventListener('loadedmetadata', () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(video, 0, 0);
+          
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const file = new File([blob], 'camera-capture.png', { type: 'image/png' });
+              onImageLoad(file);
+            }
+          });
+          
+          stream.getTracks().forEach(track => track.stop());
+        });
+      } catch (error) {
+        console.error('Camera access denied:', error);
+      }
+      return;
+    }
+
+    // Capture from preview
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx?.drawImage(videoRef.current, 0, 0);
+    
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], 'camera-capture.png', { type: 'image/png' });
+        onImageLoad(file);
+        stopCameraPreview();
+      }
+    });
+  }, [onImageLoad, stopCameraPreview]);
 
   return (
     <Card className="p-6 border-pixel-grid bg-card">
@@ -96,13 +141,47 @@ export const ImageUpload = ({ onImageLoad }: ImageUploadProps) => {
               <Camera className="inline mr-2 h-4 w-4" />
               {t('camera')}
             </label>
-            <Button 
-              onClick={handleCameraCapture}
-              variant="modern3d"
-              className="w-full"
-            >
-              {t('capture')}
-            </Button>
+            
+            {showCameraPreview && (
+              <div className="relative mb-2 bg-black rounded-md overflow-hidden">
+                <video
+                  ref={videoRef}
+                  className="w-full h-48 object-cover"
+                  autoPlay
+                  muted
+                  playsInline
+                />
+                <Button
+                  onClick={stopCameraPreview}
+                  variant="secondary"
+                  size="sm"
+                  className="absolute top-2 right-2"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+              {!showCameraPreview ? (
+                <Button 
+                  onClick={startCameraPreview}
+                  variant="modern3d"
+                  className="flex-1"
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  {t('preview')}
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleCameraCapture}
+                  variant="modern3d"
+                  className="flex-1"
+                >
+                  {t('capture')}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

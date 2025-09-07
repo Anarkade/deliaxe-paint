@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Eye, ZoomIn } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { analyzePNGFile, ImageFormatInfo } from '@/lib/pngAnalyzer';
+import { LoadImage } from './LoadImage';
 import { PaletteViewer } from './PaletteViewer';
 import { PaletteType } from './ColorPaletteSelector';
 
@@ -100,7 +101,7 @@ interface ImagePreviewProps {
   originalImage: HTMLImageElement | null;
   processedImageData: ImageData | null;
   onDownload?: () => void;
-  onLoadImageClick?: () => void;
+  onLoadImageClick?: (source: File | string) => void;
   originalImageSource?: File | string; // Add source for PNG analysis
   selectedPalette?: PaletteType;
   onPaletteUpdate?: (colors: any[]) => void;
@@ -340,13 +341,8 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             />
           </div>
         ) : (
-          <div 
-            className="text-center text-muted-foreground cursor-pointer hover:bg-accent/10 rounded-lg p-8 transition-colors border border-dashed border-muted-foreground/30 hover:border-muted-foreground/50"
-            onClick={onLoadImageClick}
-          >
-            <div className="text-4xl mb-4">🖼️</div>
-            <p>{t('noImageLoaded')}</p>
-            <p className="text-sm">{t('loadImageToStart')}</p>
+          <div className="w-full">
+            <LoadImage onImageLoad={onLoadImageClick} />
           </div>
         )}
       </div>

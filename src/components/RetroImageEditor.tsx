@@ -359,7 +359,7 @@ export const RetroImageEditor = () => {
             originalImage={originalImage}
             processedImageData={processedImageData}
             onDownload={downloadImage}
-            onLoadImageClick={() => handleTabClick('load-image')}
+            onLoadImageClick={loadImage}
             originalImageSource={originalImageSource}
             selectedPalette={selectedPalette}
             onPaletteUpdate={setCurrentPaletteColors}
