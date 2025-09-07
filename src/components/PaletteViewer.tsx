@@ -247,7 +247,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           className="flex items-center gap-2 rounded-lg"
         >
           <Palette className="h-4 w-4" />
-          {isOriginalPNG && selectedPalette === 'original' ? t('originalPalette') : t('extractColors')}
+          {t('extractColors')}
         </Button>
       </div>
       
@@ -259,7 +259,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         </div>
           
           <div className="text-xs text-muted-foreground">
-            <p>{t('dragAndClickInstructions')}</p>
+            <p>{t('paletteInstructions')}</p>
           </div>
           
           <div className="grid gap-4 w-full" style={{ 
