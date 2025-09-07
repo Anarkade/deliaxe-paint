@@ -6,6 +6,93 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Eye, ZoomIn } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
+// Helper function to analyze image format and properties
+const analyzeImageFormat = (image: HTMLImageElement): Promise<string> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    if (!ctx) {
+      resolve('Unknown');
+      return;
+    }
+    
+    canvas.width = image.width;
+    canvas.height = image.height;
+    ctx.drawImage(image, 0, 0);
+    
+    const imageData = ctx.getImageData(0, 0, image.width, image.height);
+    const data = imageData.data;
+    
+    // Get original format from src
+    const src = image.src.toLowerCase();
+    let baseFormat = 'Unknown';
+    
+    if (src.includes('data:image/')) {
+      const mimeMatch = src.match(/data:image\/([^;]+)/);
+      if (mimeMatch) {
+        const mime = mimeMatch[1];
+        if (mime === 'jpeg' || mime === 'jpg') baseFormat = 'JPG';
+        else if (mime === 'png') baseFormat = 'PNG';
+        else if (mime === 'bmp') baseFormat = 'BMP';
+        else if (mime === 'gif') baseFormat = 'GIF';
+        else baseFormat = mime.toUpperCase();
+      }
+    } else {
+      if (src.includes('.jpg') || src.includes('.jpeg')) baseFormat = 'JPG';
+      else if (src.includes('.png')) baseFormat = 'PNG';
+      else if (src.includes('.bmp')) baseFormat = 'BMP';
+      else if (src.includes('.gif')) baseFormat = 'GIF';
+    }
+    
+    // For non-PNG formats, return just the format
+    if (baseFormat !== 'PNG') {
+      resolve(baseFormat);
+      return;
+    }
+    
+    // For PNG, analyze color properties
+    const uniqueColors = new Set<string>();
+    let hasAlpha = false;
+    
+    // Sample pixels to determine color properties (sample every 4th pixel for performance)
+    for (let i = 0; i < data.length; i += 16) { // Skip 4 pixels each time (16 bytes)
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      const a = data[i + 3];
+      
+      if (a < 255) hasAlpha = true;
+      
+      const colorKey = `${r},${g},${b}`;
+      uniqueColors.add(colorKey);
+      
+      // If we have more than 256 unique colors, it's likely RGB
+      if (uniqueColors.size > 256) {
+        resolve(`PNG-24 RGB`);
+        return;
+      }
+    }
+    
+    // Determine if it's indexed or RGB based on color count
+    const colorCount = uniqueColors.size;
+    
+    if (colorCount <= 256) {
+      if (colorCount <= 2) resolve(`PNG-8 Indexed (${colorCount} colors palette)`);
+      else if (colorCount <= 16) resolve(`PNG-8 Indexed (${colorCount} colors palette)`);
+      else if (colorCount <= 256) resolve(`PNG-8 Indexed (${colorCount} colors palette)`);
+      else resolve('PNG-24 RGB');
+    } else {
+      resolve('PNG-24 RGB');
+    }
+  });
+};
+
+const analyzeImageDataFormat = (imageData: ImageData): string => {
+  // For processed ImageData, we'll assume it's PNG-24 RGB since that's typical for canvas output
+  return 'PNG-24 RGB';
+};
+
 interface ImagePreviewProps {
   originalImage: HTMLImageElement | null;
   processedImageData: ImageData | null;
@@ -22,6 +109,29 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [fitToWidth, setFitToWidth] = useState(false);
   const [containerWidth, setContainerWidth] = useState(0);
   const [previewHeight, setPreviewHeight] = useState(400);
+  const [originalFormat, setOriginalFormat] = useState<string>('');
+  const [processedFormat, setProcessedFormat] = useState<string>('');
+
+  // Analyze original image format
+  useEffect(() => {
+    if (originalImage) {
+      analyzeImageFormat(originalImage).then(format => {
+        setOriginalFormat(format);
+      });
+    } else {
+      setOriginalFormat('');
+    }
+  }, [originalImage]);
+
+  // Analyze processed image format
+  useEffect(() => {
+    if (processedImageData) {
+      const format = analyzeImageDataFormat(processedImageData);
+      setProcessedFormat(format);
+    } else {
+      setProcessedFormat('');
+    }
+  }, [processedImageData]);
 
   // Calculate container width and fit-to-width zoom
   useEffect(() => {
@@ -147,11 +257,11 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             {/* Left side - Resolutions */}
             <div className="flex items-center gap-6 text-sm font-mono text-muted-foreground">
               <div>
-                <span className="text-blood-red">Original:</span> {originalImage.width}×{originalImage.height}
+                <span className="text-blood-red">Original:</span> {originalImage.width}×{originalImage.height} {originalFormat}
               </div>
               {processedImageData && (
                 <div>
-                  <span className="text-blood-red">Processed:</span> {processedImageData.width}×{processedImageData.height}
+                  <span className="text-blood-red">Processed:</span> {processedImageData.width}×{processedImageData.height} {processedFormat}
                 </div>
               )}
             </div>
