@@ -27,7 +27,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   useEffect(() => {
     const updateContainerWidth = () => {
       if (containerRef.current) {
-        const width = containerRef.current.clientWidth - 32; // Account for padding
+        const width = containerRef.current.clientWidth; // Use full width
         setContainerWidth(width);
       }
     };
@@ -105,7 +105,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     <div className="bg-card rounded-xl p-6 border border-elegant-border space-y-4">
       <div 
         ref={containerRef}
-        className="relative bg-elegant-bg rounded-lg border border-elegant-border px-1 flex items-center justify-center overflow-hidden"
+        className="relative bg-elegant-bg flex items-center justify-center overflow-hidden"
         style={{ height: `${previewHeight}px` }}
       >
         {originalImage ? (
