@@ -142,7 +142,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
       
       {originalImage && (
         <div className="space-y-3">
-          {/* Single line with all controls */}
+          {/* First line - Resolutions and toggle button */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
             {/* Left side - Resolutions */}
             <div className="flex items-center gap-6 text-sm font-mono text-muted-foreground">
@@ -156,46 +156,46 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
               )}
             </div>
             
-            {/* Right side - Controls */}
-            <div className="flex items-center gap-4 flex-wrap">
-              {/* Original/Processed toggle button */}
-              {hasProcessedImage && (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setShowOriginal(!showOriginal)}
-                  className="flex items-center gap-2 rounded-lg"
-                >
-                  <Eye className="h-4 w-4" />
-                  {showOriginal ? t('processed') : t('original')}
-                </Button>
-              )}
-              
-              {/* Fit to width checkbox */}
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="fit-width"
-                  checked={fitToWidth}
-                  onCheckedChange={(checked) => setFitToWidth(checked === true)}
-                />
-                <label htmlFor="fit-width" className="text-sm text-bone-white whitespace-nowrap">
-                  Fit to width
-                </label>
-              </div>
-              
-              {/* Zoom slider */}
-              <div className="flex items-center space-x-2 min-w-[200px]">
-                <ZoomIn className="h-4 w-4 text-muted-foreground" />
-                <Slider
-                  value={zoom}
-                  onValueChange={setZoom}
-                  max={1000}
-                  min={0}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-sm text-muted-foreground min-w-[50px]">{zoom[0]}%</span>
-              </div>
+            {/* Right side - Original/Processed toggle button */}
+            {hasProcessedImage && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowOriginal(!showOriginal)}
+                className="flex items-center gap-2 rounded-lg"
+              >
+                <Eye className="h-4 w-4" />
+                {showOriginal ? t('processed') : t('original')}
+              </Button>
+            )}
+          </div>
+          
+          {/* Second line - Fit to width checkbox and zoom slider */}
+          <div className="flex items-center gap-4">
+            {/* Fit to width checkbox */}
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              <Checkbox
+                id="fit-width"
+                checked={fitToWidth}
+                onCheckedChange={(checked) => setFitToWidth(checked === true)}
+              />
+              <label htmlFor="fit-width" className="text-sm text-bone-white whitespace-nowrap">
+                Fit to width
+              </label>
+            </div>
+            
+            {/* Zoom slider - takes remaining space */}
+            <div className="flex items-center space-x-2 flex-1">
+              <ZoomIn className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <Slider
+                value={zoom}
+                onValueChange={setZoom}
+                max={1000}
+                min={0}
+                step={1}
+                className="flex-1"
+              />
+              <span className="text-sm text-muted-foreground min-w-[50px] flex-shrink-0">{zoom[0]}%</span>
             </div>
           </div>
         </div>
