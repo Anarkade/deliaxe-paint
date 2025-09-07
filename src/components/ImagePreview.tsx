@@ -181,8 +181,15 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
         displayHeight = currentImage.height * currentZoom;
       }
       
-      // Add padding and ensure minimum height
-      const calculatedHeight = Math.max(400, displayHeight + 64); // 64px for padding
+      // For vertical images (height > width), use minimal padding
+      // For horizontal/square images, maintain minimum height
+      const aspectRatio = currentImage.height / currentImage.width;
+      const isVertical = aspectRatio > 1.2; // Consider vertical if height is 20% more than width
+      
+      const padding = isVertical ? 32 : 64; // Less padding for vertical images
+      const minHeight = isVertical ? 200 : 400; // Lower minimum for vertical images
+      
+      const calculatedHeight = Math.max(minHeight, displayHeight + padding);
       setPreviewHeight(calculatedHeight);
     }
   }, [originalImage, processedImageData, zoom, fitToWidth, containerWidth, showOriginal]);
