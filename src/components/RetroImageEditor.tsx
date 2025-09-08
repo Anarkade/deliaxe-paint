@@ -242,74 +242,113 @@ export const RetroImageEditor = () => {
   const applyPaletteConversion = (imageData: ImageData, palette: PaletteType) => {
     const data = imageData.data;
     
-    switch (palette) {
-      case 'gameboy':
-        // Game Boy palette conversion
-        const gbColors = [
-          [27, 42, 9],    // #1b2a09
-          [14, 69, 11],   // #0e450b
-          [73, 107, 34],  // #496b22
-          [154, 158, 63]  // #9a9e3f
-        ];
-        
-        for (let i = 0; i < data.length; i += 4) {
-          const gray = (data[i] + data[i + 1] + data[i + 2]) / 3;
-          const colorIndex = Math.floor((gray / 255) * 3);
-          const color = gbColors[Math.min(colorIndex, 3)];
-          
-          data[i] = color[0];     // R
-          data[i + 1] = color[1]; // G
-          data[i + 2] = color[2]; // B
+    // Define indexed palettes for retro systems
+    const palettes = {
+      gameboy: [
+        [15, 56, 15],    // Darkest green
+        [48, 98, 48],    // Dark green  
+        [139, 172, 15],  // Light green
+        [155, 188, 15]   // Lightest green
+      ],
+      'megadrive-single': [
+        [0, 0, 0],       // Black
+        [36, 36, 36],    // Dark gray
+        [72, 72, 72],    // Medium gray
+        [109, 109, 109], // Light gray
+        [145, 145, 145], // Lighter gray
+        [182, 182, 182], // Very light gray
+        [218, 218, 218], // Near white
+        [255, 255, 255]  // White
+      ],
+      'megadrive-multi': [
+        [0, 0, 0], [36, 0, 0], [72, 0, 0], [109, 0, 0], [145, 0, 0], [182, 0, 0], [218, 0, 0], [255, 0, 0],
+        [0, 36, 0], [36, 36, 0], [72, 36, 0], [109, 36, 0], [145, 36, 0], [182, 36, 0], [218, 36, 0], [255, 36, 0],
+        [0, 72, 0], [36, 72, 0], [72, 72, 0], [109, 72, 0], [145, 72, 0], [182, 72, 0], [218, 72, 0], [255, 72, 0],
+        [0, 109, 0], [36, 109, 0], [72, 109, 0], [109, 109, 0], [145, 109, 0], [182, 109, 0], [218, 109, 0], [255, 109, 0],
+        [0, 145, 0], [36, 145, 0], [72, 145, 0], [109, 145, 0], [145, 145, 0], [182, 145, 0], [218, 145, 0], [255, 145, 0],
+        [0, 182, 0], [36, 182, 0], [72, 182, 0], [109, 182, 0], [145, 182, 0], [182, 182, 0], [218, 182, 0], [255, 182, 0],
+        [0, 218, 0], [36, 218, 0], [72, 218, 0], [109, 218, 0], [145, 218, 0], [182, 218, 0], [218, 218, 0], [255, 218, 0],
+        [0, 255, 0], [36, 255, 0], [72, 255, 0], [109, 255, 0], [145, 255, 0], [182, 255, 0], [218, 255, 0], [255, 255, 0]
+      ],
+      'neogeo-single': [],
+      'neogeo-multi': [],
+      'zx-spectrum': [
+        [0, 0, 0],       // Black
+        [0, 0, 215],     // Blue
+        [215, 0, 0],     // Red
+        [215, 0, 215],   // Magenta
+        [0, 215, 0],     // Green
+        [0, 215, 215],   // Cyan
+        [215, 215, 0],   // Yellow
+        [215, 215, 215], // White
+        [0, 0, 0],       // Bright Black (same as black)
+        [0, 0, 255],     // Bright Blue
+        [255, 0, 0],     // Bright Red
+        [255, 0, 255],   // Bright Magenta
+        [0, 255, 0],     // Bright Green
+        [0, 255, 255],   // Bright Cyan
+        [255, 255, 0],   // Bright Yellow
+        [255, 255, 255]  // Bright White
+      ]
+    };
+
+    // Generate Neo Geo palettes (15-bit color - 5 bits per channel)
+    if (palette === 'neogeo-single') {
+      palettes['neogeo-single'] = [];
+      for (let i = 0; i < 16; i++) {
+        const gray = Math.floor((i / 15) * 31) * 8; // 0-31 range mapped to 0-248
+        palettes['neogeo-single'].push([gray, gray, gray]);
+      }
+    }
+
+    if (palette === 'neogeo-multi') {
+      palettes['neogeo-multi'] = [];
+      // Generate a representative subset of Neo Geo colors
+      for (let r = 0; r < 4; r++) {
+        for (let g = 0; g < 4; g++) {
+          for (let b = 0; b < 4; b++) {
+            palettes['neogeo-multi'].push([r * 85, g * 85, b * 85]);
+          }
         }
-        break;
+      }
+    }
+
+    const currentPalette = palettes[palette];
+    if (!currentPalette) return;
+
+    // Function to find closest color in palette
+    const findClosestColor = (r: number, g: number, b: number) => {
+      let minDistance = Infinity;
+      let closestColor = currentPalette[0];
+
+      for (const color of currentPalette) {
+        const distance = Math.sqrt(
+          Math.pow(r - color[0], 2) + 
+          Math.pow(g - color[1], 2) + 
+          Math.pow(b - color[2], 2)
+        );
         
-      case 'megadrive-single':
-        // Mega Drive 9-bit color (3-3-3)
-        for (let i = 0; i < data.length; i += 4) {
-          data[i] = Math.round(data[i] / 36) * 36;     // R (0-7 levels * 36)
-          data[i + 1] = Math.round(data[i + 1] / 36) * 36; // G
-          data[i + 2] = Math.round(data[i + 2] / 36) * 36; // B
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestColor = color;
         }
-        break;
-        
-      case 'megadrive-multi':
-        // Similar to single but with more color reduction
-        for (let i = 0; i < data.length; i += 4) {
-          data[i] = Math.round(data[i] / 36) * 36;
-          data[i + 1] = Math.round(data[i + 1] / 36) * 36;
-          data[i + 2] = Math.round(data[i + 2] / 36) * 36;
-        }
-        break;
-        
-      case 'neogeo-single':
-        // Neo Geo 15-bit color (5-5-5)
-        for (let i = 0; i < data.length; i += 4) {
-          data[i] = Math.round(data[i] / 8) * 8;     // R (0-31 levels * 8)
-          data[i + 1] = Math.round(data[i + 1] / 8) * 8; // G
-          data[i + 2] = Math.round(data[i + 2] / 8) * 8; // B
-        }
-        break;
-        
-      case 'neogeo-multi':
-        // Similar to single but with more palettes available
-        for (let i = 0; i < data.length; i += 4) {
-          data[i] = Math.round(data[i] / 8) * 8;
-          data[i + 1] = Math.round(data[i + 1] / 8) * 8;
-          data[i + 2] = Math.round(data[i + 2] / 8) * 8;
-        }
-        break;
-        
-      case 'zx-spectrum':
-        // ZX Spectrum 4-bit color reduction
-        for (let i = 0; i < data.length; i += 4) {
-          data[i] = Math.round(data[i] / 85) * 85;     // R (0, 85, 170, 255)
-          data[i + 1] = Math.round(data[i + 1] / 85) * 85; // G
-          data[i + 2] = Math.round(data[i + 2] / 85) * 85; // B
-        }
-        break;
-        
-      default:
-        break;
+      }
+      
+      return closestColor;
+    };
+
+    // Apply indexed color conversion
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      const closestColor = findClosestColor(r, g, b);
+      
+      data[i] = closestColor[0];     // R
+      data[i + 1] = closestColor[1]; // G
+      data[i + 2] = closestColor[2]; // B
+      // Alpha channel (i + 3) remains unchanged
     }
   };
 
