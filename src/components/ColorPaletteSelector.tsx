@@ -6,11 +6,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 export type PaletteType = 
   | 'original'
-  | 'megadrive-single'
-  | 'megadrive-multi'
-  | 'neogeo-single'
-  | 'neogeo-multi'
-  | 'zx-spectrum'
   | 'gameboy';
 
 interface ColorPaletteSelectorProps {
@@ -35,11 +30,6 @@ export const ColorPaletteSelector = ({
   const paletteOptions = [
     { value: 'original' as const, label: t('originalPalette'), colors: t('unlimitedColors') },
     { value: 'gameboy' as const, label: t('gameBoy'), colors: t('gameBoyColors') },
-    { value: 'megadrive-multi' as const, label: t('megaDriveMulti'), colors: t('megaDriveMultiColors') },
-    { value: 'megadrive-single' as const, label: t('megaDriveSingle'), colors: t('megaDriveSingleColors') },
-    { value: 'neogeo-multi' as const, label: t('neoGeoMulti'), colors: t('neoGeoMultiColors') },
-    { value: 'neogeo-single' as const, label: t('neoGeoSingle'), colors: t('neoGeoSingleColors') },
-    { value: 'zx-spectrum' as const, label: t('zxSpectrum'), colors: t('zxSpectrumColors') },
   ];
 
   return (

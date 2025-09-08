@@ -25,47 +25,11 @@ const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
   switch (paletteType) {
     case 'gameboy':
       return [
-        { r: 27, g: 42, b: 9 },
-        { r: 14, g: 69, b: 11 },
-        { r: 73, g: 107, b: 34 },
-        { r: 154, g: 158, b: 63 }
+        { r: 15, g: 56, b: 15 },    // Darkest green
+        { r: 48, g: 98, b: 48 },    // Dark green  
+        { r: 139, g: 172, b: 15 },  // Light green
+        { r: 155, g: 188, b: 15 }   // Lightest green
       ];
-    case 'megadrive-single':
-      // Generate 16 colors with 9-bit depth
-      return Array.from({ length: 16 }, (_, i) => ({
-        r: (i % 8) * 36,
-        g: Math.floor(i / 8) % 8 * 36,
-        b: Math.floor(i / 4) % 8 * 36,
-        transparent: i === 0
-      }));
-    case 'megadrive-multi':
-      // Generate 64 colors (4 palettes of 16)
-      return Array.from({ length: 64 }, (_, i) => ({
-        r: (i % 8) * 36,
-        g: Math.floor(i / 8) % 8 * 36,
-        b: Math.floor(i / 16) % 8 * 36,
-        transparent: i % 16 === 0
-      }));
-    case 'neogeo-single':
-      return Array.from({ length: 16 }, (_, i) => ({
-        r: (i % 8) * 32,
-        g: Math.floor(i / 8) % 8 * 32,
-        b: Math.floor(i / 4) % 8 * 32,
-        transparent: i === 0
-      }));
-    case 'neogeo-multi':
-      return Array.from({ length: 256 }, (_, i) => ({
-        r: (i % 32) * 8,
-        g: Math.floor(i / 32) % 32 * 8,
-        b: Math.floor(i / 64) % 32 * 8,
-        transparent: i % 16 === 0
-      }));
-    case 'zx-spectrum':
-      return Array.from({ length: 16 }, (_, i) => ({
-        r: (i & 1) ? (i & 8 ? 255 : 170) : 0,
-        g: (i & 2) ? (i & 8 ? 255 : 170) : 0,
-        b: (i & 4) ? (i & 8 ? 255 : 170) : 0
-      }));
     default:
       return [];
   }
