@@ -146,6 +146,12 @@ export const RetroImageEditor = () => {
   const processImage = useCallback(() => {
     if (!originalImage) return;
 
+    // If all settings are original, don't process - keep the original image
+    if (selectedPalette === 'original' && selectedResolution === 'original') {
+      setProcessedImageData(null); // Clear processed data to show original
+      return;
+    }
+
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
