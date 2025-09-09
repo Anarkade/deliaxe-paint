@@ -19,6 +19,7 @@ interface PaletteViewerProps {
   imageData: ImageData | null;
   onPaletteUpdate?: (colors: PaletteColor[]) => void;
   originalImageSource?: File | string | null;
+  externalPalette?: PaletteColor[] | null;
 }
 
 const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
@@ -54,7 +55,7 @@ const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
   }
 };
 
-export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource }: PaletteViewerProps) => {
+export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette }: PaletteViewerProps) => {
   const { t } = useTranslation();
   const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() => 
     getDefaultPalette(selectedPalette)
@@ -158,8 +159,15 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   // Extract unique colors from the current image data and update when it changes
   useEffect(() => {
     const extractColors = async () => {
+      // If external palette is provided (from processing), use it
+      if (externalPalette && externalPalette.length > 0) {
+        setPaletteColors(externalPalette);
+        onPaletteUpdate?.(externalPalette);
+        return;
+      }
+
       // First try to extract from PNG PLTE chunk if it's an indexed PNG
-      if (originalImageSource) {
+      if (originalImageSource && selectedPalette === 'original') {
         try {
           const pngPalette = await extractPNGPalette(originalImageSource);
           if (pngPalette && pngPalette.length > 0) {
@@ -174,6 +182,14 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       }
       
       setIsOriginalPNG(false);
+
+      // For retro palettes, use the default or processed palette
+      if (selectedPalette !== 'original') {
+        const defaultPalette = getDefaultPalette(selectedPalette);
+        setPaletteColors(defaultPalette);
+        onPaletteUpdate?.(defaultPalette);
+        return;
+      }
 
       if (!imageData) {
         const defaultPalette = getDefaultPalette(selectedPalette);
@@ -213,7 +229,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     };
 
     extractColors();
-  }, [imageData, selectedPalette, originalImageSource, onPaletteUpdate]);
+  }, [imageData, selectedPalette, originalImageSource, onPaletteUpdate, externalPalette]);
 
   if (selectedPalette === 'original' && !isOriginalPNG) {
     return null; // Don't show anything if not an indexed PNG

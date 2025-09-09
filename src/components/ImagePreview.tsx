@@ -107,9 +107,10 @@ interface ImagePreviewProps {
   onPaletteUpdate?: (colors: any[]) => void;
   showCameraPreview?: boolean;
   onCameraPreviewChange?: (show: boolean) => void;
+  currentPaletteColors?: any[];
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -542,14 +543,15 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
         </div>
       )}
       
-      {/* Palette Viewer - only shown for indexed PNG images */}
-      {isIndexedPNG && originalImage && originalImageSource && (
+      {/* Palette Viewer - shown for indexed PNG images and retro palettes */}
+      {((isIndexedPNG && originalImage && originalImageSource) || (selectedPalette !== 'original' && originalImage)) && (
         <div className="mt-4">
           <PaletteViewer
             selectedPalette={selectedPalette}
             imageData={processedImageData}
             onPaletteUpdate={onPaletteUpdate}
             originalImageSource={originalImageSource}
+            externalPalette={currentPaletteColors}
           />
         </div>
       )}
