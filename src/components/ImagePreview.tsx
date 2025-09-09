@@ -265,22 +265,24 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   useEffect(() => {
     if (originalImage && containerWidth > 0) {
       setFitToWidth(true);
-      const fitZoom = Math.floor((containerWidth / originalImage.width) * 100);
+      const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
+      const fitZoom = Math.floor((containerWidth / currentImage.width) * 100);
       const newZoom = Math.max(1, Math.min(1600, fitZoom));
       programmaticZoomChange.current = true;
       setZoom([newZoom]);
     }
-  }, [originalImage, containerWidth]);
+  }, [originalImage, containerWidth, showOriginal, processedImageData]);
 
-  // Handle fit to width checkbox changes
+  // Handle fit to width checkbox changes and view toggle
   useEffect(() => {
     if (fitToWidth && originalImage && containerWidth > 0) {
-      const fitZoom = Math.floor((containerWidth / originalImage.width) * 100);
+      const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
+      const fitZoom = Math.floor((containerWidth / currentImage.width) * 100);
       const newZoom = Math.max(1, Math.min(1600, fitZoom));
       programmaticZoomChange.current = true;
       setZoom([newZoom]);
     }
-  }, [fitToWidth, originalImage, containerWidth]);
+  }, [fitToWidth, originalImage, containerWidth, showOriginal, processedImageData]);
 
   // Disable fit to width when user manually changes zoom
   useEffect(() => {
