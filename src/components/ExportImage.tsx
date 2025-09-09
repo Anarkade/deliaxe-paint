@@ -25,12 +25,12 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
     canvas.height = processedImageData.height;
     ctx.putImageData(processedImageData, 0, 0);
     
-    // For retro palettes, try to export as PNG-8 indexed color
+    // For retro palettes, export as PNG-8 indexed color format
     let dataURL: string;
-    const retroPalettes = ['gameboy', 'megadrive-single', 'megadrive-multi', 'neogeo-single', 'neogeo-multi', 'zx-spectrum'];
+    const retroPalettes = ['gameboy', 'megadrive'];
     
     if (retroPalettes.includes(selectedPalette)) {
-      // For indexed color formats, we still use PNG but with reduced quality to encourage indexed color
+      // For indexed color formats like Mega Drive, export optimized PNG
       dataURL = canvas.toDataURL('image/png');
     } else {
       dataURL = canvas.toDataURL('image/png');
