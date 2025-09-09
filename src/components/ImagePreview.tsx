@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Download, Eye, ZoomIn, Camera, RotateCcw, X } from 'lucide-react';
+import { Download, Eye, ZoomIn, Camera, RotateCcw, X, Maximize2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { analyzePNGFile, ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { LoadImage } from './LoadImage';
@@ -118,7 +118,6 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const containerRef = useRef<HTMLDivElement>(null);
   const [showOriginal, setShowOriginal] = useState(false);
   const [zoom, setZoom] = useState([100]);
-  const [fitToWidth, setFitToWidth] = useState(false);
   const [containerWidth, setContainerWidth] = useState(0);
   const [previewHeight, setPreviewHeight] = useState(400);
   const [originalFormat, setOriginalFormat] = useState<string>('');
@@ -261,10 +260,9 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     return () => window.removeEventListener('resize', updateContainerWidth);
   }, []);
 
-  // Set default fit to width and calculate zoom when image loads
-  useEffect(() => {
+  // Fit to width function
+  const fitToWidth = useCallback(() => {
     if (originalImage && containerWidth > 0) {
-      setFitToWidth(true);
       const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
       const fitZoom = Math.floor((containerWidth / currentImage.width) * 100);
       const newZoom = Math.max(1, Math.min(1600, fitZoom));
@@ -273,24 +271,12 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     }
   }, [originalImage, containerWidth, showOriginal, processedImageData]);
 
-  // Handle fit to width checkbox changes and view toggle
+  // Apply fit to width when image loads or resolution changes
   useEffect(() => {
-    if (fitToWidth && originalImage && containerWidth > 0) {
-      const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
-      const fitZoom = Math.floor((containerWidth / currentImage.width) * 100);
-      const newZoom = Math.max(1, Math.min(1600, fitZoom));
-      programmaticZoomChange.current = true;
-      setZoom([newZoom]);
+    if (originalImage && containerWidth > 0) {
+      fitToWidth();
     }
-  }, [fitToWidth, originalImage, containerWidth, showOriginal, processedImageData]);
-
-  // Disable fit to width when user manually changes zoom
-  useEffect(() => {
-    if (!programmaticZoomChange.current && fitToWidth) {
-      setFitToWidth(false);
-    }
-    programmaticZoomChange.current = false;
-  }, [zoom, fitToWidth]);
+  }, [originalImage, containerWidth, processedImageData, fitToWidth]);
 
   // Calculate adaptive height based on image and zoom
   useEffect(() => {
@@ -299,16 +285,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
         const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
         const currentZoom = zoom[0] / 100;
         
-        let displayHeight: number;
-        
-        if (fitToWidth) {
-          displayHeight = (currentImage.height * containerWidth) / currentImage.width;
-          // Limit maximum height when fit to width is enabled to prevent excessive heights
-          const maxFitHeight = Math.min(window.innerHeight * 0.7, 800);
-          displayHeight = Math.min(displayHeight, maxFitHeight);
-        } else {
-          displayHeight = currentImage.height * currentZoom;
-        }
+        const displayHeight = currentImage.height * currentZoom;
         
         const padding = 40;
         const minHeight = 150;
@@ -319,7 +296,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     }, 100);
 
     return () => clearTimeout(timeoutId);
-  }, [originalImage, processedImageData, zoom, fitToWidth, containerWidth, showOriginal]);
+  }, [originalImage, processedImageData, zoom, containerWidth, showOriginal]);
 
   // Reset scroll position when zoom or image changes
   useEffect(() => {
@@ -334,16 +311,8 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     const currentZoom = zoom[0] / 100;
     const containerRect = containerRef.current.getBoundingClientRect();
     
-    let displayWidth: number;
-    let displayHeight: number;
-    
-    if (fitToWidth) {
-      displayWidth = containerWidth;
-      displayHeight = (currentImage.height * containerWidth) / currentImage.width;
-    } else {
-      displayWidth = currentImage.width * currentZoom;
-      displayHeight = currentImage.height * currentZoom;
-    }
+    const displayWidth = currentImage.width * currentZoom;
+    const displayHeight = currentImage.height * currentZoom;
     
     const maxScrollX = Math.max(0, (displayWidth - containerRect.width) / 2);
     const maxScrollY = Math.max(0, (displayHeight - containerRect.height) / 2);
@@ -425,13 +394,10 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
           <div className="relative">
             <canvas
               ref={canvasRef}
-              className={`${fitToWidth ? 'max-w-full' : ''}`}
               style={{ 
                 imageRendering: 'pixelated',
                 transform: `scale(${zoom[0] / 100}) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
                 transformOrigin: 'center',
-                width: fitToWidth ? '100%' : 'auto',
-                height: 'auto',
                 pointerEvents: 'none'
               }}
             />
@@ -514,19 +480,18 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             )}
           </div>
           
-          {/* Second line - Fit to width checkbox and zoom slider */}
+          {/* Second line - Fit to width button and zoom slider */}
           <div className="flex items-center gap-4">
-            {/* Fit to width checkbox */}
-            <div className="flex items-center space-x-2 flex-shrink-0">
-              <Checkbox
-                id="fit-width"
-                checked={fitToWidth}
-                onCheckedChange={(checked) => setFitToWidth(checked === true)}
-              />
-              <label htmlFor="fit-width" className="text-sm text-bone-white whitespace-nowrap">
-                {t('fitToWidth')}
-              </label>
-            </div>
+            {/* Fit to width button */}
+            <Button
+              onClick={fitToWidth}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 flex-shrink-0"
+            >
+              <Maximize2 className="h-4 w-4" />
+              {t('fitToWidth')}
+            </Button>
             
             {/* Zoom slider - takes remaining space */}
             <div className="flex items-center space-x-2 flex-1">
