@@ -273,6 +273,74 @@ export const RetroImageEditor = () => {
           // Alpha channel (i + 3) remains unchanged
         }
         break;
+      
+      case 'megadrive':
+        // Mega Drive RGB 3-3-3 format (16 colors)
+        const mdColors = [
+          [0, 0, 0],       // Black
+          [0, 0, 146],     // Dark Blue
+          [0, 146, 0],     // Dark Green
+          [0, 146, 146],   // Dark Cyan
+          [146, 0, 0],     // Dark Red
+          [146, 0, 146],   // Dark Magenta
+          [146, 73, 0],    // Brown
+          [182, 182, 182], // Light Gray
+          [73, 73, 73],    // Dark Gray
+          [73, 73, 255],   // Blue
+          [73, 255, 73],   // Green
+          [73, 255, 255],  // Cyan
+          [255, 73, 73],   // Red
+          [255, 73, 255],  // Magenta
+          [255, 255, 73],  // Yellow
+          [255, 255, 255]  // White
+        ];
+
+        // Function to find closest color in Mega Drive palette
+        const findClosestMDColor = (r: number, g: number, b: number) => {
+          let closestColor = mdColors[0];
+          let minDistance = Infinity;
+          
+          for (const color of mdColors) {
+            const distance = Math.sqrt(
+              Math.pow(r - color[0], 2) +
+              Math.pow(g - color[1], 2) +
+              Math.pow(b - color[2], 2)
+            );
+            
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestColor = color;
+            }
+          }
+          
+          return closestColor;
+        };
+
+        // Apply Mega Drive indexed color conversion
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          
+          // First convert to RGB 3-3-3 format
+          const r3bit = Math.round((r / 255) * 7);
+          const g3bit = Math.round((g / 255) * 7);
+          const b3bit = Math.round((b / 255) * 7);
+          
+          // Convert back to 8-bit values
+          const r8bit = Math.round((r3bit / 7) * 255);
+          const g8bit = Math.round((g3bit / 7) * 255);
+          const b8bit = Math.round((b3bit / 7) * 255);
+          
+          // Then find closest color in the 16-color palette
+          const closestColor = findClosestMDColor(r8bit, g8bit, b8bit);
+          
+          data[i] = closestColor[0];     // R
+          data[i + 1] = closestColor[1]; // G
+          data[i + 2] = closestColor[2]; // B
+          // Alpha channel (i + 3) remains unchanged
+        }
+        break;
         
       default:
         break;
