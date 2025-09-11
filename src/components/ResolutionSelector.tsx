@@ -57,14 +57,11 @@ export const ResolutionSelector = ({
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-neon-cyan flex items-center">
           <Monitor className="mr-2 h-5 w-5" />
-          {t('resolution')}
+          {t('changeResolution')}
         </h3>
         
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">
-              {t('targetResolution')}
-            </label>
             <Select value={selectedResolution} onValueChange={onResolutionChange}>
               <SelectTrigger className="bg-console-bg border-pixel-grid">
                 <SelectValue />

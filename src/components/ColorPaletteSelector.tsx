@@ -68,9 +68,6 @@ export const ColorPaletteSelector = ({
         </div>
         
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">
-            {t('consolePlatform')}
-          </label>
           <Select value={selectedPalette} onValueChange={onPaletteChange}>
             <SelectTrigger className="bg-console-bg border-pixel-grid">
               <SelectValue />

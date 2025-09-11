@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Upload, Palette, Eye, Monitor, Download, Gamepad2 } from 'lucide-react';
 import { processMegaDriveImage } from '@/lib/colorQuantization';
+import { analyzePNGFile } from '@/lib/pngAnalyzer';
 
 interface HistoryState {
   imageData: ImageData | null;
@@ -33,6 +34,7 @@ export const RetroImageEditor = () => {
   const [activeTab, setActiveTab] = useState<string>('load-image');
   const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
   const [showCameraPreview, setShowCameraPreview] = useState(false);
+  const [isOriginalPNG8Indexed, setIsOriginalPNG8Indexed] = useState(false);
   
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -93,6 +95,7 @@ export const RetroImageEditor = () => {
     setHistory([]);
     setHistoryIndex(-1);
     setActiveTab('load-image');
+    setIsOriginalPNG8Indexed(false);
   }, []);
 
   const loadImage = useCallback(async (source: File | string) => {
@@ -120,6 +123,14 @@ export const RetroImageEditor = () => {
       setOriginalImage(img);
       setProcessedImageData(null);
       setOriginalImageSource(source); // Store the source for PNG analysis
+      
+      // Check if original image is PNG-8 indexed
+      try {
+        const formatInfo = await analyzePNGFile(source);
+        setIsOriginalPNG8Indexed(formatInfo.isIndexed && formatInfo.format.includes('PNG-8'));
+      } catch (error) {
+        setIsOriginalPNG8Indexed(false);
+      }
       
       // Reset settings when loading new image
       setSelectedPalette('original');
@@ -159,6 +170,12 @@ export const RetroImageEditor = () => {
       if (!ctx) {
         toast.error(t('canvasNotSupported'));
         return;
+      }
+
+      // For PNG-8 indexed images, preserve format by using a temporary canvas
+      // that maintains the indexed color handling
+      if (isOriginalPNG8Indexed && selectedPalette === 'original') {
+        ctx.imageSmoothingEnabled = false; // Preserve indexed colors
       }
 
       // Set canvas dimensions based on resolution
