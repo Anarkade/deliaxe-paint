@@ -840,22 +840,6 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 )}
               </div>
             </div>
-
-            {/* Zoom Control */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                {t('zoom')} {sliderValue[0]}%
-              </label>
-              <Slider
-                value={sliderValue}
-                onValueChange={(v) => setSliderValue(v)}
-                onValueCommit={handleZoomChange}
-                min={25}
-                max={1600}
-                step={25}
-                className="flex-1"
-              />
-            </div>
           </div>
         </div>
       )}
