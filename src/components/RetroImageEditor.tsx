@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { LoadImage } from './LoadImage';
+// import removed: LoadImage now handled within ImagePreview
 import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
 import { ResolutionSelector, ResolutionType, ScalingMode } from './ResolutionSelector';
 import { ImagePreview } from './ImagePreview';
@@ -440,12 +440,7 @@ export const RetroImageEditor = () => {
 
           {/* Content Sections */}
           <div className="w-full max-w-4xl mx-auto">
-          {activeTab === 'load-image' && (
-            <LoadImage 
-              onImageLoad={handleLoadImageClick}
-              onCameraPreviewRequest={() => setShowCameraPreview(true)}
-            />
-          )}
+          {/* Load Image block hidden; handled inside ImagePreview */}
 
             {activeTab === 'palette-selector' && originalImage && (
               <ColorPaletteSelector
