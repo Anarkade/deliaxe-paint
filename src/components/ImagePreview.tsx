@@ -431,19 +431,20 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             />
             {showGrid && (
               <div
-                className="absolute inset-0 pointer-events-none"
+                className="absolute pointer-events-none"
                 style={{
                   backgroundImage: `
                     linear-gradient(to right, #808080 1px, transparent 1px),
                     linear-gradient(to bottom, #808080 1px, transparent 1px)
                   `,
-                  backgroundSize: `${(zoom[0] / 100) * 8}px ${(zoom[0] / 100) * 8}px`,
-                  width: `${(((showOriginal ? originalImage?.width : (processedImageData?.width ?? originalImage?.width)) || 0) * (zoom[0] / 100))}px`,
-                  height: `${(((showOriginal ? originalImage?.height : (processedImageData?.height ?? originalImage?.height)) || 0) * (zoom[0] / 100))}px`,
+                  backgroundSize: `${8 * (zoom[0] / 100)}px ${8 * (zoom[0] / 100)}px`,
+                  width: `${((showOriginal ? originalImage?.width : (processedImageData?.width ?? originalImage?.width)) || 0) * (zoom[0] / 100)}px`,
+                  height: `${((showOriginal ? originalImage?.height : (processedImageData?.height ?? originalImage?.height)) || 0) * (zoom[0] / 100)}px`,
                   position: 'absolute',
                   top: '50%',
                   left: '50%',
-                  transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`
+                  transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
+                  backgroundPosition: '0 0'
                 }}
               />
             )}
