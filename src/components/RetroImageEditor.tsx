@@ -51,19 +51,9 @@ export const RetroImageEditor = () => {
       return 'highlighted';
     }
     
-    // When image is loaded, export-image becomes highlighted (always)
-    if (originalImage && tabId === 'export-image') {
-      return 'highlighted';
-    }
-    
-    // Active tab is highlighted (except load-image when image is loaded)
-    if (activeTab === tabId && !(originalImage && tabId === 'load-image')) {
-      return 'highlighted';
-    }
-    
-    // When image is loaded, all other buttons (including load-image) are plum
+    // When image is loaded, all buttons are highlighted
     if (originalImage) {
-      return 'plum';
+      return 'highlighted';
     }
     
     return 'blocked';
@@ -73,6 +63,13 @@ export const RetroImageEditor = () => {
     if (!originalImage && tabId !== 'load-image') {
       return; // Don't allow clicking blocked tabs
     }
+    
+    // If image is loaded and user clicks load-image, unload the image
+    if (originalImage && tabId === 'load-image') {
+      resetEditor();
+      return;
+    }
+    
     setActiveTab(tabId);
   };
 
@@ -454,10 +451,6 @@ export const RetroImageEditor = () => {
               <ColorPaletteSelector
                 selectedPalette={selectedPalette}
                 onPaletteChange={setSelectedPalette}
-                onUndo={undo}
-                onRedo={redo}
-                canUndo={historyIndex > 0}
-                canRedo={historyIndex < history.length - 1}
               />
             )}
 

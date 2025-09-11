@@ -12,19 +12,11 @@ export type PaletteType =
 interface ColorPaletteSelectorProps {
   selectedPalette: PaletteType;
   onPaletteChange: (palette: PaletteType) => void;
-  onUndo: () => void;
-  onRedo: () => void;
-  canUndo: boolean;
-  canRedo: boolean;
 }
 
 export const ColorPaletteSelector = ({
   selectedPalette,
-  onPaletteChange,
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo
+  onPaletteChange
 }: ColorPaletteSelectorProps) => {
   const { t } = useTranslation();
 
@@ -37,35 +29,10 @@ export const ColorPaletteSelector = ({
   return (
     <Card className="p-6 border-pixel-grid bg-card">
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-neon-cyan flex items-center">
-            <Palette className="mr-2 h-5 w-5" />
-            {t('selectPalette')}
-          </h3>
-          
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onUndo}
-              disabled={!canUndo}
-              className="p-2"
-              title={t('undo')}
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={onRedo}
-              disabled={!canRedo}
-              className="p-2"
-              title={t('redo')}
-            >
-              <RotateCw className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <h3 className="text-lg font-bold text-neon-cyan flex items-center">
+          <Palette className="mr-2 h-5 w-5" />
+          {t('selectPalette')}
+        </h3>
         
         <div className="space-y-2">
           <Select value={selectedPalette} onValueChange={onPaletteChange}>
