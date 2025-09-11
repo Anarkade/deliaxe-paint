@@ -141,6 +141,10 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [tileGridColor, setTileGridColor] = useState('#808080');
   const [frameGridColor, setFrameGridColor] = useState('#808080');
   const programmaticZoomChange = useRef(false);
+  
+  // Touch/pinch zoom state
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance?: number } | null>(null);
+  const [initialZoom, setInitialZoom] = useState(100);
 
   // Get available cameras
   useEffect(() => {
@@ -392,6 +396,107 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     setIsDragging(false);
   };
 
+  // Touch event handlers for mobile pinch-to-zoom and pan
+  const getDistance = (touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    return Math.sqrt(
+      Math.pow(touch2.clientX - touch1.clientX, 2) + 
+      Math.pow(touch2.clientY - touch1.clientY, 2)
+    );
+  };
+
+  const getTouchCenter = (touches: React.TouchList) => {
+    if (touches.length === 1) {
+      return { x: touches[0].clientX, y: touches[0].clientY };
+    }
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    return {
+      x: (touch1.clientX + touch2.clientX) / 2,
+      y: (touch1.clientY + touch2.clientY) / 2
+    };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    
+    if (e.touches.length === 1) {
+      // Single touch - prepare for potential pan
+      const bounds = getScrollBounds();
+      const isZoomedBeyondView = bounds.maxX > 0 || bounds.maxY > 0;
+      
+      if (isZoomedBeyondView) {
+        const touch = e.touches[0];
+        setTouchStart({ 
+          x: touch.clientX - scrollPosition.x, 
+          y: touch.clientY - scrollPosition.y 
+        });
+      }
+    } else if (e.touches.length === 2) {
+      // Pinch gesture
+      const distance = getDistance(e.touches);
+      const center = getTouchCenter(e.touches);
+      setTouchStart({ x: center.x, y: center.y, distance });
+      setInitialZoom(zoom[0]);
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    
+    if (!touchStart) return;
+
+    if (e.touches.length === 1 && touchStart.distance === undefined) {
+      // Single touch pan
+      const bounds = getScrollBounds();
+      const isZoomedBeyondView = bounds.maxX > 0 || bounds.maxY > 0;
+      
+      if (isZoomedBeyondView) {
+        const touch = e.touches[0];
+        const newX = Math.max(bounds.minX, Math.min(bounds.maxX, touch.clientX - touchStart.x));
+        const newY = Math.max(bounds.minY, Math.min(bounds.maxY, touch.clientY - touchStart.y));
+        setScrollPosition({ x: newX, y: newY });
+      }
+    } else if (e.touches.length === 2 && touchStart.distance !== undefined) {
+      // Pinch zoom
+      const currentDistance = getDistance(e.touches);
+      const scale = currentDistance / touchStart.distance;
+      const newZoom = Math.max(10, Math.min(1600, initialZoom * scale));
+      
+      if (integerScaling) {
+        const roundedZoom = Math.round(newZoom / 100) * 100;
+        const applied = Math.max(100, roundedZoom);
+        setZoom([applied]);
+        setSliderValue([applied]);
+      } else {
+        setZoom([newZoom]);
+        setSliderValue([newZoom]);
+      }
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      setTouchStart(null);
+    } else if (e.touches.length === 1 && touchStart?.distance !== undefined) {
+      // Switched from pinch to single touch
+      const bounds = getScrollBounds();
+      const isZoomedBeyondView = bounds.maxX > 0 || bounds.maxY > 0;
+      
+      if (isZoomedBeyondView) {
+        const touch = e.touches[0];
+        setTouchStart({ 
+          x: touch.clientX - scrollPosition.x, 
+          y: touch.clientY - scrollPosition.y 
+        });
+      } else {
+        setTouchStart(null);
+      }
+    }
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -418,6 +523,35 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
 
   return (
     <div className="bg-card rounded-xl p-6 border border-elegant-border space-y-4">
+      {/* Zoom Controls - moved to top */}
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-4 text-sm">
+          <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
+          <Slider
+            value={sliderValue}
+            onValueChange={handleZoomChange}
+            max={1600}
+            min={10}
+            step={integerScaling ? 100 : 1}
+            className="flex-1"
+          />
+          <Button onClick={fitToWidth} variant="outline" size="sm">
+            {t('fitToWidth')}
+          </Button>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="integer-scaling" 
+              checked={integerScaling}
+              onCheckedChange={handleIntegerScalingChange}
+            />
+            <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
+          </div>
+        </div>
+      </div>
+
       <div 
         ref={containerRef}
         className={`relative bg-elegant-bg flex items-center justify-center overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
@@ -426,6 +560,9 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {originalImage ? (
           <div className="relative">
