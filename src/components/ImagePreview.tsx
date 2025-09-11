@@ -712,26 +712,6 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 </Button>
               )}
               
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={fitToWidth}
-                className="text-xs h-8"
-              >
-                <Maximize2 className="h-3 w-3 mr-1" />
-                {t('fitToWidth')}
-              </Button>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="integer-scaling" 
-                  checked={integerScaling}
-                  onCheckedChange={handleIntegerScalingChange}
-                />
-                <label htmlFor="integer-scaling" className="text-xs text-muted-foreground cursor-pointer">
-                  {t('integerScaling')}
-                </label>
-              </div>
             </div>
 
             {/* Grid Controls */}
