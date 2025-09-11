@@ -235,6 +235,11 @@ export const processMegaDriveImage = (imageData: ImageData, originalPalette?: Co
     // Quantize to 16 colors using median cut
     finalPalette = medianCutQuantization(uniqueColors, 16);
   }
+
+  // Ensure exactly 16 colors for Mega Drive - pad with transparent black if needed
+  while (finalPalette.length < 16) {
+    finalPalette.push({ r: 0, g: 0, b: 0, count: 0 });
+  }
   
   // Step 5: Apply final palette to image
   const finalImageData = applyQuantizedPalette(rgb333ImageData, finalPalette);

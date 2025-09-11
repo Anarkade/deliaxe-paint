@@ -84,6 +84,12 @@ interface Translation {
   framesGrid: string;
   tileSize: string;
   frameSize: string;
+  tileWidth: string;
+  tileHeight: string;
+  tileGridColor: string;
+  frameWidth: string;
+  frameHeight: string;
+  frameGridColor: string;
   integerScaling: string;
   
   // Resolution
@@ -208,10 +214,16 @@ const baseTranslation: Translation = {
   fitToWidth: 'Fit to width',
   noImageLoaded: 'No image loaded',
   zoom: 'Zoom',
-  tileGrid: 'Tile grid',
-  framesGrid: 'Frames grid',
-  tileSize: 'Tile size',
-  frameSize: 'Frame size',
+    tileGrid: 'Tile grid',
+    framesGrid: 'Frames grid',
+    tileSize: 'Tile size',
+    frameSize: 'Frame size',
+    tileWidth: 'Width',
+    tileHeight: 'Height',
+    tileGridColor: 'Tile color',
+    frameWidth: 'Width', 
+    frameHeight: 'Height',
+    frameGridColor: 'Frame color',
   integerScaling: 'Integer scaling',
   resolution: 'Resolution',
   targetResolution: 'Target Resolution',
@@ -338,6 +350,12 @@ const translations: Record<Language, Translation> = {
     framesGrid: 'Cuadrícula de marcos',
     tileSize: 'Tamaño de mosaico',
     frameSize: 'Tamaño de marco',
+    tileWidth: 'Ancho',
+    tileHeight: 'Alto',
+    tileGridColor: 'Color celda',
+    frameWidth: 'Ancho',
+    frameHeight: 'Alto', 
+    frameGridColor: 'Color marco',
     integerScaling: 'Escalado entero',
     resolution: 'Resolución',
     targetResolution: 'Resolución Objetivo',
@@ -644,6 +662,18 @@ const translations: Record<Language, Translation> = {
     processed: 'Traitée',
     fitToWidth: 'Ajuster à la largeur',
     noImageLoaded: 'Aucune image chargée',
+    zoom: 'Zoom',
+    tileGrid: 'Grille de tuiles',
+    framesGrid: 'Grille de cadres',
+    tileSize: 'Taille de tuile',
+    frameSize: 'Taille de cadre',
+    tileWidth: 'Largeur',
+    tileHeight: 'Hauteur',
+    tileGridColor: 'Couleur tuile',
+    frameWidth: 'Largeur',
+    frameHeight: 'Hauteur',
+    frameGridColor: 'Couleur cadre',
+    integerScaling: 'Mise à l\'échelle entière',
     resolution: 'Résolution',
     targetResolution: 'Résolution Cible',
     originalSize: 'Original',

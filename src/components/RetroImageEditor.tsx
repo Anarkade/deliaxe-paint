@@ -242,9 +242,9 @@ export const RetroImageEditor = () => {
         return;
       }
       
-      // Apply palette conversion (simplified for now)
+      // Apply palette conversion using current palette colors
       if (selectedPalette !== 'original') {
-        applyPaletteConversion(imageData, selectedPalette);
+        applyPaletteConversion(imageData, selectedPalette, currentPaletteColors);
         ctx.putImageData(imageData, 0, 0);
       }
 
@@ -264,18 +264,20 @@ export const RetroImageEditor = () => {
     }
   }, [originalImage, selectedPalette, selectedResolution, scalingMode, saveToHistory]);
 
-  const applyPaletteConversion = (imageData: ImageData, palette: PaletteType) => {
+  const applyPaletteConversion = (imageData: ImageData, palette: PaletteType, customColors?: any[]) => {
     const data = imageData.data;
     
     switch (palette) {
       case 'gameboy':
-        // Game Boy palette - authentic green shades
-        const gbColors = [
-          [15, 56, 15],    // Darkest green
-          [48, 98, 48],    // Dark green  
-          [139, 172, 15],  // Light green
-          [155, 188, 15]   // Lightest green
-        ];
+        // Use custom colors if provided, otherwise use default Game Boy palette
+        const gbColors = customColors && customColors.length === 4 
+          ? customColors.map(c => [c.r, c.g, c.b])
+          : [
+              [15, 56, 15],    // Darkest green
+              [48, 98, 48],    // Dark green  
+              [139, 172, 15],  // Light green
+              [155, 188, 15]   // Lightest green
+            ];
         
         // Function to find closest color in Game Boy palette
         const findClosestGBColor = (r: number, g: number, b: number) => {
@@ -298,33 +300,65 @@ export const RetroImageEditor = () => {
           // Alpha channel (i + 3) remains unchanged
         }
         
-        // Update the current palette colors for the palette viewer to show exact 4 Game Boy colors
-        setCurrentPaletteColors(gbColors.map(color => ({
-          r: color[0],
-          g: color[1],
-          b: color[2]
-        })));
+        // Update the current palette colors for the palette viewer if not using custom colors
+        if (!customColors || customColors.length !== 4) {
+          setCurrentPaletteColors(gbColors.map(color => ({
+            r: color[0],
+            g: color[1],
+            b: color[2]
+          })));
+        }
         break;
       
       case 'megadrive':
-        // Extract original colors to preserve palette order if possible
-        const originalColors = extractColorsFromImageData(imageData);
-        
-        // Use advanced color quantization for Mega Drive
-        const megaDriveResult = processMegaDriveImage(imageData, originalColors.length <= 16 ? originalColors : undefined);
-        
-        // Replace the current image data with the processed data
-        const processedData = megaDriveResult.imageData.data;
-        for (let i = 0; i < data.length; i++) {
-          data[i] = processedData[i];
+        // Use custom colors if provided, otherwise generate palette
+        if (customColors && customColors.length === 16) {
+          // Apply custom Mega Drive palette
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            
+            // Find closest color in the custom palette
+            let closestIndex = 0;
+            let minDistance = Infinity;
+            
+            for (let j = 0; j < customColors.length; j++) {
+              const dr = r - customColors[j].r;
+              const dg = g - customColors[j].g;
+              const db = b - customColors[j].b;
+              const distance = dr * dr + dg * dg + db * db;
+              
+              if (distance < minDistance) {
+                minDistance = distance;
+                closestIndex = j;
+              }
+            }
+            
+            data[i] = customColors[closestIndex].r;
+            data[i + 1] = customColors[closestIndex].g;
+            data[i + 2] = customColors[closestIndex].b;
+          }
+        } else {
+          // Extract original colors to preserve palette order if possible
+          const originalColors = extractColorsFromImageData(imageData);
+          
+          // Use advanced color quantization for Mega Drive
+          const megaDriveResult = processMegaDriveImage(imageData, originalColors.length <= 16 ? originalColors : undefined);
+          
+          // Replace the current image data with the processed data
+          const processedData = megaDriveResult.imageData.data;
+          for (let i = 0; i < data.length; i++) {
+            data[i] = processedData[i];
+          }
+          
+          // Update the current palette colors for the palette viewer
+          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({
+            r: color.r,
+            g: color.g,
+            b: color.b
+          })));
         }
-        
-        // Update the current palette colors for the palette viewer
-        setCurrentPaletteColors(megaDriveResult.palette.map(color => ({
-          r: color.r,
-          g: color.g,
-          b: color.b
-        })));
         break;
         
       default:

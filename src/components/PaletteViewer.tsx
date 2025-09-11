@@ -20,6 +20,7 @@ interface PaletteViewerProps {
   onPaletteUpdate?: (colors: PaletteColor[]) => void;
   originalImageSource?: File | string | null;
   externalPalette?: PaletteColor[] | null;
+  onImageUpdate?: () => void;
 }
 
 const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
@@ -55,7 +56,7 @@ const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
   }
 };
 
-export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette }: PaletteViewerProps) => {
+export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate }: PaletteViewerProps) => {
   const { t } = useTranslation();
   const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() => 
     getDefaultPalette(selectedPalette)
@@ -83,7 +84,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     setDraggedIndex(null);
   }, [draggedIndex, paletteColors, onPaletteUpdate]);
 
-  const selectNewColor = useCallback((index: number) => {
+  const selectNewColor = useCallback((index: number, currentPalette: PaletteType) => {
     // Open color picker to select new color for this slot
     const input = document.createElement('input');
     input.type = 'color';
@@ -92,18 +93,44 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     input.addEventListener('change', (e) => {
       const target = e.target as HTMLInputElement;
       const hex = target.value;
-      const r = parseInt(hex.substr(1, 2), 16);
-      const g = parseInt(hex.substr(3, 2), 16);
-      const b = parseInt(hex.substr(5, 2), 16);
+      let r = parseInt(hex.substr(1, 2), 16);
+      let g = parseInt(hex.substr(3, 2), 16);
+      let b = parseInt(hex.substr(5, 2), 16);
+      
+      // For Mega Drive palette, restrict to RGB333 equivalent colors
+      if (currentPalette === 'megadrive') {
+        const rgb333 = toRGB333(r, g, b);
+        r = rgb333.r;
+        g = rgb333.g;
+        b = rgb333.b;
+      }
       
       const newColors = [...paletteColors];
       newColors[index] = { ...newColors[index], r, g, b };
       setPaletteColors(newColors);
       onPaletteUpdate?.(newColors);
+      
+      // Trigger image reprocessing with the new palette
+      setTimeout(() => {
+        onImageUpdate?.();
+      }, 50);
     });
     
     input.click();
   }, [paletteColors, onPaletteUpdate]);
+
+  // RGB333 conversion helper
+  const toRGB333 = (r: number, g: number, b: number) => {
+    const r3 = Math.round((r / 255) * 7);
+    const g3 = Math.round((g / 255) * 7);
+    const b3 = Math.round((b / 255) * 7);
+    
+    return {
+      r: Math.round((r3 / 7) * 255),
+      g: Math.round((g3 / 7) * 255),
+      b: Math.round((b3 / 7) * 255)
+    };
+  };
 
   const extractColorsFromImage = useCallback(async () => {
     if (!imageData && !originalImageSource) return;
@@ -284,7 +311,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                           backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                           opacity: color.transparent ? 0.5 : 1
                         }}
-                        onClick={() => selectNewColor(index)}
+                        onClick={() => selectNewColor(index, selectedPalette)}
                         title="Click to change color"
                       >
                         {color.transparent && (

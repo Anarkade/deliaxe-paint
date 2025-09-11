@@ -134,8 +134,12 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [integerScaling, setIntegerScaling] = useState(false);
   const [showTileGrid, setShowTileGrid] = useState(false);
   const [showFrameGrid, setShowFrameGrid] = useState(false);
-  const [tileSize, setTileSize] = useState(8);
-  const [frameSize, setFrameSize] = useState(16);
+  const [tileWidth, setTileWidth] = useState(8);
+  const [tileHeight, setTileHeight] = useState(8);
+  const [frameWidth, setFrameWidth] = useState(16);
+  const [frameHeight, setFrameHeight] = useState(16);
+  const [tileGridColor, setTileGridColor] = useState('#808080');
+  const [frameGridColor, setFrameGridColor] = useState('#808080');
   const programmaticZoomChange = useRef(false);
 
   // Get available cameras
@@ -440,10 +444,10 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 className="absolute pointer-events-none"
                 style={{
                   backgroundImage: `
-                    linear-gradient(to right, #808080 1px, transparent 1px),
-                    linear-gradient(to bottom, #808080 1px, transparent 1px)
+                    linear-gradient(to right, ${tileGridColor} 1px, transparent 1px),
+                    linear-gradient(to bottom, ${tileGridColor} 1px, transparent 1px)
                   `,
-                  backgroundSize: `${tileSize * (zoom[0] / 100)}px ${tileSize * (zoom[0] / 100)}px`,
+                  backgroundSize: `${tileWidth * (zoom[0] / 100)}px ${tileHeight * (zoom[0] / 100)}px`,
                   width: `${((showOriginal ? originalImage?.width : (processedImageData?.width ?? originalImage?.width)) || 0) * (zoom[0] / 100)}px`,
                   height: `${((showOriginal ? originalImage?.height : (processedImageData?.height ?? originalImage?.height)) || 0) * (zoom[0] / 100)}px`,
                   position: 'absolute',
@@ -460,10 +464,10 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 className="absolute pointer-events-none"
                 style={{
                   backgroundImage: `
-                    linear-gradient(to right, #808080 2px, transparent 2px),
-                    linear-gradient(to bottom, #808080 2px, transparent 2px)
+                    linear-gradient(to right, ${frameGridColor} 3px, transparent 3px),
+                    linear-gradient(to bottom, ${frameGridColor} 3px, transparent 3px)
                   `,
-                  backgroundSize: `${frameSize * (zoom[0] / 100)}px ${frameSize * (zoom[0] / 100)}px`,
+                  backgroundSize: `${frameWidth * (zoom[0] / 100)}px ${frameHeight * (zoom[0] / 100)}px`,
                   width: `${((showOriginal ? originalImage?.width : (processedImageData?.width ?? originalImage?.width)) || 0) * (zoom[0] / 100)}px`,
                   height: `${((showOriginal ? originalImage?.height : (processedImageData?.height ?? originalImage?.height)) || 0) * (zoom[0] / 100)}px`,
                   position: 'absolute',
@@ -601,23 +605,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                     {t('tileGrid')}
                   </label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <label className="text-xs text-muted-foreground min-w-fit">
-                    {t('tileSize')}:
-                  </label>
-                  <Select value={tileSize.toString()} onValueChange={(value) => setTileSize(parseInt(value))}>
-                    <SelectTrigger className="h-7 text-xs min-w-[80px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="4">4px</SelectItem>
-                      <SelectItem value="8">8px</SelectItem>
-                      <SelectItem value="16">16px</SelectItem>
-                      <SelectItem value="32">32px</SelectItem>
-                      <SelectItem value="64">64px</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                 {/* This section was replaced with the new tile size controls */}
               </div>
 
               <div className="space-y-3">
@@ -632,23 +620,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                     {t('framesGrid')}
                   </label>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <label className="text-xs text-muted-foreground min-w-fit">
-                    {t('frameSize')}:
-                  </label>
-                  <Select value={frameSize.toString()} onValueChange={(value) => setFrameSize(parseInt(value))}>
-                    <SelectTrigger className="h-7 text-xs min-w-[80px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="8">8px</SelectItem>
-                      <SelectItem value="16">16px</SelectItem>
-                      <SelectItem value="32">32px</SelectItem>
-                      <SelectItem value="64">64px</SelectItem>
-                      <SelectItem value="128">128px</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                 {/* This section was replaced with the new frame size controls */}
               </div>
             </div>
 
