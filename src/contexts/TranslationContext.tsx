@@ -80,6 +80,11 @@ interface Translation {
   fitToWidth: string;
   noImageLoaded: string;
   zoom: string;
+  tileGrid: string;
+  framesGrid: string;
+  tileSize: string;
+  frameSize: string;
+  integerScaling: string;
   
   // Resolution
   resolution: string;
@@ -203,6 +208,11 @@ const baseTranslation: Translation = {
   fitToWidth: 'Fit to width',
   noImageLoaded: 'No image loaded',
   zoom: 'Zoom',
+  tileGrid: 'Tile grid',
+  framesGrid: 'Frames grid',
+  tileSize: 'Tile size',
+  frameSize: 'Frame size',
+  integerScaling: 'Integer scaling',
   resolution: 'Resolution',
   targetResolution: 'Target Resolution',
   originalSize: 'Original',
@@ -324,6 +334,11 @@ const translations: Record<Language, Translation> = {
     fitToWidth: 'Ajustar al ancho',
     noImageLoaded: 'No hay imagen cargada',
     zoom: 'Zoom',
+    tileGrid: 'Cuadrícula de mosaicos',
+    framesGrid: 'Cuadrícula de marcos',
+    tileSize: 'Tamaño de mosaico',
+    frameSize: 'Tamaño de marco',
+    integerScaling: 'Escalado entero',
     resolution: 'Resolución',
     targetResolution: 'Resolución Objetivo',
     originalSize: 'Original',
@@ -440,6 +455,11 @@ const translations: Record<Language, Translation> = {
     processed: 'Procesada',
     fitToWidth: 'Ajustar al ancho',
     zoom: 'Zoom',
+    tileGrid: 'Cuadrícula de mosaicos',
+    framesGrid: 'Cuadrícula de marcos',
+    tileSize: 'Tamaño de mosaico',
+    frameSize: 'Tamaño de marco',
+    integerScaling: 'Escalado entero',
     imageLoaded: '¡Imagen cargada con éxito!',
     imageLoadError: 'Error al cargar la imagen',
     imageDownloaded: '¡Imagen descargada!',
@@ -521,6 +541,12 @@ const translations: Record<Language, Translation> = {
     processed: 'Processada',
     fitToWidth: 'Ajustar a l\'ample',
     noImageLoaded: 'No hi ha imatge carregada',
+    zoom: 'Zoom',
+    tileGrid: 'Quadrícula de mosaic',
+    framesGrid: 'Quadrícula de marcs',
+    tileSize: 'Mida de mosaic',
+    frameSize: 'Mida de marc',
+    integerScaling: 'Escalat enter',
     resolution: 'Resolució',
     targetResolution: 'Resolució Objectiu',
     originalSize: 'Original',

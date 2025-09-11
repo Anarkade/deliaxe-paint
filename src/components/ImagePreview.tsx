@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Eye, ZoomIn, Camera, RotateCcw, X, Maximize2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { analyzePNGFile, ImageFormatInfo } from '@/lib/pngAnalyzer';
@@ -108,9 +109,10 @@ interface ImagePreviewProps {
   showCameraPreview?: boolean;
   onCameraPreviewChange?: (show: boolean) => void;
   currentPaletteColors?: any[];
+  onSectionOpen?: () => void; // New callback for section opening
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -130,7 +132,10 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [currentCameraId, setCurrentCameraId] = useState<string>('');
   const [integerScaling, setIntegerScaling] = useState(false);
-  const [showGrid, setShowGrid] = useState(false);
+  const [showTileGrid, setShowTileGrid] = useState(false);
+  const [showFrameGrid, setShowFrameGrid] = useState(false);
+  const [tileSize, setTileSize] = useState(8);
+  const [frameSize, setFrameSize] = useState(16);
   const programmaticZoomChange = useRef(false);
 
   // Get available cameras
@@ -429,7 +434,8 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 pointerEvents: 'none'
               }}
             />
-            {showGrid && (
+            {/* Tile Grid */}
+            {showTileGrid && (
               <div
                 className="absolute pointer-events-none"
                 style={{
@@ -437,7 +443,27 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                     linear-gradient(to right, #808080 1px, transparent 1px),
                     linear-gradient(to bottom, #808080 1px, transparent 1px)
                   `,
-                  backgroundSize: `${8 * (zoom[0] / 100)}px ${8 * (zoom[0] / 100)}px`,
+                  backgroundSize: `${tileSize * (zoom[0] / 100)}px ${tileSize * (zoom[0] / 100)}px`,
+                  width: `${((showOriginal ? originalImage?.width : (processedImageData?.width ?? originalImage?.width)) || 0) * (zoom[0] / 100)}px`,
+                  height: `${((showOriginal ? originalImage?.height : (processedImageData?.height ?? originalImage?.height)) || 0) * (zoom[0] / 100)}px`,
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
+                  backgroundPosition: '0 0'
+                }}
+              />
+            )}
+            {/* Frame Grid */}
+            {showFrameGrid && (
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(to right, #808080 2px, transparent 2px),
+                    linear-gradient(to bottom, #808080 2px, transparent 2px)
+                  `,
+                  backgroundSize: `${frameSize * (zoom[0] / 100)}px ${frameSize * (zoom[0] / 100)}px`,
                   width: `${((showOriginal ? originalImage?.width : (processedImageData?.width ?? originalImage?.width)) || 0) * (zoom[0] / 100)}px`,
                   height: `${((showOriginal ? originalImage?.height : (processedImageData?.height ?? originalImage?.height)) || 0) * (zoom[0] / 100)}px`,
                   position: 'absolute',
@@ -488,9 +514,15 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             </div>
           </div>
         ) : (
-          <div className="w-full">
+          <div className="w-full" style={{ minHeight: showCameraPreview ? 'auto' : '300px' }}>
             <LoadImage 
-              onImageLoad={onLoadImageClick}
+              onImageLoad={(source) => {
+                onLoadImageClick?.(source);
+                // Scroll to top when image is loaded
+                setTimeout(() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 100);
+              }}
               onCameraPreviewRequest={() => onCameraPreviewChange?.(true)}
             />
           </div>
@@ -498,86 +530,143 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
       </div>
       
       {originalImage && (
-        <div className="space-y-3">
-          {/* First line - Resolutions only */}
-          <div className="flex items-center gap-6 text-sm font-mono text-muted-foreground">
-            <div>
-              <span className="text-blood-red">{t('originalLabel')}</span> {originalImage.width}×{originalImage.height} {originalFormat}
-            </div>
-            {processedImageData && (
-              <div>
-                <span className="text-blood-red">{t('processedLabel')}</span> {processedImageData.width}×{processedImageData.height} {processedFormat}
+        <div className="space-y-6">
+          {/* Image Information */}
+          <div className="bg-elegant-bg/50 rounded-lg p-4 border border-elegant-border/50">
+            <div className="flex flex-wrap items-center gap-4 text-sm font-mono">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">{t('originalLabel')}</span>
+                <span className="text-foreground font-semibold">{originalImage.width}×{originalImage.height}</span>
+                <span className="text-muted-foreground text-xs">{originalFormat}</span>
               </div>
-            )}
+              {processedImageData && (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{t('processedLabel')}</span>
+                  <span className="text-foreground font-semibold">{processedImageData.width}×{processedImageData.height}</span>
+                  <span className="text-muted-foreground text-xs">{processedFormat}</span>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Second line - Original/Processed toggle, Fit to width, Integer scaling, Grid */}
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-4">
-              {/* Original/Processed toggle button - left side */}
+          {/* Controls Section */}
+          <div className="bg-elegant-bg/30 rounded-lg p-4 border border-elegant-border/50 space-y-4">
+            {/* View Controls */}
+            <div className="flex flex-wrap items-center gap-3">
               {hasProcessedImage && (
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => setShowOriginal(!showOriginal)}
-                  className="text-xs"
+                  className="text-xs h-8"
                 >
                   <Eye className="h-3 w-3 mr-1" />
                   {showOriginal ? t('processed') : t('original')}
                 </Button>
               )}
               
-              {/* Fit to width button */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={fitToWidth}
-                className="text-xs"
+                className="text-xs h-8"
               >
                 <Maximize2 className="h-3 w-3 mr-1" />
                 {t('fitToWidth')}
               </Button>
               
-              {/* Integer scaling checkbox */}
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="integer-scaling" 
                   checked={integerScaling}
                   onCheckedChange={handleIntegerScalingChange}
                 />
-                <label htmlFor="integer-scaling" className="text-xs text-muted-foreground">
-                  Integer scaling
-                </label>
-              </div>
-              
-              {/* Grid checkbox */}
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="show-grid" 
-                  checked={showGrid}
-                  onCheckedChange={(checked) => setShowGrid(checked === true)}
-                />
-                <label htmlFor="show-grid" className="text-xs text-muted-foreground">
-                  Grid
+                <label htmlFor="integer-scaling" className="text-xs text-muted-foreground cursor-pointer">
+                  {t('integerScaling')}
                 </label>
               </div>
             </div>
-          </div>
 
-          {/* Third line - Zoom control */}
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-muted-foreground min-w-fit">
-              Zoom {sliderValue[0]}%
-            </label>
-            <Slider
-              value={sliderValue}
-              onValueChange={(v) => setSliderValue(v)}
-              onValueCommit={handleZoomChange}
-              min={25}
-              max={1600}
-              step={25}
-              className="flex-1"
-            />
+            {/* Grid Controls */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-foreground">{t('tileGrid')}</h4>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="show-tile-grid" 
+                    checked={showTileGrid}
+                    onCheckedChange={(checked) => setShowTileGrid(checked === true)}
+                  />
+                  <label htmlFor="show-tile-grid" className="text-xs text-muted-foreground cursor-pointer">
+                    {t('tileGrid')}
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-xs text-muted-foreground min-w-fit">
+                    {t('tileSize')}:
+                  </label>
+                  <Select value={tileSize.toString()} onValueChange={(value) => setTileSize(parseInt(value))}>
+                    <SelectTrigger className="h-7 text-xs min-w-[80px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="4">4px</SelectItem>
+                      <SelectItem value="8">8px</SelectItem>
+                      <SelectItem value="16">16px</SelectItem>
+                      <SelectItem value="32">32px</SelectItem>
+                      <SelectItem value="64">64px</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-foreground">{t('framesGrid')}</h4>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="show-frame-grid" 
+                    checked={showFrameGrid}
+                    onCheckedChange={(checked) => setShowFrameGrid(checked === true)}
+                  />
+                  <label htmlFor="show-frame-grid" className="text-xs text-muted-foreground cursor-pointer">
+                    {t('framesGrid')}
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-xs text-muted-foreground min-w-fit">
+                    {t('frameSize')}:
+                  </label>
+                  <Select value={frameSize.toString()} onValueChange={(value) => setFrameSize(parseInt(value))}>
+                    <SelectTrigger className="h-7 text-xs min-w-[80px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="8">8px</SelectItem>
+                      <SelectItem value="16">16px</SelectItem>
+                      <SelectItem value="32">32px</SelectItem>
+                      <SelectItem value="64">64px</SelectItem>
+                      <SelectItem value="128">128px</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Zoom Control */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">
+                {t('zoom')} {sliderValue[0]}%
+              </label>
+              <Slider
+                value={sliderValue}
+                onValueChange={(v) => setSliderValue(v)}
+                onValueCommit={handleZoomChange}
+                min={25}
+                max={1600}
+                step={25}
+                className="flex-1"
+              />
+            </div>
           </div>
         </div>
       )}

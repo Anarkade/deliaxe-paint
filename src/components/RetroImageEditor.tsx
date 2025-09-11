@@ -71,6 +71,16 @@ export const RetroImageEditor = () => {
     }
     
     setActiveTab(tabId);
+    
+    // Auto-scroll to show the opened section
+    if (originalImage && tabId !== 'load-image') {
+      setTimeout(() => {
+        const element = document.querySelector(`[data-section="${tabId}"]`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 100);
+    }
   };
 
   const saveToHistory = useCallback((state: HistoryState) => {
@@ -402,6 +412,9 @@ export const RetroImageEditor = () => {
           showCameraPreview={showCameraPreview}
           onCameraPreviewChange={setShowCameraPreview}
           currentPaletteColors={currentPaletteColors}
+          onSectionOpen={() => {
+            // Handle any additional logic when sections are opened
+          }}
         />
         </div>
 
@@ -453,32 +466,45 @@ export const RetroImageEditor = () => {
           {/* Load Image block hidden; handled inside ImagePreview */}
 
             {activeTab === 'palette-selector' && originalImage && (
-              <ColorPaletteSelector
-                selectedPalette={selectedPalette}
-                onPaletteChange={setSelectedPalette}
-              />
+              <div data-section="palette-selector">
+                <ColorPaletteSelector
+                  selectedPalette={selectedPalette}
+                  onPaletteChange={setSelectedPalette}
+                />
+              </div>
             )}
 
 
             {activeTab === 'resolution' && originalImage && (
-              <ResolutionSelector
-                selectedResolution={selectedResolution}
-                scalingMode={scalingMode}
-                onResolutionChange={setSelectedResolution}
-                onScalingModeChange={setScalingMode}
-              />
+              <div data-section="resolution">
+                <ResolutionSelector
+                  selectedResolution={selectedResolution}
+                  scalingMode={scalingMode}
+                  onResolutionChange={setSelectedResolution}
+                  onScalingModeChange={setScalingMode}
+                />
+              </div>
             )}
 
             {activeTab === 'export-image' && originalImage && (
-              <ExportImage
-                processedImageData={processedImageData}
-                selectedPalette={selectedPalette}
-                selectedResolution={selectedResolution}
-              />
+              <div data-section="export-image">
+                <ExportImage
+                  processedImageData={processedImageData}
+                  selectedPalette={selectedPalette}
+                  selectedResolution={selectedResolution}
+                />
+              </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-elegant-border bg-card px-6 py-4 mt-8">
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">©2025 Anarkade</p>
+        </div>
+      </footer>
     </div>
   );
 };
