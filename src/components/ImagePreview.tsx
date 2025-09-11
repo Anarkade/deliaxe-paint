@@ -431,9 +431,12 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                     linear-gradient(to bottom, #808080 1px, transparent 1px)
                   `,
                   backgroundSize: `${(zoom[0] / 100) * 8}px ${(zoom[0] / 100) * 8}px`,
-                  transform: `scale(${zoom[0] / 100}) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
-                  transformOrigin: 'center',
-                  backgroundPosition: 'center'
+                  width: `${(originalImage?.width || processedImageData?.width || 0) * (zoom[0] / 100)}px`,
+                  height: `${(originalImage?.height || processedImageData?.height || 0) * (zoom[0] / 100)}px`,
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`
                 }}
               />
             )}
@@ -560,7 +563,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             </label>
             <Slider
               value={zoom}
-              onValueChange={handleZoomChange}
+              onValueCommit={handleZoomChange}
               min={25}
               max={1600}
               step={25}
