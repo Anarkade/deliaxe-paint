@@ -287,6 +287,13 @@ export const RetroImageEditor = () => {
           data[i + 2] = closestColor[2]; // B
           // Alpha channel (i + 3) remains unchanged
         }
+        
+        // Update the current palette colors for the palette viewer to show exact 4 Game Boy colors
+        setCurrentPaletteColors(gbColors.map(color => ({
+          r: color[0],
+          g: color[1],
+          b: color[2]
+        })));
         break;
       
       case 'megadrive':
