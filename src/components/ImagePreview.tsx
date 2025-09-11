@@ -283,6 +283,15 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     }
   }, [integerScaling]);
 
+  // Handle integer scaling toggle
+  const handleIntegerScalingChange = useCallback((checked: boolean) => {
+    setIntegerScaling(checked);
+    if (checked) {
+      const roundedZoom = Math.round(zoom[0] / 100) * 100;
+      setZoom([Math.max(100, roundedZoom)]);
+    }
+  }, [zoom]);
+
   // Apply fit to width when image loads or resolution changes
   useEffect(() => {
     if (originalImage && containerWidth > 0) {
@@ -422,8 +431,9 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                     linear-gradient(to bottom, #808080 1px, transparent 1px)
                   `,
                   backgroundSize: `${zoom[0] / 100}px ${zoom[0] / 100}px`,
-                  transform: `translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
-                  transformOrigin: 'center'
+                  transform: `scale(${zoom[0] / 100}) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
+                  transformOrigin: 'center',
+                  backgroundPosition: 'center'
                 }}
               />
             )}
@@ -490,7 +500,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             )}
           </div>
 
-          {/* Second line - Original/Processed toggle, Integer scaling, Grid, Fit to width, Download */}
+          {/* Second line - Original/Processed toggle, Fit to width, Integer scaling, Grid */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-4">
               {/* Original/Processed toggle button - left side */}
@@ -506,12 +516,23 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 </Button>
               )}
               
+              {/* Fit to width button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fitToWidth}
+                className="text-xs"
+              >
+                <Maximize2 className="h-3 w-3 mr-1" />
+                {t('fitToWidth')}
+              </Button>
+              
               {/* Integer scaling checkbox */}
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="integer-scaling" 
                   checked={integerScaling}
-                  onCheckedChange={(checked) => setIntegerScaling(checked === true)}
+                  onCheckedChange={handleIntegerScalingChange}
                 />
                 <label htmlFor="integer-scaling" className="text-xs text-muted-foreground">
                   Integer scaling
@@ -530,29 +551,6 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 </label>
               </div>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={fitToWidth}
-                className="text-xs"
-              >
-                <Maximize2 className="h-3 w-3 mr-1" />
-                {t('fitToWidth')}
-              </Button>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onDownload}
-                disabled={!onDownload}
-                className="text-xs"
-              >
-                <Download className="h-3 w-3 mr-1" />
-                {t('downloadPng')}
-              </Button>
-            </div>
           </div>
 
           {/* Third line - Zoom control */}
@@ -568,21 +566,6 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
               step={25}
               className="flex-1"
             />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                programmaticZoomChange.current = true;
-                if (integerScaling) {
-                  setZoom([100]);
-                } else {
-                  setZoom([100]);
-                }
-              }}
-              className="text-xs min-w-fit"
-            >
-              100%
-            </Button>
           </div>
         </div>
       )}
