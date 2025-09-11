@@ -430,7 +430,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                     linear-gradient(to right, #808080 1px, transparent 1px),
                     linear-gradient(to bottom, #808080 1px, transparent 1px)
                   `,
-                  backgroundSize: `${zoom[0] / 100}px ${zoom[0] / 100}px`,
+                  backgroundSize: `${(zoom[0] / 100) * 8}px ${(zoom[0] / 100) * 8}px`,
                   transform: `scale(${zoom[0] / 100}) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
                   transformOrigin: 'center',
                   backgroundPosition: 'center'
