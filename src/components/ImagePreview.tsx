@@ -454,7 +454,10 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                   top: '50%',
                   left: '50%',
                   transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
-                  backgroundPosition: '0 0'
+                  backgroundPosition: '0 0',
+                  // Add border to ensure edge lines are visible
+                  borderRight: `1px solid ${tileGridColor}`,
+                  borderBottom: `1px solid ${tileGridColor}`
                 }}
               />
             )}
@@ -474,7 +477,10 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                   top: '50%',
                   left: '50%',
                   transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
-                  backgroundPosition: '0 0'
+                  backgroundPosition: '0 0',
+                  // Add border to ensure edge lines are visible  
+                  borderRight: `3px solid ${frameGridColor}`,
+                  borderBottom: `3px solid ${frameGridColor}`
                 }}
               />
             )}
