@@ -110,14 +110,14 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       setPaletteColors(newColors);
       onPaletteUpdate?.(newColors);
       
-      // Trigger image reprocessing with the new palette
+      // Trigger image reprocessing with the new palette immediately
       setTimeout(() => {
         onImageUpdate?.();
-      }, 50);
+      }, 10);
     });
     
     input.click();
-  }, [paletteColors, onPaletteUpdate]);
+  }, [paletteColors, onPaletteUpdate, onImageUpdate]);
 
   // RGB333 conversion helper
   const toRGB333 = (r: number, g: number, b: number) => {

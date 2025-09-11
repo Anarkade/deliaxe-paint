@@ -312,8 +312,14 @@ export const RetroImageEditor = () => {
       
       case 'megadrive':
         // Use custom colors if provided, otherwise generate palette
-        if (customColors && customColors.length === 16) {
+        if (customColors && customColors.length >= 1) {
           // Apply custom Mega Drive palette
+          // Ensure we have exactly 16 colors for Mega Drive
+          const megaDrivePalette = [...customColors];
+          while (megaDrivePalette.length < 16) {
+            megaDrivePalette.push({ r: 0, g: 0, b: 0 }); // Fill with transparent black
+          }
+          
           for (let i = 0; i < data.length; i += 4) {
             const r = data[i];
             const g = data[i + 1];
@@ -323,10 +329,10 @@ export const RetroImageEditor = () => {
             let closestIndex = 0;
             let minDistance = Infinity;
             
-            for (let j = 0; j < customColors.length; j++) {
-              const dr = r - customColors[j].r;
-              const dg = g - customColors[j].g;
-              const db = b - customColors[j].b;
+            for (let j = 0; j < megaDrivePalette.length; j++) {
+              const dr = r - megaDrivePalette[j].r;
+              const dg = g - megaDrivePalette[j].g;
+              const db = b - megaDrivePalette[j].b;
               const distance = dr * dr + dg * dg + db * db;
               
               if (distance < minDistance) {
@@ -335,10 +341,13 @@ export const RetroImageEditor = () => {
               }
             }
             
-            data[i] = customColors[closestIndex].r;
-            data[i + 1] = customColors[closestIndex].g;
-            data[i + 2] = customColors[closestIndex].b;
+            data[i] = megaDrivePalette[closestIndex].r;
+            data[i + 1] = megaDrivePalette[closestIndex].g;
+            data[i + 2] = megaDrivePalette[closestIndex].b;
           }
+          
+          // Update the current palette colors for the palette viewer
+          setCurrentPaletteColors(megaDrivePalette);
         } else {
           // Extract original colors to preserve palette order if possible
           const originalColors = extractColorsFromImageData(imageData);
@@ -352,8 +361,13 @@ export const RetroImageEditor = () => {
             data[i] = processedData[i];
           }
           
-          // Update the current palette colors for the palette viewer
-          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({
+          // Update the current palette colors for the palette viewer - ensure exactly 16 colors
+          const finalPalette = [...megaDriveResult.palette];
+          while (finalPalette.length < 16) {
+            finalPalette.push({ r: 0, g: 0, b: 0 });
+          }
+          
+          setCurrentPaletteColors(finalPalette.map(color => ({
             r: color.r,
             g: color.g,
             b: color.b
@@ -442,7 +456,11 @@ export const RetroImageEditor = () => {
           onLoadImageClick={handleLoadImageClick}
           originalImageSource={originalImageSource}
           selectedPalette={selectedPalette}
-          onPaletteUpdate={setCurrentPaletteColors}
+          onPaletteUpdate={(colors) => {
+            setCurrentPaletteColors(colors);
+            // Trigger image reprocessing with new palette
+            setTimeout(processImage, 50);
+          }}
           showCameraPreview={showCameraPreview}
           onCameraPreviewChange={setShowCameraPreview}
           currentPaletteColors={currentPaletteColors}

@@ -594,33 +594,107 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             {/* Grid Controls */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-3">
-                <h4 className="text-sm font-medium text-foreground">{t('tileGrid')}</h4>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="show-tile-grid" 
                     checked={showTileGrid}
                     onCheckedChange={(checked) => setShowTileGrid(checked === true)}
                   />
-                  <label htmlFor="show-tile-grid" className="text-xs text-muted-foreground cursor-pointer">
+                  <label htmlFor="show-tile-grid" className="text-sm font-medium text-foreground cursor-pointer">
                     {t('tileGrid')}
                   </label>
                 </div>
-                 {/* This section was replaced with the new tile size controls */}
+                
+                {showTileGrid && (
+                  <div className="ml-6 space-y-3">
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <div className="text-xs text-muted-foreground">{t('tileWidth')}</div>
+                      <input
+                        type="number"
+                        value={tileWidth}
+                        onChange={(e) => setTileWidth(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="h-8 px-2 text-xs border border-elegant-border rounded bg-card"
+                        min="1"
+                        max="256"
+                      />
+                      <span className="text-xs text-muted-foreground">px</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <div className="text-xs text-muted-foreground">{t('tileHeight')}</div>
+                      <input
+                        type="number"
+                        value={tileHeight}
+                        onChange={(e) => setTileHeight(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="h-8 px-2 text-xs border border-elegant-border rounded bg-card"
+                        min="1"
+                        max="256"
+                      />
+                      <span className="text-xs text-muted-foreground">px</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <div className="text-xs text-muted-foreground">{t('tileGridColor')}</div>
+                      <input
+                        type="color"
+                        value={tileGridColor}
+                        onChange={(e) => setTileGridColor(e.target.value)}
+                        className="h-8 w-full border border-elegant-border rounded cursor-pointer"
+                      />
+                      <span className="text-xs text-muted-foreground">{tileGridColor}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-sm font-medium text-foreground">{t('framesGrid')}</h4>
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="show-frame-grid" 
                     checked={showFrameGrid}
                     onCheckedChange={(checked) => setShowFrameGrid(checked === true)}
                   />
-                  <label htmlFor="show-frame-grid" className="text-xs text-muted-foreground cursor-pointer">
+                  <label htmlFor="show-frame-grid" className="text-sm font-medium text-foreground cursor-pointer">
                     {t('framesGrid')}
                   </label>
                 </div>
-                 {/* This section was replaced with the new frame size controls */}
+                
+                {showFrameGrid && (
+                  <div className="ml-6 space-y-3">
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <div className="text-xs text-muted-foreground">{t('frameWidth')}</div>
+                      <input
+                        type="number"
+                        value={frameWidth}
+                        onChange={(e) => setFrameWidth(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="h-8 px-2 text-xs border border-elegant-border rounded bg-card"
+                        min="1"
+                        max="256"
+                      />
+                      <span className="text-xs text-muted-foreground">px</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <div className="text-xs text-muted-foreground">{t('frameHeight')}</div>
+                      <input
+                        type="number"
+                        value={frameHeight}
+                        onChange={(e) => setFrameHeight(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="h-8 px-2 text-xs border border-elegant-border rounded bg-card"
+                        min="1"
+                        max="256"
+                      />
+                      <span className="text-xs text-muted-foreground">px</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <div className="text-xs text-muted-foreground">{t('frameGridColor')}</div>
+                      <input
+                        type="color"
+                        value={frameGridColor}
+                        onChange={(e) => setFrameGridColor(e.target.value)}
+                        className="h-8 w-full border border-elegant-border rounded cursor-pointer"
+                      />
+                      <span className="text-xs text-muted-foreground">{frameGridColor}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -652,9 +726,18 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             onPaletteUpdate={onPaletteUpdate}
             originalImageSource={originalImageSource}
             externalPalette={currentPaletteColors}
+            onImageUpdate={() => {
+              // Trigger image reprocessing when palette is updated
+              onSectionOpen?.();
+            }}
           />
         </div>
       )}
+      
+      {/* Copyright footer */}
+      <div className="text-center mt-8 text-xs text-muted-foreground">
+        ©2025 Anarkade
+      </div>
     </div>
   );
 };

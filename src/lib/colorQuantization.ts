@@ -241,6 +241,9 @@ export const processMegaDriveImage = (imageData: ImageData, originalPalette?: Co
     finalPalette.push({ r: 0, g: 0, b: 0, count: 0 });
   }
   
+  // Limit to exactly 16 colors
+  finalPalette = finalPalette.slice(0, 16);
+  
   // Step 5: Apply final palette to image
   const finalImageData = applyQuantizedPalette(rgb333ImageData, finalPalette);
   
