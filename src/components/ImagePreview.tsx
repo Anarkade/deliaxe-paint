@@ -841,10 +841,6 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
         </div>
       )}
       
-      {/* Copyright footer */}
-      <div className="text-center mt-8 text-xs text-muted-foreground">
-        ©2025 Anarkade
-      </div>
     </div>
   );
 };
