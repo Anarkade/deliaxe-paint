@@ -193,11 +193,15 @@ export const applyQuantizedPalette = (imageData: ImageData, palette: Color[]): I
 /**
  * Process image for Mega Drive format:
  * 1. Convert to RGB 3-3-3 format
- * 2. Quantize to 16 colors if needed
- * 3. Return processed image data and palette
+ * 2. Preserve original palette if image has 16 or fewer colors
+ * 3. Quantize to 16 colors only if needed
+ * 4. Return processed image data and palette
  */
-export const processMegaDriveImage = (imageData: ImageData): { imageData: ImageData; palette: Color[] } => {
-  // Step 1: Convert all colors to RGB 3-3-3 format
+export const processMegaDriveImage = (imageData: ImageData, originalPalette?: Color[]): { imageData: ImageData; palette: Color[] } => {
+  // Step 1: Extract original colors from the image
+  const originalColors = extractColorsFromImageData(imageData);
+  
+  // Step 2: Convert all colors to RGB 3-3-3 format
   const rgb333ImageData = new ImageData(
     new Uint8ClampedArray(imageData.data),
     imageData.width,
@@ -214,18 +218,25 @@ export const processMegaDriveImage = (imageData: ImageData): { imageData: ImageD
     }
   }
   
-  // Step 2: Extract unique colors from RGB 3-3-3 converted image
+  // Step 3: Extract unique colors from RGB 3-3-3 converted image
   const uniqueColors = extractColorsFromImageData(rgb333ImageData);
   
-  // Step 3: If more than 16 colors, quantize to 16
+  // Step 4: Determine final palette
   let finalPalette: Color[];
-  if (uniqueColors.length > 16) {
-    finalPalette = medianCutQuantization(uniqueColors, 16);
-  } else {
+  
+  // If original image had 16 or fewer colors, preserve the original palette order and RGB333 convert it
+  if (originalColors.length <= 16 && originalPalette && originalPalette.length <= 16) {
+    // Convert original palette to RGB 3-3-3 and preserve order
+    finalPalette = originalPalette.map(color => toRGB333(color.r, color.g, color.b));
+  } else if (uniqueColors.length <= 16) {
+    // Use the RGB 3-3-3 converted colors as-is
     finalPalette = uniqueColors;
+  } else {
+    // Quantize to 16 colors using median cut
+    finalPalette = medianCutQuantization(uniqueColors, 16);
   }
   
-  // Step 4: Apply final palette to image
+  // Step 5: Apply final palette to image
   const finalImageData = applyQuantizedPalette(rgb333ImageData, finalPalette);
   
   return {

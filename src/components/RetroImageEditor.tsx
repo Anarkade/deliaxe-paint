@@ -9,7 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Upload, Palette, Eye, Monitor, Download, Gamepad2 } from 'lucide-react';
-import { processMegaDriveImage } from '@/lib/colorQuantization';
+import { processMegaDriveImage, extractColorsFromImageData } from '@/lib/colorQuantization';
 import { analyzePNGFile } from '@/lib/pngAnalyzer';
 
 interface HistoryState {
@@ -290,8 +290,11 @@ export const RetroImageEditor = () => {
         break;
       
       case 'megadrive':
+        // Extract original colors to preserve palette order if possible
+        const originalColors = extractColorsFromImageData(imageData);
+        
         // Use advanced color quantization for Mega Drive
-        const megaDriveResult = processMegaDriveImage(imageData);
+        const megaDriveResult = processMegaDriveImage(imageData, originalColors.length <= 16 ? originalColors : undefined);
         
         // Replace the current image data with the processed data
         const processedData = megaDriveResult.imageData.data;

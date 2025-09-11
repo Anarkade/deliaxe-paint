@@ -79,6 +79,7 @@ interface Translation {
   processed: string;
   fitToWidth: string;
   noImageLoaded: string;
+  zoom: string;
   
   // Resolution
   resolution: string;
@@ -201,6 +202,7 @@ const baseTranslation: Translation = {
   processed: 'Processed',
   fitToWidth: 'Fit to width',
   noImageLoaded: 'No image loaded',
+  zoom: 'Zoom',
   resolution: 'Resolution',
   targetResolution: 'Target Resolution',
   originalSize: 'Original',
@@ -321,6 +323,7 @@ const translations: Record<Language, Translation> = {
     processed: 'Procesada',
     fitToWidth: 'Ajustar al ancho',
     noImageLoaded: 'No hay imagen cargada',
+    zoom: 'Zoom',
     resolution: 'Resolución',
     targetResolution: 'Resolución Objetivo',
     originalSize: 'Original',
@@ -436,6 +439,7 @@ const translations: Record<Language, Translation> = {
     original: 'Original',
     processed: 'Procesada',
     fitToWidth: 'Ajustar al ancho',
+    zoom: 'Zoom',
     imageLoaded: '¡Imagen cargada con éxito!',
     imageLoadError: 'Error al cargar la imagen',
     imageDownloaded: '¡Imagen descargada!',

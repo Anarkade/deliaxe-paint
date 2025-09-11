@@ -128,6 +128,8 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [currentCameraId, setCurrentCameraId] = useState<string>('');
+  const [integerScaling, setIntegerScaling] = useState(false);
+  const [showGrid, setShowGrid] = useState(false);
   const programmaticZoomChange = useRef(false);
 
   // Get available cameras
@@ -271,6 +273,16 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     }
   }, [originalImage, containerWidth, showOriginal, processedImageData]);
 
+  // Handle zoom change with integer scaling
+  const handleZoomChange = useCallback((newZoom: number[]) => {
+    if (integerScaling) {
+      const roundedZoom = Math.round(newZoom[0] / 100) * 100;
+      setZoom([Math.max(100, roundedZoom)]);
+    } else {
+      setZoom(newZoom);
+    }
+  }, [integerScaling]);
+
   // Apply fit to width when image loads or resolution changes
   useEffect(() => {
     if (originalImage && containerWidth > 0) {
@@ -401,6 +413,20 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 pointerEvents: 'none'
               }}
             />
+            {showGrid && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(to right, #808080 1px, transparent 1px),
+                    linear-gradient(to bottom, #808080 1px, transparent 1px)
+                  `,
+                  backgroundSize: `${zoom[0] / 100}px ${zoom[0] / 100}px`,
+                  transform: `translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
+                  transformOrigin: 'center'
+                }}
+              />
+            )}
           </div>
         ) : showCameraPreview ? (
           <div className="relative w-full">
@@ -452,60 +478,111 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
       
       {originalImage && (
         <div className="space-y-3">
-          {/* First line - Resolutions and toggle button */}
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            {/* Left side - Resolutions */}
-            <div className="flex items-center gap-6 text-sm font-mono text-muted-foreground">
-              <div>
-                <span className="text-blood-red">{t('originalLabel')}</span> {originalImage.width}×{originalImage.height} {originalFormat}
-              </div>
-              {processedImageData && (
-                <div>
-                  <span className="text-blood-red">{t('processedLabel')}</span> {processedImageData.width}×{processedImageData.height} {processedFormat}
-                </div>
-              )}
+          {/* First line - Resolutions only */}
+          <div className="flex items-center gap-6 text-sm font-mono text-muted-foreground">
+            <div>
+              <span className="text-blood-red">{t('originalLabel')}</span> {originalImage.width}×{originalImage.height} {originalFormat}
             </div>
-            
-            {/* Right side - Original/Processed toggle button */}
-            {hasProcessedImage && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowOriginal(!showOriginal)}
-                className="flex items-center gap-2 rounded-lg"
-              >
-                <Eye className="h-4 w-4" />
-                {showOriginal ? t('processed') : t('original')}
-              </Button>
+            {processedImageData && (
+              <div>
+                <span className="text-blood-red">{t('processedLabel')}</span> {processedImageData.width}×{processedImageData.height} {processedFormat}
+              </div>
             )}
           </div>
-          
-          {/* Second line - Fit to width button and zoom slider */}
+
+          {/* Second line - Original/Processed toggle, Integer scaling, Grid, Fit to width, Download */}
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-4">
+              {/* Original/Processed toggle button - left side */}
+              {hasProcessedImage && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowOriginal(!showOriginal)}
+                  className="text-xs"
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  {showOriginal ? t('processed') : t('original')}
+                </Button>
+              )}
+              
+              {/* Integer scaling checkbox */}
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="integer-scaling" 
+                  checked={integerScaling}
+                  onCheckedChange={(checked) => setIntegerScaling(checked === true)}
+                />
+                <label htmlFor="integer-scaling" className="text-xs text-muted-foreground">
+                  Integer scaling
+                </label>
+              </div>
+              
+              {/* Grid checkbox */}
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="show-grid" 
+                  checked={showGrid}
+                  onCheckedChange={(checked) => setShowGrid(checked === true)}
+                />
+                <label htmlFor="show-grid" className="text-xs text-muted-foreground">
+                  Grid
+                </label>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fitToWidth}
+                className="text-xs"
+              >
+                <Maximize2 className="h-3 w-3 mr-1" />
+                {t('fitToWidth')}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onDownload}
+                disabled={!onDownload}
+                className="text-xs"
+              >
+                <Download className="h-3 w-3 mr-1" />
+                {t('downloadPng')}
+              </Button>
+            </div>
+          </div>
+
+          {/* Third line - Zoom control */}
           <div className="flex items-center gap-4">
-            {/* Fit to width button */}
+            <label className="text-sm font-medium text-muted-foreground min-w-fit">
+              Zoom {zoom[0]}%
+            </label>
+            <Slider
+              value={zoom}
+              onValueChange={handleZoomChange}
+              min={25}
+              max={1600}
+              step={25}
+              className="flex-1"
+            />
             <Button
-              onClick={fitToWidth}
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 flex-shrink-0"
+              onClick={() => {
+                programmaticZoomChange.current = true;
+                if (integerScaling) {
+                  setZoom([100]);
+                } else {
+                  setZoom([100]);
+                }
+              }}
+              className="text-xs min-w-fit"
             >
-              <Maximize2 className="h-4 w-4" />
-              {t('fitToWidth')}
+              100%
             </Button>
-            
-            {/* Zoom slider - takes remaining space */}
-            <div className="flex items-center space-x-2 flex-1">
-              <ZoomIn className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <Slider
-                value={zoom}
-                onValueChange={setZoom}
-                max={1600}
-                min={0}
-                step={1}
-                className="flex-1"
-              />
-              <span className="text-sm text-muted-foreground min-w-[50px] flex-shrink-0">{zoom[0]}%</span>
-            </div>
           </div>
         </div>
       )}
