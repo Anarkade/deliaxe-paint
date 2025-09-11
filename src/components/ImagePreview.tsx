@@ -118,6 +118,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const containerRef = useRef<HTMLDivElement>(null);
   const [showOriginal, setShowOriginal] = useState(false);
   const [zoom, setZoom] = useState([100]);
+  const [sliderValue, setSliderValue] = useState<number[]>([100]);
   const [containerWidth, setContainerWidth] = useState(0);
   const [previewHeight, setPreviewHeight] = useState(400);
   const [originalFormat, setOriginalFormat] = useState<string>('');
@@ -270,6 +271,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
       const newZoom = Math.max(1, Math.min(1600, fitZoom));
       programmaticZoomChange.current = true;
       setZoom([newZoom]);
+      setSliderValue([newZoom]);
     }
   }, [originalImage, containerWidth, showOriginal, processedImageData]);
 
@@ -277,9 +279,12 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const handleZoomChange = useCallback((newZoom: number[]) => {
     if (integerScaling) {
       const roundedZoom = Math.round(newZoom[0] / 100) * 100;
-      setZoom([Math.max(100, roundedZoom)]);
+      const applied = Math.max(100, roundedZoom);
+      setZoom([applied]);
+      setSliderValue([applied]);
     } else {
       setZoom(newZoom);
+      setSliderValue(newZoom);
     }
   }, [integerScaling]);
 
@@ -288,7 +293,9 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     setIntegerScaling(checked);
     if (checked) {
       const roundedZoom = Math.round(zoom[0] / 100) * 100;
-      setZoom([Math.max(100, roundedZoom)]);
+      const applied = Math.max(100, roundedZoom);
+      setZoom([applied]);
+      setSliderValue([applied]);
     }
   }, [zoom]);
 
@@ -431,8 +438,8 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                     linear-gradient(to bottom, #808080 1px, transparent 1px)
                   `,
                   backgroundSize: `${(zoom[0] / 100) * 8}px ${(zoom[0] / 100) * 8}px`,
-                  width: `${(originalImage?.width || processedImageData?.width || 0) * (zoom[0] / 100)}px`,
-                  height: `${(originalImage?.height || processedImageData?.height || 0) * (zoom[0] / 100)}px`,
+                  width: `${(((showOriginal ? originalImage?.width : (processedImageData?.width ?? originalImage?.width)) || 0) * (zoom[0] / 100))}px`,
+                  height: `${(((showOriginal ? originalImage?.height : (processedImageData?.height ?? originalImage?.height)) || 0) * (zoom[0] / 100))}px`,
                   position: 'absolute',
                   top: '50%',
                   left: '50%',
@@ -559,10 +566,11 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
           {/* Third line - Zoom control */}
           <div className="flex items-center gap-4">
             <label className="text-sm font-medium text-muted-foreground min-w-fit">
-              Zoom {zoom[0]}%
+              Zoom {sliderValue[0]}%
             </label>
             <Slider
-              value={zoom}
+              value={sliderValue}
+              onValueChange={(v) => setSliderValue(v)}
               onValueCommit={handleZoomChange}
               min={25}
               max={1600}
