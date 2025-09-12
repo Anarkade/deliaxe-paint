@@ -153,6 +153,18 @@ interface Translation {
   neoGeoSingleColors: string;
   zxSpectrumColors: string;
 
+  // Alignment options
+  alignment: string;
+  alignTopLeft: string;
+  alignTopCenter: string;
+  alignTopRight: string;
+  alignMiddleLeft: string;
+  alignMiddleCenter: string;
+  alignMiddleRight: string;
+  alignBottomLeft: string;
+  alignBottomCenter: string;
+  alignBottomRight: string;
+
   // Language names
   languageNames: Record<Language, string>;
 }
@@ -269,6 +281,16 @@ const baseTranslation: Translation = {
     neoGeoMultiColors: '4096 colors (16×256)',
     neoGeoSingleColors: '16 colors (15-bit)',
     zxSpectrumColors: '16 colors (4-bit)',
+  alignment: 'Alignment',
+  alignTopLeft: 'Top Left',
+  alignTopCenter: 'Top Center',
+  alignTopRight: 'Top Right',
+  alignMiddleLeft: 'Middle Left',
+  alignMiddleCenter: 'Middle Center',
+  alignMiddleRight: 'Middle Right',
+  alignBottomLeft: 'Bottom Left',
+  alignBottomCenter: 'Bottom Center',
+  alignBottomRight: 'Bottom Right',
   languageNames: {
     'en': 'English',
     'es-ES': 'Español (España)',
@@ -290,10 +312,25 @@ const baseTranslation: Translation = {
   }
 };
 
+// Create a template with alignment translations that can be extended
+const alignmentTranslations = {
+  alignment: 'Alignment',
+  alignTopLeft: 'Top Left',
+  alignTopCenter: 'Top Center', 
+  alignTopRight: 'Top Right',
+  alignMiddleLeft: 'Middle Left',
+  alignMiddleCenter: 'Middle Center',
+  alignMiddleRight: 'Middle Right',
+  alignBottomLeft: 'Bottom Left',
+  alignBottomCenter: 'Bottom Center',
+  alignBottomRight: 'Bottom Right',
+};
+
 const translations: Record<Language, Translation> = {
-  en: baseTranslation,
+  en: { ...baseTranslation, ...alignmentTranslations },
   'es-ES': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Cargar Imagen',
     paletteViewer: 'Visor de Paleta',
     changeResolution: 'Cambiar Resolución',
@@ -402,6 +439,17 @@ const translations: Record<Language, Translation> = {
     neoGeoMultiColors: '4096 colores (16×256)',
     neoGeoSingleColors: '16 colores (15-bit)',
     zxSpectrumColors: '16 colores (4-bit)',
+    // Spanish specific translations for alignment
+    alignment: 'Alineación',
+    alignTopLeft: 'Superior Izquierda',
+    alignTopCenter: 'Superior Centro',
+    alignTopRight: 'Superior Derecha',
+    alignMiddleLeft: 'Centro Izquierda',
+    alignMiddleCenter: 'Centro Centro',
+    alignMiddleRight: 'Centro Derecha',
+    alignBottomLeft: 'Inferior Izquierda',
+    alignBottomCenter: 'Inferior Centro',
+    alignBottomRight: 'Inferior Derecha',
     languageNames: {
       'en': 'English (Inglés)',
       'es-ES': 'Español (España)',
@@ -424,6 +472,7 @@ const translations: Record<Language, Translation> = {
   },
   'es-LA': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Cargar Imagen',
     paletteViewer: 'Visor de Paleta',
     changeResolution: 'Cambiar Resolución',
@@ -517,6 +566,7 @@ const translations: Record<Language, Translation> = {
   },
   'ca': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Carregar Imatge',
     paletteViewer: 'Visor de Paleta',
     changeResolution: 'Canviar Resolució',
@@ -627,6 +677,7 @@ const translations: Record<Language, Translation> = {
   },
   'fr': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Charger Image',
     paletteViewer: 'Visionneuse de Palette',
     changeResolution: 'Changer Résolution',
@@ -737,6 +788,7 @@ const translations: Record<Language, Translation> = {
   },
   'de': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Bild Laden',
     paletteViewer: 'Palette Betrachter',
     changeResolution: 'Auflösung Ändern',
@@ -828,6 +880,7 @@ const translations: Record<Language, Translation> = {
   },
   'it': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Carica Immagine',
     paletteViewer: 'Visualizzatore Tavolozza',
     changeResolution: 'Cambia Risoluzione',
@@ -925,6 +978,7 @@ const translations: Record<Language, Translation> = {
   },
   'pt-PT': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Carregar Imagem',
     paletteViewer: 'Visualizador de Paleta',
     changeResolution: 'Alterar Resolução',
@@ -1016,6 +1070,7 @@ const translations: Record<Language, Translation> = {
   },
   'pt-BR': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Carregar Imagem',
     paletteViewer: 'Visualizador de Paleta',
     changeResolution: 'Alterar Resolução',
@@ -1107,6 +1162,7 @@ const translations: Record<Language, Translation> = {
   },
   'ru': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Загрузить Изображение',
     paletteViewer: 'Просмотр Палитры',
     changeResolution: 'Изменить Разрешение',
@@ -1198,6 +1254,7 @@ const translations: Record<Language, Translation> = {
   },
   'zh-CN': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: '加载图像',
     paletteViewer: '调色板查看器',
     changeResolution: '更改分辨率',
@@ -1289,6 +1346,7 @@ const translations: Record<Language, Translation> = {
   },
   'zh-TW': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: '載入圖像',
     paletteViewer: '調色盤檢視器',
     changeResolution: '更改解析度',
@@ -1380,6 +1438,7 @@ const translations: Record<Language, Translation> = {
   },
   'ja': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: '画像を読み込み',
     paletteViewer: 'パレットビューア',
     changeResolution: '解像度を変更',
@@ -1471,6 +1530,7 @@ const translations: Record<Language, Translation> = {
   },
   'pl': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Wczytaj Obraz',
     paletteViewer: 'Przeglądarka Palety',
     changeResolution: 'Zmień Rozdzielczość',
@@ -1562,6 +1622,7 @@ const translations: Record<Language, Translation> = {
   },
   'tr': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Resim Yükle',
     paletteViewer: 'Palet Görüntüleyici',
     changeResolution: 'Çözünürlüğü Değiştir',
@@ -1653,6 +1714,7 @@ const translations: Record<Language, Translation> = {
   },
   'eu': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Irudia Kargatu',
     paletteViewer: 'Paleta Ikustailea',
     changeResolution: 'Bereizmena Aldatu',
@@ -1744,6 +1806,7 @@ const translations: Record<Language, Translation> = {
   },
   'oc': { 
     ...baseTranslation,
+    ...alignmentTranslations,
     loadImage: 'Cargar Imatge',
     paletteViewer: 'Visualizaire de Paleta',
     changeResolution: 'Cambiar Resolucion',

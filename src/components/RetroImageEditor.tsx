@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 // import removed: LoadImage now handled within ImagePreview
 import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
-import { ResolutionSelector, ResolutionType, ScalingMode } from './ResolutionSelector';
+import { ResolutionSelector, ResolutionType, CombinedScalingMode } from './ResolutionSelector';
 import { ImagePreview } from './ImagePreview';
 import { ExportImage } from './ExportImage';
 import { LanguageSelector } from './LanguageSelector';
@@ -16,7 +16,7 @@ interface HistoryState {
   imageData: ImageData | null;
   palette: PaletteType;
   resolution: ResolutionType;
-  scaling: ScalingMode;
+  scaling: CombinedScalingMode;
 }
 
 // Maximum dimensions to prevent memory issues
@@ -29,7 +29,7 @@ export const RetroImageEditor = () => {
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
   const [selectedPalette, setSelectedPalette] = useState<PaletteType>('original');
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
-  const [scalingMode, setScalingMode] = useState<ScalingMode>('fit');
+  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
   const [currentPaletteColors, setCurrentPaletteColors] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<string>('load-image');
   const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
@@ -214,10 +214,7 @@ export const RetroImageEditor = () => {
           case 'stretch':
             ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
             break;
-          case 'center':
-            const centerX = (targetWidth - originalImage.width) / 2;
-            const centerY = (targetHeight - originalImage.height) / 2;
-            ctx.drawImage(originalImage, centerX, centerY);
+          case 'fit':
             break;
           case 'fit':
             const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
@@ -226,6 +223,42 @@ export const RetroImageEditor = () => {
             const fitX = (targetWidth - scaledWidth) / 2;
             const fitY = (targetHeight - scaledHeight) / 2;
             ctx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
+            break;
+          default:
+            // Handle alignment modes
+            const alignmentModes = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
+            if (alignmentModes.includes(scalingMode)) {
+              const [vAlign, hAlign] = (scalingMode as string).split('-');
+              let x = 0, y = 0;
+              
+              // Calculate horizontal position
+              switch (hAlign) {
+                case 'left':
+                  x = 0;
+                  break;
+                case 'center':
+                  x = (targetWidth - originalImage.width) / 2;
+                  break;
+                case 'right':
+                  x = targetWidth - originalImage.width;
+                  break;
+              }
+              
+              // Calculate vertical position
+              switch (vAlign) {
+                case 'top':
+                  y = 0;
+                  break;
+                case 'middle':
+                  y = (targetHeight - originalImage.height) / 2;
+                  break;
+                case 'bottom':
+                  y = targetHeight - originalImage.height;
+                  break;
+              }
+              
+              ctx.drawImage(originalImage, x, y);
+            }
             break;
         }
       } else {

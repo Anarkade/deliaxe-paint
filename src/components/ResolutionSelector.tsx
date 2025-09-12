@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Monitor, AlignCenter, Maximize } from 'lucide-react';
+import { Monitor, AlignCenter, Maximize, AlignLeft, AlignRight, ChevronUp, ChevronDown } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export type ResolutionType = 
@@ -16,13 +16,15 @@ export type ResolutionType =
   | '320x240'
   | '640x200';
 
-export type ScalingMode = 'stretch' | 'center' | 'fit';
+export type AlignmentMode = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-center' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
+export type ScalingMode = 'stretch' | 'fit';
+export type CombinedScalingMode = ScalingMode | AlignmentMode;
 
 interface ResolutionSelectorProps {
   selectedResolution: ResolutionType;
-  scalingMode: ScalingMode;
+  scalingMode: CombinedScalingMode;
   onResolutionChange: (resolution: ResolutionType) => void;
-  onScalingModeChange: (mode: ScalingMode) => void;
+  onScalingModeChange: (mode: CombinedScalingMode) => void;
 }
 
 
@@ -49,9 +51,24 @@ export const ResolutionSelector = ({
 
   const scalingOptions = [
     { value: 'stretch' as const, label: t('stretch'), icon: Maximize, desc: t('stretchToFit') },
-    { value: 'center' as const, label: t('center'), icon: AlignCenter, desc: t('centerWithBars') },
     { value: 'fit' as const, label: t('fit'), icon: Monitor, desc: t('scaleToFit') },
   ];
+
+  const alignmentOptions = [
+    { value: 'top-left' as const, label: t('alignTopLeft'), icon: AlignLeft, position: 'top-left' },
+    { value: 'top-center' as const, label: t('alignTopCenter'), icon: ChevronUp, position: 'top-center' },
+    { value: 'top-right' as const, label: t('alignTopRight'), icon: AlignRight, position: 'top-right' },
+    { value: 'middle-left' as const, label: t('alignMiddleLeft'), icon: AlignLeft, position: 'middle-left' },
+    { value: 'middle-center' as const, label: t('alignMiddleCenter'), icon: AlignCenter, position: 'middle-center' },
+    { value: 'middle-right' as const, label: t('alignMiddleRight'), icon: AlignRight, position: 'middle-right' },
+    { value: 'bottom-left' as const, label: t('alignBottomLeft'), icon: AlignLeft, position: 'bottom-left' },
+    { value: 'bottom-center' as const, label: t('alignBottomCenter'), icon: ChevronDown, position: 'bottom-center' },
+    { value: 'bottom-right' as const, label: t('alignBottomRight'), icon: AlignRight, position: 'bottom-right' },
+  ];
+
+  const isAlignmentMode = (mode: CombinedScalingMode): mode is AlignmentMode => {
+    return alignmentOptions.some(option => option.value === mode);
+  };
   return (
     <Card className="p-6 border-pixel-grid bg-card">
       <div className="space-y-4">
@@ -80,25 +97,51 @@ export const ResolutionSelector = ({
           </div>
           
           {selectedResolution !== 'original' && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-foreground">
-                {t('scalingMode')}
-              </label>
-              <div className="grid grid-cols-3 gap-2">
-                {scalingOptions.map((option) => {
-                  const Icon = option.icon;
-                  return (
-                    <Button
-                      key={option.value}
-                      variant={scalingMode === option.value ? "default" : "secondary"}
-                      onClick={() => onScalingModeChange(option.value)}
-                      className="flex flex-col gap-1 h-auto p-3"
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="text-xs">{option.label}</span>
-                    </Button>
-                  );
-                })}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-foreground">
+                  {t('scalingMode')}
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {scalingOptions.map((option) => {
+                    const Icon = option.icon;
+                    return (
+                      <Button
+                        key={option.value}
+                        variant={scalingMode === option.value ? "default" : "secondary"}
+                        onClick={() => onScalingModeChange(option.value)}
+                        className="flex flex-col gap-1 h-auto p-3"
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="text-xs">{option.label}</span>
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-foreground">
+                  {t('alignment')}
+                </label>
+                <Select 
+                  value={isAlignmentMode(scalingMode) ? scalingMode : 'middle-center'} 
+                  onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
+                >
+                  <SelectTrigger className="bg-console-bg border-pixel-grid">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card border-pixel-grid">
+                    {alignmentOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value} className="text-foreground">
+                        <div className="flex items-center gap-2">
+                          <option.icon className="h-4 w-4" />
+                          <span>{option.label}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
