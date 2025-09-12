@@ -164,29 +164,31 @@ export const ResolutionSelector = ({
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-foreground">
-                  {t('alignment')}
-                </label>
-                 <Select 
-                   value={isAlignmentMode(scalingMode) ? scalingMode : (scalingMode === 'dont-scale' ? 'middle-center' : 'middle-center')} 
-                   onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
-                >
-                  <SelectTrigger className="bg-console-bg border-pixel-grid">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-pixel-grid">
-                     {alignmentOptions.map((option) => (
-                       <SelectItem key={option.value} value={option.value} className="text-foreground">
-                         <div className="flex items-center gap-2">
-                           <AlignmentIcon position={option.position} />
-                           <span>{option.label}</span>
-                         </div>
-                       </SelectItem>
-                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {(scalingMode === 'fit' || scalingMode === 'dont-scale' || isAlignmentMode(scalingMode)) && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-foreground">
+                    {t('alignment')}
+                  </label>
+                   <Select 
+                     value={isAlignmentMode(scalingMode) ? scalingMode : (scalingMode === 'dont-scale' ? 'middle-center' : 'middle-center')} 
+                     onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
+                  >
+                    <SelectTrigger className="bg-console-bg border-pixel-grid">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border-pixel-grid">
+                       {alignmentOptions.map((option) => (
+                         <SelectItem key={option.value} value={option.value} className="text-foreground">
+                           <div className="flex items-center gap-2">
+                             <AlignmentIcon position={option.position} />
+                             <span>{option.label}</span>
+                           </div>
+                         </SelectItem>
+                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </div>
           )}
         </div>

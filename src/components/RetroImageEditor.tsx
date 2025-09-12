@@ -7,8 +7,10 @@ import { ExportImage } from './ExportImage';
 import { LanguageSelector } from './LanguageSelector';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Upload, Palette, Eye, Monitor, Download, Gamepad2 } from 'lucide-react';
+import { Upload, Palette, Eye, Monitor, Download, Gamepad2, Grid3X3 } from 'lucide-react';
 import { processMegaDriveImage, extractColorsFromImageData } from '@/lib/colorQuantization';
 import { analyzePNGFile } from '@/lib/pngAnalyzer';
 
@@ -540,6 +542,16 @@ export const RetroImageEditor = () => {
             </Button>
             
             <Button
+              variant={getButtonVariant('change-grids')}
+              onClick={() => handleTabClick('change-grids')}
+              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
+              disabled={!originalImage}
+            >
+              <Grid3X3 className="h-4 w-4 flex-shrink-0" />
+              <span className="truncate">{t('changeGrids')}</span>
+            </Button>
+            
+            <Button
               variant={getButtonVariant('export-image')}
               onClick={() => handleTabClick('export-image')}
               className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
@@ -572,6 +584,47 @@ export const RetroImageEditor = () => {
                   onResolutionChange={setSelectedResolution}
                   onScalingModeChange={setScalingMode}
                 />
+              </div>
+            )}
+
+            {activeTab === 'change-grids' && originalImage && (
+              <div data-section="change-grids">
+                <Card className="bg-elegant-bg border-elegant-border p-6">
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                      <Grid3X3 className="h-5 w-5 text-cyan-400" />
+                      <h2 className="text-lg font-semibold text-foreground">{t('changeGrids')}</h2>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="show-tile-grid" 
+                            checked={false}
+                            onCheckedChange={() => {}}
+                          />
+                          <label htmlFor="show-tile-grid" className="text-sm font-medium text-foreground cursor-pointer">
+                            {t('tileGrid')}
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="show-frame-grid" 
+                            checked={false}
+                            onCheckedChange={() => {}}
+                          />
+                          <label htmlFor="show-frame-grid" className="text-sm font-medium text-foreground cursor-pointer">
+                            {t('framesGrid')}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
               </div>
             )}
 

@@ -10,6 +10,7 @@ interface Translation {
   loadImage: string;
   paletteViewer: string;
   changeResolution: string;
+  changeGrids: string;
   settings: string;
   exportImage: string;
   preview: string;
@@ -174,6 +175,7 @@ const baseTranslation: Translation = {
   loadImage: 'Load Image',
   paletteViewer: 'Palette Viewer',
   changeResolution: 'Change Resolution',
+  changeGrids: 'Change Grids',
   settings: 'Settings',
   exportImage: 'Export Image',
   preview: 'Preview',
@@ -336,6 +338,7 @@ const translations: Record<Language, Translation> = {
     loadImage: 'Cargar Imagen',
     paletteViewer: 'Visor de Paleta',
     changeResolution: 'Cambiar Resolución',
+    changeGrids: 'Cambiar Cuadrículas',
     settings: 'Configuración',
     exportImage: 'Exportar Imagen',
     preview: 'Vista Previa',
@@ -479,6 +482,7 @@ const translations: Record<Language, Translation> = {
     loadImage: 'Cargar Imagen',
     paletteViewer: 'Visor de Paleta',
     changeResolution: 'Cambiar Resolución',
+    changeGrids: 'Cambiar Cuadrículas',
     settings: 'Configuración',
     exportImage: 'Exportar Imagen',
     preview: 'Vista Previa',
@@ -686,6 +690,7 @@ const translations: Record<Language, Translation> = {
     loadImage: 'Charger Image',
     paletteViewer: 'Visionneuse de Palette',
     changeResolution: 'Changer Résolution',
+    changeGrids: 'Changer les Grilles',
     settings: 'Paramètres',
     exportImage: 'Exporter Image',
     preview: 'Aperçu',

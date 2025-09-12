@@ -139,7 +139,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [frameWidth, setFrameWidth] = useState(16);
   const [frameHeight, setFrameHeight] = useState(16);
   const [tileGridColor, setTileGridColor] = useState('#808080');
-  const [frameGridColor, setFrameGridColor] = useState('#808080');
+  const [frameGridColor, setFrameGridColor] = useState('#96629d');
   const programmaticZoomChange = useRef(false);
   
   // Touch/pinch zoom state
@@ -695,6 +695,66 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                   <span className="text-muted-foreground text-xs">{processedFormat}</span>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Zoom and View Controls */}
+          <div className="flex flex-wrap items-center gap-3 p-4 bg-elegant-bg/30 rounded-lg border border-elegant-border/50">
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-foreground">{t('zoom')}</span>
+                <span className="text-xs text-muted-foreground font-mono">{zoom[0]}%</span>
+              </div>
+              <div className="flex-1 min-w-[200px] max-w-[300px]">
+                <Slider
+                  value={sliderValue}
+                  onValueChange={handleZoomChange}
+                  max={1600}
+                  min={1}
+                  step={integerScaling ? 100 : 1}
+                  className="w-full"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <ZoomIn className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </div>
+            
+            {/* View and Fit Controls - Second Line */}
+            <div className="flex flex-wrap items-center gap-3 w-full">
+              {hasProcessedImage && (
+                <Button
+                  variant="highlighted"
+                  size="sm"
+                  onClick={() => setShowOriginal(!showOriginal)}
+                  className="text-xs h-8"
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  {showOriginal ? t('processed') : t('original')}
+                </Button>
+              )}
+              
+              <Button
+                variant="highlighted"
+                size="sm"
+                onClick={fitToWidth}
+                className="text-xs h-8"
+              >
+                <Maximize2 className="h-3 w-3 mr-1" />
+                {t('fitToWidth')}
+              </Button>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="integer-scaling" 
+                  checked={integerScaling}
+                  onCheckedChange={handleIntegerScalingChange}
+                />
+                <label htmlFor="integer-scaling" className="text-sm font-medium text-foreground cursor-pointer">
+                  {t('integerScaling')}
+                </label>
+              </div>
             </div>
           </div>
 
