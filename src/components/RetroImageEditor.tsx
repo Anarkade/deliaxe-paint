@@ -71,10 +71,10 @@ export const RetroImageEditor = () => {
       // Handle floating sections (except load-image)
       if (activeTab && activeTab !== 'load-image') {
         const isOutsideSection = !target.closest('[data-section]');
-        const isInsideFloatingBox = target.closest('[data-section="' + activeTab + '"]');
+        const isButton = target.closest('button') || target.closest('[role="button"]');
         
-        // Only close if clicking outside all sections and not inside the current floating box
-        if (isOutsideSection && !isInsideFloatingBox) {
+        // Only close if clicking outside and NOT on any button
+        if (isOutsideSection && !isButton) {
           setActiveTab(null);
         }
       }
@@ -128,10 +128,6 @@ export const RetroImageEditor = () => {
     
     setActiveTab(tabId);
     
-    // Set default values when opening resolution tab for the first time
-    if (tabId === 'resolution' && scalingMode === 'fit') {
-      setScalingMode('middle-center');
-    }
     
     // Auto-scroll to show the opened section
     if (originalImage && tabId !== 'load-image') {
