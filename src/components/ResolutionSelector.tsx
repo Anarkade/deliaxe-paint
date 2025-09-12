@@ -122,24 +122,6 @@ export const ResolutionSelector = ({
         </h3>
         
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Select value={selectedResolution} onValueChange={onResolutionChange}>
-              <SelectTrigger className="bg-console-bg border-pixel-grid">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-pixel-grid">
-                {resolutionOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value} className="text-foreground">
-                    <div className="flex flex-col">
-                      <span className="font-medium">{option.label}</span>
-                      <span className="text-xs text-muted-foreground">{option.desc}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
           {selectedResolution !== 'original' && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -191,6 +173,28 @@ export const ResolutionSelector = ({
               )}
             </div>
           )}
+          
+          {/* Target Resolution - moved to the bottom */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              {t('targetResolution')}
+            </label>
+            <Select value={selectedResolution} onValueChange={onResolutionChange}>
+              <SelectTrigger className="bg-console-bg border-pixel-grid">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-pixel-grid">
+                {resolutionOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value} className="text-foreground">
+                    <div className="flex flex-col">
+                      <span className="font-medium">{option.label}</span>
+                      <span className="text-xs text-muted-foreground">{option.desc}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     </Card>

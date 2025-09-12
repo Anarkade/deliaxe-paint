@@ -1828,7 +1828,6 @@ const translations: Record<Language, Translation> = {
   },
   'oc': { 
     ...baseTranslation,
-    ...alignmentTranslations,
     loadImage: 'Cargar Imatge',
     paletteViewer: 'Visualizaire de Paleta',
     changeResolution: 'Cambiar Resolucion',
@@ -1918,6 +1917,41 @@ const translations: Record<Language, Translation> = {
     neoGeoMultiColors: '4096 colors (16×256)',
     neoGeoSingleColors: '16 colors (15-bit)',
     zxSpectrumColors: '16 colors (4-bit)',
+    
+    // Aranés specific translations for alignment  
+    alignment: 'Alinhament',
+    alignTopLeft: 'Naut Esquèrra',
+    alignTopCenter: 'Naut Centre',
+    alignTopRight: 'Naut Dreta',
+    alignMiddleLeft: 'Centre Esquèrra',
+    alignMiddleCenter: 'Centre Centre',
+    alignMiddleRight: 'Centre Dreta',
+    alignBottomLeft: 'Bas Esquèrra',
+    alignBottomCenter: 'Bas Centre',
+    alignBottomRight: 'Bas Dreta',
+    
+    // More complete Aranés translations
+    uploadFile: 'Pujar Fichèr',
+    fromUrl: 'Dempús URL',
+    camera: 'Camèra',
+    capture: 'Capturar',
+    switchCamera: 'Cambiar Camèra',
+    close: 'Hermar',
+    consolePlatform: 'Consòla/Plataforma',
+    zoom: 'Zoom',
+    tileGrid: 'Mialha de mosaics',
+    framesGrid: 'Mialha de quadres',
+    tileSize: 'Talha de mosaic',
+    frameSize: 'Talha de quadre',
+    tileWidth: 'Largor',
+    tileHeight: 'Naut',
+    tileGridColor: 'Color de la mialha de mosaics',
+    frameWidth: 'Largor',
+    frameHeight: 'Naut',
+    frameGridColor: 'Color de la mialha de quadres',
+    originalIndexedPng: 'Original:',
+    integerScaling: 'Escalatge entièr',
+    changeGrids: 'Cambiar Mialhes',
   }
 };
 

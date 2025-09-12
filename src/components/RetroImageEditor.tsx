@@ -32,7 +32,7 @@ export const RetroImageEditor = () => {
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
   const [selectedPalette, setSelectedPalette] = useState<PaletteType>('original');
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
-  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('dont-scale');
+  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
   const [currentPaletteColors, setCurrentPaletteColors] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<string>('load-image');
   const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
@@ -71,9 +71,10 @@ export const RetroImageEditor = () => {
       // Handle floating sections (except load-image)
       if (activeTab && activeTab !== 'load-image') {
         const isOutsideSection = !target.closest('[data-section]');
-        const isButton = target.closest('button') || target.closest('[role="button"]');
+        const isInsideFloatingBox = target.closest('[data-section="' + activeTab + '"]');
         
-        if (isOutsideSection && !isButton) {
+        // Only close if clicking outside all sections and not inside the current floating box
+        if (isOutsideSection && !isInsideFloatingBox) {
           setActiveTab(null);
         }
       }
@@ -126,6 +127,11 @@ export const RetroImageEditor = () => {
     }
     
     setActiveTab(tabId);
+    
+    // Set default values when opening resolution tab for the first time
+    if (tabId === 'resolution' && scalingMode === 'fit') {
+      setScalingMode('middle-center');
+    }
     
     // Auto-scroll to show the opened section
     if (originalImage && tabId !== 'load-image') {
