@@ -475,14 +475,14 @@ export const RetroImageEditor = () => {
   return (
     <div className="min-h-screen bg-elegant-bg">
       {/* Header */}
-      <header className="border-b border-elegant-border bg-card px-6 py-4">
+      <header className="border-b border-elegant-border bg-card px-4 py-3 landscape:hidden">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Gamepad2 className="h-8 w-8 text-blood-red" />
+            <Gamepad2 className="h-10 w-10 text-blood-red" />
             <h1 className="text-2xl font-bold text-blood-red">{t('appTitle')}</h1>
           </div>
           
-          {/* Section buttons moved to header */}
+          {/* Section buttons centered between logo and language */}
           <div className="flex items-center gap-2">
             <Button
               variant={getButtonVariant('load-image')}
@@ -532,14 +532,81 @@ export const RetroImageEditor = () => {
             >
               <Download className="h-4 w-4" />
             </Button>
-            
-            <LanguageSelector />
           </div>
+          
+          <LanguageSelector hideLabel />
         </div>
       </header>
 
+      {/* Vertical Sidebar for landscape orientation */}
+      <aside className="hidden landscape:flex landscape:fixed landscape:left-0 landscape:top-0 landscape:h-full landscape:w-20 landscape:flex-col landscape:bg-card landscape:border-r landscape:border-elegant-border landscape:z-50">
+        <div className="flex flex-col items-center py-4 space-y-4">
+          {/* Logo */}
+          <div className="flex flex-col items-center gap-1">
+            <Gamepad2 className="h-10 w-10 text-blood-red" />
+          </div>
+          
+          {/* Section buttons */}
+          <div className="flex flex-col items-center gap-2">
+            <Button
+              variant={getButtonVariant('load-image')}
+              onClick={() => handleTabClick('load-image')}
+              className="flex items-center justify-center h-10 w-10 p-0"
+              title={t('loadImage')}
+            >
+              <Upload className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('palette-selector')}
+              onClick={() => handleTabClick('palette-selector')}
+              className="flex items-center justify-center h-10 w-10 p-0"
+              disabled={!originalImage}
+              title={t('selectPalette')}
+            >
+              <Palette className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('resolution')}
+              onClick={() => handleTabClick('resolution')}
+              className="flex items-center justify-center h-10 w-10 p-0"
+              disabled={!originalImage}
+              title={t('changeResolution')}
+            >
+              <Monitor className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('change-grids')}
+              onClick={() => handleTabClick('change-grids')}
+              className="flex items-center justify-center h-10 w-10 p-0"
+              disabled={!originalImage}
+              title={t('changeGrids')}
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('export-image')}
+              onClick={() => handleTabClick('export-image')}
+              className="flex items-center justify-center h-10 w-10 p-0"
+              disabled={!originalImage}
+              title={t('exportImage')}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {/* Language selector at bottom */}
+          <div className="mt-auto pb-4">
+            <LanguageSelector hideLabel />
+          </div>
+        </div>
+      </aside>
+
       {/* Main Content */}
-      <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
+      <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6 landscape:ml-20">
         <div className="w-full">
         <ImagePreview 
           originalImage={originalImage}

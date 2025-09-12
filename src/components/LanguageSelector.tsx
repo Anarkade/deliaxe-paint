@@ -2,7 +2,11 @@ import { useTranslation, Language } from '@/hooks/useTranslation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Globe } from 'lucide-react';
 
-export const LanguageSelector = () => {
+interface LanguageSelectorProps {
+  hideLabel?: boolean;
+}
+
+export const LanguageSelector = ({ hideLabel = false }: LanguageSelectorProps) => {
   const { currentLanguage, changeLanguage, languages, getLanguageName, t } = useTranslation();
 
   const sortedLanguages = [...languages].sort((a, b) => 
@@ -11,12 +15,14 @@ export const LanguageSelector = () => {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="flex items-center gap-2">
-        <Globe className="h-4 w-4 text-bone-white" />
-        <span className="text-sm font-medium text-bone-white">{t('language')}</span>
-      </div>
+      {!hideLabel && (
+        <div className="flex items-center gap-2">
+          <Globe className="h-4 w-4 text-bone-white" />
+          <span className="text-sm font-medium text-bone-white">{t('language')}</span>
+        </div>
+      )}
       <Select value={currentLanguage} onValueChange={(value) => changeLanguage(value as Language)}>
-        <SelectTrigger className="bg-card border-elegant-border text-bone-white min-w-[140px]">
+        <SelectTrigger className="bg-card border-elegant-border text-bone-white min-w-[140px] h-10">
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="bg-card border-elegant-border">
