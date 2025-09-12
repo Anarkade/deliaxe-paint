@@ -578,35 +578,14 @@ export const RetroImageEditor = () => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="language-dropdown-container relative">
-                      <Button
-                        onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
-                        variant="secondary"
-                        size="sm"
-                        className="w-10 h-10 p-0 text-bone-white border-none"
-                        style={{ backgroundColor: '#7d1b2d' }}
-                      >
-                        <Globe className="w-4 h-4" />
-                      </Button>
-                      {isLanguageDropdownOpen && (
-                        <div className="fixed right-4 top-16 z-50 bg-card border border-elegant-border rounded-md shadow-lg min-w-[140px] max-h-[60vh] overflow-y-auto">
-                          {sortedLanguages.map((lang) => (
-                            <button
-                              key={lang}
-                              onClick={() => {
-                                changeLanguage(lang);
-                                setIsLanguageDropdownOpen(false);
-                              }}
-                              className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary first:rounded-t-md last:rounded-b-md ${
-                                currentLanguage === lang ? 'bg-secondary text-primary' : 'text-bone-white'
-                              }`}
-                            >
-                              {getLanguageName(lang)}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <Button
+                      onClick={() => handleTabClick('language')}
+                      variant="secondary"
+                      size="sm"
+                      className="w-12 h-12 p-0 bg-blood-red hover:bg-blood-red-hover text-bone-white border-none"
+                    >
+                      <Globe className="w-5 h-5" />
+                    </Button>
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>{t('language')}</p>
@@ -682,59 +661,32 @@ export const RetroImageEditor = () => {
               >
                 <Download className="h-4 w-4" />
               </Button>
+              
+              <Button
+                variant={getButtonVariant('language')}
+                onClick={() => handleTabClick('language')}
+                className="flex items-center justify-center h-10 w-10 p-0"
+                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+                title={t('language')}
+              >
+                <Globe className="h-4 w-4" />
+              </Button>
             </div>
             
-            {/* Language selector at bottom */}
+            {/* Language selector at bottom - Remove since we have it as a section now */}
             <div className="mt-auto pb-4 flex-shrink-0">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="language-dropdown-container relative">
-                      <Button
-                        onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
-                        variant="secondary"
-                        size="sm"
-                        className="w-10 h-10 p-0 text-bone-white border-none"
-                        style={{ backgroundColor: '#7d1b2d' }}
-                      >
-                        <Globe className="w-4 h-4" />
-                      </Button>
-                      {isLanguageDropdownOpen && (
-                        <div className="fixed left-24 bottom-4 z-50 bg-card border border-elegant-border rounded-md shadow-lg min-w-[140px] max-h-[60vh] overflow-y-auto">
-                          {sortedLanguages.map((lang) => (
-                            <button
-                              key={lang}
-                              onClick={() => {
-                                changeLanguage(lang);
-                                setIsLanguageDropdownOpen(false);
-                              }}
-                              className={`w-full text-left px-3 py-2 text-sm hover:bg-secondary first:rounded-t-md last:rounded-b-md ${
-                                currentLanguage === lang ? 'bg-secondary text-primary' : 'text-bone-white'
-                              }`}
-                            >
-                              {getLanguageName(lang)}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <p>{t('language')}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              {/* Intentionally left empty */}
             </div>
           </div>
         </aside>
       )}
 
-      {/* Main Content - Flex-grow to fill available space */}
+      {/* Main Content - Flex-grow to fill available space with minimal padding */}
       <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-20' : ''}`}>
-        <div className={`container mx-auto px-4 md:px-6 py-6 flex-1 w-full ${isVerticalLayout ? 'max-w-[calc(100vw-5rem)]' : 'max-w-none'}`}>
-          <div className="w-full flex flex-col space-y-6">
-            {/* Image Preview with consistent spacing */}
-            <div className="w-full">
+        <div className={`container mx-auto px-2 py-2 flex-1 w-full ${isVerticalLayout ? 'max-w-[calc(100vw-5rem)]' : 'max-w-none'}`}>
+          <div className="w-full flex flex-col space-y-2">
+            {/* Image Preview with minimal consistent spacing */}
+            <div className="w-full max-w-4xl mx-auto">
               <ImagePreview
                 originalImage={originalImage}
                 processedImageData={processedImageData}
@@ -759,6 +711,12 @@ export const RetroImageEditor = () => {
             {/* Content sections with consistent spacing */}
             <div className="w-full">
               <div className="w-full max-w-4xl mx-auto">
+                {activeTab === 'language' && (
+                  <div data-section="language">
+                    <LanguageSelector hideLabel={false} />
+                  </div>
+                )}
+
                 {activeTab === 'palette-selector' && originalImage && (
                   <div data-section="palette-selector">
                     <ColorPaletteSelector
@@ -835,9 +793,9 @@ export const RetroImageEditor = () => {
         </div>
       </main>
 
-      {/* Footer - Always at bottom */}
-      <footer className="border-t border-elegant-border bg-card px-6 py-4 w-full flex-shrink-0">
-        <div className="text-center">
+      {/* Footer - Always at bottom, matches preview block width */}
+      <footer className="border-t border-elegant-border bg-card px-2 py-4 w-full flex-shrink-0">
+        <div className="w-full max-w-4xl mx-auto text-center">
           <p className="text-sm text-muted-foreground">©2025 Anarkade</p>
         </div>
       </footer>
