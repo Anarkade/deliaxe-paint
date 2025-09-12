@@ -266,10 +266,9 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   useEffect(() => {
     const updateContainerWidth = () => {
       if (containerRef.current) {
-        // Account for potential scrollbar space (typically ~20px) and some padding
-        const scrollbarWidth = 20;
-        const padding = 40;
-        const width = containerRef.current.clientWidth - scrollbarWidth - padding;
+        // Use the actual available width without subtracting arbitrary values
+        // The container already has proper padding through CSS
+        const width = containerRef.current.clientWidth;
         setContainerWidth(Math.max(200, width)); // Ensure minimum width
       }
     };
