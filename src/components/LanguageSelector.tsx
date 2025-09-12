@@ -41,8 +41,8 @@ export const LanguageSelector = ({ hideLabel = false }: LanguageSelectorProps) =
   return (
     <Card className="p-6 bg-card border-elegant-border">
       <div className="flex items-center gap-3 mb-4">
-        <Globe className="h-6 w-6" style={{ color: '#7d1b2d' }} />
-        <h3 className="text-xl font-bold" style={{ color: '#7d1b2d' }}>
+        <Globe className="h-6 w-6 text-primary" />
+        <h3 className="text-xl font-bold text-primary">
           {t('language')}
         </h3>
       </div>
@@ -57,7 +57,7 @@ export const LanguageSelector = ({ hideLabel = false }: LanguageSelectorProps) =
             <RadioGroupItem 
               value={lang} 
               id={`lang-${lang}`}
-              className="border-elegant-border text-bone-white data-[state=checked]:bg-[#7d1b2d] data-[state=checked]:border-[#7d1b2d]"
+              className="border-elegant-border text-bone-white data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
             <Label 
               htmlFor={`lang-${lang}`} 

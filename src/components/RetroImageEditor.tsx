@@ -76,25 +76,30 @@ export const RetroImageEditor = () => {
   }, [checkOrientation, isLanguageDropdownOpen]);
 
   const getButtonVariant = (tabId: string) => {
+    // Language is always enabled and highlighted
+    if (tabId === 'language') {
+      return 'highlighted'
+    }
+
     if (!originalImage && tabId !== 'load-image') {
-      return 'blocked';
+      return 'blocked'
     }
     
     // When no image is loaded, only load-image is highlighted
     if (!originalImage && tabId === 'load-image') {
-      return 'highlighted';
+      return 'highlighted'
     }
     
     // When image is loaded, all buttons are highlighted
     if (originalImage) {
-      return 'highlighted';
+      return 'highlighted'
     }
     
-    return 'blocked';
+    return 'blocked'
   };
 
   const handleTabClick = (tabId: string) => {
-    if (!originalImage && tabId !== 'load-image') {
+    if (!originalImage && !['load-image', 'language'].includes(tabId)) {
       return; // Don't allow clicking blocked tabs
     }
     
@@ -683,7 +688,7 @@ export const RetroImageEditor = () => {
 
       {/* Main Content - Flex-grow to fill available space with minimal padding */}
       <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-20' : ''}`}>
-        <div className={`container mx-auto px-2 py-2 flex-1 w-full ${isVerticalLayout ? 'max-w-[calc(100vw-5rem)]' : 'max-w-none'}`}>
+        <div className={`container mx-auto px-2 py-2 flex-1 w-full ${isVerticalLayout ? 'max-w-[calc(100vw-5rem-1rem)]' : 'max-w-none'}`}>
           <div className="w-full flex flex-col space-y-2">
             {/* Image Preview with minimal consistent spacing */}
             <div className="w-full max-w-4xl mx-auto">
