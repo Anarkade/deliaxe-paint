@@ -262,22 +262,35 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     }
   }, [processedImageData]);
 
-  // Calculate container width and fit-to-width zoom
+  // Calculate container width and fit-to-width zoom (observe element size)
   useEffect(() => {
-    const updateContainerWidth = () => {
+    const update = () => {
       if (containerRef.current) {
-        // Use the actual available width without subtracting arbitrary values
-        // The container already has proper padding through CSS
         const width = containerRef.current.clientWidth;
-        setContainerWidth(Math.max(200, width)); // Ensure minimum width
+        setContainerWidth(Math.max(200, width));
       }
     };
 
-    updateContainerWidth();
-    window.addEventListener('resize', updateContainerWidth);
-    return () => window.removeEventListener('resize', updateContainerWidth);
-  }, []);
+    update();
 
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width;
+        setContainerWidth(Math.max(200, width));
+      }
+    });
+
+    if (containerRef.current) {
+      ro.observe(containerRef.current);
+    }
+
+    window.addEventListener('resize', update);
+
+    return () => {
+      window.removeEventListener('resize', update);
+      ro.disconnect();
+    };
+  }, []);
   // Fit to width function
   const fitToWidth = useCallback(() => {
     if (originalImage && containerWidth > 0) {
