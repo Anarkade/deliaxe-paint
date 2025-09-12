@@ -688,7 +688,7 @@ export const RetroImageEditor = () => {
 
       {/* Main Content - Flex-grow to fill available space with minimal padding */}
       <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-20' : ''}`}>
-        <div className={`container mx-auto px-2 py-2 flex-1 w-full ${isVerticalLayout ? 'max-w-[calc(100vw-5rem-1rem)]' : 'max-w-none'}`}>
+        <div className={`w-full px-1 py-2 flex-1 ${isVerticalLayout ? 'max-w-[calc(100vw-5rem)]' : 'max-w-none'}`}>
           <div className="w-full flex flex-col space-y-2">
             {/* Image Preview with minimal consistent spacing */}
             <div className="w-full max-w-4xl mx-auto">
