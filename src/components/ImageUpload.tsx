@@ -108,8 +108,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
           {t('loadImage')}
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-2">
+        <div className="space-y-4">
+          <div className="w-full space-y-2">
             <label className="block text-sm font-medium text-foreground">
               <Upload className="inline mr-2 h-4 w-4" />
               {t('uploadFile')}
@@ -127,7 +127,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
             </div>
           </div>
           
-          <div className="space-y-2">
+          <div className="w-full space-y-2">
             <label className="block text-sm font-medium text-foreground">
               <Link className="inline mr-2 h-4 w-4" />
               {t('fromUrl')}
@@ -140,7 +140,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
             />
           </div>
           
-          <div className="space-y-2">
+          <div className="w-full space-y-2">
             <label className="block text-sm font-medium text-foreground">
               <Camera className="inline mr-2 h-4 w-4" />
               {t('camera')}

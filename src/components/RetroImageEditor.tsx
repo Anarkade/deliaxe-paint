@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-// import removed: LoadImage now handled within ImagePreview
+import { LoadImage } from './LoadImage';
 import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
 import { ResolutionSelector, ResolutionType, CombinedScalingMode } from './ResolutionSelector';
 import { ImagePreview } from './ImagePreview';
@@ -59,10 +59,23 @@ export const RetroImageEditor = () => {
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
     
-    // Close dropdown when clicking outside
+    // Close dropdown when clicking outside and close floating sections (except load-image)
     const handleClickOutside = (event: MouseEvent) => {
-      if (isLanguageDropdownOpen && !(event.target as Element).closest('.language-dropdown-container')) {
+      const target = event.target as Element;
+      
+      // Handle language dropdown
+      if (isLanguageDropdownOpen && !target.closest('.language-dropdown-container')) {
         setIsLanguageDropdownOpen(false);
+      }
+      
+      // Handle floating sections (except load-image)
+      if (activeTab && activeTab !== 'load-image') {
+        const isOutsideSection = !target.closest('[data-section]');
+        const isButton = target.closest('button') || target.closest('[role="button"]');
+        
+        if (isOutsideSection && !isButton) {
+          setActiveTab(null);
+        }
       }
     };
     
@@ -73,7 +86,7 @@ export const RetroImageEditor = () => {
       window.removeEventListener('orientationchange', checkOrientation);
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [checkOrientation, isLanguageDropdownOpen]);
+  }, [checkOrientation, isLanguageDropdownOpen, activeTab]);
 
   const getButtonVariant = (tabId: string) => {
     // Language is always enabled and highlighted
@@ -691,39 +704,59 @@ export const RetroImageEditor = () => {
         <div className={`w-full flex-1 px-[5px] pt-[5px] pb-[5px] ${isVerticalLayout ? 'max-w-[calc(100vw-5rem-10px)]' : 'max-w-[calc(100vw-10px)]'}`}>
           <div className="w-full flex flex-col space-y-[5px]">
             {/* Image Preview with minimal consistent spacing */}
-            <div className="w-full">
-              <ImagePreview
-                originalImage={originalImage}
-                processedImageData={processedImageData}
-                onDownload={downloadImage}
-                onLoadImageClick={handleLoadImageClick}
-                originalImageSource={originalImageSource}
-                selectedPalette={selectedPalette}
-                onPaletteUpdate={(colors) => {
-                  setCurrentPaletteColors(colors);
-                  // Trigger image reprocessing with new palette
-                  setTimeout(processImage, 50);
-                }}
-                showCameraPreview={showCameraPreview}
-                onCameraPreviewChange={setShowCameraPreview}
-                currentPaletteColors={currentPaletteColors}
-                onSectionOpen={() => {
-                  // Handle any additional logic when sections are opened
-                }}
-              />
-            </div>
+              <div className="relative w-full">
+                <ImagePreview
+                  originalImage={originalImage}
+                  processedImageData={processedImageData}
+                  onDownload={downloadImage}
+                  onLoadImageClick={handleLoadImageClick}
+                  originalImageSource={originalImageSource}
+                  selectedPalette={selectedPalette}
+                  onPaletteUpdate={(colors) => {
+                    setCurrentPaletteColors(colors);
+                    // Trigger image reprocessing with new palette
+                    setTimeout(processImage, 50);
+                  }}
+                  showCameraPreview={showCameraPreview}
+                  onCameraPreviewChange={setShowCameraPreview}
+                  currentPaletteColors={currentPaletteColors}
+                  onSectionOpen={() => {
+                    // Handle any additional logic when sections are opened
+                  }}
+                />
 
-            {/* Content sections with consistent spacing */}
-            <div className="w-full">
-              <div className="w-full max-w-4xl mx-auto">
+                {/* Floating Content Sections */}
+                {activeTab === 'load-image' && (
+                  <div 
+                    className="absolute top-0 left-0 z-50 max-w-md bg-card border border-elegant-border rounded-xl shadow-xl"
+                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                    data-section="load-image"
+                  >
+                    <LoadImage
+                      onImageLoad={loadImage}
+                      onCameraPreviewRequest={() => setShowCameraPreview(true)}
+                    />
+                  </div>
+                )}
+
                 {activeTab === 'language' && (
-                  <div data-section="language">
+                  <div 
+                    className="absolute top-0 left-0 z-50 max-w-md bg-card border border-elegant-border rounded-xl shadow-xl"
+                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                    onClick={(e) => e.stopPropagation()}
+                    data-section="language"
+                  >
                     <LanguageSelector hideLabel={false} />
                   </div>
                 )}
 
                 {activeTab === 'palette-selector' && originalImage && (
-                  <div data-section="palette-selector">
+                  <div 
+                    className="absolute top-0 left-0 z-50 max-w-md bg-card border border-elegant-border rounded-xl shadow-xl"
+                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                    onClick={(e) => e.stopPropagation()}
+                    data-section="palette-selector"
+                  >
                     <ColorPaletteSelector
                       selectedPalette={selectedPalette}
                       onPaletteChange={setSelectedPalette}
@@ -732,7 +765,12 @@ export const RetroImageEditor = () => {
                 )}
 
                 {activeTab === 'resolution' && originalImage && (
-                  <div data-section="resolution">
+                  <div 
+                    className="absolute top-0 left-0 z-50 max-w-md bg-card border border-elegant-border rounded-xl shadow-xl"
+                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                    onClick={(e) => e.stopPropagation()}
+                    data-section="resolution"
+                  >
                     <ResolutionSelector
                       selectedResolution={selectedResolution}
                       scalingMode={scalingMode}
@@ -743,7 +781,12 @@ export const RetroImageEditor = () => {
                 )}
 
                 {activeTab === 'change-grids' && originalImage && (
-                  <div data-section="change-grids">
+                  <div 
+                    className="absolute top-0 left-0 z-50 max-w-md bg-card border border-elegant-border rounded-xl shadow-xl"
+                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                    onClick={(e) => e.stopPropagation()}
+                    data-section="change-grids"
+                  >
                     <Card className="bg-elegant-bg border-elegant-border p-6">
                       <div className="space-y-6">
                         <div className="flex items-center gap-3">
@@ -784,7 +827,12 @@ export const RetroImageEditor = () => {
                 )}
 
                 {activeTab === 'export-image' && originalImage && (
-                  <div data-section="export-image">
+                  <div 
+                    className="absolute top-0 left-0 z-50 max-w-md bg-card border border-elegant-border rounded-xl shadow-xl"
+                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                    onClick={(e) => e.stopPropagation()}
+                    data-section="export-image"
+                  >
                     <ExportImage
                       processedImageData={processedImageData}
                       selectedPalette={selectedPalette}
@@ -793,7 +841,6 @@ export const RetroImageEditor = () => {
                   </div>
                 )}
               </div>
-            </div>
           </div>
         </div>
       </main>
