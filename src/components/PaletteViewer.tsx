@@ -269,7 +269,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
   return (
     <div className="space-y-4 p-4 border border-elegant-border bg-card/50 rounded-lg">
-      <div className="flex items-center justify-between">
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold text-neon-cyan flex items-center">
+          <Palette className="mr-2 h-5 w-5" />
+          {paletteColors.length > 0 ? t('paletteWithCount').replace('{count}', paletteColors.length.toString()) : t('extractColors')}
+        </h3>
+        
         <Button
           variant="highlighted"
           size="sm"
@@ -277,8 +282,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           disabled={!imageData && !originalImageSource}
           className="flex items-center gap-2 rounded-lg"
         >
-          <Palette className="h-4 w-4" />
-          {paletteColors.length > 0 ? t('paletteWithCount').replace('{count}', paletteColors.length.toString()) : t('extractColors')}
+          <Eye className="h-4 w-4" />
+          {t('extractColors')}
         </Button>
       </div>
       
