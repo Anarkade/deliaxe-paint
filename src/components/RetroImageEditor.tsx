@@ -481,7 +481,60 @@ export const RetroImageEditor = () => {
             <Gamepad2 className="h-8 w-8 text-blood-red" />
             <h1 className="text-2xl font-bold text-blood-red">{t('appTitle')}</h1>
           </div>
-          <LanguageSelector />
+          
+          {/* Section buttons moved to header */}
+          <div className="flex items-center gap-2">
+            <Button
+              variant={getButtonVariant('load-image')}
+              onClick={() => handleTabClick('load-image')}
+              className="flex items-center justify-center h-10 w-10 p-0"
+              title={t('loadImage')}
+            >
+              <Upload className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('palette-selector')}
+              onClick={() => handleTabClick('palette-selector')}
+              className="flex items-center justify-center h-10 w-10 p-0"
+              disabled={!originalImage}
+              title={t('selectPalette')}
+            >
+              <Palette className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('resolution')}
+              onClick={() => handleTabClick('resolution')}
+              className="flex items-center justify-center h-10 w-10 p-0"
+              disabled={!originalImage}
+              title={t('changeResolution')}
+            >
+              <Monitor className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('change-grids')}
+              onClick={() => handleTabClick('change-grids')}
+              className="flex items-center justify-center h-10 w-10 p-0"
+              disabled={!originalImage}
+              title={t('changeGrids')}
+            >
+              <Grid3X3 className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant={getButtonVariant('export-image')}
+              onClick={() => handleTabClick('export-image')}
+              className="flex items-center justify-center h-10 w-10 p-0"
+              disabled={!originalImage}
+              title={t('exportImage')}
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+            
+            <LanguageSelector />
+          </div>
         </div>
       </header>
 
@@ -509,58 +562,8 @@ export const RetroImageEditor = () => {
         />
         </div>
 
-        {/* Sections Menu */}
+        {/* Content sections - no longer need the sections menu here */}
         <div className="w-full space-y-4 md:space-y-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 p-2 bg-card border border-elegant-border rounded-xl">
-            <Button
-              variant={getButtonVariant('load-image')}
-              onClick={() => handleTabClick('load-image')}
-              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
-            >
-              <Upload className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{t('loadImage')}</span>
-            </Button>
-            
-            <Button
-              variant={getButtonVariant('palette-selector')}
-              onClick={() => handleTabClick('palette-selector')}
-              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
-              disabled={!originalImage}
-            >
-              <Palette className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{t('selectPalette')}</span>
-            </Button>
-            
-            <Button
-              variant={getButtonVariant('resolution')}
-              onClick={() => handleTabClick('resolution')}
-              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
-              disabled={!originalImage}
-            >
-              <Monitor className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{t('changeResolution')}</span>
-            </Button>
-            
-            <Button
-              variant={getButtonVariant('change-grids')}
-              onClick={() => handleTabClick('change-grids')}
-              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
-              disabled={!originalImage}
-            >
-              <Grid3X3 className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{t('changeGrids')}</span>
-            </Button>
-            
-            <Button
-              variant={getButtonVariant('export-image')}
-              onClick={() => handleTabClick('export-image')}
-              className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2 h-auto min-h-[2.5rem]"
-              disabled={!originalImage}
-            >
-              <Download className="h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{t('exportImage')}</span>
-            </Button>
-          </div>
 
           {/* Content Sections */}
           <div className="w-full max-w-4xl mx-auto">
