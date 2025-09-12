@@ -29,7 +29,7 @@ export const RetroImageEditor = () => {
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
   const [selectedPalette, setSelectedPalette] = useState<PaletteType>('original');
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
-  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
+  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('dont-scale');
   const [currentPaletteColors, setCurrentPaletteColors] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<string>('load-image');
   const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
@@ -96,7 +96,7 @@ export const RetroImageEditor = () => {
     setOriginalImageSource(null);
     setSelectedPalette('original');
     setSelectedResolution('original');
-    setScalingMode('fit');
+    setScalingMode('dont-scale');
     setCurrentPaletteColors([]);
     setShowCameraPreview(false);
     setHistory([]);
@@ -142,7 +142,7 @@ export const RetroImageEditor = () => {
       // Reset settings when loading new image
       setSelectedPalette('original');
       setSelectedResolution('original');
-      setScalingMode('fit');
+      setScalingMode('dont-scale');
       
       toast.success(t('imageLoaded'));
       
@@ -215,8 +215,6 @@ export const RetroImageEditor = () => {
             ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
             break;
           case 'fit':
-            break;
-          case 'fit':
             const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
             const scaledWidth = originalImage.width * scale;
             const scaledHeight = originalImage.height * scale;
@@ -224,8 +222,14 @@ export const RetroImageEditor = () => {
             const fitY = (targetHeight - scaledHeight) / 2;
             ctx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
             break;
+          case 'dont-scale':
+            // Use middle-center alignment for don't scale by default
+            const centerX = (targetWidth - originalImage.width) / 2;
+            const centerY = (targetHeight - originalImage.height) / 2;
+            ctx.drawImage(originalImage, centerX, centerY);
+            break;
           default:
-            // Handle alignment modes
+            // Handle alignment modes (including dont-scale with specific alignment)
             const alignmentModes = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
             if (alignmentModes.includes(scalingMode)) {
               const [vAlign, hAlign] = (scalingMode as string).split('-');

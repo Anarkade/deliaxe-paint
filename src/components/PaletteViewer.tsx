@@ -274,17 +274,6 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           <Palette className="mr-2 h-5 w-5" />
           {paletteColors.length > 0 ? t('paletteWithCount').replace('{count}', paletteColors.length.toString()) : t('extractColors')}
         </h3>
-        
-        <Button
-          variant="highlighted"
-          size="sm"
-          onClick={extractColorsFromImage}
-          disabled={!imageData && !originalImageSource}
-          className="flex items-center gap-2 rounded-lg"
-        >
-          <Eye className="h-4 w-4" />
-          {t('extractColors')}
-        </Button>
       </div>
       
       <div className="space-y-4">

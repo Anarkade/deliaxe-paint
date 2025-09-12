@@ -1,8 +1,51 @@
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Monitor, AlignCenter, Maximize, AlignLeft, AlignRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { Monitor, AlignCenter, Maximize } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+
+// Custom alignment icon component
+const AlignmentIcon = ({ position }: { position: string }) => {
+  const getAlignment = () => {
+    const [vertical, horizontal] = position.split('-');
+    let outerStyle = '';
+    let innerStyle = '';
+    
+    switch (vertical) {
+      case 'top':
+        outerStyle += 'items-start ';
+        break;
+      case 'middle':
+        outerStyle += 'items-center ';
+        break;
+      case 'bottom':
+        outerStyle += 'items-end ';
+        break;
+    }
+    
+    switch (horizontal) {
+      case 'left':
+        outerStyle += 'justify-start';
+        break;
+      case 'center':
+        outerStyle += 'justify-center';
+        break;
+      case 'right':
+        outerStyle += 'justify-end';
+        break;
+    }
+    
+    return { outerStyle };
+  };
+  
+  const { outerStyle } = getAlignment();
+  
+  return (
+    <div className={`w-4 h-4 border border-current flex ${outerStyle}`}>
+      <div className="w-1.5 h-1.5 bg-current rounded-sm"></div>
+    </div>
+  );
+};
 
 export type ResolutionType = 
   | 'original'
@@ -17,7 +60,7 @@ export type ResolutionType =
   | '640x200';
 
 export type AlignmentMode = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-center' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
-export type ScalingMode = 'stretch' | 'fit';
+export type ScalingMode = 'stretch' | 'fit' | 'dont-scale';
 export type CombinedScalingMode = ScalingMode | AlignmentMode;
 
 interface ResolutionSelectorProps {
@@ -52,18 +95,19 @@ export const ResolutionSelector = ({
   const scalingOptions = [
     { value: 'stretch' as const, label: t('stretch'), icon: Maximize, desc: t('stretchToFit') },
     { value: 'fit' as const, label: t('fit'), icon: Monitor, desc: t('scaleToFit') },
+    { value: 'dont-scale' as const, label: t('dontScale'), icon: AlignCenter, desc: t('dontScale') },
   ];
 
   const alignmentOptions = [
-    { value: 'top-left' as const, label: t('alignTopLeft'), icon: AlignLeft, position: 'top-left' },
-    { value: 'top-center' as const, label: t('alignTopCenter'), icon: ChevronUp, position: 'top-center' },
-    { value: 'top-right' as const, label: t('alignTopRight'), icon: AlignRight, position: 'top-right' },
-    { value: 'middle-left' as const, label: t('alignMiddleLeft'), icon: AlignLeft, position: 'middle-left' },
-    { value: 'middle-center' as const, label: t('alignMiddleCenter'), icon: AlignCenter, position: 'middle-center' },
-    { value: 'middle-right' as const, label: t('alignMiddleRight'), icon: AlignRight, position: 'middle-right' },
-    { value: 'bottom-left' as const, label: t('alignBottomLeft'), icon: AlignLeft, position: 'bottom-left' },
-    { value: 'bottom-center' as const, label: t('alignBottomCenter'), icon: ChevronDown, position: 'bottom-center' },
-    { value: 'bottom-right' as const, label: t('alignBottomRight'), icon: AlignRight, position: 'bottom-right' },
+    { value: 'top-left' as const, label: t('alignTopLeft'), position: 'top-left' },
+    { value: 'top-center' as const, label: t('alignTopCenter'), position: 'top-center' },
+    { value: 'top-right' as const, label: t('alignTopRight'), position: 'top-right' },
+    { value: 'middle-left' as const, label: t('alignMiddleLeft'), position: 'middle-left' },
+    { value: 'middle-center' as const, label: t('alignMiddleCenter'), position: 'middle-center' },
+    { value: 'middle-right' as const, label: t('alignMiddleRight'), position: 'middle-right' },
+    { value: 'bottom-left' as const, label: t('alignBottomLeft'), position: 'bottom-left' },
+    { value: 'bottom-center' as const, label: t('alignBottomCenter'), position: 'bottom-center' },
+    { value: 'bottom-right' as const, label: t('alignBottomRight'), position: 'bottom-right' },
   ];
 
   const isAlignmentMode = (mode: CombinedScalingMode): mode is AlignmentMode => {
@@ -102,7 +146,7 @@ export const ResolutionSelector = ({
                 <label className="block text-sm font-medium text-foreground">
                   {t('scalingMode')}
                 </label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {scalingOptions.map((option) => {
                     const Icon = option.icon;
                     return (
@@ -124,22 +168,22 @@ export const ResolutionSelector = ({
                 <label className="block text-sm font-medium text-foreground">
                   {t('alignment')}
                 </label>
-                <Select 
-                  value={isAlignmentMode(scalingMode) ? scalingMode : 'middle-center'} 
-                  onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
+                 <Select 
+                   value={isAlignmentMode(scalingMode) ? scalingMode : (scalingMode === 'dont-scale' ? 'middle-center' : 'middle-center')} 
+                   onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
                 >
                   <SelectTrigger className="bg-console-bg border-pixel-grid">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-card border-pixel-grid">
-                    {alignmentOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="text-foreground">
-                        <div className="flex items-center gap-2">
-                          <option.icon className="h-4 w-4" />
-                          <span>{option.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
+                     {alignmentOptions.map((option) => (
+                       <SelectItem key={option.value} value={option.value} className="text-foreground">
+                         <div className="flex items-center gap-2">
+                           <AlignmentIcon position={option.position} />
+                           <span>{option.label}</span>
+                         </div>
+                       </SelectItem>
+                     ))}
                   </SelectContent>
                 </Select>
               </div>

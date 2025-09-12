@@ -700,7 +700,30 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
 
           {/* Controls Section */}
           <div className="bg-elegant-bg/30 rounded-lg p-4 border border-elegant-border/50 space-y-4">
-            {/* View Controls */}
+            {/* Zoom Controls */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground">{t('zoom')}</span>
+                  <span className="text-xs text-muted-foreground font-mono">{zoom[0]}%</span>
+                </div>
+                <div className="flex-1 min-w-[200px] max-w-[300px]">
+                  <Slider
+                    value={sliderValue}
+                    onValueChange={handleZoomChange}
+                    max={1600}
+                    min={1}
+                    step={integerScaling ? 100 : 1}
+                    className="w-full"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <ZoomIn className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            </div>
+            
+            {/* View and Fit Controls */}
             <div className="flex flex-wrap items-center gap-3">
               {hasProcessedImage && (
                 <Button
@@ -714,6 +737,26 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 </Button>
               )}
               
+              <Button
+                variant="highlighted"
+                size="sm"
+                onClick={fitToWidth}
+                className="text-xs h-8"
+              >
+                <Maximize2 className="h-3 w-3 mr-1" />
+                {t('fitToWidth')}
+              </Button>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="integer-scaling" 
+                  checked={integerScaling}
+                  onCheckedChange={handleIntegerScalingChange}
+                />
+                <label htmlFor="integer-scaling" className="text-sm font-medium text-foreground cursor-pointer">
+                  {t('integerScaling')}
+                </label>
+              </div>
             </div>
 
             {/* Grid Controls */}
