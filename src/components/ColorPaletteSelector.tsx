@@ -29,8 +29,8 @@ export const ColorPaletteSelector = ({
   return (
     <Card className="p-6 border-pixel-grid bg-card">
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-neon-cyan flex items-center">
-          <Palette className="mr-2 h-5 w-5" />
+        <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+          <Palette className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
           {t('selectPalette')}
         </h3>
         

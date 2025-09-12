@@ -103,7 +103,10 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
   return (
     <Card className="p-6 border-pixel-grid bg-card">
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-neon-cyan">{t('loadImage')}</h3>
+        <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+          <Upload className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+          {t('loadImage')}
+        </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">

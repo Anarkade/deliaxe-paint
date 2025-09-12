@@ -61,7 +61,7 @@ export const RetroImageEditor = () => {
     
     // Close dropdown when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
-      if (isLanguageDropdownOpen && !(event.target as Element).closest('.relative')) {
+      if (isLanguageDropdownOpen && !(event.target as Element).closest('.language-dropdown-container')) {
         setIsLanguageDropdownOpen(false);
       }
     };
@@ -578,7 +578,7 @@ export const RetroImageEditor = () => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="relative">
+                    <div className="language-dropdown-container relative">
                       <Button
                         onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
                         variant="secondary"
@@ -689,7 +689,7 @@ export const RetroImageEditor = () => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="relative">
+                    <div className="language-dropdown-container relative">
                       <Button
                         onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
                         variant="secondary"
@@ -731,11 +731,11 @@ export const RetroImageEditor = () => {
 
       {/* Main Content - Flex-grow to fill available space */}
       <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-20' : ''}`}>
-        <div className="container mx-auto px-4 md:px-6 py-6 flex-1 w-full max-w-none">
+        <div className={`container mx-auto px-4 md:px-6 py-6 flex-1 w-full ${isVerticalLayout ? 'max-w-[calc(100vw-5rem)]' : 'max-w-none'}`}>
           <div className="w-full flex flex-col space-y-6">
             {/* Image Preview with consistent spacing */}
             <div className="w-full">
-              <ImagePreview 
+              <ImagePreview
                 originalImage={originalImage}
                 processedImageData={processedImageData}
                 onDownload={downloadImage}
@@ -784,8 +784,8 @@ export const RetroImageEditor = () => {
                     <Card className="bg-elegant-bg border-elegant-border p-6">
                       <div className="space-y-6">
                         <div className="flex items-center gap-3">
-                          <Grid3X3 className="h-5 w-5" style={{ color: '#7d1b2d' }} />
-                          <h2 className="text-lg font-semibold text-foreground" style={{ color: '#7d1b2d' }}>{t('changeGrids')}</h2>
+                          <Grid3X3 className="h-6 w-6" style={{ color: '#7d1b2d' }} />
+                          <h3 className="text-xl font-bold" style={{ color: '#7d1b2d' }}>{t('changeGrids')}</h3>
                         </div>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
