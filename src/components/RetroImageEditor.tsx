@@ -49,6 +49,9 @@ export const RetroImageEditor = () => {
   const checkOrientation = useCallback(() => {
     const isLandscape = window.innerWidth >= window.innerHeight;
     setIsVerticalLayout(isLandscape);
+    
+    // Close language dropdown on orientation/size change
+    setIsLanguageDropdownOpen(false);
   }, []);
 
   useEffect(() => {
@@ -56,11 +59,21 @@ export const RetroImageEditor = () => {
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
     
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isLanguageDropdownOpen && !(event.target as Element).closest('.relative')) {
+        setIsLanguageDropdownOpen(false);
+      }
+    };
+    
+    document.addEventListener('click', handleClickOutside);
+    
     return () => {
       window.removeEventListener('resize', checkOrientation);
       window.removeEventListener('orientationchange', checkOrientation);
+      document.removeEventListener('click', handleClickOutside);
     };
-  }, [checkOrientation]);
+  }, [checkOrientation, isLanguageDropdownOpen]);
 
   const getButtonVariant = (tabId: string) => {
     if (!originalImage && tabId !== 'load-image') {
@@ -496,18 +509,18 @@ export const RetroImageEditor = () => {
   );
 
   return (
-    <div className="min-h-screen bg-elegant-bg">
+    <div className="min-h-screen w-full flex flex-col bg-elegant-bg overflow-x-hidden">
       {/* Header */}
       {!isVerticalLayout && (
-        <header className="border-b border-elegant-border bg-card px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <header className="border-b border-elegant-border bg-card px-4 py-3 w-full flex-shrink-0">
+          <div className="w-full max-w-none flex items-center justify-between">
+            <div className="flex items-center gap-3 flex-shrink-0">
               <Gamepad2 className="h-10 w-10" style={{ color: '#7d1b2d' }} />
-              <h1 className="text-2xl font-bold" style={{ color: '#7d1b2d' }}>{t('appTitle')}</h1>
+              <h1 className="text-xl md:text-2xl font-bold" style={{ color: '#7d1b2d' }}>{t('appTitle')}</h1>
             </div>
             
             {/* Section buttons centered between logo and language */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant={getButtonVariant('load-image')}
                 onClick={() => handleTabClick('load-image')}
@@ -576,7 +589,7 @@ export const RetroImageEditor = () => {
                         <Globe className="w-4 h-4" />
                       </Button>
                       {isLanguageDropdownOpen && (
-                        <div className="absolute top-12 right-0 z-50 bg-card border border-elegant-border rounded-md shadow-lg min-w-[140px]">
+                        <div className="fixed right-4 top-16 z-50 bg-card border border-elegant-border rounded-md shadow-lg min-w-[140px] max-h-[60vh] overflow-y-auto">
                           {sortedLanguages.map((lang) => (
                             <button
                               key={lang}
@@ -608,14 +621,14 @@ export const RetroImageEditor = () => {
       {/* Vertical Sidebar for landscape orientation */}
       {isVerticalLayout && (
         <aside className="fixed left-0 top-0 h-full w-20 flex flex-col bg-card border-r border-elegant-border z-50">
-          <div className="flex flex-col items-center py-4 space-y-4">
+          <div className="flex flex-col items-center py-4 space-y-4 h-full">
             {/* Logo */}
-            <div className="flex flex-col items-center gap-1">
+            <div className="flex flex-col items-center gap-1 flex-shrink-0">
               <Gamepad2 className="h-10 w-10" style={{ color: '#7d1b2d' }} />
             </div>
             
             {/* Section buttons */}
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-2 flex-shrink-0">
               <Button
                 variant={getButtonVariant('load-image')}
                 onClick={() => handleTabClick('load-image')}
@@ -672,7 +685,7 @@ export const RetroImageEditor = () => {
             </div>
             
             {/* Language selector at bottom */}
-            <div className="mt-auto pb-4">
+            <div className="mt-auto pb-4 flex-shrink-0">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -687,7 +700,7 @@ export const RetroImageEditor = () => {
                         <Globe className="w-4 h-4" />
                       </Button>
                       {isLanguageDropdownOpen && (
-                        <div className="absolute bottom-12 left-0 z-50 bg-card border border-elegant-border rounded-md shadow-lg min-w-[140px]">
+                        <div className="fixed left-24 bottom-4 z-50 bg-card border border-elegant-border rounded-md shadow-lg min-w-[140px] max-h-[60vh] overflow-y-auto">
                           {sortedLanguages.map((lang) => (
                             <button
                               key={lang}
@@ -716,114 +729,114 @@ export const RetroImageEditor = () => {
         </aside>
       )}
 
-      {/* Main Content */}
-      <div className={`container mx-auto p-4 md:p-6 space-y-4 md:space-y-6 ${isVerticalLayout ? 'ml-20' : ''}`}>
-        <div className="w-full">
-        <ImagePreview 
-          originalImage={originalImage}
-          processedImageData={processedImageData}
-          onDownload={downloadImage}
-          onLoadImageClick={handleLoadImageClick}
-          originalImageSource={originalImageSource}
-          selectedPalette={selectedPalette}
-          onPaletteUpdate={(colors) => {
-            setCurrentPaletteColors(colors);
-            // Trigger image reprocessing with new palette
-            setTimeout(processImage, 50);
-          }}
-          showCameraPreview={showCameraPreview}
-          onCameraPreviewChange={setShowCameraPreview}
-          currentPaletteColors={currentPaletteColors}
-          onSectionOpen={() => {
-            // Handle any additional logic when sections are opened
-          }}
-        />
-        </div>
+      {/* Main Content - Flex-grow to fill available space */}
+      <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-20' : ''}`}>
+        <div className="container mx-auto px-4 md:px-6 py-6 flex-1 w-full max-w-none">
+          <div className="w-full flex flex-col space-y-6">
+            {/* Image Preview with consistent spacing */}
+            <div className="w-full">
+              <ImagePreview 
+                originalImage={originalImage}
+                processedImageData={processedImageData}
+                onDownload={downloadImage}
+                onLoadImageClick={handleLoadImageClick}
+                originalImageSource={originalImageSource}
+                selectedPalette={selectedPalette}
+                onPaletteUpdate={(colors) => {
+                  setCurrentPaletteColors(colors);
+                  // Trigger image reprocessing with new palette
+                  setTimeout(processImage, 50);
+                }}
+                showCameraPreview={showCameraPreview}
+                onCameraPreviewChange={setShowCameraPreview}
+                currentPaletteColors={currentPaletteColors}
+                onSectionOpen={() => {
+                  // Handle any additional logic when sections are opened
+                }}
+              />
+            </div>
 
-        {/* Content sections - no longer need the sections menu here */}
-        <div className="w-full space-y-4 md:space-y-6">
-
-          {/* Content Sections */}
-          <div className="w-full max-w-4xl mx-auto">
-          {/* Load Image block hidden; handled inside ImagePreview */}
-
-            {activeTab === 'palette-selector' && originalImage && (
-              <div data-section="palette-selector">
-                <ColorPaletteSelector
-                  selectedPalette={selectedPalette}
-                  onPaletteChange={setSelectedPalette}
-                />
-              </div>
-            )}
-
-
-            {activeTab === 'resolution' && originalImage && (
-              <div data-section="resolution">
-                <ResolutionSelector
-                  selectedResolution={selectedResolution}
-                  scalingMode={scalingMode}
-                  onResolutionChange={setSelectedResolution}
-                  onScalingModeChange={setScalingMode}
-                />
-              </div>
-            )}
-
-            {activeTab === 'change-grids' && originalImage && (
-              <div data-section="change-grids">
-                <Card className="bg-elegant-bg border-elegant-border p-6">
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-3">
-                      <Grid3X3 className="h-5 w-5" style={{ color: '#7d1b2d' }} />
-                      <h2 className="text-lg font-semibold text-foreground" style={{ color: '#7d1b2d' }}>{t('changeGrids')}</h2>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="show-tile-grid" 
-                            checked={false}
-                            onCheckedChange={() => {}}
-                          />
-                          <label htmlFor="show-tile-grid" className="text-sm font-medium text-foreground cursor-pointer">
-                            {t('tileGrid')}
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="show-frame-grid" 
-                            checked={false}
-                            onCheckedChange={() => {}}
-                          />
-                          <label htmlFor="show-frame-grid" className="text-sm font-medium text-foreground cursor-pointer">
-                            {t('framesGrid')}
-                          </label>
-                        </div>
-                      </div>
-                    </div>
+            {/* Content sections with consistent spacing */}
+            <div className="w-full">
+              <div className="w-full max-w-4xl mx-auto">
+                {activeTab === 'palette-selector' && originalImage && (
+                  <div data-section="palette-selector">
+                    <ColorPaletteSelector
+                      selectedPalette={selectedPalette}
+                      onPaletteChange={setSelectedPalette}
+                    />
                   </div>
-                </Card>
-              </div>
-            )}
+                )}
 
-            {activeTab === 'export-image' && originalImage && (
-              <div data-section="export-image">
-                <ExportImage
-                  processedImageData={processedImageData}
-                  selectedPalette={selectedPalette}
-                  selectedResolution={selectedResolution}
-                />
+                {activeTab === 'resolution' && originalImage && (
+                  <div data-section="resolution">
+                    <ResolutionSelector
+                      selectedResolution={selectedResolution}
+                      scalingMode={scalingMode}
+                      onResolutionChange={setSelectedResolution}
+                      onScalingModeChange={setScalingMode}
+                    />
+                  </div>
+                )}
+
+                {activeTab === 'change-grids' && originalImage && (
+                  <div data-section="change-grids">
+                    <Card className="bg-elegant-bg border-elegant-border p-6">
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3">
+                          <Grid3X3 className="h-5 w-5" style={{ color: '#7d1b2d' }} />
+                          <h2 className="text-lg font-semibold text-foreground" style={{ color: '#7d1b2d' }}>{t('changeGrids')}</h2>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                id="show-tile-grid" 
+                                checked={false}
+                                onCheckedChange={() => {}}
+                              />
+                              <label htmlFor="show-tile-grid" className="text-sm font-medium text-foreground cursor-pointer">
+                                {t('tileGrid')}
+                              </label>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                id="show-frame-grid" 
+                                checked={false}
+                                onCheckedChange={() => {}}
+                              />
+                              <label htmlFor="show-frame-grid" className="text-sm font-medium text-foreground cursor-pointer">
+                                {t('framesGrid')}
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  </div>
+                )}
+
+                {activeTab === 'export-image' && originalImage && (
+                  <div data-section="export-image">
+                    <ExportImage
+                      processedImageData={processedImageData}
+                      selectedPalette={selectedPalette}
+                      selectedResolution={selectedResolution}
+                    />
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Footer */}
-      <footer className="border-t border-elegant-border bg-card px-6 py-4 mt-8">
+      {/* Footer - Always at bottom */}
+      <footer className="border-t border-elegant-border bg-card px-6 py-4 w-full flex-shrink-0">
         <div className="text-center">
           <p className="text-sm text-muted-foreground">©2025 Anarkade</p>
         </div>
