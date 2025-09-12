@@ -109,9 +109,11 @@ interface ImagePreviewProps {
   onCameraPreviewChange?: (show: boolean) => void;
   currentPaletteColors?: any[];
   onSectionOpen?: () => void; // New callback for section opening
+  showTileGrid?: boolean;
+  showFrameGrid?: boolean;
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen, showTileGrid = false, showFrameGrid = false }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -131,8 +133,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [currentCameraId, setCurrentCameraId] = useState<string>('');
   const [integerScaling, setIntegerScaling] = useState(false);
-  const [showTileGrid, setShowTileGrid] = useState(false);
-  const [showFrameGrid, setShowFrameGrid] = useState(false);
+  // Note: showTileGrid and showFrameGrid now come from props
   const [tileWidth, setTileWidth] = useState(8);
   const [tileHeight, setTileHeight] = useState(8);
   const [frameWidth, setFrameWidth] = useState(16);

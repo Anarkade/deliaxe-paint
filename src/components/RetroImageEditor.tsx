@@ -41,6 +41,10 @@ export const RetroImageEditor = () => {
   const [isVerticalLayout, setIsVerticalLayout] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   
+  // Grid state
+  const [showTileGrid, setShowTileGrid] = useState(false);
+  const [showFrameGrid, setShowFrameGrid] = useState(false);
+  
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   
@@ -733,6 +737,8 @@ export const RetroImageEditor = () => {
                   onSectionOpen={() => {
                     // Handle any additional logic when sections are opened
                   }}
+                  showTileGrid={showTileGrid}
+                  showFrameGrid={showFrameGrid}
                 />
 
                 {/* Floating Content Sections */}
@@ -811,8 +817,8 @@ export const RetroImageEditor = () => {
                             <div className="flex items-center space-x-2">
                               <Checkbox 
                                 id="show-tile-grid" 
-                                checked={false}
-                                onCheckedChange={() => {}}
+                                checked={showTileGrid}
+                                onCheckedChange={(checked) => setShowTileGrid(!!checked)}
                               />
                               <label htmlFor="show-tile-grid" className="text-sm font-medium text-foreground cursor-pointer">
                                 {t('tileGrid')}
@@ -824,8 +830,8 @@ export const RetroImageEditor = () => {
                             <div className="flex items-center space-x-2">
                               <Checkbox 
                                 id="show-frame-grid" 
-                                checked={false}
-                                onCheckedChange={() => {}}
+                                checked={showFrameGrid}
+                                onCheckedChange={(checked) => setShowFrameGrid(!!checked)}
                               />
                               <label htmlFor="show-frame-grid" className="text-sm font-medium text-foreground cursor-pointer">
                                 {t('framesGrid')}
