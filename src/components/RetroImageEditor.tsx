@@ -688,10 +688,10 @@ export const RetroImageEditor = () => {
 
       {/* Main Content - Flex-grow to fill available space with minimal padding */}
       <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-20' : ''}`}>
-        <div className={`w-full px-1 py-2 flex-1 ${isVerticalLayout ? 'max-w-[calc(100vw-5rem)]' : 'max-w-none'}`}>
-          <div className="w-full flex flex-col space-y-2">
+        <div className={`w-full flex-1 px-[5px] pt-[5px] pb-[5px] ${isVerticalLayout ? 'max-w-[calc(100vw-5rem-10px)]' : 'max-w-[calc(100vw-10px)]'}`}>
+          <div className="w-full flex flex-col space-y-[5px]">
             {/* Image Preview with minimal consistent spacing */}
-            <div className="w-full max-w-4xl mx-auto">
+            <div className="w-full">
               <ImagePreview
                 originalImage={originalImage}
                 processedImageData={processedImageData}
@@ -799,8 +799,8 @@ export const RetroImageEditor = () => {
       </main>
 
       {/* Footer - Always at bottom, matches preview block width */}
-      <footer className="border-t border-elegant-border bg-card px-2 py-4 w-full flex-shrink-0">
-        <div className="w-full max-w-4xl mx-auto text-center">
+      <footer className={`border-t border-elegant-border bg-card w-full flex-shrink-0 ${isVerticalLayout ? 'ml-20' : ''}`}>
+        <div className={`${isVerticalLayout ? 'max-w-[calc(100vw-5rem-10px)]' : 'max-w-[calc(100vw-10px)]'} w-full px-[5px] py-[5px] mx-0 text-center`}>
           <p className="text-sm text-muted-foreground">©2025 Anarkade</p>
         </div>
       </footer>

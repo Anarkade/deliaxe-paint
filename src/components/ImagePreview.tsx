@@ -522,7 +522,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const hasProcessedImage = processedImageData !== null;
 
   return (
-    <div className="bg-card rounded-xl p-2 border border-elegant-border space-y-2">
+    <div className="bg-card rounded-xl border border-elegant-border space-y-[5px] px-0 py-[5px]">
       {/* Zoom Controls - only show when image is loaded */}
       {(originalImage || processedImageData) && (
         <div className="flex flex-col gap-4">
@@ -556,7 +556,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
 
       <div 
         ref={containerRef}
-        className={`relative bg-elegant-bg flex items-center justify-center overflow-hidden p-1 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+        className={`relative bg-elegant-bg flex items-center justify-center overflow-hidden p-0 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
         style={{ height: `${previewHeight}px` }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
