@@ -94,6 +94,8 @@ interface Translation {
   frameGridColor: string;
   originalIndexedPng: string;
   integerScaling: string;
+  width: string;
+  height: string;
   
   // Resolution
   resolution: string;
@@ -243,6 +245,8 @@ const baseTranslation: Translation = {
     frameGridColor: 'Frame grid color',
     originalIndexedPng: 'Original:',
   integerScaling: 'Integer scaling',
+  width: 'Width',
+  height: 'Height',
   resolution: 'Resolution',
   targetResolution: 'Target Resolution',
   originalSize: 'Original',
@@ -403,6 +407,8 @@ const translations: Record<Language, Translation> = {
     frameGridColor: 'Color cuadrícula de marcos',
     originalIndexedPng: 'Original:',
     integerScaling: 'Escalado entero',
+    width: 'Ancho',
+    height: 'Alto',
     resolution: 'Resolución',
     targetResolution: 'Resolución Objetivo',
     originalSize: 'Original',
@@ -545,6 +551,8 @@ const translations: Record<Language, Translation> = {
     frameGridColor: 'Color cuadrícula de marcos',
     originalIndexedPng: 'Original:',
     integerScaling: 'Escalado entero',
+    width: 'Ancho',
+    height: 'Alto',
     imageLoaded: '¡Imagen cargada con éxito!',
     imageLoadError: 'Error al cargar la imagen',
     imageDownloaded: '¡Imagen descargada!',

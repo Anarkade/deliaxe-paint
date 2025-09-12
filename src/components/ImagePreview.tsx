@@ -111,9 +111,13 @@ interface ImagePreviewProps {
   onSectionOpen?: () => void; // New callback for section opening
   showTileGrid?: boolean;
   showFrameGrid?: boolean;
+  tileWidth?: number;
+  tileHeight?: number;
+  frameWidth?: number;
+  frameHeight?: number;
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen, showTileGrid = false, showFrameGrid = false }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen, showTileGrid = false, showFrameGrid = false, tileWidth = 8, tileHeight = 8, frameWidth = 16, frameHeight = 16 }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -133,11 +137,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [currentCameraId, setCurrentCameraId] = useState<string>('');
   const [integerScaling, setIntegerScaling] = useState(false);
-  // Note: showTileGrid and showFrameGrid now come from props
-  const [tileWidth, setTileWidth] = useState(8);
-  const [tileHeight, setTileHeight] = useState(8);
-  const [frameWidth, setFrameWidth] = useState(16);
-  const [frameHeight, setFrameHeight] = useState(16);
+  // Note: Grid dimensions now come from props
   const [tileGridColor, setTileGridColor] = useState('#808080');
   const [frameGridColor, setFrameGridColor] = useState('#96629d');
   const programmaticZoomChange = useRef(false);
@@ -266,8 +266,11 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   useEffect(() => {
     const updateContainerWidth = () => {
       if (containerRef.current) {
-        const width = containerRef.current.clientWidth; // Use full width
-        setContainerWidth(width);
+        // Account for potential scrollbar space (typically ~20px) and some padding
+        const scrollbarWidth = 20;
+        const padding = 40;
+        const width = containerRef.current.clientWidth - scrollbarWidth - padding;
+        setContainerWidth(Math.max(200, width)); // Ensure minimum width
       }
     };
 

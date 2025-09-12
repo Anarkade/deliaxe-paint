@@ -44,6 +44,10 @@ export const RetroImageEditor = () => {
   // Grid state
   const [showTileGrid, setShowTileGrid] = useState(false);
   const [showFrameGrid, setShowFrameGrid] = useState(false);
+  const [tileWidth, setTileWidth] = useState(8);
+  const [tileHeight, setTileHeight] = useState(8);
+  const [frameWidth, setFrameWidth] = useState(16);
+  const [frameHeight, setFrameHeight] = useState(16);
   
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -739,6 +743,10 @@ export const RetroImageEditor = () => {
                   }}
                   showTileGrid={showTileGrid}
                   showFrameGrid={showFrameGrid}
+                  tileWidth={tileWidth}
+                  tileHeight={tileHeight}
+                  frameWidth={frameWidth}
+                  frameHeight={frameHeight}
                 />
 
                 {/* Floating Content Sections */}
@@ -812,7 +820,8 @@ export const RetroImageEditor = () => {
                           <h3 className="text-xl font-bold" style={{ color: '#7d1b2d' }}>{t('changeGrids')}</h3>
                         </div>
                         
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-6">
+                          {/* Tile Grid Section */}
                           <div className="space-y-3">
                             <div className="flex items-center space-x-2">
                               <Checkbox 
@@ -824,8 +833,35 @@ export const RetroImageEditor = () => {
                                 {t('tileGrid')}
                               </label>
                             </div>
+                            {showTileGrid && (
+                              <div className="ml-6 grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-xs text-muted-foreground">{t('width')}</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="64"
+                                    value={tileWidth}
+                                    onChange={(e) => setTileWidth(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-xs text-muted-foreground">{t('height')}</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="64"
+                                    value={tileHeight}
+                                    onChange={(e) => setTileHeight(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
 
+                          {/* Frame Grid Section */}
                           <div className="space-y-3">
                             <div className="flex items-center space-x-2">
                               <Checkbox 
@@ -837,6 +873,32 @@ export const RetroImageEditor = () => {
                                 {t('framesGrid')}
                               </label>
                             </div>
+                            {showFrameGrid && (
+                              <div className="ml-6 grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-xs text-muted-foreground">{t('width')}</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="128"
+                                    value={frameWidth}
+                                    onChange={(e) => setFrameWidth(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-xs text-muted-foreground">{t('height')}</label>
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="128"
+                                    value={frameHeight}
+                                    onChange={(e) => setFrameHeight(Math.max(1, parseInt(e.target.value) || 1))}
+                                    className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
