@@ -116,6 +116,9 @@ export const RetroImageEditor = () => {
       return; // Don't allow clicking blocked tabs
     }
     
+    // Scroll to top for all button clicks
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     // If image is loaded and user clicks load-image, unload the image
     if (originalImage && tabId === 'load-image') {
       resetEditor();
@@ -201,6 +204,11 @@ export const RetroImageEditor = () => {
       // Clear history when loading new image
       setHistory([]);
       setHistoryIndex(-1);
+      
+      // Close the load-image floating section after successful load
+      if (activeTab === 'load-image') {
+        setActiveTab(null);
+      }
       
     } catch (error) {
       toast.error(t('imageLoadError'));
@@ -732,10 +740,12 @@ export const RetroImageEditor = () => {
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     data-section="load-image"
                   >
-                    <LoadImage
-                      onImageLoad={loadImage}
-                      onCameraPreviewRequest={() => setShowCameraPreview(true)}
-                    />
+                     <LoadImage
+                       onImageLoad={(source) => {
+                         loadImage(source);
+                       }}
+                       onCameraPreviewRequest={() => setShowCameraPreview(true)}
+                     />
                   </div>
                 )}
 

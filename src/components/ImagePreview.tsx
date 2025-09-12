@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Download, Eye, ZoomIn, Camera, RotateCcw, X, Maximize2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { analyzePNGFile, ImageFormatInfo } from '@/lib/pngAnalyzer';
-import { LoadImage } from './LoadImage';
 import { PaletteViewer } from './PaletteViewer';
 import { PaletteType } from './ColorPaletteSelector';
 
@@ -663,17 +662,11 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             </div>
           </div>
         ) : (
-          <div className="w-full" style={{ minHeight: showCameraPreview ? 'auto' : '300px' }}>
-            <LoadImage 
-              onImageLoad={(source) => {
-                onLoadImageClick?.(source);
-                // Scroll to top when image is loaded
-                setTimeout(() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }, 100);
-              }}
-              onCameraPreviewRequest={() => onCameraPreviewChange?.(true)}
-            />
+          <div className="w-full bg-card/50 rounded-lg border-2 border-dashed border-elegant-border flex items-center justify-center" style={{ minHeight: showCameraPreview ? 'auto' : '300px' }}>
+            <div className="text-center text-muted-foreground">
+              <p className="text-lg">{t('loadImage')}</p>
+              <p className="text-sm">{t('noImageLoaded')}</p>
+            </div>
           </div>
         )}
       </div>
