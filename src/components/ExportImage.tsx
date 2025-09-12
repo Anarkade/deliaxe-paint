@@ -166,7 +166,7 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
           <Button
             onClick={copyToClipboard}
             className="flex items-center justify-center gap-2 w-full rounded-lg"
-            variant="secondary"
+            variant="highlighted"
           >
             <Copy className="h-4 w-4" />
             {t('copyToClipboard')}

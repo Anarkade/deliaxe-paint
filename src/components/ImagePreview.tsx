@@ -523,34 +523,36 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
 
   return (
     <div className="bg-card rounded-xl p-6 border border-elegant-border space-y-4">
-      {/* Zoom Controls - moved to top */}
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-4 text-sm">
-          <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
-          <Slider
-            value={sliderValue}
-            onValueChange={handleZoomChange}
-            max={1600}
-            min={10}
-            step={integerScaling ? 100 : 1}
-            className="flex-1"
-          />
-          <Button onClick={fitToWidth} variant="outline" size="sm">
-            {t('fitToWidth')}
-          </Button>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="integer-scaling" 
-              checked={integerScaling}
-              onCheckedChange={handleIntegerScalingChange}
+      {/* Zoom Controls - only show when image is loaded */}
+      {(originalImage || processedImageData) && (
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4 text-sm">
+            <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
+            <Slider
+              value={sliderValue}
+              onValueChange={handleZoomChange}
+              max={1600}
+              min={10}
+              step={integerScaling ? 100 : 1}
+              className="flex-1"
             />
-            <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <Button onClick={fitToWidth} variant="highlighted" size="sm">
+              {t('fitToWidth')}
+            </Button>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="integer-scaling" 
+                checked={integerScaling}
+                onCheckedChange={handleIntegerScalingChange}
+              />
+              <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div 
         ref={containerRef}
@@ -702,7 +704,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
             <div className="flex flex-wrap items-center gap-3">
               {hasProcessedImage && (
                 <Button
-                  variant="secondary"
+                  variant="highlighted"
                   size="sm"
                   onClick={() => setShowOriginal(!showOriginal)}
                   className="text-xs h-8"

@@ -271,7 +271,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     <div className="space-y-4 p-4 border border-elegant-border bg-card/50 rounded-lg">
       <div className="flex items-center justify-between">
         <Button
-          variant="secondary"
+          variant="highlighted"
           size="sm"
           onClick={extractColorsFromImage}
           disabled={!imageData && !originalImageSource}

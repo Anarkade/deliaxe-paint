@@ -118,9 +118,9 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
                 onChange={handleFileUpload}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
-              <div className="bg-gradient-to-b from-secondary/80 to-secondary border border-border shadow-lg hover:shadow-xl hover:from-secondary/90 hover:to-secondary/80 transform hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0 active:shadow-md rounded-md px-3 py-2 text-sm text-foreground cursor-pointer text-center">
+              <Button variant="highlighted" className="w-full h-10">
                 {t('chooseFile')}
-              </div>
+              </Button>
             </div>
           </div>
           
@@ -167,7 +167,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
               {!showCameraPreview ? (
                 <Button 
                   onClick={onCameraPreviewRequest || startCameraPreview}
-                  variant="modern3d"
+                  variant="highlighted"
                   className="flex-1"
                 >
                   <Eye className="mr-2 h-4 w-4" />
