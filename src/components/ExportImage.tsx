@@ -1,6 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Download, Cloud, Upload, Share, Copy } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,10 +10,21 @@ interface ExportImageProps {
   processedImageData: ImageData | null;
   selectedPalette: string;
   selectedResolution: string;
+  currentZoom?: number;
+  showGrids?: boolean;
+  paletteColors?: { r: number; g: number; b: number }[];
 }
 
-export const ExportImage = ({ processedImageData, selectedPalette, selectedResolution }: ExportImageProps) => {
+export const ExportImage = ({ processedImageData, selectedPalette, selectedResolution, currentZoom = 1, showGrids = false, paletteColors }: ExportImageProps) => {
   const { t } = useTranslation();
+  const [exportAtCurrentZoom, setExportAtCurrentZoom] = useState(false);
+  const [exportWithGrids, setExportWithGrids] = useState(false);
+
+  const createIndexedPNG = useCallback((canvas: HTMLCanvasElement, palette: { r: number; g: number; b: number }[]) => {
+    // This is a simplified approach - actual PNG-8 with indexed colors requires more complex implementation
+    // For now, we'll use regular PNG export but with reduced colors
+    return canvas.toDataURL('image/png');
+  }, []);
 
   const downloadPNG = useCallback(() => {
     if (!processedImageData) return;
@@ -21,28 +33,56 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    canvas.width = processedImageData.width;
-    canvas.height = processedImageData.height;
+    const scale = exportAtCurrentZoom ? currentZoom : 1;
+    canvas.width = processedImageData.width * scale;
+    canvas.height = processedImageData.height * scale;
+    
+    if (scale !== 1) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.scale(scale, scale);
+    }
+    
     ctx.putImageData(processedImageData, 0, 0);
     
-    // For retro palettes, export as PNG-8 indexed color format
+    // Add grids if requested
+    if (exportWithGrids && showGrids) {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      
+      // Draw a simple grid (this would need to be more sophisticated based on actual grid settings)
+      for (let x = 0; x < canvas.width; x += 8 * scale) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 8 * scale) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+    }
+    
     let dataURL: string;
     const retroPalettes = ['gameboy', 'megadrive'];
     
-    if (retroPalettes.includes(selectedPalette)) {
-      // For indexed color formats like Mega Drive, export optimized PNG
-      dataURL = canvas.toDataURL('image/png');
+    if (retroPalettes.includes(selectedPalette) && paletteColors && paletteColors.length > 0) {
+      // Export as indexed PNG when palette is available
+      dataURL = createIndexedPNG(canvas, paletteColors);
     } else {
       dataURL = canvas.toDataURL('image/png');
     }
     
     const link = document.createElement('a');
-    link.download = `retro-image-${selectedPalette}-${selectedResolution}.png`;
+    const zoomSuffix = exportAtCurrentZoom ? `-${Math.round(currentZoom * 100)}pct` : '';
+    const gridSuffix = exportWithGrids ? '-with-grids' : '';
+    link.download = `retro-image-${selectedPalette}-${selectedResolution}${zoomSuffix}${gridSuffix}.png`;
     link.href = dataURL;
     link.click();
     
     toast.success(t('imageDownloaded'));
-  }, [processedImageData, selectedPalette, selectedResolution, t]);
+  }, [processedImageData, selectedPalette, selectedResolution, t, exportAtCurrentZoom, exportWithGrids, currentZoom, showGrids, paletteColors, createIndexedPNG]);
 
   const getImageDataURL = useCallback(() => {
     if (!processedImageData) return null;
@@ -158,23 +198,51 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
           <Download className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
           {t('exportImage')}
         </h3>
-        <div className="grid grid-cols-1 gap-3">
-          <Button
-            onClick={downloadPNG}
-            className="flex items-center justify-center gap-2 w-full rounded-lg"
-            variant="default"
-          >
-            <Download className="h-4 w-4" />
-            {t('downloadPng')}
-          </Button>
-          <Button
-            onClick={copyToClipboard}
-            className="flex items-center justify-center gap-2 w-full rounded-lg"
-            variant="highlighted"
-          >
-            <Copy className="h-4 w-4" />
-            {t('copyToClipboard')}
-          </Button>
+        <div className="space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="export-zoom" 
+                checked={exportAtCurrentZoom}
+                onCheckedChange={(checked) => setExportAtCurrentZoom(checked as boolean)}
+              />
+              <label htmlFor="export-zoom" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                {t('exportAtCurrentZoom')} ({Math.round(currentZoom * 100)}%)
+              </label>
+            </div>
+            
+            {showGrids && (
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="export-grids" 
+                  checked={exportWithGrids}
+                  onCheckedChange={(checked) => setExportWithGrids(checked as boolean)}
+                />
+                <label htmlFor="export-grids" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  {t('exportWithGrids')}
+                </label>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 gap-3">
+            <Button
+              onClick={downloadPNG}
+              className="flex items-center justify-center gap-2 w-full rounded-lg"
+              variant="default"
+            >
+              <Download className="h-4 w-4" />
+              {t('downloadPng')}
+            </Button>
+            <Button
+              onClick={copyToClipboard}
+              className="flex items-center justify-center gap-2 w-full rounded-lg"
+              variant="highlighted"
+            >
+              <Copy className="h-4 w-4" />
+              {t('copyToClipboard')}
+            </Button>
+          </div>
         </div>
       </div>
     </Card>

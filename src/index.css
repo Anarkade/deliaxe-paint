@@ -49,6 +49,11 @@ All colors MUST be HSL.
     /* Gradients */
     --gradient-retro: linear-gradient(135deg, hsl(var(--neon-cyan)), hsl(var(--neon-pink)));
     --gradient-console: linear-gradient(180deg, hsl(var(--console-bg)), hsl(var(--background)));
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+
+    /* Glass effect shadows */
+    --shadow-glass: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    --shadow-glass-hover: 0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
 
     --radius: 0.75rem;
 

@@ -18,9 +18,9 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        highlighted: "bg-blood-red text-bone-white hover:bg-blood-red/90",
-        blocked: "bg-slate-700 text-slate-400 cursor-not-allowed opacity-60",
-        plum: "bg-dark-plum text-bone-white hover:bg-dark-plum/80",
+        highlighted: "bg-blood-red/20 backdrop-blur-md border border-blood-red/30 text-bone-white hover:bg-blood-red/30 hover:border-blood-red/40 shadow-glass hover:shadow-glass-hover transition-all duration-300",
+        blocked: "bg-slate-700/20 backdrop-blur-md border border-slate-700/30 text-slate-400 cursor-not-allowed opacity-60",
+        plum: "bg-dark-plum/20 backdrop-blur-md border border-dark-plum/30 text-bone-white hover:bg-dark-plum/30 hover:border-dark-plum/40 shadow-glass hover:shadow-glass-hover transition-all duration-300",
         modern3d: "bg-gradient-to-b from-secondary/80 to-secondary border border-border shadow-lg hover:shadow-xl hover:from-secondary/90 hover:to-secondary/80 transform hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0 active:shadow-md",
       },
       size: {

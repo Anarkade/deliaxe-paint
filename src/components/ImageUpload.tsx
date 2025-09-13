@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
-import { Upload, Camera, Link, Eye, X } from 'lucide-react';
+import { useCallback, useRef, useState, useEffect } from 'react';
+import { Upload, Camera, Link, Eye, X, Clipboard, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -8,13 +8,16 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface ImageUploadProps {
   onImageLoad: (file: File | string) => void;
   onCameraPreviewRequest?: () => void;
+  hideSection?: boolean;
 }
 
-export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUploadProps) => {
+export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }: ImageUploadProps) => {
   const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [showCameraPreview, setShowCameraPreview] = useState(false);
+  const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -30,9 +33,46 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
     }
   }, [onImageLoad]);
 
+  const loadFromClipboard = useCallback(async () => {
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
+          const blob = await item.getType(item.types.find(type => type.startsWith('image/')) || '');
+          const file = new File([blob], 'clipboard-image.png', { type: blob.type });
+          onImageLoad(file);
+          return;
+        }
+      }
+      alert('No image found in clipboard');
+    } catch (error) {
+      console.error('Failed to read clipboard:', error);
+      alert('Failed to read clipboard. Please make sure you have an image copied.');
+    }
+  }, [onImageLoad]);
+
+  const getAvailableCameras = useCallback(async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter(device => device.kind === 'videoinput');
+      setAvailableCameras(cameras);
+    } catch (error) {
+      console.error('Failed to get cameras:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    getAvailableCameras();
+  }, [getAvailableCameras]);
+
   const startCameraPreview = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const constraints: MediaStreamConstraints = {
+        video: availableCameras.length > 0 ? {
+          deviceId: availableCameras[currentCameraIndex]?.deviceId
+        } : true
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
       
       if (videoRef.current) {
@@ -43,7 +83,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
     } catch (error) {
       console.error('Camera access denied:', error);
     }
-  }, []);
+  }, [availableCameras, currentCameraIndex]);
 
   const stopCameraPreview = useCallback(() => {
     if (streamRef.current) {
@@ -52,6 +92,20 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
     }
     setShowCameraPreview(false);
   }, []);
+
+  const switchCamera = useCallback(async () => {
+    if (availableCameras.length <= 1) return;
+    
+    const nextIndex = (currentCameraIndex + 1) % availableCameras.length;
+    setCurrentCameraIndex(nextIndex);
+    
+    if (showCameraPreview) {
+      stopCameraPreview();
+      setTimeout(() => {
+        startCameraPreview();
+      }, 100);
+    }
+  }, [availableCameras, currentCameraIndex, showCameraPreview, stopCameraPreview, startCameraPreview]);
 
   const handleCameraCapture = useCallback(async () => {
     if (!videoRef.current || !streamRef.current) {
@@ -100,6 +154,18 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
     });
   }, [onImageLoad, stopCameraPreview]);
 
+  const getCameraDisplayName = useCallback((camera: MediaDeviceInfo, index: number) => {
+    if (camera.label) {
+      return camera.label;
+    }
+    // Fallback names for mobile/unnamed cameras
+    return `Camera ${index + 1}`;
+  }, []);
+
+  if (hideSection) {
+    return null;
+  }
+
   return (
     <Card className="p-6 border-pixel-grid bg-card">
       <div className="space-y-4">
@@ -139,6 +205,21 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
               className="bg-console-bg border-pixel-grid"
             />
           </div>
+
+          <div className="w-full space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              <Clipboard className="inline mr-2 h-4 w-4" />
+              {t('loadFromClipboard')}
+            </label>
+            <Button 
+              onClick={loadFromClipboard}
+              variant="highlighted"
+              className="w-full"
+            >
+              <Clipboard className="mr-2 h-4 w-4" />
+              {t('loadFromClipboard')}
+            </Button>
+          </div>
           
           <div className="w-full space-y-2">
             <label className="block text-sm font-medium text-foreground">
@@ -155,14 +236,27 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest }: ImageUpload
                   muted
                   playsInline
                 />
-                <Button
-                  onClick={stopCameraPreview}
-                  variant="secondary"
-                  size="sm"
-                  className="absolute top-2 right-2 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+                <div className="absolute top-2 right-2 flex gap-2">
+                  {availableCameras.length > 1 && (
+                    <Button
+                      onClick={switchCamera}
+                      variant="secondary"
+                      size="sm"
+                      className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
+                      title={getCameraDisplayName(availableCameras[currentCameraIndex], currentCameraIndex)}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    onClick={stopCameraPreview}
+                    variant="secondary"
+                    size="sm"
+                    className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             )}
             

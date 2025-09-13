@@ -85,12 +85,19 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   }, [draggedIndex, paletteColors, onPaletteUpdate]);
 
   const selectNewColor = useCallback((index: number, currentPalette: PaletteType) => {
-    // Open color picker to select new color for this slot
+    // Create a color input element for both desktop and mobile
     const input = document.createElement('input');
     input.type = 'color';
     input.value = `#${paletteColors[index].r.toString(16).padStart(2, '0')}${paletteColors[index].g.toString(16).padStart(2, '0')}${paletteColors[index].b.toString(16).padStart(2, '0')}`;
     
-    input.addEventListener('change', (e) => {
+    // Make sure it works on mobile by adding proper styling
+    input.style.position = 'absolute';
+    input.style.left = '-9999px';
+    input.style.width = '50px';
+    input.style.height = '50px';
+    document.body.appendChild(input);
+    
+    const handleChange = (e: Event) => {
       const target = e.target as HTMLInputElement;
       const hex = target.value;
       let r = parseInt(hex.substr(1, 2), 16);
@@ -114,6 +121,16 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       setTimeout(() => {
         onImageUpdate?.();
       }, 10);
+      
+      // Clean up
+      document.body.removeChild(input);
+    };
+    
+    input.addEventListener('change', handleChange);
+    input.addEventListener('blur', () => {
+      if (document.body.contains(input)) {
+        document.body.removeChild(input);
+      }
     });
     
     input.click();
@@ -292,10 +309,37 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                 <div
                   key={index}
                   draggable
-                  onDragStart={() => handleDragStart(index)}
+                  onDragStart={(e) => {
+                    handleDragStart(index);
+                    // Improve mobile drag support
+                    if (e.dataTransfer) {
+                      e.dataTransfer.effectAllowed = 'move';
+                      e.dataTransfer.setData('text/plain', index.toString());
+                    }
+                  }}
                   onDragOver={handleDragOver}
-                  onDrop={() => handleDrop(index)}
-                  className="relative group cursor-move bg-card border border-elegant-border rounded-lg p-3 hover:shadow-lg transition-all"
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    handleDrop(index);
+                  }}
+                  onTouchStart={() => handleDragStart(index)}
+                  onTouchMove={(e) => {
+                    e.preventDefault();
+                    // Handle touch drag for mobile
+                  }}
+                  onTouchEnd={(e) => {
+                    // Handle touch drop for mobile
+                    const touch = e.changedTouches[0];
+                    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const targetElement = elementBelow?.closest('[data-palette-index]');
+                    if (targetElement) {
+                      const targetIndex = parseInt(targetElement.getAttribute('data-palette-index') || '0');
+                      handleDrop(targetIndex);
+                    }
+                    setDraggedIndex(null);
+                  }}
+                  data-palette-index={index}
+                  className="relative group cursor-move bg-card border border-elegant-border rounded-lg p-3 hover:shadow-lg transition-all touch-manipulation"
                 >
                   <div className="space-y-2">
                     <div className="relative">

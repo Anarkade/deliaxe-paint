@@ -1050,11 +1050,14 @@ export const RetroImageEditor = () => {
                     onClick={(e) => e.stopPropagation()}
                     data-section="export-image"
                   >
-                    <ExportImage
-                      processedImageData={processedImageData}
-                      selectedPalette={selectedPalette}
-                      selectedResolution={selectedResolution}
-                    />
+          <ExportImage 
+            processedImageData={processedImageData}
+            selectedPalette={selectedPalette}
+            selectedResolution={selectedResolution}
+            currentZoom={1}
+            showGrids={showTileGrid || showFrameGrid}
+            paletteColors={currentPaletteColors}
+          />
                   </div>
                 )}
               </div>

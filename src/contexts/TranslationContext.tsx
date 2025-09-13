@@ -174,6 +174,16 @@ interface Translation {
   showTileGrid: string;
   showFrameGrid: string;
 
+  // New clipboard and camera features
+  loadFromClipboard: string;
+  changeCamera: string;
+  
+  // Export options
+  exportAtCurrentZoom: string;
+  exportAtOriginalSize: string;
+  exportWithGrids: string;
+  exportWithoutGrids: string;
+
   // Language names
   languageNames: Record<Language, string>;
 }
@@ -305,11 +315,21 @@ const baseTranslation: Translation = {
   alignBottomLeft: 'Bottom Left',
   alignBottomCenter: 'Bottom Center',
   alignBottomRight: 'Bottom Right',
+
+  // Grid texts (renamed to avoid conflict)
+  showTileGrid: 'Show tile grid',
+  showFrameGrid: 'Show frame grid',
+
+  // New clipboard and camera features
+  loadFromClipboard: 'Load from clipboard',
+  changeCamera: 'Change camera',
   
-  // Grid texts
-  showTileGrid: 'Show Tile Grid',
-  showFrameGrid: 'Show Frame Grid',
-  
+  // Export options
+  exportAtCurrentZoom: 'Export at current zoom',
+  exportAtOriginalSize: 'Export at original size',
+  exportWithGrids: 'Export with grids',
+  exportWithoutGrids: 'Export without grids',
+
   languageNames: {
     'en': 'English',
     'es-ES': 'Español (España)',
@@ -372,8 +392,12 @@ const translations: Record<Language, Translation> = {
     fromUrl: 'Desde URL',
     camera: 'Cámara',
     capture: 'Capturar',
-    switchCamera: 'Cambiar Cámara',
-    close: 'Cerrar',
+    loadFromClipboard: 'Cargar desde portapapeles',
+    changeCamera: 'Cambiar cámara',
+    exportAtCurrentZoom: 'Exportar al zoom actual',
+    exportAtOriginalSize: 'Exportar al tamaño original',
+    exportWithGrids: 'Exportar con cuadrículas',
+    exportWithoutGrids: 'Exportar sin cuadrículas',
       selectPalette: 'Cambiar Paleta',
     originalPalette: 'Original',
     gameBoy: 'Game Boy (GB Studio sprites)',
@@ -476,7 +500,17 @@ const translations: Record<Language, Translation> = {
     alignBottomLeft: 'Inferior Izquierda',
     alignBottomCenter: 'Inferior Centro',
     alignBottomRight: 'Inferior Derecha',
-    languageNames: {
+  // New clipboard and camera features
+  loadFromClipboard: 'Load from clipboard',
+  changeCamera: 'Change camera',
+  
+  // Export options
+  exportAtCurrentZoom: 'Export at current zoom',
+  exportAtOriginalSize: 'Export at original size',
+  exportWithGrids: 'Export with grids',
+  exportWithoutGrids: 'Export without grids',
+
+  languageNames: {
       'en': 'English (Inglés)',
       'es-ES': 'Español (España)',
       'es-LA': 'Español (Latinoamérica)',
@@ -655,7 +689,12 @@ const translations: Record<Language, Translation> = {
     alignMiddleRight: 'Centre Dreta',
     alignBottomLeft: 'Inferior Esquerra',
     alignBottomCenter: 'Inferior Centre',
-    alignBottomRight: 'Inferior Dreta',
+    loadFromClipboard: 'Carregar del porta-retalls',
+    changeCamera: 'Canviar càmera',
+    exportAtCurrentZoom: 'Exportar al zoom actual',
+    exportAtOriginalSize: 'Exportar a la mida original',
+    exportWithGrids: 'Exportar amb graelles',
+    exportWithoutGrids: 'Exportar sense graelles',
     downloadPng: 'Descarregar PNG',
     copyToClipboard: 'Copiar al porta-retalls',
     imageCopiedToClipboard: 'Imatge copiada al porta-retalls!',
