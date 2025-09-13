@@ -34,6 +34,7 @@ export const RetroImageEditor = () => {
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
   const [currentPaletteColors, setCurrentPaletteColors] = useState<any[]>([]);
+  const [originalPaletteColors, setOriginalPaletteColors] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<string>('load-image');
   const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
   const [showCameraPreview, setShowCameraPreview] = useState(false);
@@ -161,9 +162,10 @@ export const RetroImageEditor = () => {
     setOriginalImageSource(null);
     setSelectedPalette('original');
     setSelectedResolution('original');
-    setScalingMode('dont-scale');
-    setCurrentPaletteColors([]);
-    setShowCameraPreview(false);
+      setScalingMode('dont-scale');
+      setCurrentPaletteColors([]);
+      setOriginalPaletteColors([]);
+      setShowCameraPreview(false);
     setHistory([]);
     setHistoryIndex(-1);
     setActiveTab('load-image');
@@ -195,6 +197,18 @@ export const RetroImageEditor = () => {
       setOriginalImage(img);
       setProcessedImageData(null);
       setOriginalImageSource(source); // Store the source for PNG analysis
+      
+      // Extract original image palette for palette conversions
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      if (tempCtx) {
+        tempCanvas.width = img.width;
+        tempCanvas.height = img.height;
+        tempCtx.drawImage(img, 0, 0);
+        const originalImageData = tempCtx.getImageData(0, 0, img.width, img.height);
+        const originalColors = extractColorsFromImageData(originalImageData);
+        setOriginalPaletteColors(originalColors);
+      }
       
       // Check if original image is PNG-8 indexed
       try {
@@ -411,7 +425,7 @@ export const RetroImageEditor = () => {
         
         // Get fresh image data from original for palette conversion
         const originalImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
-        applyPaletteConversion(originalImageData, selectedPalette, currentPaletteColors);
+        applyPaletteConversion(originalImageData, selectedPalette, originalPaletteColors);
         ctx.putImageData(originalImageData, 0, 0);
         imageData = originalImageData;
       }
