@@ -141,6 +141,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [tileGridColor, setTileGridColor] = useState('#808080');
   const [frameGridColor, setFrameGridColor] = useState('#96629d');
   const programmaticZoomChange = useRef(false);
+  const [shouldAutoFit, setShouldAutoFit] = useState(true);
   
   // Touch/pinch zoom state
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance?: number } | null>(null);
@@ -305,6 +306,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
 
   // Handle zoom change with integer scaling
   const handleZoomChange = useCallback((newZoom: number[]) => {
+    setShouldAutoFit(false);
     if (integerScaling) {
       const roundedZoom = Math.round(newZoom[0] / 100) * 100;
       const applied = Math.max(100, roundedZoom);
@@ -318,6 +320,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
 
   // Handle integer scaling toggle
   const handleIntegerScalingChange = useCallback((checked: boolean) => {
+    setShouldAutoFit(false);
     setIntegerScaling(checked);
     if (checked) {
       const roundedZoom = Math.round(zoom[0] / 100) * 100;
@@ -327,12 +330,18 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     }
   }, [zoom]);
 
-  // Apply fit to width when image loads or resolution changes
+  // Mark auto-fit pending when image content changes
   useEffect(() => {
-    if (originalImage && containerWidth > 0) {
-      fitToWidth();
-    }
-  }, [originalImage, containerWidth, processedImageData, fitToWidth]);
+    setShouldAutoFit(true);
+  }, [originalImage, processedImageData]);
+
+  // Apply fit to width once when auto-fit is pending and container size is known
+  useEffect(() => {
+    if (!originalImage || containerWidth <= 0) return;
+    if (!shouldAutoFit) return;
+    fitToWidth();
+    setShouldAutoFit(false);
+  }, [shouldAutoFit, containerWidth, originalImage, fitToWidth]);
 
   // Calculate adaptive height based on image and zoom
   useEffect(() => {
