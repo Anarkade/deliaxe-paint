@@ -500,17 +500,8 @@ const translations: Record<Language, Translation> = {
     alignBottomLeft: 'Inferior Izquierda',
     alignBottomCenter: 'Inferior Centro',
     alignBottomRight: 'Inferior Derecha',
-  // New clipboard and camera features
-  loadFromClipboard: 'Load from clipboard',
-  changeCamera: 'Change camera',
-  
-  // Export options
-  exportAtCurrentZoom: 'Export at current zoom',
-  exportAtOriginalSize: 'Export at original size',
-  exportWithGrids: 'Export with grids',
-  exportWithoutGrids: 'Export without grids',
 
-  languageNames: {
+    languageNames: {
       'en': 'English (Inglés)',
       'es-ES': 'Español (España)',
       'es-LA': 'Español (Latinoamérica)',
