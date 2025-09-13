@@ -381,10 +381,10 @@ export const RetroImageEditor = () => {
         const gbColors = customColors && customColors.length === 4 
           ? customColors.map(c => [c.r, c.g, c.b])
           : [
-              [15, 56, 15],    // Darkest green
-              [48, 98, 48],    // Dark green  
-              [139, 172, 15],  // Light green
-              [155, 188, 15]   // Lightest green
+              [7, 24, 33],     // #071821
+              [134, 192, 108], // #86c06c
+              [224, 248, 207], // #e0f8cf
+              [101, 255, 0]    // #65ff00
             ];
         
         // Function to find closest color in Game Boy palette
@@ -786,7 +786,13 @@ export const RetroImageEditor = () => {
                   >
                     <ColorPaletteSelector
                       selectedPalette={selectedPalette}
-                      onPaletteChange={setSelectedPalette}
+                      onPaletteChange={(palette) => {
+                        setSelectedPalette(palette);
+                        // Force reprocessing from original when palette changes
+                        if (originalImage && palette !== 'original') {
+                          setTimeout(() => processImage(), 50);
+                        }
+                      }}
                     />
                   </div>
                 )}
