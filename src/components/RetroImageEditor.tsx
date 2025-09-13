@@ -882,6 +882,7 @@ export const RetroImageEditor = () => {
                   tileHeight={tileHeight}
                   frameWidth={frameWidth}
                   frameHeight={frameHeight}
+                  autoFitKey={`${selectedResolution}|${scalingMode}`}
                 />
 
                 {/* Floating Content Sections */}

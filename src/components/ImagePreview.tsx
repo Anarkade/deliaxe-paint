@@ -115,9 +115,10 @@ interface ImagePreviewProps {
   tileHeight?: number;
   frameWidth?: number;
   frameHeight?: number;
+  autoFitKey?: string;
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen, showTileGrid = false, showFrameGrid = false, tileWidth = 8, tileHeight = 8, frameWidth = 16, frameHeight = 16 }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen, showTileGrid = false, showFrameGrid = false, tileWidth = 8, tileHeight = 8, frameWidth = 16, frameHeight = 16, autoFitKey }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -142,6 +143,8 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [frameGridColor, setFrameGridColor] = useState('#96629d');
   const programmaticZoomChange = useRef(false);
   const [shouldAutoFit, setShouldAutoFit] = useState(true);
+  const autoFitAllowed = useRef(true);
+  const expectingProcessedChange = useRef(false);
   
   // Touch/pinch zoom state
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance?: number } | null>(null);
@@ -307,6 +310,8 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   // Handle zoom change with integer scaling
   const handleZoomChange = useCallback((newZoom: number[]) => {
     setShouldAutoFit(false);
+    autoFitAllowed.current = false;
+    expectingProcessedChange.current = false;
     if (integerScaling) {
       const roundedZoom = Math.round(newZoom[0] / 100) * 100;
       const applied = Math.max(100, roundedZoom);
@@ -321,6 +326,8 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   // Handle integer scaling toggle
   const handleIntegerScalingChange = useCallback((checked: boolean) => {
     setShouldAutoFit(false);
+    autoFitAllowed.current = false;
+    expectingProcessedChange.current = false;
     setIntegerScaling(checked);
     if (checked) {
       const roundedZoom = Math.round(zoom[0] / 100) * 100;
@@ -330,10 +337,26 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     }
   }, [zoom]);
 
-  // Mark auto-fit pending when image content changes
+  // Enable auto-fit on new image load
   useEffect(() => {
+    autoFitAllowed.current = true;
     setShouldAutoFit(true);
-  }, [originalImage, processedImageData]);
+  }, [originalImage]);
+
+  // Prepare auto-fit when resolution/scaling changes; wait for processed image
+  useEffect(() => {
+    if (autoFitKey !== undefined) {
+      autoFitAllowed.current = true;
+      expectingProcessedChange.current = true;
+    }
+  }, [autoFitKey]);
+
+  // When processed image updates due to resolution/scaling changes and auto-fit is allowed, trigger it once
+  useEffect(() => {
+    if (expectingProcessedChange.current && autoFitAllowed.current) {
+      setShouldAutoFit(true);
+    }
+  }, [processedImageData]);
 
   // Apply fit to width once when auto-fit is pending and container size is known
   useEffect(() => {
@@ -341,6 +364,7 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
     if (!shouldAutoFit) return;
     fitToWidth();
     setShouldAutoFit(false);
+    expectingProcessedChange.current = false;
   }, [shouldAutoFit, containerWidth, originalImage, fitToWidth]);
 
   // Calculate adaptive height based on image and zoom
