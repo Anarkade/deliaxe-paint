@@ -387,26 +387,20 @@ export const RetroImageEditor = () => {
               [101, 255, 0]    // #65ff00
             ];
         
-        // Calculate brightness for each Game Boy palette color
-        const gbBrightness = gbColors.map(color => 
-          0.299 * color[0] + 0.587 * color[1] + 0.114 * color[2]
-        );
-        
-        // Function to find closest color by brightness in Game Boy palette
+        // Function to assign Game Boy colors based on brightness ranges
         const findClosestGBColor = (r: number, g: number, b: number) => {
           const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
-          let closestIndex = 0;
-          let smallestDiff = Math.abs(pixelBrightness - gbBrightness[0]);
+          const brightnessPercent = (pixelBrightness / 255) * 100;
           
-          for (let i = 1; i < gbBrightness.length; i++) {
-            const diff = Math.abs(pixelBrightness - gbBrightness[i]);
-            if (diff < smallestDiff) {
-              smallestDiff = diff;
-              closestIndex = i;
-            }
+          if (brightnessPercent <= 24) {
+            return gbColors[0]; // #071821 (darkest) for 0%-24%
+          } else if (brightnessPercent <= 49) {
+            return gbColors[1]; // #86c06c (2nd darkest) for 25%-49%
+          } else if (brightnessPercent <= 74) {
+            return gbColors[2]; // #65ff00 (2nd brightest) for 50%-74%
+          } else {
+            return gbColors[3]; // #e0f8cf (brightest) for 75%-100%
           }
-          
-          return gbColors[closestIndex];
         };
 
         // Apply Game Boy indexed color conversion
