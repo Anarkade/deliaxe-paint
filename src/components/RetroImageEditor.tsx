@@ -684,13 +684,8 @@ export const RetroImageEditor = () => {
       {/* Header */}
       {!isVerticalLayout && (
         <header className="border-b border-elegant-border bg-card px-4 py-3 w-full flex-shrink-0">
-          <div className="w-full max-w-none flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <Gamepad2 className="h-10 w-10" style={{ color: '#7d1b2d' }} />
-              <h1 className="text-xl md:text-2xl font-bold" style={{ color: '#7d1b2d' }}>{t('appTitle')}</h1>
-            </div>
-            
-            {/* Section buttons centered between logo and language */}
+          <div className="w-full max-w-none flex items-center justify-center">
+            {/* Horizontally centered section buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <Button
                 variant={getButtonVariant('load-image')}
@@ -753,7 +748,7 @@ export const RetroImageEditor = () => {
                       onClick={() => handleTabClick('language')}
                       variant="secondary"
                       size="sm"
-                      className="w-12 h-12 p-0 bg-blood-red hover:bg-blood-red-hover text-bone-white border-none"
+                      className="w-10 h-10 p-0 bg-blood-red hover:bg-blood-red-hover text-bone-white border-none"
                     >
                       <Globe className="w-5 h-5" />
                     </Button>
