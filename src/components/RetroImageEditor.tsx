@@ -426,6 +426,57 @@ export const RetroImageEditor = () => {
           })));
         }
         break;
+        
+      case 'gameboyBg':
+        // Game Boy Background palette with different colors
+        const gbBgColors = customColors && customColors.length === 4 
+          ? customColors.map(c => [c.r, c.g, c.b])
+          : [
+              [7, 24, 33],     // #071821 (darkest)
+              [48, 104, 80],   // #306850 (2nd darkest)
+              [134, 192, 108], // #86c06c (2nd brightest)
+              [224, 248, 207]  // #e0f8cf (brightest)
+            ];
+        
+        // Function to assign Game Boy background colors based on brightness ranges
+        const findClosestGBBgColor = (r: number, g: number, b: number) => {
+          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
+          const brightnessPercent = (pixelBrightness / 255) * 100;
+          
+          if (brightnessPercent <= 24) {
+            return gbBgColors[0]; // #071821 (darkest) for 0%-24%
+          } else if (brightnessPercent <= 49) {
+            return gbBgColors[1]; // #306850 (2nd darkest) for 25%-49%
+          } else if (brightnessPercent <= 74) {
+            return gbBgColors[2]; // #86c06c (2nd brightest) for 50%-74%
+          } else {
+            return gbBgColors[3]; // #e0f8cf (brightest) for 75%-100%
+          }
+        };
+
+        // Apply Game Boy background indexed color conversion
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          
+          const closestColor = findClosestGBBgColor(r, g, b);
+          
+          data[i] = closestColor[0];     // R
+          data[i + 1] = closestColor[1]; // G
+          data[i + 2] = closestColor[2]; // B
+          // Alpha channel (i + 3) remains unchanged
+        }
+        
+        // Update the current palette colors for the palette viewer if not using custom colors
+        if (!customColors || customColors.length !== 4) {
+          setCurrentPaletteColors(gbBgColors.map(color => ({
+            r: color[0],
+            g: color[1],
+            b: color[2]
+          })));
+        }
+        break;
       
       case 'megadrive':
         // Use custom colors if provided, otherwise generate palette

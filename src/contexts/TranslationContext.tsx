@@ -40,6 +40,7 @@ interface Translation {
   selectPalette: string;
   originalPalette: string;
   gameBoy: string;
+  gameBoyBg: string;
   megaDriveSingle: string;
   megaDriveMulti: string;
   neoGeoSingle: string;
@@ -201,6 +202,7 @@ const baseTranslation: Translation = {
   selectPalette: 'Change Palette',
   originalPalette: 'Original',
   gameBoy: 'Game Boy (GB Studio sprites)',
+  gameBoyBg: 'Game Boy (GB Studio backgrounds)',
   megaDriveSingle: 'Mega Drive Single (16 colors)',
   megaDriveMulti: 'Mega Drive Multi (64 colors)',
   neoGeoSingle: 'Neo Geo Single (16 colors)',
@@ -364,6 +366,7 @@ const translations: Record<Language, Translation> = {
       selectPalette: 'Cambiar Paleta',
     originalPalette: 'Original',
     gameBoy: 'Game Boy (GB Studio sprites)',
+    gameBoyBg: 'Game Boy (GB Studio backgrounds)',
     megaDriveSingle: 'Mega Drive Simple (16 colores)',
     megaDriveMulti: 'Mega Drive Multi (64 colores)',
     neoGeoSingle: 'Neo Geo Simple (16 colores)',

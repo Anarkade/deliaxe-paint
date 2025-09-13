@@ -8,6 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 export type PaletteType = 
   | 'original'
   | 'gameboy'
+  | 'gameboyBg'
   | 'megadrive';
 
 interface ColorPaletteSelectorProps {
@@ -24,6 +25,7 @@ export const ColorPaletteSelector = ({
   const paletteOptions = [
     { value: 'original' as const, label: t('originalPalette'), colors: t('unlimitedColors') },
     { value: 'gameboy' as const, label: t('gameBoy'), colors: t('gameBoyColors') },
+    { value: 'gameboyBg' as const, label: t('gameBoyBg'), colors: t('gameBoyColors') },
     { value: 'megadrive' as const, label: t('megaDrive16'), colors: t('megaDrive16Colors') },
   ];
 
