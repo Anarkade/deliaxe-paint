@@ -673,7 +673,7 @@ export const RetroImageEditor = () => {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [originalImage, selectedPalette, selectedResolution, scalingMode]);
+  }, [originalImage, selectedPalette, selectedResolution, scalingMode, processImage]);
 
   const sortedLanguages = [...languages].sort((a, b) => 
     getLanguageName(a).localeCompare(getLanguageName(b))
