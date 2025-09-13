@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Palette, RotateCcw, RotateCw } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -34,23 +35,17 @@ export const ColorPaletteSelector = ({
           {t('selectPalette')}
         </h3>
         
-        <div className="space-y-2">
-          <Select value={selectedPalette} onValueChange={onPaletteChange}>
-            <SelectTrigger className="bg-console-bg border-pixel-grid">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-card border-pixel-grid">
-              {paletteOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value} className="text-foreground">
-                  <div className="flex flex-col">
-                    <span className="font-medium">{option.label}</span>
-                    <span className="text-xs text-muted-foreground">{option.colors}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="space-y-3">
+          {paletteOptions.map((option) => (
+            <div key={option.value} className="flex items-center space-x-2">
+              <RadioGroupItem value={option.value} id={`palette-${option.value}`} />
+              <Label htmlFor={`palette-${option.value}`} className="flex flex-col cursor-pointer">
+                <span className="font-medium">{option.label}</span>
+                <span className="text-xs text-muted-foreground">{option.colors}</span>
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
       </div>
     </Card>
   );

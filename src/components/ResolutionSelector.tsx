@@ -1,5 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Monitor, AlignCenter, Maximize } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -175,25 +177,21 @@ export const ResolutionSelector = ({
           )}
           
           {/* Target Resolution - moved to the bottom */}
-          <div className="space-y-2">
+          <div className="space-y-3">
             <label className="block text-sm font-medium text-foreground">
               {t('targetResolution')}
             </label>
-            <Select value={selectedResolution} onValueChange={onResolutionChange}>
-              <SelectTrigger className="bg-console-bg border-pixel-grid">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-pixel-grid">
-                {resolutionOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value} className="text-foreground">
-                    <div className="flex flex-col">
-                      <span className="font-medium">{option.label}</span>
-                      <span className="text-xs text-muted-foreground">{option.desc}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <RadioGroup value={selectedResolution} onValueChange={onResolutionChange} className="space-y-3">
+              {resolutionOptions.map((option) => (
+                <div key={option.value} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option.value} id={`resolution-${option.value}`} />
+                  <Label htmlFor={`resolution-${option.value}`} className="flex flex-col cursor-pointer">
+                    <span className="font-medium">{option.label}</span>
+                    <span className="text-xs text-muted-foreground">{option.desc}</span>
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
           </div>
         </div>
       </div>

@@ -255,6 +255,7 @@ export const RetroImageEditor = () => {
         ctx.imageSmoothingEnabled = false; // Preserve indexed colors
       }
 
+      // ALWAYS use original image as source for any changes
       // Set canvas dimensions based on resolution
       let targetWidth = originalImage.width;
       let targetHeight = originalImage.height;
