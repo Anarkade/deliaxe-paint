@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -153,24 +153,21 @@ export const ResolutionSelector = ({
                   <label className="block text-sm font-medium text-foreground">
                     {t('alignment')}
                   </label>
-                   <Select 
-                     value={isAlignmentMode(scalingMode) ? scalingMode : (scalingMode === 'dont-scale' ? 'middle-center' : 'middle-center')} 
-                     onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
+                  <RadioGroup 
+                    value={isAlignmentMode(scalingMode) ? scalingMode : (scalingMode === 'dont-scale' ? 'middle-center' : 'middle-center')} 
+                    onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
+                    className="grid grid-cols-3 gap-2"
                   >
-                    <SelectTrigger className="bg-console-bg border-pixel-grid">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-card border-pixel-grid">
-                       {alignmentOptions.map((option) => (
-                         <SelectItem key={option.value} value={option.value} className="text-foreground">
-                           <div className="flex items-center gap-2">
-                             <AlignmentIcon position={option.position} />
-                             <span>{option.label}</span>
-                           </div>
-                         </SelectItem>
-                       ))}
-                    </SelectContent>
-                  </Select>
+                    {alignmentOptions.map((option) => (
+                      <div key={option.value} className="flex items-center space-x-2">
+                        <RadioGroupItem value={option.value} id={`alignment-${option.value}`} />
+                        <Label htmlFor={`alignment-${option.value}`} className="flex items-center gap-2 cursor-pointer text-xs">
+                          <AlignmentIcon position={option.position} />
+                          <span>{option.label}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </RadioGroup>
                 </div>
               )}
             </div>
