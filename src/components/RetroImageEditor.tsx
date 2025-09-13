@@ -972,7 +972,7 @@ export const RetroImageEditor = () => {
                                 onCheckedChange={(checked) => setShowTileGrid(!!checked)}
                               />
                               <label htmlFor="show-tile-grid" className="text-sm font-medium text-foreground cursor-pointer">
-                                {t('tileGrid')}
+                                {t('showTileGrid')}
                               </label>
                             </div>
                             {showTileGrid && (
@@ -1012,7 +1012,7 @@ export const RetroImageEditor = () => {
                                 onCheckedChange={(checked) => setShowFrameGrid(!!checked)}
                               />
                               <label htmlFor="show-frame-grid" className="text-sm font-medium text-foreground cursor-pointer">
-                                {t('framesGrid')}
+                                {t('showFrameGrid')}
                               </label>
                             </div>
                             {showFrameGrid && (

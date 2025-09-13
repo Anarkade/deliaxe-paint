@@ -170,6 +170,10 @@ interface Translation {
   alignBottomCenter: string;
   alignBottomRight: string;
 
+  // Grid texts (renamed to avoid conflict)
+  showTileGrid: string;
+  showFrameGrid: string;
+
   // Language names
   languageNames: Record<Language, string>;
 }
@@ -301,6 +305,11 @@ const baseTranslation: Translation = {
   alignBottomLeft: 'Bottom Left',
   alignBottomCenter: 'Bottom Center',
   alignBottomRight: 'Bottom Right',
+  
+  // Grid texts
+  showTileGrid: 'Show Tile Grid',
+  showFrameGrid: 'Show Frame Grid',
+  
   languageNames: {
     'en': 'English',
     'es-ES': 'Español (España)',
@@ -582,6 +591,10 @@ const translations: Record<Language, Translation> = {
     neoGeoMultiColors: '4096 colores (16×256)',
     neoGeoSingleColors: '16 colores (15-bit)',
     zxSpectrumColors: '16 colores (4-bit)',
+    
+    // Grid translations
+    showTileGrid: 'Mostrar Cuadrícula de Mosaicos',
+    showFrameGrid: 'Mostrar Cuadrícula de Marcos',
   },
   'ca': { 
     ...baseTranslation,
@@ -694,6 +707,10 @@ const translations: Record<Language, Translation> = {
     neoGeoMultiColors: '4096 colors (16×256)',
     neoGeoSingleColors: '16 colors (15-bit)',
     zxSpectrumColors: '16 colors (4-bit)',
+    
+    // Grid translations
+    showTileGrid: 'Mostrar Graella de Mosaic',
+    showFrameGrid: 'Mostrar Graella de Marcs',
   },
   'fr': { 
     ...baseTranslation,
@@ -807,6 +824,10 @@ const translations: Record<Language, Translation> = {
     neoGeoMultiColors: '4096 couleurs (16×256)',
     neoGeoSingleColors: '16 couleurs (15-bit)',
     zxSpectrumColors: '16 couleurs (4-bit)',
+    
+    // Grid translations
+    showTileGrid: 'Afficher la Grille de Tuiles',
+    showFrameGrid: 'Afficher la Grille de Cadres',
   },
   'de': { 
     ...baseTranslation,
@@ -900,6 +921,10 @@ const translations: Record<Language, Translation> = {
     neoGeoMultiColors: '4096 Farben (16×256)',
     neoGeoSingleColors: '16 Farben (15-bit)',
     zxSpectrumColors: '16 Farben (4-bit)',
+    
+    // Grid translations
+    showTileGrid: 'Kachel-Raster anzeigen',
+    showFrameGrid: 'Rahmen-Raster anzeigen',
   },
   'it': { 
     ...baseTranslation,
@@ -999,6 +1024,10 @@ const translations: Record<Language, Translation> = {
     neoGeoMultiColors: '4096 colori (16×256)',
     neoGeoSingleColors: '16 colori (15-bit)',
     zxSpectrumColors: '16 colori (4-bit)',
+    
+    // Grid translations
+    showTileGrid: 'Mostra Griglia Tessere',
+    showFrameGrid: 'Mostra Griglia Cornici',
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -1963,6 +1992,8 @@ const translations: Record<Language, Translation> = {
     originalIndexedPng: 'Original:',
     integerScaling: 'Escalatge entièr',
     changeGrids: 'Cambiar Mialhes',
+    showTileGrid: 'Mostrar Mialha de Mosaics',
+    showFrameGrid: 'Mostrar Mialha de Quadres',
   }
 };
 
