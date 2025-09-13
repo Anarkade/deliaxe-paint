@@ -22,6 +22,7 @@ const buttonVariants = cva(
         blocked: "bg-slate-700/20 backdrop-blur-md border border-slate-700/30 text-slate-400 cursor-not-allowed opacity-60",
         plum: "bg-dark-plum/20 backdrop-blur-md border border-dark-plum/30 text-bone-white hover:bg-dark-plum/30 hover:border-dark-plum/40 shadow-glass hover:shadow-glass-hover transition-all duration-300",
         modern3d: "bg-gradient-to-b from-secondary/80 to-secondary border border-border shadow-lg hover:shadow-xl hover:from-secondary/90 hover:to-secondary/80 transform hover:-translate-y-0.5 transition-all duration-200 active:translate-y-0 active:shadow-md",
+        glass: "bg-glass-dark/20 backdrop-blur-md border border-glass-border text-foreground hover:bg-glass-dark/30 hover:border-glass-border-hover shadow-glass hover:shadow-glass-hover transition-all duration-300",
       },
       size: {
         default: "h-10 px-4 py-2",
