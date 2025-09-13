@@ -351,9 +351,69 @@ export const RetroImageEditor = () => {
       }
       
       // Apply palette conversion using current palette colors
+      // Always use original image data for palette conversion to avoid degradation
       if (selectedPalette !== 'original') {
-        applyPaletteConversion(imageData, selectedPalette, currentPaletteColors);
-        ctx.putImageData(imageData, 0, 0);
+        // Create a temporary canvas with original image data for palette conversion
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = targetWidth;
+        tempCanvas.height = targetHeight;
+        const tempCtx = tempCanvas.getContext('2d');
+        if (!tempCtx) return;
+        
+        // Clear with black background
+        tempCtx.fillStyle = '#000000';
+        tempCtx.fillRect(0, 0, targetWidth, targetHeight);
+        
+        // Draw original image with same scaling/positioning logic
+        if (selectedResolution !== 'original') {
+          switch (scalingMode) {
+            case 'stretch':
+              tempCtx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+              break;
+            case 'fit':
+              const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
+              const scaledWidth = originalImage.width * scale;
+              const scaledHeight = originalImage.height * scale;
+              const fitX = (targetWidth - scaledWidth) / 2;
+              const fitY = (targetHeight - scaledHeight) / 2;
+              tempCtx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
+              break;
+            case 'dont-scale':
+              const centerX = (targetWidth - originalImage.width) / 2;
+              const centerY = (targetHeight - originalImage.height) / 2;
+              tempCtx.drawImage(originalImage, centerX, centerY);
+              break;
+            default:
+              const alignmentModes = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
+              if (alignmentModes.includes(scalingMode)) {
+                const [vAlign, hAlign] = (scalingMode as string).split('-');
+                let x = 0, y = 0;
+                
+                switch (hAlign) {
+                  case 'left': x = 0; break;
+                  case 'center': x = (targetWidth - originalImage.width) / 2; break;
+                  case 'right': x = targetWidth - originalImage.width; break;
+                }
+                
+                switch (vAlign) {
+                  case 'top': y = 0; break;
+                  case 'middle': y = (targetHeight - originalImage.height) / 2; break;
+                  case 'bottom': y = targetHeight - originalImage.height; break;
+                }
+                
+                tempCtx.drawImage(originalImage, x, y);
+              }
+              break;
+          }
+        } else {
+          tempCtx.drawImage(originalImage, 0, 0);
+        }
+        
+        // Get fresh image data from original for palette conversion
+        const originalImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
+        applyPaletteConversion(originalImageData, selectedPalette, currentPaletteColors);
+        ctx.putImageData(originalImageData, 0, 0);
+        imageData = originalImageData;
       }
 
       setProcessedImageData(imageData);
