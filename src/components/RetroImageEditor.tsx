@@ -397,9 +397,9 @@ export const RetroImageEditor = () => {
           } else if (brightnessPercent <= 49) {
             return gbColors[1]; // #86c06c (2nd darkest) for 25%-49%
           } else if (brightnessPercent <= 74) {
-            return gbColors[2]; // #65ff00 (2nd brightest) for 50%-74%
+            return gbColors[2]; // #e0f8cf (2nd brightest) for 50%-74%
           } else {
-            return gbColors[3]; // #e0f8cf (brightest) for 75%-100%
+            return gbColors[3]; // #65ff00 (brightest) for 75%-100%
           }
         };
 
