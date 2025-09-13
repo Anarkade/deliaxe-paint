@@ -11,7 +11,6 @@ const AlignmentIcon = ({ position }: { position: string }) => {
   const getAlignment = () => {
     const [vertical, horizontal] = position.split('-');
     let outerStyle = '';
-    let innerStyle = '';
     
     switch (vertical) {
       case 'top':
@@ -72,7 +71,6 @@ interface ResolutionSelectorProps {
   onScalingModeChange: (mode: CombinedScalingMode) => void;
 }
 
-
 export const ResolutionSelector = ({
   selectedResolution,
   scalingMode,
@@ -115,6 +113,7 @@ export const ResolutionSelector = ({
   const isAlignmentMode = (mode: CombinedScalingMode): mode is AlignmentMode => {
     return alignmentOptions.some(option => option.value === mode);
   };
+
   return (
     <Card className="p-6 border-pixel-grid bg-card">
       <div className="space-y-4">
@@ -122,58 +121,54 @@ export const ResolutionSelector = ({
           <Monitor className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
           {t('changeResolution')}
         </h3>
-        
+
         <div className="space-y-4">
-          {selectedResolution !== 'original' && (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-foreground">
-                  {t('scalingMode')}
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {scalingOptions.map((option) => {
-                    const Icon = option.icon;
-                    return (
-                      <Button
-                        key={option.value}
-                        variant={scalingMode === option.value ? "default" : "secondary"}
-                        onClick={() => onScalingModeChange(option.value)}
-                        className="flex flex-col gap-1 h-auto p-3"
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="text-xs">{option.label}</span>
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-              
-              {(scalingMode === 'fit' || scalingMode === 'dont-scale' || isAlignmentMode(scalingMode)) && (
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-foreground">
-                    {t('alignment')}
-                  </label>
-                  <RadioGroup 
-                    value={isAlignmentMode(scalingMode) ? scalingMode : (scalingMode === 'dont-scale' ? 'middle-center' : 'middle-center')} 
-                    onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
-                    className="grid grid-cols-3 gap-2"
+          {/* Scaling Mode - always visible */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              {t('scalingMode')}
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {scalingOptions.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <Button
+                    key={option.value}
+                    variant={scalingMode === option.value ? 'default' : 'secondary'}
+                    onClick={() => onScalingModeChange(option.value)}
+                    className="flex flex-col gap-1 h-auto p-3"
                   >
-                    {alignmentOptions.map((option) => (
-                      <div key={option.value} className="flex items-center space-x-2">
-                        <RadioGroupItem value={option.value} id={`alignment-${option.value}`} />
-                        <Label htmlFor={`alignment-${option.value}`} className="flex items-center gap-2 cursor-pointer text-xs">
-                          <AlignmentIcon position={option.position} />
-                          <span>{option.label}</span>
-                        </Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                </div>
-              )}
+                    <Icon className="h-4 w-4" />
+                    <span className="text-xs">{option.label}</span>
+                  </Button>
+                );
+              })}
             </div>
-          )}
-          
-          {/* Target Resolution - moved to the bottom */}
+          </div>
+
+          {/* Alignment - always visible with 9 radio options */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              {t('alignment')}
+            </label>
+            <RadioGroup
+              value={isAlignmentMode(scalingMode) ? (scalingMode as AlignmentMode) : 'middle-center'}
+              onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
+              className="grid grid-cols-3 gap-2"
+            >
+              {alignmentOptions.map((option) => (
+                <div key={option.value} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} />
+                  <Label htmlFor={`alignment-${option.value}`} className="flex items-center gap-2 cursor-pointer text-xs">
+                    <AlignmentIcon position={option.position} />
+                    <span>{option.label}</span>
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
+
+          {/* Target Resolution */}
           <div className="space-y-3">
             <label className="block text-sm font-medium text-foreground">
               {t('targetResolution')}

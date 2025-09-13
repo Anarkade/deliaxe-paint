@@ -162,7 +162,7 @@ export const RetroImageEditor = () => {
     setOriginalImageSource(null);
     setSelectedPalette('original');
     setSelectedResolution('original');
-      setScalingMode('dont-scale');
+      setScalingMode('fit');
       setCurrentPaletteColors([]);
       setOriginalPaletteColors([]);
       setShowCameraPreview(false);
@@ -221,7 +221,7 @@ export const RetroImageEditor = () => {
       // Reset settings when loading new image
       setSelectedPalette('original');
       setSelectedResolution('original');
-      setScalingMode('dont-scale');
+      setScalingMode('fit');
       
       toast.success(t('imageLoaded'));
       
