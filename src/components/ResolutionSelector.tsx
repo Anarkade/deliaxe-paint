@@ -128,22 +128,24 @@ export const ResolutionSelector = ({
             <label className="block text-sm font-medium text-foreground">
               {t('scalingMode')}
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <RadioGroup
+              value={['stretch', 'fit', 'dont-scale'].includes(scalingMode as string) ? scalingMode as ScalingMode : 'fit'}
+              onValueChange={(value: ScalingMode) => onScalingModeChange(value)}
+              className="grid grid-cols-3 gap-2"
+            >
               {scalingOptions.map((option) => {
                 const Icon = option.icon;
                 return (
-                  <Button
-                    key={option.value}
-                    variant={scalingMode === option.value ? 'default' : 'secondary'}
-                    onClick={() => onScalingModeChange(option.value)}
-                    className="flex flex-col gap-1 h-auto p-3"
-                  >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-xs">{option.label}</span>
-                  </Button>
+                  <div key={option.value} className="flex items-center space-x-2">
+                    <RadioGroupItem value={option.value} id={`scaling-${option.value}`} />
+                    <Label htmlFor={`scaling-${option.value}`} className="flex items-center gap-2 cursor-pointer text-xs">
+                      <Icon className="h-4 w-4" />
+                      <span>{option.label}</span>
+                    </Label>
+                  </div>
                 );
               })}
-            </div>
+            </RadioGroup>
           </div>
 
           {/* Alignment - always visible with 9 radio options */}
