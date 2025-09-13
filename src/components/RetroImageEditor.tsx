@@ -973,18 +973,18 @@ export const RetroImageEditor = () => {
                             {showTileGrid && (
                               <div className="ml-6 grid grid-cols-2 gap-4">
                                 <div>
-                                  <label className="text-xs text-muted-foreground">{t('width')}</label>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    max="64"
-                                    value={tileWidth}
-                                    onChange={(e) => setTileWidth(Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-xs text-muted-foreground">{t('height')}</label>
+                                   <label className="text-xs text-muted-foreground">{t('width')}</label>
+                                   <input
+                                     type="number"
+                                     min="1"
+                                     max="64"
+                                     value={tileWidth}
+                                     onChange={(e) => setTileWidth(Math.max(1, parseInt(e.target.value) || 1))}
+                                     className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                   />
+                                 </div>
+                                 <div>
+                                   <label className="text-xs text-muted-foreground">{t('height')}</label>
                                   <input
                                     type="number"
                                     min="1"
@@ -1012,19 +1012,19 @@ export const RetroImageEditor = () => {
                             </div>
                             {showFrameGrid && (
                               <div className="ml-6 grid grid-cols-2 gap-4">
-                                <div>
-                                  <label className="text-xs text-muted-foreground">{t('width')}</label>
-                                  <input
-                                    type="number"
-                                    min="1"
-                                    max="128"
-                                    value={frameWidth}
-                                    onChange={(e) => setFrameWidth(Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-xs text-muted-foreground">{t('height')}</label>
+                                 <div>
+                                   <label className="text-xs text-muted-foreground">{t('width')}</label>
+                                   <input
+                                     type="number"
+                                     min="1"
+                                     max="128"
+                                     value={frameWidth}
+                                     onChange={(e) => setFrameWidth(Math.max(1, parseInt(e.target.value) || 1))}
+                                     className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                   />
+                                 </div>
+                                 <div>
+                                   <label className="text-xs text-muted-foreground">{t('height')}</label>
                                   <input
                                     type="number"
                                     min="1"
