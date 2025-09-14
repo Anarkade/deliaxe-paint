@@ -169,10 +169,13 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
   return (
     <Card className="p-6 border-pixel-grid bg-card">
       <div className="space-y-4">
-        <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-          <Upload className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
-          {t('loadImage')}
-        </h3>
+        <div>
+          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+            <Upload className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+            {t('loadImage')}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">{t('loadImageDesc')}</p>
+        </div>
         
         <div className="space-y-4">
           <div className="w-full space-y-2">

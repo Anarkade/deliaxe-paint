@@ -117,10 +117,13 @@ export const ResolutionSelector = ({
   return (
     <Card className="p-6 border-pixel-grid bg-card">
       <div className="space-y-4">
-        <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-          <Monitor className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
-          {t('changeResolution')}
-        </h3>
+        <div>
+          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+            <Monitor className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+            {t('changeResolution')}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">{t('changeResolutionDesc')}</p>
+        </div>
 
         <div className="space-y-4">
           {/* Scaling Mode - always visible */}

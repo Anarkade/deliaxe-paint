@@ -32,10 +32,13 @@ export const ColorPaletteSelector = ({
   return (
     <Card className="p-6 border-pixel-grid bg-card">
       <div className="space-y-4">
-        <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-          <Palette className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
-          {t('selectPalette')}
-        </h3>
+        <div>
+          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+            <Palette className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+            {t('selectPalette')}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">{t('changePaletteDesc')}</p>
+        </div>
         
         <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="space-y-3">
           {paletteOptions.map((option) => (

@@ -194,11 +194,13 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
   return (
     <Card className="p-6 border-elegant-border bg-card rounded-xl">
         <div className="space-y-4">
-          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-            <Download className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
-            {t('exportImage')}
-          </h3>
-          <p className="text-sm text-muted-foreground">{t('exportImageDescription')}</p>
+          <div>
+            <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+              <Download className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+              {t('exportImage')}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">{t('exportImageDesc')}</p>
+          </div>
           
           <div className="space-y-4">
             <div className="space-y-3">
