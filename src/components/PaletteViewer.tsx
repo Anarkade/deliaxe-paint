@@ -88,22 +88,26 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     // Create a color input element for both desktop and mobile
     const input = document.createElement('input');
     input.type = 'color';
-    input.value = `#${paletteColors[index].r.toString(16).padStart(2, '0')}${paletteColors[index].g.toString(16).padStart(2, '0')}${paletteColors[index].b.toString(16).padStart(2, '0')}`;
-    
-    // Make sure it works on mobile by adding proper styling
-    input.style.position = 'absolute';
-    input.style.left = '-9999px';
-    input.style.width = '50px';
-    input.style.height = '50px';
+    input.value = `#${paletteColors[index].r.toString(16).padStart(2, '0')}${paletteColors[index].g.toString(16).padStart(2, '0')}${paletteColors[index].b.toString(16).padStart(2, '0')}`.toUpperCase();
+
+    // Mobile-safe placement: keep it on-screen but invisible so iOS/Android open the picker
+    input.style.position = 'fixed';
+    input.style.top = '0px';
+    input.style.left = '0px';
+    input.style.width = '1px';
+    input.style.height = '1px';
+    input.style.opacity = '0';
+    input.style.pointerEvents = 'none';
+    input.setAttribute('aria-hidden', 'true');
+    input.tabIndex = -1;
+
     document.body.appendChild(input);
-    
-    const handleChange = (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      const hex = target.value;
+
+    const applyColor = (hex: string) => {
       let r = parseInt(hex.substr(1, 2), 16);
       let g = parseInt(hex.substr(3, 2), 16);
       let b = parseInt(hex.substr(5, 2), 16);
-      
+
       // For Mega Drive palette, restrict to RGB333 equivalent colors
       if (currentPalette === 'megadrive') {
         const rgb333 = toRGB333(r, g, b);
@@ -111,29 +115,47 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         g = rgb333.g;
         b = rgb333.b;
       }
-      
+
       const newColors = [...paletteColors];
       newColors[index] = { ...newColors[index], r, g, b };
       setPaletteColors(newColors);
       onPaletteUpdate?.(newColors);
-      
+
       // Trigger image reprocessing with the new palette immediately
       setTimeout(() => {
         onImageUpdate?.();
       }, 10);
-      
-      // Clean up
-      document.body.removeChild(input);
     };
-    
-    input.addEventListener('change', handleChange);
-    input.addEventListener('blur', () => {
+
+    const cleanup = () => {
       if (document.body.contains(input)) {
         document.body.removeChild(input);
       }
-    });
-    
-    input.click();
+    };
+
+    const handleChange = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      if (!target || !target.value) {
+        cleanup();
+        return;
+      }
+      applyColor(target.value);
+      cleanup();
+    };
+
+    input.addEventListener('change', handleChange, { once: true });
+    input.addEventListener('input', handleChange, { once: true });
+    input.addEventListener('blur', cleanup, { once: true });
+
+    // Open the native color picker (must be within user gesture)
+    try {
+      input.click();
+    } catch {
+      // Fallback: focus then dispatch a click
+      input.focus();
+      const event = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
+      input.dispatchEvent(event);
+    }
   }, [paletteColors, onPaletteUpdate, onImageUpdate]);
 
   // RGB333 conversion helper
