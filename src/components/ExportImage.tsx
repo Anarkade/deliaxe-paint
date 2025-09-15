@@ -98,7 +98,7 @@ export const ExportImage = ({
     }
     
     // Add grids if requested
-    if (exportWithGrids && hasAnyGridEnabled) {
+    if (exportWithGrids) {
       // Draw tile grid
       if (showTileGrid) {
         ctx.strokeStyle = tileGridColor;
@@ -245,7 +245,7 @@ export const ExportImage = ({
       }
       
       // Add grids if requested
-      if (exportWithGrids && hasAnyGridEnabled) {
+      if (exportWithGrids) {
         // Draw tile grid
         if (showTileGrid) {
           ctx.strokeStyle = tileGridColor;
