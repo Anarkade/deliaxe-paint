@@ -105,13 +105,9 @@ export const RetroImageEditor = () => {
       return 'highlighted'
     }
 
-    if (!originalImage && tabId !== 'load-image') {
+    // When no image is loaded, all buttons including load-image are blocked
+    if (!originalImage) {
       return 'blocked'
-    }
-    
-    // When no image is loaded, only load-image is highlighted
-    if (!originalImage && tabId === 'load-image') {
-      return 'highlighted'
     }
     
     // When image is loaded, all buttons are highlighted
@@ -123,8 +119,8 @@ export const RetroImageEditor = () => {
   };
 
   const handleTabClick = (tabId: string) => {
-    if (!originalImage && !['load-image', 'language'].includes(tabId)) {
-      return; // Don't allow clicking blocked tabs
+    if (!originalImage && tabId !== 'language') {
+      return; // Don't allow clicking blocked tabs (including load-image when no image)
     }
     
     // Scroll to top for all button clicks
