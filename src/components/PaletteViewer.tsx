@@ -298,7 +298,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   }, [imageData, selectedPalette, originalImageSource, onPaletteUpdate, externalPalette]);
 
   if (selectedPalette === 'original' && !isOriginalPNG) {
-    return null; // Don't show anything if not an indexed PNG
+    // If an external palette is provided (e.g., after processing), allow showing the viewer
+    if (!externalPalette || externalPalette.length === 0) return null;
   }
 
   // Always show for retro palettes

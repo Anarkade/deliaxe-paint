@@ -779,7 +779,8 @@ export const ImagePreview = ({
       )}
       
       {/* Palette Viewer - shown for indexed PNG images and retro palettes */}
-      {((isIndexedPNG && originalImage && originalImageSource) || (selectedPalette !== 'original' && originalImage)) && (
+      {(((isIndexedPNG && originalImage && originalImageSource) || (selectedPalette !== 'original' && originalImage))
+        || (originalImage && processedImageData && currentPaletteColors && currentPaletteColors.length > 0)) && (
         <div className="mt-4">
           <PaletteViewer
             selectedPalette={selectedPalette}
