@@ -50,6 +50,7 @@ const AlignmentIcon = ({ position }: { position: string }) => {
 
 export type ResolutionType = 
   | 'original'
+  | 'unscaled'
   | '160x144'
   | '160x200'
   | '256x224'
@@ -83,6 +84,7 @@ export const ResolutionSelector = ({
 
   const resolutionOptions = [
     { value: 'original' as const, label: t('originalSize'), desc: t('keepOriginalSize') },
+    { value: 'unscaled' as const, label: t('unscaledSize'), desc: t('removeScaling') },
     { value: '160x144' as const, label: '160×144', desc: t('gameBoyRes') },
     { value: '160x200' as const, label: '160×200', desc: t('amstradCpc0') },
     { value: '256x224' as const, label: '256×224', desc: t('megaDriveNtscH32') },

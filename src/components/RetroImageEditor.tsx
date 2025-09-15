@@ -239,6 +239,74 @@ export const RetroImageEditor = () => {
     setTimeout(() => loadImage(source), 50); // Small delay to ensure state is reset
   }, [resetEditor, loadImage]);
 
+  // Detect scaling in pixel art and return unscaled dimensions
+  const detectAndUnscaleImage = useCallback((image: HTMLImageElement) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    canvas.width = Math.min(image.width, 200); // Sample only first 200px for performance
+    canvas.height = Math.min(image.height, 200);
+    
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const pixels = imageData.data;
+    
+    // Try different scale factors from 2 to 8
+    for (let scale = 2; scale <= 8; scale++) {
+      let isScaled = true;
+      let checkedPixels = 0;
+      const maxChecks = 100; // Limit checks for performance
+      
+      // Check if blocks of pixels match the scaling pattern
+      for (let y = 0; y < canvas.height - scale && checkedPixels < maxChecks; y += scale) {
+        for (let x = 0; x < canvas.width - scale && checkedPixels < maxChecks; x += scale) {
+          // Get the first pixel of the block
+          const baseIndex = (y * canvas.width + x) * 4;
+          const baseR = pixels[baseIndex];
+          const baseG = pixels[baseIndex + 1];
+          const baseB = pixels[baseIndex + 2];
+          
+          // Check if all pixels in the block are the same color
+          let blockMatches = true;
+          for (let dy = 0; dy < scale && blockMatches; dy++) {
+            for (let dx = 0; dx < scale && blockMatches; dx++) {
+              const checkY = y + dy;
+              const checkX = x + dx;
+              if (checkY < canvas.height && checkX < canvas.width) {
+                const checkIndex = (checkY * canvas.width + checkX) * 4;
+                if (pixels[checkIndex] !== baseR || 
+                    pixels[checkIndex + 1] !== baseG || 
+                    pixels[checkIndex + 2] !== baseB) {
+                  blockMatches = false;
+                }
+              }
+            }
+          }
+          
+          if (!blockMatches) {
+            isScaled = false;
+            break;
+          }
+          checkedPixels++;
+        }
+        if (!isScaled) break;
+      }
+      
+      // If we found a consistent scaling pattern, return unscaled dimensions
+      if (isScaled && checkedPixels > 10) {
+        return {
+          width: Math.floor(image.width / scale),
+          height: Math.floor(image.height / scale)
+        };
+      }
+    }
+    
+    return null; // No scaling detected
+  }, []);
+
   const processImage = useCallback(() => {
     if (!originalImage) return;
 
@@ -268,9 +336,18 @@ export const RetroImageEditor = () => {
       let targetHeight = originalImage.height;
 
       if (selectedResolution !== 'original') {
-        const [width, height] = selectedResolution.split('x').map(Number);
-        targetWidth = width;
-        targetHeight = height;
+        if (selectedResolution === 'unscaled') {
+          // Detect and remove scaling from pixel art
+          const unscaledDimensions = detectAndUnscaleImage(originalImage);
+          if (unscaledDimensions) {
+            targetWidth = unscaledDimensions.width;
+            targetHeight = unscaledDimensions.height;
+          }
+        } else {
+          const [width, height] = selectedResolution.split('x').map(Number);
+          targetWidth = width;
+          targetHeight = height;
+        }
       }
 
       // Additional safety check for canvas size
@@ -288,60 +365,96 @@ export const RetroImageEditor = () => {
 
       // Draw image based on scaling mode
       if (selectedResolution !== 'original') {
-        switch (scalingMode) {
-          case 'stretch':
-            ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
-            break;
-          case 'fit':
-            const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
-            const scaledWidth = originalImage.width * scale;
-            const scaledHeight = originalImage.height * scale;
-            const fitX = (targetWidth - scaledWidth) / 2;
-            const fitY = (targetHeight - scaledHeight) / 2;
-            ctx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
-            break;
-          case 'dont-scale':
-            // Use middle-center alignment for don't scale by default
-            const centerX = (targetWidth - originalImage.width) / 2;
-            const centerY = (targetHeight - originalImage.height) / 2;
-            ctx.drawImage(originalImage, centerX, centerY);
-            break;
-          default:
-            // Handle alignment modes (including dont-scale with specific alignment)
-            const alignmentModes = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
-            if (alignmentModes.includes(scalingMode)) {
-              const [vAlign, hAlign] = (scalingMode as string).split('-');
-              let x = 0, y = 0;
-              
-              // Calculate horizontal position
-              switch (hAlign) {
-                case 'left':
-                  x = 0;
-                  break;
-                case 'center':
-                  x = (targetWidth - originalImage.width) / 2;
-                  break;
-                case 'right':
-                  x = targetWidth - originalImage.width;
-                  break;
+        if (selectedResolution === 'unscaled') {
+          // For unscaled, we need to sample the image to remove scaling
+          const detectedScale = Math.floor(originalImage.width / targetWidth);
+          ctx.imageSmoothingEnabled = false;
+          
+          // Create temporary canvas to sample the original image
+          const tempCanvas = document.createElement('canvas');
+          const tempCtx = tempCanvas.getContext('2d');
+          if (tempCtx) {
+            tempCanvas.width = originalImage.width;
+            tempCanvas.height = originalImage.height;
+            tempCtx.imageSmoothingEnabled = false;
+            tempCtx.drawImage(originalImage, 0, 0);
+            
+            const sourceData = tempCtx.getImageData(0, 0, originalImage.width, originalImage.height);
+            const targetData = ctx.createImageData(targetWidth, targetHeight);
+            
+            // Sample pixels at the detected scale interval
+            for (let y = 0; y < targetHeight; y++) {
+              for (let x = 0; x < targetWidth; x++) {
+                const sourceX = x * detectedScale;
+                const sourceY = y * detectedScale;
+                const sourceIndex = (sourceY * originalImage.width + sourceX) * 4;
+                const targetIndex = (y * targetWidth + x) * 4;
+                
+                targetData.data[targetIndex] = sourceData.data[sourceIndex];
+                targetData.data[targetIndex + 1] = sourceData.data[sourceIndex + 1];
+                targetData.data[targetIndex + 2] = sourceData.data[sourceIndex + 2];
+                targetData.data[targetIndex + 3] = sourceData.data[sourceIndex + 3];
               }
-              
-              // Calculate vertical position
-              switch (vAlign) {
-                case 'top':
-                  y = 0;
-                  break;
-                case 'middle':
-                  y = (targetHeight - originalImage.height) / 2;
-                  break;
-                case 'bottom':
-                  y = targetHeight - originalImage.height;
-                  break;
-              }
-              
-              ctx.drawImage(originalImage, x, y);
             }
-            break;
+            
+            ctx.putImageData(targetData, 0, 0);
+          }
+        } else {
+          switch (scalingMode) {
+            case 'stretch':
+              ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+              break;
+            case 'fit':
+              const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
+              const scaledWidth = originalImage.width * scale;
+              const scaledHeight = originalImage.height * scale;
+              const fitX = (targetWidth - scaledWidth) / 2;
+              const fitY = (targetHeight - scaledHeight) / 2;
+              ctx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
+              break;
+            case 'dont-scale':
+              // Use middle-center alignment for don't scale by default
+              const centerX = (targetWidth - originalImage.width) / 2;
+              const centerY = (targetHeight - originalImage.height) / 2;
+              ctx.drawImage(originalImage, centerX, centerY);
+              break;
+            default:
+              // Handle alignment modes (including dont-scale with specific alignment)
+              const alignmentModes = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
+              if (alignmentModes.includes(scalingMode)) {
+                const [vAlign, hAlign] = (scalingMode as string).split('-');
+                let x = 0, y = 0;
+                
+                // Calculate horizontal position
+                switch (hAlign) {
+                  case 'left':
+                    x = 0;
+                    break;
+                  case 'center':
+                    x = (targetWidth - originalImage.width) / 2;
+                    break;
+                  case 'right':
+                    x = targetWidth - originalImage.width;
+                    break;
+                }
+                
+                // Calculate vertical position
+                switch (vAlign) {
+                  case 'top':
+                    y = 0;
+                    break;
+                  case 'middle':
+                    y = (targetHeight - originalImage.height) / 2;
+                    break;
+                  case 'bottom':
+                    y = targetHeight - originalImage.height;
+                    break;
+                }
+                
+                ctx.drawImage(originalImage, x, y);
+              }
+              break;
+          }
         }
       } else {
         ctx.drawImage(originalImage, 0, 0);

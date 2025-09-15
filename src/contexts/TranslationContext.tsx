@@ -110,6 +110,8 @@ interface Translation {
   keepOriginalSize: string;
   
   // Resolution descriptions
+  unscaledSize: string;
+  removeScaling: string;
   gameBoyRes: string;
   amstradCpc0: string;
   megaDriveNtscH32: string;
@@ -306,6 +308,8 @@ const baseTranslation: Translation = {
   targetResolution: 'Target Resolution',
   originalSize: 'Original',
   keepOriginalSize: 'Keep original size',
+  unscaledSize: 'Unscaled',
+  removeScaling: 'Remove scaling from pixel art',
   gameBoyRes: 'Game Boy',
   amstradCpc0: 'Amstrad CPC mode 0',
   megaDriveNtscH32: 'Mega Drive NTSC H32, SNES, NES',
@@ -468,6 +472,8 @@ const translations: Record<Language, Translation> = {
     targetResolution: 'Resolución Objetivo',
     originalSize: 'Original',
     keepOriginalSize: 'Mantener tamaño original',
+    unscaledSize: 'Sin escala',
+    removeScaling: 'Eliminar escalado del pixel art',
     gameBoyRes: 'Game Boy',
     amstradCpc0: 'Amstrad CPC modo 0',
     megaDriveNtscH32: 'Mega Drive NTSC H32, SNES, NES',
@@ -831,6 +837,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDesc: 'Ajoutez des grilles visuelles et des superpositions à votre image',
     exportImageDesc: 'Sauvegardez votre image au style rétro avec des paramètres personnalisés',
     zoomedResolution: 'zoomé',
+    unscaledSize: 'Non mis à l\'échelle',
+    removeScaling: 'Supprimer la mise à l\'échelle du pixel art',
   },
   'de': { 
     ...baseTranslation,
@@ -861,6 +869,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDesc: 'Fügen Sie visuelle Raster und Überlagerungen zu Ihrem Bild hinzu',
     exportImageDesc: 'Speichern Sie Ihr Retro-Bild mit benutzerdefinierten Einstellungen',
     zoomedResolution: 'gezoomt',
+    unscaledSize: 'Nicht skaliert',
+    removeScaling: 'Skalierung vom Pixel-Art entfernen',
   },
   'it': { 
     ...baseTranslation,
@@ -891,6 +901,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDesc: 'Aggiungi griglie visive e sovrapposizioni alla tua immagine',
     exportImageDesc: 'Salva la tua immagine in stile retro con impostazioni personalizzate',
     zoomedResolution: 'zoomato',
+    unscaledSize: 'Non ridimensionato',
+    removeScaling: 'Rimuovi ridimensionamento dalla pixel art',
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -921,6 +933,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDesc: 'Adicione grelhas visuais e sobreposições à sua imagem',
     exportImageDesc: 'Guarde a sua imagem no estilo retro com definições personalizadas',
     zoomedResolution: 'com zoom',
+    unscaledSize: 'Não dimensionado',
+    removeScaling: 'Remover dimensionamento da pixel art',
   },
   'pt-BR': { 
     ...baseTranslation,
@@ -951,6 +965,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDesc: 'Adicione grades visuais e sobreposições à sua imagem',
     exportImageDesc: 'Salve sua imagem no estilo retro com configurações personalizadas',
     zoomedResolution: 'com zoom',
+    unscaledSize: 'Não dimensionado',
+    removeScaling: 'Remover dimensionamento da pixel art',
   },
   'ru': { 
     ...baseTranslation,
@@ -981,6 +997,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDesc: 'Добавьте визуальные сетки и наложения к вашему изображению',
     exportImageDesc: 'Сохраните ваше изображение в ретро-стиле с пользовательскими настройками',
     zoomedResolution: 'с масштабом',
+    unscaledSize: 'Без масштаба',
+    removeScaling: 'Убрать масштабирование с пиксель-арта',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -1011,6 +1029,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDesc: '为你的图片添加视觉网格和叠加层',
     exportImageDesc: '用自定义设置保存你的复古风格图片',
     zoomedResolution: '缩放',
+    unscaledSize: '未缩放',
+    removeScaling: '移除像素艺术的缩放',
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -1041,6 +1061,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDesc: '為你的圖片添加視覺網格和疊加層',
     exportImageDesc: '用自訂設定儲存你的復古風格圖片',
     zoomedResolution: '縮放',
+    unscaledSize: '未縮放',
+    removeScaling: '移除像素藝術的縮放',
   },
   'ja': { 
     ...baseTranslation,
@@ -1071,6 +1093,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDesc: 'ビジュアルグリッドとオーバーレイを画像に追加',
     exportImageDesc: 'カスタム設定でレトロスタイルの画像を保存',
     zoomedResolution: 'ズーム',
+    unscaledSize: '非スケール',
+    removeScaling: 'ピクセルアートからスケーリングを除去',
   },
   'pl': { 
     ...baseTranslation,
@@ -1100,6 +1124,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDescription: 'Skonfiguruj siatki kafli i ramek',
     exportImageDescription: 'Pobierz lub udostępnij przetworzony obraz',
     zoomedResolution: 'powiększony',
+    unscaledSize: 'Nieskalowany',
+    removeScaling: 'Usuń skalowanie z pixel art',
   },
   'tr': { 
     ...baseTranslation,
@@ -1129,6 +1155,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDescription: 'Karo ve çerçeve ızgaralarını yapılandırın',
     exportImageDescription: 'İşlenmiş resminizi indirin veya paylaşın',
     zoomedResolution: 'yakınlaştırılmış',
+    unscaledSize: 'Ölçeksiz',
+    removeScaling: 'Piksel sanatından ölçeklendirmeyi kaldır',
   },
   'eu': { 
     ...baseTranslation,
@@ -1158,6 +1186,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDescription: 'Baldosa eta marko sareak konfiguratu',
     exportImageDescription: 'Zure prozesatutako irudia deskargatu edo partekatu',
     zoomedResolution: 'zoom-arekin',
+    unscaledSize: 'Eskalik gabe',
+    removeScaling: 'Pixel arteko eskala kendu',
   },
   'oc': { 
     ...baseTranslation,
@@ -1187,6 +1217,8 @@ const translations: Record<Language, Translation> = {
     changeGridsDescription: 'Configurar las grasilhas de teulas e quadres',
     exportImageDescription: 'Telecargar o partejar vòstre imatge tractat',
     zoomedResolution: 'amb zoom',
+    unscaledSize: 'Pas escalat',
+    removeScaling: 'Levar l\'escalada del pixel art',
   },
 };
 
