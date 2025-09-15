@@ -146,13 +146,13 @@ export const ResolutionSelector = ({
             <RadioGroup
               value={['stretch', 'fit', 'dont-scale'].includes(scalingMode as string) ? scalingMode as ScalingMode : 'fit'}
               onValueChange={(value: ScalingMode) => onScalingModeChange(value)}
-              className="space-y-2"
+              className="space-y-1"
             >
               {scalingOptions.map((option) => {
                 const Icon = option.icon;
                 return (
-                  <div key={option.value} className="flex items-start space-x-2 min-h-[2.25rem]">
-                    <RadioGroupItem value={option.value} id={`scaling-${option.value}`} className="mt-1 flex-shrink-0" />
+                  <div key={option.value} className="flex items-start space-x-2 py-0.5">
+                    <RadioGroupItem value={option.value} id={`scaling-${option.value}`} className="mt-0.5 flex-shrink-0" />
                     <Label htmlFor={`scaling-${option.value}`} className="flex items-start gap-1.5 cursor-pointer text-xs">
                       <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                       <span className="leading-tight break-words">{option.label}</span>
