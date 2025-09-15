@@ -133,17 +133,7 @@ export const RetroImageEditor = () => {
     }
     
     setActiveTab(tabId);
-    
-    
-    // Auto-scroll to show the opened section
-    if (originalImage && tabId !== 'load-image') {
-      setTimeout(() => {
-        const element = document.querySelector(`[data-section="${tabId}"]`);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
-    }
+    // Note: intentionally avoid any scrolling when toggling sections
   };
 
   const saveToHistory = useCallback((state: HistoryState) => {
