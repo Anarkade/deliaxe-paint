@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { Upload, Palette, Eye, Monitor, Download, Gamepad2, Grid3X3, Globe, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { Separator } from '@/components/ui/separator';
 import { processMegaDriveImage, extractColorsFromImageData } from '@/lib/colorQuantization';
 import { analyzePNGFile } from '@/lib/pngAnalyzer';
 
@@ -50,6 +51,8 @@ export const RetroImageEditor = () => {
   const [tileHeight, setTileHeight] = useState(8);
   const [frameWidth, setFrameWidth] = useState(16);
   const [frameHeight, setFrameHeight] = useState(16);
+  const [tileGridColor, setTileGridColor] = useState('#808080');
+  const [frameGridColor, setFrameGridColor] = useState('#96629d');
   
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -868,12 +871,14 @@ export const RetroImageEditor = () => {
                   onSectionOpen={() => {
                     // Handle any additional logic when sections are opened
                   }}
-                  showTileGrid={showTileGrid}
-                  showFrameGrid={showFrameGrid}
-                  tileWidth={tileWidth}
-                  tileHeight={tileHeight}
-                  frameWidth={frameWidth}
-                  frameHeight={frameHeight}
+              showTileGrid={showTileGrid}
+              showFrameGrid={showFrameGrid}
+              tileWidth={tileWidth}
+              tileHeight={tileHeight}
+              frameWidth={frameWidth}
+              frameHeight={frameHeight}
+              tileGridColor={tileGridColor}
+              frameGridColor={frameGridColor}
                   autoFitKey={`${selectedResolution}|${scalingMode}`}
                   onZoomChange={setCurrentZoom}
                 />
@@ -986,32 +991,45 @@ export const RetroImageEditor = () => {
                               </label>
                             </div>
                             {showTileGrid && (
-                              <div className="ml-6 grid grid-cols-2 gap-4">
+                              <div className="ml-6 space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                     <label className="text-xs text-muted-foreground">{t('width')}</label>
+                                     <input
+                                       type="number"
+                                       min="1"
+                                       max="64"
+                                       value={tileWidth}
+                                       onChange={(e) => setTileWidth(Math.max(1, parseInt(e.target.value) || 1))}
+                                       className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                     />
+                                   </div>
+                                   <div>
+                                     <label className="text-xs text-muted-foreground">{t('height')}</label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max="64"
+                                      value={tileHeight}
+                                      onChange={(e) => setTileHeight(Math.max(1, parseInt(e.target.value) || 1))}
+                                      className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                    />
+                                  </div>
+                                </div>
                                 <div>
-                                   <label className="text-xs text-muted-foreground">{t('width')}</label>
-                                   <input
-                                     type="number"
-                                     min="1"
-                                     max="64"
-                                     value={tileWidth}
-                                     onChange={(e) => setTileWidth(Math.max(1, parseInt(e.target.value) || 1))}
-                                     className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
-                                   />
-                                 </div>
-                                 <div>
-                                   <label className="text-xs text-muted-foreground">{t('height')}</label>
+                                  <label className="text-xs text-muted-foreground">{t('tileGridColor')}</label>
                                   <input
-                                    type="number"
-                                    min="1"
-                                    max="64"
-                                    value={tileHeight}
-                                    onChange={(e) => setTileHeight(Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                    type="color"
+                                    value={tileGridColor}
+                                    onChange={(e) => setTileGridColor(e.target.value)}
+                                    className="w-full h-8 border border-input rounded bg-background cursor-pointer"
                                   />
                                 </div>
                               </div>
                             )}
                           </div>
+
+                          <Separator />
 
                           {/* Frame Grid Section */}
                           <div className="space-y-3">
@@ -1026,27 +1044,38 @@ export const RetroImageEditor = () => {
                               </label>
                             </div>
                             {showFrameGrid && (
-                              <div className="ml-6 grid grid-cols-2 gap-4">
-                                 <div>
-                                   <label className="text-xs text-muted-foreground">{t('width')}</label>
-                                   <input
-                                     type="number"
-                                     min="1"
-                                     max="128"
-                                     value={frameWidth}
-                                     onChange={(e) => setFrameWidth(Math.max(1, parseInt(e.target.value) || 1))}
-                                     className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
-                                   />
-                                 </div>
-                                 <div>
-                                   <label className="text-xs text-muted-foreground">{t('height')}</label>
+                              <div className="ml-6 space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                   <div>
+                                     <label className="text-xs text-muted-foreground">{t('width')}</label>
+                                     <input
+                                       type="number"
+                                       min="1"
+                                       max="128"
+                                       value={frameWidth}
+                                       onChange={(e) => setFrameWidth(Math.max(1, parseInt(e.target.value) || 1))}
+                                       className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                     />
+                                   </div>
+                                   <div>
+                                     <label className="text-xs text-muted-foreground">{t('height')}</label>
+                                    <input
+                                      type="number"
+                                      min="1"
+                                      max="128"
+                                      value={frameHeight}
+                                      onChange={(e) => setFrameHeight(Math.max(1, parseInt(e.target.value) || 1))}
+                                      className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                    />
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="text-xs text-muted-foreground">{t('frameGridColor')}</label>
                                   <input
-                                    type="number"
-                                    min="1"
-                                    max="128"
-                                    value={frameHeight}
-                                    onChange={(e) => setFrameHeight(Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
+                                    type="color"
+                                    value={frameGridColor}
+                                    onChange={(e) => setFrameGridColor(e.target.value)}
+                                    className="w-full h-8 border border-input rounded bg-background cursor-pointer"
                                   />
                                 </div>
                               </div>
@@ -1077,8 +1106,8 @@ export const RetroImageEditor = () => {
               tileHeight={tileHeight}
               frameWidth={frameWidth}
               frameHeight={frameHeight}
-              tileGridColor="#808080"
-              frameGridColor="#96629d"
+              tileGridColor={tileGridColor}
+              frameGridColor={frameGridColor}
               paletteColors={currentPaletteColors}
               onClose={() => setActiveTab(null)}
             />

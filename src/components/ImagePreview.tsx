@@ -115,11 +115,13 @@ interface ImagePreviewProps {
   tileHeight?: number;
   frameWidth?: number;
   frameHeight?: number;
+  tileGridColor?: string;
+  frameGridColor?: string;
   autoFitKey?: string;
   onZoomChange?: (zoom: number) => void;
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen, showTileGrid = false, showFrameGrid = false, tileWidth = 8, tileHeight = 8, frameWidth = 16, frameHeight = 16, autoFitKey, onZoomChange }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen, showTileGrid = false, showFrameGrid = false, tileWidth = 8, tileHeight = 8, frameWidth = 16, frameHeight = 16, tileGridColor = '#808080', frameGridColor = '#96629d', autoFitKey, onZoomChange }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -140,8 +142,6 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
   const [currentCameraId, setCurrentCameraId] = useState<string>('');
   const [integerScaling, setIntegerScaling] = useState(false);
   // Note: Grid dimensions now come from props
-  const [tileGridColor, setTileGridColor] = useState('#808080');
-  const [frameGridColor, setFrameGridColor] = useState('#96629d');
   const programmaticZoomChange = useRef(false);
   const [shouldAutoFit, setShouldAutoFit] = useState(true);
   const autoFitAllowed = useRef(true);
