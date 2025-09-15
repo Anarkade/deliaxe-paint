@@ -683,7 +683,7 @@ export const RetroImageEditor = () => {
     <div className="min-h-screen w-full flex flex-col bg-elegant-bg overflow-x-hidden">
       {/* Header */}
       {!isVerticalLayout && (
-        <header className="border-b border-elegant-border bg-card px-4 py-3 w-full flex-shrink-0">
+        <header className="border-b border-elegant-border bg-card px-3 py-1.5 w-full flex-shrink-0">
           <div className="w-full max-w-none flex items-center justify-center">
             {/* Horizontally centered section buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -765,8 +765,8 @@ export const RetroImageEditor = () => {
 
       {/* Vertical Sidebar for landscape orientation */}
       {isVerticalLayout && (
-        <aside className="fixed left-0 top-0 h-full w-16 flex flex-col bg-card border-r border-elegant-border z-50">
-          <div className="flex flex-col items-center py-2 space-y-2 h-full">
+        <aside className="fixed left-0 top-0 h-full w-12 flex flex-col bg-card border-r border-elegant-border z-50">
+          <div className="flex flex-col items-center py-1 space-y-1 h-full">
             {/* Logo */}
             <div className="flex flex-col items-center gap-1 flex-shrink-0">
               <Gamepad2 className="h-8 w-8" style={{ color: '#7d1b2d' }} />
@@ -848,8 +848,8 @@ export const RetroImageEditor = () => {
       )}
 
       {/* Main Content - Flex-grow to fill available space with minimal padding */}
-      <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-16' : ''}`}>
-        <div className={`w-full flex-1 px-[5px] pt-[5px] pb-[5px] ${isVerticalLayout ? 'max-w-[calc(100vw-4rem-10px)]' : 'max-w-[calc(100vw-10px)]'}`}>
+      <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-12' : ''}`}>
+        <div className={`w-full flex-1 px-[5px] pt-[5px] pb-[5px] ${isVerticalLayout ? 'max-w-[calc(100%-3rem-10px)]' : 'max-w-[calc(100%-10px)]'}`}>
           <div className="w-full flex flex-col space-y-[5px]">
             {/* Image Preview with minimal consistent spacing */}
               <div className="relative w-full">
@@ -886,7 +886,7 @@ export const RetroImageEditor = () => {
                 {/* Floating Content Sections */}
                 {activeTab === 'load-image' && (
                   <div 
-                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
+                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100%-3rem-15px)]' : 'w-[calc(100%-15px)]'}`}
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     data-section="load-image"
                   >
@@ -905,7 +905,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'language' && (
                   <div 
-                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100%-3rem-15px)]' : 'w-[calc(100%-15px)]'}`}
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="language"
@@ -916,7 +916,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'palette-selector' && originalImage && (
                   <div 
-                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100%-3rem-15px)]' : 'w-[calc(100%-15px)]'}`}
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="palette-selector"
@@ -937,7 +937,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'resolution' && originalImage && (
                   <div 
-                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100%-3rem-15px)]' : 'w-[calc(100%-15px)]'}`}
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="resolution"
