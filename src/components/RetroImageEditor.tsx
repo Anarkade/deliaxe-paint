@@ -756,92 +756,94 @@ export const RetroImageEditor = () => {
         </header>
       )}
 
-      {/* Vertical Sidebar for landscape orientation */}
-      {isVerticalLayout && (
-        <aside className="fixed left-0 top-0 h-full w-12 flex flex-col bg-card border-r border-elegant-border z-50">
-          <div className="flex flex-col items-center py-1 space-y-1 h-full">
-            {/* Logo */}
-            <div className="flex flex-col items-center gap-1 flex-shrink-0">
-              <Gamepad2 className="h-8 w-8" style={{ color: '#7d1b2d' }} />
+      {/* Content wrapper */}
+      <div className="flex-1 flex">
+        {/* Vertical Sidebar for landscape orientation */}
+        {isVerticalLayout && (
+          <aside className="fixed left-0 top-0 h-full w-12 flex flex-col bg-card border-r border-elegant-border z-50">
+            <div className="flex flex-col items-center py-1 space-y-1 h-full">
+              {/* Logo */}
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                <Gamepad2 className="h-8 w-8" style={{ color: '#7d1b2d' }} />
+              </div>
+              
+              {/* Section buttons */}
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                <Button
+                  variant={getButtonVariant('load-image')}
+                  onClick={() => handleTabClick('load-image')}
+                  className="flex items-center justify-center h-8 w-8 p-0"
+                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+                  title={t('loadImage')}
+                >
+                  <Upload className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant={getButtonVariant('palette-selector')}
+                  onClick={() => handleTabClick('palette-selector')}
+                  className="flex items-center justify-center h-8 w-8 p-0"
+                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+                  disabled={!originalImage}
+                  title={t('selectPalette')}
+                >
+                  <Palette className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant={getButtonVariant('resolution')}
+                  onClick={() => handleTabClick('resolution')}
+                  className="flex items-center justify-center h-8 w-8 p-0"
+                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+                  disabled={!originalImage}
+                  title={t('changeResolution')}
+                >
+                  <Monitor className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant={getButtonVariant('change-grids')}
+                  onClick={() => handleTabClick('change-grids')}
+                  className="flex items-center justify-center h-8 w-8 p-0"
+                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+                  disabled={!originalImage}
+                  title={t('changeGrids')}
+                >
+                  <Grid3X3 className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant={getButtonVariant('export-image')}
+                  onClick={() => handleTabClick('export-image')}
+                  className="flex items-center justify-center h-8 w-8 p-0"
+                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+                  disabled={!originalImage}
+                  title={t('exportImage')}
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant={getButtonVariant('language')}
+                  onClick={() => handleTabClick('language')}
+                  className="flex items-center justify-center h-8 w-8 p-0"
+                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+                  title={t('language')}
+                >
+                  <Globe className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Language selector at bottom - Remove since we have it as a section now */}
+              <div className="mt-auto pb-4 flex-shrink-0">
+                {/* Intentionally left empty */}
+              </div>
             </div>
-            
-            {/* Section buttons */}
-            <div className="flex flex-col items-center gap-1 flex-shrink-0">
-              <Button
-                variant={getButtonVariant('load-image')}
-                onClick={() => handleTabClick('load-image')}
-                className="flex items-center justify-center h-8 w-8 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                title={t('loadImage')}
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant={getButtonVariant('palette-selector')}
-                onClick={() => handleTabClick('palette-selector')}
-                className="flex items-center justify-center h-8 w-8 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                disabled={!originalImage}
-                title={t('selectPalette')}
-              >
-                <Palette className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant={getButtonVariant('resolution')}
-                onClick={() => handleTabClick('resolution')}
-                className="flex items-center justify-center h-8 w-8 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                disabled={!originalImage}
-                title={t('changeResolution')}
-              >
-                <Monitor className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant={getButtonVariant('change-grids')}
-                onClick={() => handleTabClick('change-grids')}
-                className="flex items-center justify-center h-8 w-8 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                disabled={!originalImage}
-                title={t('changeGrids')}
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant={getButtonVariant('export-image')}
-                onClick={() => handleTabClick('export-image')}
-                className="flex items-center justify-center h-8 w-8 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                disabled={!originalImage}
-                title={t('exportImage')}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant={getButtonVariant('language')}
-                onClick={() => handleTabClick('language')}
-                className="flex items-center justify-center h-8 w-8 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                title={t('language')}
-              >
-                <Globe className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {/* Language selector at bottom - Remove since we have it as a section now */}
-            <div className="mt-auto pb-4 flex-shrink-0">
-              {/* Intentionally left empty */}
-            </div>
-          </div>
-        </aside>
-      )}
+          </aside>
+        )}
 
-      {/* Main Content - Flex-grow to fill available space with minimal padding */}
-      <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-12' : ''}`}>
+        {/* Main Content - Flex-grow to fill available space with minimal padding */}
+        <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-12' : ''}`}>
         <div className={`w-full flex-1 px-[5px] pt-[5px] pb-[5px] ${isVerticalLayout ? 'max-w-[calc(100%-3rem-10px)]' : 'max-w-[calc(100%-10px)]'}`}>
           <div className="w-full flex flex-col space-y-[5px]">
             {/* Image Preview with minimal consistent spacing */}
@@ -1102,13 +1104,14 @@ export const RetroImageEditor = () => {
                 )}
               </div>
           </div>
-        </div>
-      </main>
+          </div>
+        </main>
+      </div>
 
       {/* Footer - Full width, at bottom of document */}
       <footer className="border-t border-elegant-border bg-card flex-shrink-0 w-full">
-        <div className="w-full px-[5px] py-[5px] text-center">
-          <p className="text-sm text-muted-foreground">©2025 Anarkade</p>
+        <div className="w-full px-[5px] py-[5px]">
+          <p className="text-sm text-muted-foreground text-center" style={{ marginRight: isVerticalLayout ? '0' : '15px' }}>©2025 Anarkade</p>
         </div>
       </footer>
     </div>
