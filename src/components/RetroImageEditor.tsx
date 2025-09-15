@@ -108,7 +108,12 @@ export const RetroImageEditor = () => {
       return 'highlighted'
     }
 
-    // When no image is loaded, all buttons including load-image are blocked
+    // Load image is always enabled (unless currently active)
+    if (tabId === 'load-image') {
+      return 'highlighted'
+    }
+
+    // When no image is loaded, other buttons are blocked
     if (!originalImage) {
       return 'blocked'
     }
@@ -122,8 +127,9 @@ export const RetroImageEditor = () => {
   };
 
   const handleTabClick = (tabId: string) => {
-    if (!originalImage && tabId !== 'language') {
-      return; // Don't allow clicking blocked tabs (including load-image when no image)
+    // Allow language and load-image clicks even when no image is loaded
+    if (!originalImage && tabId !== 'language' && tabId !== 'load-image') {
+      return; // Don't allow clicking other blocked tabs when no image is loaded
     }
     
     // If image is loaded and user clicks load-image, unload the image
