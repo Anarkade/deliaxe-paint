@@ -239,14 +239,24 @@ export const RetroImageEditor = () => {
     setTimeout(() => loadImage(source), 50); // Small delay to ensure state is reset
   }, [resetEditor, loadImage]);
 
+  // Helper function to check color similarity (80% threshold)
+  const areColorsSimilar = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): boolean => {
+    const distance = Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
+    const maxDistance = Math.sqrt(3 * 255 ** 2); // Maximum possible distance
+    const similarity = 1 - (distance / maxDistance);
+    return similarity >= 0.8; // 80% similarity threshold
+  };
+
   // Detect scaling in pixel art and return unscaled dimensions
   const detectAndUnscaleImage = useCallback((image: HTMLImageElement) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    canvas.width = Math.min(image.width, 200); // Sample only first 200px for performance
-    canvas.height = Math.min(image.height, 200);
+    // Use a larger sample for better detection, but still limit for performance
+    const sampleSize = Math.min(Math.max(image.width, image.height), 400);
+    canvas.width = Math.min(image.width, sampleSize);
+    canvas.height = Math.min(image.height, sampleSize);
     
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
@@ -254,54 +264,86 @@ export const RetroImageEditor = () => {
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const pixels = imageData.data;
     
-    // Try different scale factors from 2 to 8
-    for (let scale = 2; scale <= 8; scale++) {
-      let isScaled = true;
-      let checkedPixels = 0;
-      const maxChecks = 100; // Limit checks for performance
-      
-      // Check if blocks of pixels match the scaling pattern
-      for (let y = 0; y < canvas.height - scale && checkedPixels < maxChecks; y += scale) {
-        for (let x = 0; x < canvas.width - scale && checkedPixels < maxChecks; x += scale) {
-          // Get the first pixel of the block
-          const baseIndex = (y * canvas.width + x) * 4;
-          const baseR = pixels[baseIndex];
-          const baseG = pixels[baseIndex + 1];
-          const baseB = pixels[baseIndex + 2];
-          
-          // Check if all pixels in the block are the same color
-          let blockMatches = true;
-          for (let dy = 0; dy < scale && blockMatches; dy++) {
-            for (let dx = 0; dx < scale && blockMatches; dx++) {
-              const checkY = y + dy;
-              const checkX = x + dx;
-              if (checkY < canvas.height && checkX < canvas.width) {
-                const checkIndex = (checkY * canvas.width + checkX) * 4;
-                if (pixels[checkIndex] !== baseR || 
-                    pixels[checkIndex + 1] !== baseG || 
-                    pixels[checkIndex + 2] !== baseB) {
-                  blockMatches = false;
+    // Track pattern frequencies for each block size
+    const patternFrequencies = new Map<string, number>();
+    
+    // Test rectangular patterns (width x height) up to 8x8
+    for (let scaleWidth = 2; scaleWidth <= 8; scaleWidth++) {
+      for (let scaleHeight = 2; scaleHeight <= 8; scaleHeight++) {
+        let validBlocks = 0;
+        let totalBlocks = 0;
+        let shouldContinue = true;
+        
+        // Check blocks across the image
+        for (let y = 0; y <= canvas.height - scaleHeight && shouldContinue; y += scaleHeight) {
+          for (let x = 0; x <= canvas.width - scaleWidth && shouldContinue; x += scaleWidth) {
+            totalBlocks++;
+            
+            // Get the first pixel of the block as reference
+            const baseIndex = (y * canvas.width + x) * 4;
+            const baseR = pixels[baseIndex];
+            const baseG = pixels[baseIndex + 1];
+            const baseB = pixels[baseIndex + 2];
+            
+            // Check if all pixels in the block are similar to the base color
+            let similarPixels = 0;
+            const totalPixelsInBlock = scaleWidth * scaleHeight;
+            
+            for (let dy = 0; dy < scaleHeight; dy++) {
+              for (let dx = 0; dx < scaleWidth; dx++) {
+                const checkY = y + dy;
+                const checkX = x + dx;
+                if (checkY < canvas.height && checkX < canvas.width) {
+                  const checkIndex = (checkY * canvas.width + checkX) * 4;
+                  const checkR = pixels[checkIndex];
+                  const checkG = pixels[checkIndex + 1];
+                  const checkB = pixels[checkIndex + 2];
+                  
+                  if (areColorsSimilar(baseR, baseG, baseB, checkR, checkG, checkB)) {
+                    similarPixels++;
+                  }
                 }
               }
             }
+            
+            // Block is considered uniform if 80% or more pixels are similar
+            if (similarPixels >= totalPixelsInBlock * 0.8) {
+              validBlocks++;
+            }
+            
+            // Performance optimization: stop early if this pattern clearly won't work
+            if (totalBlocks > 20 && validBlocks / totalBlocks < 0.5) {
+              shouldContinue = false;
+            }
           }
-          
-          if (!blockMatches) {
-            isScaled = false;
-            break;
-          }
-          checkedPixels++;
         }
-        if (!isScaled) break;
+        
+        // If at least 70% of blocks are uniform, this could be a valid scaling pattern
+        if (totalBlocks > 0 && validBlocks / totalBlocks >= 0.7) {
+          const patternKey = `${scaleWidth}x${scaleHeight}`;
+          patternFrequencies.set(patternKey, validBlocks);
+        }
       }
-      
-      // If we found a consistent scaling pattern, return unscaled dimensions
-      if (isScaled && checkedPixels > 10) {
-        return {
-          width: Math.floor(image.width / scale),
-          height: Math.floor(image.height / scale)
-        };
+    }
+    
+    // Find the pattern with the highest frequency (most repeated blocks)
+    let bestPattern = '';
+    let highestFrequency = 0;
+    
+    for (const [pattern, frequency] of patternFrequencies.entries()) {
+      if (frequency > highestFrequency) {
+        highestFrequency = frequency;
+        bestPattern = pattern;
       }
+    }
+    
+    // If we found a valid pattern with enough occurrences
+    if (bestPattern && highestFrequency > 10) {
+      const [widthScale, heightScale] = bestPattern.split('x').map(Number);
+      return {
+        width: Math.floor(image.width / widthScale),
+        height: Math.floor(image.height / heightScale)
+      };
     }
     
     return null; // No scaling detected
