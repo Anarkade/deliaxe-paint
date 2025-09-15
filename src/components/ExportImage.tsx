@@ -37,25 +37,37 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
     const scale = exportAtCurrentZoom ? currentZoom : 1;
     
     if (processedImageData) {
-      canvas.width = processedImageData.width * scale;
-      canvas.height = processedImageData.height * scale;
+      const scaledWidth = Math.floor(processedImageData.width * scale);
+      const scaledHeight = Math.floor(processedImageData.height * scale);
+      
+      canvas.width = scaledWidth;
+      canvas.height = scaledHeight;
       
       if (scale !== 1) {
-        ctx.imageSmoothingEnabled = false;
-        ctx.scale(scale, scale);
+        // Create offscreen canvas for nearest-neighbor scaling
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = processedImageData.width;
+        offscreenCanvas.height = processedImageData.height;
+        const offscreenCtx = offscreenCanvas.getContext('2d');
+        if (offscreenCtx) {
+          offscreenCtx.putImageData(processedImageData, 0, 0);
+          
+          // Scale to main canvas with nearest-neighbor
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(offscreenCanvas, 0, 0, scaledWidth, scaledHeight);
+        }
+      } else {
+        ctx.putImageData(processedImageData, 0, 0);
       }
-      
-      ctx.putImageData(processedImageData, 0, 0);
     } else if (originalImage) {
-      canvas.width = originalImage.width * scale;
-      canvas.height = originalImage.height * scale;
+      const scaledWidth = Math.floor(originalImage.width * scale);
+      const scaledHeight = Math.floor(originalImage.height * scale);
       
-      if (scale !== 1) {
-        ctx.imageSmoothingEnabled = false;
-        ctx.scale(scale, scale);
-      }
+      canvas.width = scaledWidth;
+      canvas.height = scaledHeight;
       
-      ctx.drawImage(originalImage, 0, 0);
+      ctx.imageSmoothingEnabled = false; // Use nearest neighbor scaling
+      ctx.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight);
     }
     
     // Add grids if requested
