@@ -308,7 +308,7 @@ const baseTranslation: Translation = {
   targetResolution: 'Target Resolution',
   originalSize: 'Original',
   keepOriginalSize: 'Keep original size',
-  unscaledSize: 'Unscaled',
+  unscaledSize: 'Unscaled Resolution',
   removeScaling: 'Remove scaling from pixel art',
   gameBoyRes: 'Game Boy',
   amstradCpc0: 'Amstrad CPC mode 0',
