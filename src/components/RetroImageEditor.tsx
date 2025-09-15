@@ -873,8 +873,8 @@ export const RetroImageEditor = () => {
                 {/* Floating Content Sections */}
                 {activeTab === 'load-image' && (
                   <div 
-                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100%-3rem-15px)]' : 'w-[calc(100%-15px)]'}`}
-                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-3rem-5px)]' : 'w-[calc(100vw-5px)]'}`}
+                    style={{ marginTop: '2px', marginLeft: '2px' }}
                     data-section="load-image"
                   >
                       <LoadImage
@@ -892,8 +892,8 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'language' && (
                   <div 
-                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100%-3rem-15px)]' : 'w-[calc(100%-15px)]'}`}
-                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-3rem-5px)]' : 'w-[calc(100vw-5px)]'}`}
+                    style={{ marginTop: '2px', marginLeft: '2px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="language"
                   >
@@ -903,8 +903,8 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'palette-selector' && originalImage && (
                   <div 
-                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100%-3rem-15px)]' : 'w-[calc(100%-15px)]'}`}
-                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-3rem-5px)]' : 'w-[calc(100vw-5px)]'}`}
+                    style={{ marginTop: '2px', marginLeft: '2px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="palette-selector"
                   >
@@ -924,8 +924,8 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'resolution' && originalImage && (
                   <div 
-                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100%-3rem-15px)]' : 'w-[calc(100%-15px)]'}`}
-                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-3rem-5px)]' : 'w-[calc(100vw-5px)]'}`}
+                    style={{ marginTop: '2px', marginLeft: '2px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="resolution"
                   >
@@ -941,8 +941,8 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'change-grids' && originalImage && (
                   <div 
-                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
-                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-3rem-5px)]' : 'w-[calc(100vw-5px)]'}`}
+                    style={{ marginTop: '2px', marginLeft: '2px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="change-grids"
                   >
@@ -1076,8 +1076,8 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'export-image' && originalImage && (
                   <div 
-                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
-                    style={{ marginTop: '5px', marginLeft: '5px' }}
+                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-3rem-5px)]' : 'w-[calc(100vw-5px)]'}`}
+                    style={{ marginTop: '2px', marginLeft: '2px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="export-image"
                   >
