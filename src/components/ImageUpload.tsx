@@ -211,8 +211,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
   }
 
   return (
-    <Card className="p-6 border-pixel-grid bg-card">
-      <div className="space-y-4">
+    <Card className="p-5 border-pixel-grid bg-card">
+      <div className="space-y-5">
         <div>
           <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
             <Upload className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
@@ -221,10 +221,11 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
           <p className="text-sm text-muted-foreground mt-1">{t('loadImageDesc')}</p>
         </div>
         
-        <div className="space-y-4">
-          <div className="w-full space-y-2">
-            <label className="block text-sm font-medium text-foreground">
-              <Upload className="inline mr-2 h-4 w-4" />
+        {/* Compact grid layout for primary upload options */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-foreground">
+              <Upload className="inline mr-1 h-3 w-3" />
               {t('uploadFile')}
             </label>
             <div className="relative">
@@ -234,48 +235,53 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                 onChange={handleFileUpload}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
-              <Button variant="highlighted" className="w-full h-10">
+              <Button variant="highlighted" size="sm" className="w-full h-9 text-xs">
                 {t('chooseFile')}
               </Button>
             </div>
           </div>
           
-          <div className="w-full space-y-2">
-            <label className="block text-sm font-medium text-foreground">
-              <Link className="inline mr-2 h-4 w-4" />
-              {t('fromUrl')}
-            </label>
-            <Input
-              type="url"
-              placeholder="https://..."
-              onChange={handleUrlUpload}
-              className="bg-console-bg border-pixel-grid"
-            />
-          </div>
-
-          <div className="w-full space-y-2">
-            <label className="block text-sm font-medium text-foreground">
-              <Clipboard className="inline mr-2 h-4 w-4" />
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-foreground">
+              <Clipboard className="inline mr-1 h-3 w-3" />
               {t('loadFromClipboard')}
             </label>
             <Button 
               onClick={loadFromClipboard}
               variant="highlighted"
-              className="w-full"
+              size="sm"
+              className="w-full h-9 text-xs"
             >
-              <Clipboard className="mr-2 h-4 w-4" />
+              <Clipboard className="mr-1 h-3 w-3" />
               {t('loadFromClipboard')}
             </Button>
           </div>
+        </div>
+
+        {/* URL input - full width */}
+        <div className="space-y-2">
+          <label className="block text-xs font-medium text-foreground">
+            <Link className="inline mr-1 h-3 w-3" />
+            {t('fromUrl')}
+          </label>
+          <Input
+            type="url"
+            placeholder="https://..."
+            onChange={handleUrlUpload}
+            className="bg-console-bg border-pixel-grid h-9 text-sm"
+          />
+        </div>
           
-          <div className="w-full space-y-2">
-            <label className="block text-sm font-medium text-foreground">
-              <Camera className="inline mr-2 h-4 w-4" />
+        {/* Camera section - separated with more space */}
+        <div className="border-t border-elegant-border pt-4">
+          <div className="space-y-3">
+            <label className="block text-xs font-medium text-foreground">
+              <Camera className="inline mr-1 h-3 w-3" />
               {t('camera')}
             </label>
             
             {showCameraPreview && (
-              <div className="relative mb-2 bg-black rounded-md overflow-hidden w-full">
+              <div className="relative bg-black rounded-md overflow-hidden w-full">
                 {!cameraError ? (
                   <video
                     ref={videoRef}
@@ -287,22 +293,22 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                 ) : (
                   <div className="w-full aspect-video bg-black flex items-center justify-center">
                     <div className="text-center text-white p-4">
-                      <Camera className="h-12 w-12 mx-auto mb-2 text-gray-400" />
-                      <p className="text-sm">{cameraError}</p>
+                      <Camera className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                      <p className="text-xs">{cameraError}</p>
                     </div>
                   </div>
                 )}
                 
                 {/* Camera controls positioned at bottom center */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3">
+                <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-2">
                   {!cameraError && (
                     <Button
                       onClick={handleCameraCapture}
                       variant="highlighted"
                       size="sm"
-                      className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm"
+                      className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
                     >
-                      <Camera className="h-5 w-5" />
+                      <Camera className="h-4 w-4" />
                     </Button>
                   )}
                   
@@ -311,10 +317,10 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                       onClick={switchCamera}
                       variant="highlighted"
                       size="sm"
-                      className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm"
+                      className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
                       title={getCameraDisplayName(availableCameras[currentCameraIndex], currentCameraIndex)}
                     >
-                      <RotateCcw className="h-4 w-4" />
+                      <RotateCcw className="h-3 w-3" />
                     </Button>
                   )}
                   
@@ -322,26 +328,25 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                     onClick={stopCameraPreview}
                     variant="highlighted"
                     size="sm"
-                    className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm"
+                    className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3 w-3" />
                   </Button>
                 </div>
               </div>
             )}
             
-            <div className="flex gap-2">
-              {!showCameraPreview ? (
-                <Button 
-                  onClick={onCameraPreviewRequest || startCameraPreview}
-                  variant="highlighted"
-                  className="flex-1"
-                >
-                  <Eye className="mr-2 h-4 w-4" />
-                  {t('preview')}
-                </Button>
-              ) : null}
-            </div>
+            {!showCameraPreview && (
+              <Button 
+                onClick={onCameraPreviewRequest || startCameraPreview}
+                variant="highlighted"
+                size="sm"
+                className="w-full h-9 text-xs"
+              >
+                <Eye className="mr-1 h-3 w-3" />
+                {t('preview')}
+              </Button>
+            )}
           </div>
         </div>
       </div>

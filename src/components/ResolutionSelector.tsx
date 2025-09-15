@@ -117,7 +117,7 @@ export const ResolutionSelector = ({
   };
 
   return (
-    <Card className="p-6 border-pixel-grid bg-card relative">
+    <Card className="p-5 border-pixel-grid bg-card relative">
       {onClose && (
         <Button
           variant="ghost"
@@ -128,7 +128,7 @@ export const ResolutionSelector = ({
           <X className="h-4 w-4" />
         </Button>
       )}
-      <div className="space-y-4">
+      <div className="space-y-5">
         <div>
           <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
             <Monitor className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
@@ -137,24 +137,24 @@ export const ResolutionSelector = ({
           <p className="text-sm text-muted-foreground mt-1">{t('changeResolutionDesc')}</p>
         </div>
 
-        <div className="space-y-4">
-          {/* Scaling Mode - always visible */}
+        {/* Scaling and Alignment - side by side */}
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">
+            <label className="block text-xs font-medium text-foreground">
               {t('scalingMode')}
             </label>
             <RadioGroup
               value={['stretch', 'fit', 'dont-scale'].includes(scalingMode as string) ? scalingMode as ScalingMode : 'fit'}
               onValueChange={(value: ScalingMode) => onScalingModeChange(value)}
-              className="grid grid-cols-3 gap-2"
+              className="space-y-1.5"
             >
               {scalingOptions.map((option) => {
                 const Icon = option.icon;
                 return (
                   <div key={option.value} className="flex items-center space-x-2">
                     <RadioGroupItem value={option.value} id={`scaling-${option.value}`} />
-                    <Label htmlFor={`scaling-${option.value}`} className="flex items-center gap-2 cursor-pointer text-xs">
-                      <Icon className="h-4 w-4" />
+                    <Label htmlFor={`scaling-${option.value}`} className="flex items-center gap-1.5 cursor-pointer text-xs">
+                      <Icon className="h-3 w-3" />
                       <span>{option.label}</span>
                     </Label>
                   </div>
@@ -163,39 +163,39 @@ export const ResolutionSelector = ({
             </RadioGroup>
           </div>
 
-          {/* Alignment - always visible with 9 radio options */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-foreground">
+            <label className="block text-xs font-medium text-foreground">
               {t('alignment')}
             </label>
             <RadioGroup
               value={isAlignmentMode(scalingMode) ? (scalingMode as AlignmentMode) : 'middle-center'}
               onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
-              className="grid grid-cols-3 gap-2"
+              className="grid grid-cols-3 gap-1 text-xs"
             >
               {alignmentOptions.map((option) => (
-                <div key={option.value} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} />
-                  <Label htmlFor={`alignment-${option.value}`} className="flex items-center gap-2 cursor-pointer text-xs">
+                <div key={option.value} className="flex items-center space-x-1">
+                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} className="h-3 w-3" />
+                  <Label htmlFor={`alignment-${option.value}`} className="flex items-center gap-1 cursor-pointer text-xs">
                     <AlignmentIcon position={option.position} />
-                    <span>{option.label}</span>
                   </Label>
                 </div>
               ))}
             </RadioGroup>
           </div>
+        </div>
 
-          {/* Target Resolution */}
+        {/* Target Resolution - separated section */}
+        <div className="border-t border-elegant-border pt-4">
           <div className="space-y-3">
-            <label className="block text-sm font-medium text-foreground">
+            <label className="block text-xs font-medium text-foreground">
               {t('targetResolution')}
             </label>
-            <RadioGroup value={selectedResolution} onValueChange={onResolutionChange} className="space-y-3">
+            <RadioGroup value={selectedResolution} onValueChange={onResolutionChange} className="grid grid-cols-2 gap-x-4 gap-y-2">
               {resolutionOptions.map((option) => (
                 <div key={option.value} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option.value} id={`resolution-${option.value}`} />
+                  <RadioGroupItem value={option.value} id={`resolution-${option.value}`} className="h-3 w-3" />
                   <Label htmlFor={`resolution-${option.value}`} className="flex flex-col cursor-pointer">
-                    <span className="font-medium">{option.label}</span>
+                    <span className="font-medium text-xs">{option.label}</span>
                     <span className="text-xs text-muted-foreground">{option.desc}</span>
                   </Label>
                 </div>

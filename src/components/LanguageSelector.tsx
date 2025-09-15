@@ -40,7 +40,7 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
   }
 
   return (
-    <Card className="p-6 bg-card border-elegant-border relative">
+    <Card className="p-5 bg-card border-elegant-border relative">
       {onClose && (
         <Button
           variant="ghost"
@@ -61,7 +61,7 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
       <RadioGroup 
         value={currentLanguage} 
         onValueChange={(value) => changeLanguage(value as Language)}
-        className="space-y-3"
+        className="grid grid-cols-2 gap-x-4 gap-y-2"
       >
         {sortedLanguages.map((lang) => (
           <div key={lang} className="flex items-center space-x-2">
@@ -72,7 +72,7 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
             />
             <Label 
               htmlFor={`lang-${lang}`} 
-              className="text-bone-white cursor-pointer hover:text-primary"
+              className="text-bone-white cursor-pointer hover:text-primary text-sm"
             >
               {getLanguageName(lang)}
             </Label>

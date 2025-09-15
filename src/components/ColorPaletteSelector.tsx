@@ -32,7 +32,7 @@ export const ColorPaletteSelector = ({
   ];
 
   return (
-    <Card className="p-6 border-pixel-grid bg-card relative">
+    <Card className="p-5 border-pixel-grid bg-card relative">
       {onClose && (
         <Button
           variant="ghost"
@@ -52,12 +52,12 @@ export const ColorPaletteSelector = ({
           <p className="text-sm text-muted-foreground mt-1">{t('changePaletteDesc')}</p>
         </div>
         
-        <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="space-y-3">
+        <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="space-y-2.5">
           {paletteOptions.map((option) => (
             <div key={option.value} className="flex items-center space-x-2">
               <RadioGroupItem value={option.value} id={`palette-${option.value}`} />
               <Label htmlFor={`palette-${option.value}`} className="flex flex-col cursor-pointer">
-                <span className="font-medium">{option.label}</span>
+                <span className="font-medium text-sm">{option.label}</span>
                 <span className="text-xs text-muted-foreground">{option.colors}</span>
               </Label>
             </div>

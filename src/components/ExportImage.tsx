@@ -257,7 +257,7 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
   }
 
   return (
-    <Card className="p-6 border-elegant-border bg-card rounded-xl relative">
+    <Card className="p-5 border-elegant-border bg-card rounded-xl relative">
       {onClose && (
         <Button
           variant="ghost"
@@ -268,60 +268,62 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
           <X className="h-4 w-4" />
         </Button>
       )}
+      <div className="space-y-4">
+        <div>
+          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+            <Download className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+            {t('exportImage')}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">{t('exportImageDesc')}</p>
+        </div>
+        
         <div className="space-y-4">
-          <div>
-            <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-              <Download className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
-              {t('exportImage')}
-            </h3>
-            <p className="text-sm text-muted-foreground mt-1">{t('exportImageDesc')}</p>
+          <div className="grid grid-cols-1 gap-2.5">
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="export-zoom" 
+                checked={exportAtCurrentZoom}
+                onCheckedChange={(checked) => setExportAtCurrentZoom(checked as boolean)}
+              />
+              <label htmlFor="export-zoom" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                {t('exportAtCurrentZoom')} ({Math.round(currentZoom * 100)}%)
+              </label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="export-grids" 
+                checked={exportWithGrids}
+                onCheckedChange={(checked) => setExportWithGrids(checked as boolean)}
+              />
+              <label htmlFor="export-grids" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                {t('exportWithGrids')}
+              </label>
+            </div>
           </div>
-          
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="export-zoom" 
-                  checked={exportAtCurrentZoom}
-                  onCheckedChange={(checked) => setExportAtCurrentZoom(checked as boolean)}
-                />
-                <label htmlFor="export-zoom" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  {t('exportAtCurrentZoom')} ({Math.round(currentZoom * 100)}%)
-                </label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="export-grids" 
-                  checked={exportWithGrids}
-                  onCheckedChange={(checked) => setExportWithGrids(checked as boolean)}
-                />
-                <label htmlFor="export-grids" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  {t('exportWithGrids')}
-                </label>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              <Button
-                onClick={downloadPNG}
-                className="flex items-center justify-center gap-2 w-full rounded-lg"
-                variant="glass"
-              >
-                <Download className="h-4 w-4" />
-                {t('downloadPng')}
-              </Button>
-              <Button
-                onClick={copyToClipboard}
-                className="flex items-center justify-center gap-2 w-full rounded-lg"
-                variant="glass"
-              >
-                <Copy className="h-4 w-4" />
-                {t('copyToClipboard')}
-              </Button>
-            </div>
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <Button
+              onClick={downloadPNG}
+              className="flex items-center justify-center gap-2 w-full rounded-lg"
+              variant="glass"
+              size="sm"
+            >
+              <Download className="h-4 w-4" />
+              {t('downloadPng')}
+            </Button>
+            <Button
+              onClick={copyToClipboard}
+              className="flex items-center justify-center gap-2 w-full rounded-lg"
+              variant="glass"
+              size="sm"
+            >
+              <Copy className="h-4 w-4" />
+              {t('copyToClipboard')}
+            </Button>
           </div>
         </div>
+      </div>
     </Card>
   );
 };
