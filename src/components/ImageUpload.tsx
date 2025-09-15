@@ -243,9 +243,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                   {availableCameras.length > 1 && (
                     <Button
                       onClick={switchCamera}
-                      variant="secondary"
+                      variant="highlighted"
                       size="sm"
-                      className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
                       title={getCameraDisplayName(availableCameras[currentCameraIndex], currentCameraIndex)}
                     >
                       <RotateCcw className="h-4 w-4" />
@@ -253,9 +252,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                   )}
                   <Button
                     onClick={stopCameraPreview}
-                    variant="secondary"
+                    variant="highlighted"
                     size="sm"
-                    className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -276,8 +274,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
               ) : (
                 <Button 
                   onClick={handleCameraCapture}
-                  variant="secondary"
-                  className="flex-1 bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
+                  variant="highlighted"
+                  className="flex-1"
                 >
                   <Camera className="h-5 w-5" />
                 </Button>

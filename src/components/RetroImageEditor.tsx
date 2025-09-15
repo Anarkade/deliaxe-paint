@@ -887,11 +887,14 @@ export const RetroImageEditor = () => {
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     data-section="load-image"
                   >
-                     <LoadImage
-                       onImageLoad={(source) => {
-                         loadImage(source);
-                       }}
-                       onCameraPreviewRequest={() => setShowCameraPreview(true)}
+                      <LoadImage
+                        onImageLoad={(source) => {
+                          loadImage(source);
+                        }}
+                        onCameraPreviewRequest={() => {
+                          setShowCameraPreview(true);
+                          setActiveTab(null);
+                        }}
                      />
                   </div>
                 )}
