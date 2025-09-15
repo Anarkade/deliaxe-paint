@@ -60,6 +60,9 @@ export default {
 				'blood-red-light': 'hsl(var(--blood-red-light))',
 				'elegant-bg': 'hsl(var(--elegant-bg))',
 				'elegant-border': 'hsl(var(--elegant-border))',
+				'retro-primary': 'hsl(var(--retro-primary))',
+				'retro-primary-foreground': 'hsl(var(--retro-primary-foreground))',
+				'retro-primary-hover': 'hsl(var(--retro-primary-hover))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',

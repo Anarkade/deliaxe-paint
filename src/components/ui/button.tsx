@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-center leading-tight",
   {
     variants: {
       variant: {
@@ -18,17 +18,17 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        highlighted: "bg-[#7d1b2d] text-white hover:bg-[#651524] border border-[#7d1b2d] hover:border-[#651524] transition-colors duration-200",
-        blocked: "bg-slate-700 text-slate-400 cursor-not-allowed opacity-60 border border-slate-600",
-        plum: "bg-[#7d1b2d] text-white hover:bg-[#651524] border border-[#7d1b2d] hover:border-[#651524] transition-colors duration-200",
-        modern3d: "bg-[#7d1b2d] text-white hover:bg-[#651524] border border-[#7d1b2d] hover:border-[#651524] transition-colors duration-200",
-        glass: "bg-[#7d1b2d] text-white hover:bg-[#651524] border border-[#7d1b2d] hover:border-[#651524] transition-colors duration-200",
+        highlighted: "bg-retro-primary text-retro-primary-foreground hover:bg-retro-primary-hover border border-retro-primary hover:border-retro-primary-hover transition-colors duration-200 min-h-[2.5rem] px-3 py-1 whitespace-pre-wrap",
+        blocked: "bg-slate-700 text-slate-400 cursor-not-allowed opacity-60 border border-slate-600 min-h-[2.5rem] px-3 py-1",
+        plum: "bg-retro-primary text-retro-primary-foreground hover:bg-retro-primary-hover border border-retro-primary hover:border-retro-primary-hover transition-colors duration-200 min-h-[2.5rem] px-3 py-1 whitespace-pre-wrap",
+        modern3d: "bg-retro-primary text-retro-primary-foreground hover:bg-retro-primary-hover border border-retro-primary hover:border-retro-primary-hover transition-colors duration-200 min-h-[2.5rem] px-3 py-1 whitespace-pre-wrap",
+        glass: "bg-retro-primary text-retro-primary-foreground hover:bg-retro-primary-hover border border-retro-primary hover:border-retro-primary-hover transition-colors duration-200 min-h-[2.5rem] px-3 py-1 whitespace-pre-wrap",
       },
       size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-        icon: "h-10 w-10",
+        default: "min-h-[2.5rem] px-4 py-2",
+        sm: "min-h-[2.25rem] rounded-md px-3 py-1",
+        lg: "min-h-[2.75rem] rounded-md px-8 py-2",
+        icon: "h-10 w-10 min-h-[2.5rem]",
       },
     },
     defaultVariants: {

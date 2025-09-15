@@ -291,7 +291,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                 onChange={handleFileUpload}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
               />
-              <Button variant="highlighted" size="sm" className="w-full h-9 text-xs">
+              <Button variant="highlighted" size="sm" className="w-full text-xs whitespace-pre-wrap leading-tight">
                 {t('chooseFile')}
               </Button>
             </div>
@@ -306,7 +306,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
               onClick={loadFromClipboard}
               variant="highlighted"
               size="sm"
-              className="w-full h-9 text-xs"
+              className="w-full text-xs whitespace-pre-wrap leading-tight"
             >
               <Clipboard className="mr-1 h-3 w-3" />
               {t('loadFromClipboard')}
@@ -399,7 +399,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                 onClick={onCameraPreviewRequest || startCameraPreview}
                 variant="highlighted"
                 size="sm"
-                className="w-full h-9 text-xs"
+                className="w-full text-xs whitespace-pre-wrap leading-tight"
               >
                 <Eye className="mr-1 h-3 w-3" />
                 {t('preview')}

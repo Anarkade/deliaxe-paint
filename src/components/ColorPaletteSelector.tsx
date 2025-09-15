@@ -52,13 +52,13 @@ export const ColorPaletteSelector = ({
           <p className="text-sm text-muted-foreground mt-1">{t('changePaletteDesc')}</p>
         </div>
         
-        <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="space-y-2.5">
+        <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="space-y-3">
           {paletteOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2">
-              <RadioGroupItem value={option.value} id={`palette-${option.value}`} />
+            <div key={option.value} className="flex items-start space-x-2 min-h-[2.5rem]">
+              <RadioGroupItem value={option.value} id={`palette-${option.value}`} className="mt-1 flex-shrink-0" />
               <Label htmlFor={`palette-${option.value}`} className="flex flex-col cursor-pointer">
-                <span className="font-medium text-sm">{option.label}</span>
-                <span className="text-xs text-muted-foreground">{option.colors}</span>
+                <span className="font-medium text-sm leading-tight break-words">{option.label}</span>
+                <span className="text-xs text-muted-foreground leading-tight break-words">{option.colors}</span>
               </Label>
             </div>
           ))}

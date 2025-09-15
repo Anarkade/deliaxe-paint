@@ -58,21 +58,21 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
         </h3>
       </div>
       
-      <RadioGroup 
-        value={currentLanguage} 
-        onValueChange={(value) => changeLanguage(value as Language)}
-        className="grid grid-cols-3 lg:grid-cols-4 gap-x-3 gap-y-2"
-      >
+        <RadioGroup 
+          value={currentLanguage} 
+          onValueChange={(value) => changeLanguage(value as Language)}
+          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3"
+        >
         {sortedLanguages.map((lang) => (
-          <div key={lang} className="flex items-center space-x-2">
+          <div key={lang} className="flex items-start space-x-2 min-h-[2.5rem]">
             <RadioGroupItem 
               value={lang} 
               id={`lang-${lang}`}
-              className="border-elegant-border text-bone-white data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              className="border-elegant-border text-bone-white data-[state=checked]:bg-primary data-[state=checked]:border-primary mt-1 flex-shrink-0"
             />
             <Label 
               htmlFor={`lang-${lang}`} 
-              className="text-bone-white cursor-pointer hover:text-primary text-sm"
+              className="text-bone-white cursor-pointer hover:text-primary text-sm leading-tight break-words hyphens-auto max-w-[8rem] whitespace-pre-wrap"
             >
               {getLanguageName(lang)}
             </Label>

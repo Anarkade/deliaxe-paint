@@ -385,7 +385,7 @@ export const ExportImage = ({
                 checked={exportAtCurrentZoom}
                 onCheckedChange={(checked) => setExportAtCurrentZoom(checked as boolean)}
               />
-              <label htmlFor="export-zoom" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label htmlFor="export-zoom" className="text-sm font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70 break-words">
                 {t('exportAtCurrentZoom')} ({Math.round(currentZoom * 100)}%)
               </label>
             </div>
@@ -399,7 +399,7 @@ export const ExportImage = ({
               />
               <label 
                 htmlFor="export-grids" 
-                className={`text-sm font-medium leading-none ${
+                className={`text-sm font-medium leading-tight break-words ${
                   !hasAnyGridEnabled 
                     ? 'cursor-not-allowed opacity-50' 
                     : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
@@ -413,7 +413,7 @@ export const ExportImage = ({
           <div className="grid grid-cols-2 gap-3 pt-2">
             <Button
               onClick={downloadPNG}
-              className="flex items-center justify-center gap-2 w-full rounded-lg"
+              className="flex items-center justify-center gap-2 w-full rounded-lg text-xs whitespace-pre-wrap leading-tight"
               variant="glass"
               size="sm"
             >
@@ -422,7 +422,7 @@ export const ExportImage = ({
             </Button>
             <Button
               onClick={copyToClipboard}
-              className="flex items-center justify-center gap-2 w-full rounded-lg"
+              className="flex items-center justify-center gap-2 w-full rounded-lg text-xs whitespace-pre-wrap leading-tight"
               variant="glass"
               size="sm"
             >

@@ -146,16 +146,16 @@ export const ResolutionSelector = ({
             <RadioGroup
               value={['stretch', 'fit', 'dont-scale'].includes(scalingMode as string) ? scalingMode as ScalingMode : 'fit'}
               onValueChange={(value: ScalingMode) => onScalingModeChange(value)}
-              className="space-y-1.5"
+              className="space-y-2"
             >
               {scalingOptions.map((option) => {
                 const Icon = option.icon;
                 return (
-                  <div key={option.value} className="flex items-center space-x-2">
-                    <RadioGroupItem value={option.value} id={`scaling-${option.value}`} />
-                    <Label htmlFor={`scaling-${option.value}`} className="flex items-center gap-1.5 cursor-pointer text-xs">
-                      <Icon className="h-3 w-3" />
-                      <span>{option.label}</span>
+                  <div key={option.value} className="flex items-start space-x-2 min-h-[2.25rem]">
+                    <RadioGroupItem value={option.value} id={`scaling-${option.value}`} className="mt-1 flex-shrink-0" />
+                    <Label htmlFor={`scaling-${option.value}`} className="flex items-start gap-1.5 cursor-pointer text-xs">
+                      <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                      <span className="leading-tight break-words">{option.label}</span>
                     </Label>
                   </div>
                 );
@@ -170,12 +170,12 @@ export const ResolutionSelector = ({
             <RadioGroup
               value={isAlignmentMode(scalingMode) ? (scalingMode as AlignmentMode) : 'middle-center'}
               onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
-              className="grid grid-cols-3 gap-1 text-xs"
+              className="grid grid-cols-3 gap-2 text-xs"
             >
               {alignmentOptions.map((option) => (
-                <div key={option.value} className="flex items-center space-x-1">
-                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} className="h-3 w-3" />
-                  <Label htmlFor={`alignment-${option.value}`} className="flex items-center gap-1 cursor-pointer text-xs">
+                <div key={option.value} className="flex items-start space-x-1 min-h-[1.75rem]">
+                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                  <Label htmlFor={`alignment-${option.value}`} className="flex items-start gap-1 cursor-pointer text-xs">
                     <AlignmentIcon position={option.position} />
                   </Label>
                 </div>
@@ -190,13 +190,13 @@ export const ResolutionSelector = ({
             <label className="block text-xs font-medium text-foreground">
               {t('targetResolution')}
             </label>
-            <RadioGroup value={selectedResolution} onValueChange={onResolutionChange} className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2">
+            <RadioGroup value={selectedResolution} onValueChange={onResolutionChange} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
               {resolutionOptions.map((option) => (
-                <div key={option.value} className="flex items-center space-x-2">
-                  <RadioGroupItem value={option.value} id={`resolution-${option.value}`} className="h-3 w-3" />
+                <div key={option.value} className="flex items-start space-x-2 min-h-[2.5rem]">
+                  <RadioGroupItem value={option.value} id={`resolution-${option.value}`} className="h-3 w-3 mt-1 flex-shrink-0" />
                   <Label htmlFor={`resolution-${option.value}`} className="flex flex-col cursor-pointer">
-                    <span className="font-medium text-xs">{option.label}</span>
-                    <span className="text-xs text-muted-foreground">{option.desc}</span>
+                    <span className="font-medium text-xs leading-tight break-words">{option.label}</span>
+                    <span className="text-xs text-muted-foreground leading-tight break-words">{option.desc}</span>
                   </Label>
                 </div>
               ))}
