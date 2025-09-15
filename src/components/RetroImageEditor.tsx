@@ -974,7 +974,7 @@ export const RetroImageEditor = () => {
                             </div>
                             {showTileGrid && (
                               <div className="ml-6 space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-4">
                                   <div>
                                      <label className="text-xs text-muted-foreground">{t('width')}</label>
                                      <input
@@ -997,15 +997,15 @@ export const RetroImageEditor = () => {
                                       className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
                                     />
                                   </div>
-                                </div>
-                                <div>
-                                  <label className="text-xs text-muted-foreground">{t('tileGridColor')}</label>
-                                  <input
-                                    type="color"
-                                    value={tileGridColor}
-                                    onChange={(e) => setTileGridColor(e.target.value)}
-                                    className="w-full h-8 border border-input rounded bg-background cursor-pointer"
-                                  />
+                                  <div>
+                                    <label className="text-xs text-muted-foreground">{t('tileGridColor')}</label>
+                                    <input
+                                      type="color"
+                                      value={tileGridColor}
+                                      onChange={(e) => setTileGridColor(e.target.value)}
+                                      className="w-full h-8 border border-input rounded bg-background cursor-pointer"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -1027,7 +1027,7 @@ export const RetroImageEditor = () => {
                             </div>
                             {showFrameGrid && (
                               <div className="ml-6 space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-3 gap-4">
                                    <div>
                                      <label className="text-xs text-muted-foreground">{t('width')}</label>
                                      <input
@@ -1050,15 +1050,15 @@ export const RetroImageEditor = () => {
                                       className="w-full px-2 py-1 text-sm border border-input rounded bg-background"
                                     />
                                   </div>
-                                </div>
-                                <div>
-                                  <label className="text-xs text-muted-foreground">{t('frameGridColor')}</label>
-                                  <input
-                                    type="color"
-                                    value={frameGridColor}
-                                    onChange={(e) => setFrameGridColor(e.target.value)}
-                                    className="w-full h-8 border border-input rounded bg-background cursor-pointer"
-                                  />
+                                  <div>
+                                    <label className="text-xs text-muted-foreground">{t('frameGridColor')}</label>
+                                    <input
+                                      type="color"
+                                      value={frameGridColor}
+                                      onChange={(e) => setFrameGridColor(e.target.value)}
+                                      className="w-full h-8 border border-input rounded bg-background cursor-pointer"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             )}
