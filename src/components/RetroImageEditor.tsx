@@ -765,19 +765,19 @@ export const RetroImageEditor = () => {
 
       {/* Vertical Sidebar for landscape orientation */}
       {isVerticalLayout && (
-        <aside className="fixed left-0 top-0 h-full w-20 flex flex-col bg-card border-r border-elegant-border z-50">
-          <div className="flex flex-col items-center py-4 space-y-4 h-full">
+        <aside className="fixed left-0 top-0 h-full w-16 flex flex-col bg-card border-r border-elegant-border z-50">
+          <div className="flex flex-col items-center py-2 space-y-2 h-full">
             {/* Logo */}
             <div className="flex flex-col items-center gap-1 flex-shrink-0">
-              <Gamepad2 className="h-10 w-10" style={{ color: '#7d1b2d' }} />
+              <Gamepad2 className="h-8 w-8" style={{ color: '#7d1b2d' }} />
             </div>
             
             {/* Section buttons */}
-            <div className="flex flex-col items-center gap-2 flex-shrink-0">
+            <div className="flex flex-col items-center gap-1 flex-shrink-0">
               <Button
                 variant={getButtonVariant('load-image')}
                 onClick={() => handleTabClick('load-image')}
-                className="flex items-center justify-center h-10 w-10 p-0"
+                className="flex items-center justify-center h-8 w-8 p-0"
                 style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
                 title={t('loadImage')}
               >
@@ -787,7 +787,7 @@ export const RetroImageEditor = () => {
               <Button
                 variant={getButtonVariant('palette-selector')}
                 onClick={() => handleTabClick('palette-selector')}
-                className="flex items-center justify-center h-10 w-10 p-0"
+                className="flex items-center justify-center h-8 w-8 p-0"
                 style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
                 disabled={!originalImage}
                 title={t('selectPalette')}
@@ -798,7 +798,7 @@ export const RetroImageEditor = () => {
               <Button
                 variant={getButtonVariant('resolution')}
                 onClick={() => handleTabClick('resolution')}
-                className="flex items-center justify-center h-10 w-10 p-0"
+                className="flex items-center justify-center h-8 w-8 p-0"
                 style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
                 disabled={!originalImage}
                 title={t('changeResolution')}
@@ -809,7 +809,7 @@ export const RetroImageEditor = () => {
               <Button
                 variant={getButtonVariant('change-grids')}
                 onClick={() => handleTabClick('change-grids')}
-                className="flex items-center justify-center h-10 w-10 p-0"
+                className="flex items-center justify-center h-8 w-8 p-0"
                 style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
                 disabled={!originalImage}
                 title={t('changeGrids')}
@@ -820,7 +820,7 @@ export const RetroImageEditor = () => {
               <Button
                 variant={getButtonVariant('export-image')}
                 onClick={() => handleTabClick('export-image')}
-                className="flex items-center justify-center h-10 w-10 p-0"
+                className="flex items-center justify-center h-8 w-8 p-0"
                 style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
                 disabled={!originalImage}
                 title={t('exportImage')}
@@ -831,7 +831,7 @@ export const RetroImageEditor = () => {
               <Button
                 variant={getButtonVariant('language')}
                 onClick={() => handleTabClick('language')}
-                className="flex items-center justify-center h-10 w-10 p-0"
+                className="flex items-center justify-center h-8 w-8 p-0"
                 style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
                 title={t('language')}
               >
@@ -848,8 +848,8 @@ export const RetroImageEditor = () => {
       )}
 
       {/* Main Content - Flex-grow to fill available space with minimal padding */}
-      <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-20' : ''}`}>
-        <div className={`w-full flex-1 px-[5px] pt-[5px] pb-[5px] ${isVerticalLayout ? 'max-w-[calc(100vw-5rem-10px)]' : 'max-w-[calc(100vw-10px)]'}`}>
+      <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-16' : ''}`}>
+        <div className={`w-full flex-1 px-[5px] pt-[5px] pb-[5px] ${isVerticalLayout ? 'max-w-[calc(100vw-4rem-10px)]' : 'max-w-[calc(100vw-10px)]'}`}>
           <div className="w-full flex flex-col space-y-[5px]">
             {/* Image Preview with minimal consistent spacing */}
               <div className="relative w-full">
@@ -886,7 +886,7 @@ export const RetroImageEditor = () => {
                 {/* Floating Content Sections */}
                 {activeTab === 'load-image' && (
                   <div 
-                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-5rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
+                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     data-section="load-image"
                   >
@@ -905,7 +905,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'language' && (
                   <div 
-                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-5rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="language"
@@ -916,7 +916,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'palette-selector' && originalImage && (
                   <div 
-                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-5rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="palette-selector"
@@ -937,7 +937,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'resolution' && originalImage && (
                   <div 
-                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-5rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="resolution"
@@ -954,7 +954,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'change-grids' && originalImage && (
                   <div 
-                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-5rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
+                     className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="change-grids"
@@ -1089,7 +1089,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'export-image' && originalImage && (
                   <div 
-                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-5rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
+                    className={`absolute top-0 left-0 z-50 bg-card border border-elegant-border rounded-xl shadow-xl ${isVerticalLayout ? 'w-[calc(100vw-4rem-15px)]' : 'w-[calc(100vw-15px)]'}`}
                     style={{ marginTop: '5px', marginLeft: '5px' }}
                     onClick={(e) => e.stopPropagation()}
                     data-section="export-image"
