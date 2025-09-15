@@ -841,7 +841,7 @@ export const RetroImageEditor = () => {
       )}
 
       {/* Main Content - Flex-grow to fill available space with minimal padding */}
-      <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-12' : ''}`}>
+      <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-12' : ''} pb-10`}>
         <div className={`w-full flex-1 px-[5px] pt-[5px] pb-[5px] ${isVerticalLayout ? 'max-w-[calc(100%-3rem-10px)]' : 'max-w-[calc(100%-10px)]'}`}>
           <div className="w-full flex flex-col space-y-[5px]">
             {/* Image Preview with minimal consistent spacing */}
@@ -1105,9 +1105,9 @@ export const RetroImageEditor = () => {
         </div>
       </main>
 
-      {/* Footer - Always at bottom, matches preview block width */}
-      <footer className={`border-t border-elegant-border bg-card w-full flex-shrink-0 ${isVerticalLayout ? 'ml-20' : ''}`}>
-        <div className={`${isVerticalLayout ? 'max-w-[calc(100vw-5rem-10px)]' : 'max-w-[calc(100vw-10px)]'} w-full px-[5px] py-[5px] mx-0 text-center`}>
+      {/* Footer - Full width, overlaps sidebar */}
+      <footer className="fixed bottom-0 left-0 right-0 border-t border-elegant-border bg-card flex-shrink-0 z-40">
+        <div className="w-full px-[5px] py-[5px] text-center">
           <p className="text-sm text-muted-foreground">©2025 Anarkade</p>
         </div>
       </footer>
