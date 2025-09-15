@@ -1071,7 +1071,8 @@ export const RetroImageEditor = () => {
               selectedPalette={selectedPalette}
               selectedResolution={selectedResolution}
               currentZoom={currentZoom / 100}
-              showGrids={showTileGrid || showFrameGrid}
+              showTileGrid={showTileGrid}
+              showFrameGrid={showFrameGrid}
               paletteColors={currentPaletteColors}
               onClose={() => setActiveTab(null)}
             />

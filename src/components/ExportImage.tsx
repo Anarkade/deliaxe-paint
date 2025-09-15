@@ -12,15 +12,19 @@ interface ExportImageProps {
   selectedPalette: string;
   selectedResolution: string;
   currentZoom?: number;
-  showGrids?: boolean;
+  showTileGrid?: boolean;
+  showFrameGrid?: boolean;
   paletteColors?: { r: number; g: number; b: number }[];
   onClose?: () => void;
 }
 
-export const ExportImage = ({ processedImageData, originalImage, selectedPalette, selectedResolution, currentZoom = 1, showGrids = false, paletteColors, onClose }: ExportImageProps) => {
+export const ExportImage = ({ processedImageData, originalImage, selectedPalette, selectedResolution, currentZoom = 1, showTileGrid = false, showFrameGrid = false, paletteColors, onClose }: ExportImageProps) => {
   const { t } = useTranslation();
   const [exportAtCurrentZoom, setExportAtCurrentZoom] = useState(false);
   const [exportWithGrids, setExportWithGrids] = useState(false);
+  
+  // Check if any grids are enabled to determine if export with grids should be enabled
+  const hasAnyGridEnabled = showTileGrid || showFrameGrid;
 
   const createIndexedPNG = useCallback((canvas: HTMLCanvasElement, palette: { r: number; g: number; b: number }[]) => {
     // This is a simplified approach - actual PNG-8 with indexed colors requires more complex implementation
@@ -72,7 +76,7 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
     }
     
     // Add grids if requested
-    if (exportWithGrids && showGrids) {
+    if (exportWithGrids && hasAnyGridEnabled) {
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
       ctx.lineWidth = 1;
       
@@ -109,7 +113,7 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
     link.click();
     
     toast.success(t('imageDownloaded'));
-  }, [processedImageData, originalImage, selectedPalette, selectedResolution, t, exportAtCurrentZoom, exportWithGrids, currentZoom, showGrids, paletteColors, createIndexedPNG]);
+  }, [processedImageData, originalImage, selectedPalette, selectedResolution, t, exportAtCurrentZoom, exportWithGrids, currentZoom, hasAnyGridEnabled, paletteColors, createIndexedPNG]);
 
   const getImageDataURL = useCallback(() => {
     if (!processedImageData && !originalImage) return null;
@@ -295,8 +299,16 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
                 id="export-grids" 
                 checked={exportWithGrids}
                 onCheckedChange={(checked) => setExportWithGrids(checked as boolean)}
+                disabled={!hasAnyGridEnabled}
               />
-              <label htmlFor="export-grids" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+              <label 
+                htmlFor="export-grids" 
+                className={`text-sm font-medium leading-none ${
+                  !hasAnyGridEnabled 
+                    ? 'cursor-not-allowed opacity-50' 
+                    : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                }`}
+              >
                 {t('exportWithGrids')}
               </label>
             </div>
