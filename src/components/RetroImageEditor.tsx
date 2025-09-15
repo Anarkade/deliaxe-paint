@@ -428,6 +428,13 @@ export const RetroImageEditor = () => {
             // Apply the quantized palette to create PNG-8 indexed format
             const indexedImageData = applyQuantizedPalette(unscaledImageData, finalPalette);
             ctx.putImageData(indexedImageData, 0, 0);
+            
+            // Update the palette viewer with the extracted/quantized palette
+            setCurrentPaletteColors(finalPalette.map(color => ({
+              r: color.r,
+              g: color.g,
+              b: color.b
+            })));
           }
         } else {
           switch (scalingMode) {
