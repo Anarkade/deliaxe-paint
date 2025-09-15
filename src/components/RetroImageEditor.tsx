@@ -126,9 +126,6 @@ export const RetroImageEditor = () => {
       return; // Don't allow clicking blocked tabs (including load-image when no image)
     }
     
-    // Scroll to top for all button clicks
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    
     // If image is loaded and user clicks load-image, unload the image
     if (originalImage && tabId === 'load-image') {
       resetEditor();
