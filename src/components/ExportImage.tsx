@@ -142,13 +142,27 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       
+      const scale = exportAtCurrentZoom ? currentZoom : 1;
+      
       if (processedImageData) {
-        canvas.width = processedImageData.width;
-        canvas.height = processedImageData.height;
+        canvas.width = processedImageData.width * scale;
+        canvas.height = processedImageData.height * scale;
+        
+        if (scale !== 1) {
+          ctx.imageSmoothingEnabled = false; // Use nearest neighbor scaling
+          ctx.scale(scale, scale);
+        }
+        
         ctx.putImageData(processedImageData, 0, 0);
       } else if (originalImage) {
-        canvas.width = originalImage.width;
-        canvas.height = originalImage.height;
+        canvas.width = originalImage.width * scale;
+        canvas.height = originalImage.height * scale;
+        
+        if (scale !== 1) {
+          ctx.imageSmoothingEnabled = false; // Use nearest neighbor scaling
+          ctx.scale(scale, scale);
+        }
+        
         ctx.drawImage(originalImage, 0, 0);
       }
       
@@ -188,7 +202,7 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
       console.error('Failed to copy image:', error);
       toast.error('Failed to copy image to clipboard');
     }
-  }, [processedImageData, originalImage, t]);
+  }, [processedImageData, originalImage, t, exportAtCurrentZoom, currentZoom]);
 
   const shareOnTwitter = useCallback(() => {
     const dataURL = getImageDataURL();
