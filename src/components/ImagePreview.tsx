@@ -116,9 +116,10 @@ interface ImagePreviewProps {
   frameWidth?: number;
   frameHeight?: number;
   autoFitKey?: string;
+  onZoomChange?: (zoom: number) => void;
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen, showTileGrid = false, showFrameGrid = false, tileWidth = 8, tileHeight = 8, frameWidth = 16, frameHeight = 16, autoFitKey }: ImagePreviewProps) => {
+export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen, showTileGrid = false, showFrameGrid = false, tileWidth = 8, tileHeight = 8, frameWidth = 16, frameHeight = 16, autoFitKey, onZoomChange }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -304,8 +305,9 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
       programmaticZoomChange.current = true;
       setZoom([newZoom]);
       setSliderValue([newZoom]);
+      onZoomChange?.(newZoom);
     }
-  }, [originalImage, containerWidth, showOriginal, processedImageData]);
+  }, [originalImage, containerWidth, showOriginal, processedImageData, onZoomChange]);
 
   // Handle zoom change with integer scaling
   const handleZoomChange = useCallback((newZoom: number[]) => {
@@ -317,11 +319,13 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
       const applied = Math.max(100, roundedZoom);
       setZoom([applied]);
       setSliderValue([applied]);
+      onZoomChange?.(applied);
     } else {
       setZoom(newZoom);
       setSliderValue(newZoom);
+      onZoomChange?.(newZoom[0]);
     }
-  }, [integerScaling]);
+  }, [integerScaling, onZoomChange]);
 
   // Handle integer scaling toggle
   const handleIntegerScalingChange = useCallback((checked: boolean) => {
@@ -334,8 +338,9 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
       const applied = Math.max(100, roundedZoom);
       setZoom([applied]);
       setSliderValue([applied]);
+      onZoomChange?.(applied);
     }
-  }, [zoom]);
+  }, [zoom, onZoomChange]);
 
   // Enable auto-fit on new image load
   useEffect(() => {

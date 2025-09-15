@@ -41,6 +41,7 @@ export const RetroImageEditor = () => {
   const [isOriginalPNG8Indexed, setIsOriginalPNG8Indexed] = useState(false);
   const [isVerticalLayout, setIsVerticalLayout] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const [currentZoom, setCurrentZoom] = useState(100);
   
   // Grid state
   const [showTileGrid, setShowTileGrid] = useState(false);
@@ -878,6 +879,7 @@ export const RetroImageEditor = () => {
                   frameWidth={frameWidth}
                   frameHeight={frameHeight}
                   autoFitKey={`${selectedResolution}|${scalingMode}`}
+                  onZoomChange={setCurrentZoom}
                 />
 
                 {/* Floating Content Sections */}
@@ -1061,7 +1063,7 @@ export const RetroImageEditor = () => {
             originalImage={originalImage}
             selectedPalette={selectedPalette}
             selectedResolution={selectedResolution}
-            currentZoom={1}
+            currentZoom={currentZoom / 100}
             showGrids={showTileGrid || showFrameGrid}
             paletteColors={currentPaletteColors}
           />
