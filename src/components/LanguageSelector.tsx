@@ -1,16 +1,17 @@
 import { useTranslation, Language } from '@/hooks/useTranslation';
 import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import { Globe } from 'lucide-react';
+import { Globe, X } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 
 interface LanguageSelectorProps {
   hideLabel?: boolean;
+  onClose?: () => void;
 }
 
-export const LanguageSelector = ({ hideLabel = false }: LanguageSelectorProps) => {
+export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelectorProps) => {
   const { currentLanguage, changeLanguage, languages, getLanguageName, t } = useTranslation();
 
   const sortedLanguages = [...languages].sort((a, b) => 
@@ -39,7 +40,17 @@ export const LanguageSelector = ({ hideLabel = false }: LanguageSelectorProps) =
   }
 
   return (
-    <Card className="p-6 bg-card border-elegant-border">
+    <Card className="p-6 bg-card border-elegant-border relative">
+      {onClose && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
       <div className="flex items-center gap-3 mb-4">
         <Globe className="h-6 w-6 text-primary" />
         <h3 className="text-xl font-bold text-primary">

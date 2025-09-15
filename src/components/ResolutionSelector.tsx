@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Monitor, AlignCenter, Maximize } from 'lucide-react';
+import { Monitor, AlignCenter, Maximize, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 // Custom alignment icon component
@@ -69,13 +69,15 @@ interface ResolutionSelectorProps {
   scalingMode: CombinedScalingMode;
   onResolutionChange: (resolution: ResolutionType) => void;
   onScalingModeChange: (mode: CombinedScalingMode) => void;
+  onClose?: () => void;
 }
 
 export const ResolutionSelector = ({
   selectedResolution,
   scalingMode,
   onResolutionChange,
-  onScalingModeChange
+  onScalingModeChange,
+  onClose
 }: ResolutionSelectorProps) => {
   const { t } = useTranslation();
 
@@ -115,7 +117,17 @@ export const ResolutionSelector = ({
   };
 
   return (
-    <Card className="p-6 border-pixel-grid bg-card">
+    <Card className="p-6 border-pixel-grid bg-card relative">
+      {onClose && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
       <div className="space-y-4">
         <div>
           <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>

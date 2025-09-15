@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Download, Cloud, Upload, Share, Copy } from 'lucide-react';
+import { Download, Cloud, Upload, Share, Copy, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ExportImageProps {
@@ -14,9 +14,10 @@ interface ExportImageProps {
   currentZoom?: number;
   showGrids?: boolean;
   paletteColors?: { r: number; g: number; b: number }[];
+  onClose?: () => void;
 }
 
-export const ExportImage = ({ processedImageData, originalImage, selectedPalette, selectedResolution, currentZoom = 1, showGrids = false, paletteColors }: ExportImageProps) => {
+export const ExportImage = ({ processedImageData, originalImage, selectedPalette, selectedResolution, currentZoom = 1, showGrids = false, paletteColors, onClose }: ExportImageProps) => {
   const { t } = useTranslation();
   const [exportAtCurrentZoom, setExportAtCurrentZoom] = useState(false);
   const [exportWithGrids, setExportWithGrids] = useState(false);
@@ -256,7 +257,17 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
   }
 
   return (
-    <Card className="p-6 border-elegant-border bg-card rounded-xl">
+    <Card className="p-6 border-elegant-border bg-card rounded-xl relative">
+      {onClose && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
         <div className="space-y-4">
           <div>
             <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>

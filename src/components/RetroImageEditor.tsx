@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Upload, Palette, Eye, Monitor, Download, Gamepad2, Grid3X3, Globe } from 'lucide-react';
+import { Upload, Palette, Eye, Monitor, Download, Gamepad2, Grid3X3, Globe, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { processMegaDriveImage, extractColorsFromImageData } from '@/lib/colorQuantization';
 import { analyzePNGFile } from '@/lib/pngAnalyzer';
@@ -897,6 +897,7 @@ export const RetroImageEditor = () => {
                           setShowCameraPreview(true);
                           setActiveTab(null);
                         }}
+                        onClose={() => setActiveTab(null)}
                      />
                   </div>
                 )}
@@ -908,7 +909,7 @@ export const RetroImageEditor = () => {
                     onClick={(e) => e.stopPropagation()}
                     data-section="language"
                   >
-                    <LanguageSelector hideLabel={false} />
+                    <LanguageSelector hideLabel={false} onClose={() => setActiveTab(null)} />
                   </div>
                 )}
 
@@ -928,6 +929,7 @@ export const RetroImageEditor = () => {
                           setTimeout(() => processImage(), 50);
                         }
                       }}
+                      onClose={() => setActiveTab(null)}
                     />
                   </div>
                 )}
@@ -944,6 +946,7 @@ export const RetroImageEditor = () => {
                       scalingMode={scalingMode}
                       onResolutionChange={setSelectedResolution}
                       onScalingModeChange={setScalingMode}
+                      onClose={() => setActiveTab(null)}
                     />
                   </div>
                 )}
@@ -955,7 +958,15 @@ export const RetroImageEditor = () => {
                     onClick={(e) => e.stopPropagation()}
                     data-section="change-grids"
                   >
-                    <Card className="bg-elegant-bg border-elegant-border p-6">
+                    <Card className="bg-elegant-bg border-elegant-border p-6 relative">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setActiveTab(null)}
+                        className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                       <div className="space-y-6">
                          <div>
                            <div className="flex items-center gap-3">
@@ -1058,15 +1069,16 @@ export const RetroImageEditor = () => {
                     onClick={(e) => e.stopPropagation()}
                     data-section="export-image"
                   >
-          <ExportImage 
-            processedImageData={processedImageData}
-            originalImage={originalImage}
-            selectedPalette={selectedPalette}
-            selectedResolution={selectedResolution}
-            currentZoom={currentZoom / 100}
-            showGrids={showTileGrid || showFrameGrid}
-            paletteColors={currentPaletteColors}
-          />
+            <ExportImage 
+              processedImageData={processedImageData}
+              originalImage={originalImage}
+              selectedPalette={selectedPalette}
+              selectedResolution={selectedResolution}
+              currentZoom={currentZoom / 100}
+              showGrids={showTileGrid || showFrameGrid}
+              paletteColors={currentPaletteColors}
+              onClose={() => setActiveTab(null)}
+            />
                   </div>
                 )}
               </div>

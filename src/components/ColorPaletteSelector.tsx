@@ -2,7 +2,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Palette, RotateCcw, RotateCw } from 'lucide-react';
+import { Palette, RotateCcw, RotateCw, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export type PaletteType = 
@@ -14,11 +14,13 @@ export type PaletteType =
 interface ColorPaletteSelectorProps {
   selectedPalette: PaletteType;
   onPaletteChange: (palette: PaletteType) => void;
+  onClose?: () => void;
 }
 
 export const ColorPaletteSelector = ({
   selectedPalette,
-  onPaletteChange
+  onPaletteChange,
+  onClose
 }: ColorPaletteSelectorProps) => {
   const { t } = useTranslation();
 
@@ -30,7 +32,17 @@ export const ColorPaletteSelector = ({
   ];
 
   return (
-    <Card className="p-6 border-pixel-grid bg-card">
+    <Card className="p-6 border-pixel-grid bg-card relative">
+      {onClose && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      )}
       <div className="space-y-4">
         <div>
           <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
