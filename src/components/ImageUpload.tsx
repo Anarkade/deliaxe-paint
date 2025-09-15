@@ -19,6 +19,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
   const [cameraError, setCameraError] = useState<string>('');
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -206,19 +207,74 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
     return `Camera ${index + 1}`;
   }, []);
 
+  // Drag and drop handlers
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set drag over to false if we're leaving the drop zone entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        onImageLoad(file);
+      } else {
+        alert('Please drop an image file');
+      }
+    }
+  }, [onImageLoad]);
+
   if (hideSection) {
     return null;
   }
 
   return (
-    <Card className="p-5 border-pixel-grid bg-card">
+    <Card 
+      className={`p-5 border-pixel-grid bg-card transition-colors ${
+        isDragOver ? 'border-primary bg-primary/5' : ''
+      }`}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+    >
       <div className="space-y-5">
+        {/* Drag and drop overlay */}
+        {isDragOver && (
+          <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg flex items-center justify-center z-20">
+            <div className="text-center">
+              <Upload className="h-12 w-12 mx-auto mb-2 text-primary" />
+              <p className="text-lg font-medium text-primary">{t('dragDropText')}</p>
+            </div>
+          </div>
+        )}
+        
         <div>
           <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
             <Upload className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
             {t('loadImage')}
           </h3>
-          <p className="text-sm text-muted-foreground mt-1">{t('loadImageDesc')}</p>
+          <p className="text-sm text-muted-foreground mt-1">{t('dragDropText')}</p>
         </div>
         
         {/* Compact grid layout for primary upload options */}
