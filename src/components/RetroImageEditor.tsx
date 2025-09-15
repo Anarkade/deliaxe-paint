@@ -1065,7 +1065,7 @@ export const RetroImageEditor = () => {
                     onClick={(e) => e.stopPropagation()}
                     data-section="export-image"
                   >
-            <ExportImage 
+            <ExportImage
               processedImageData={processedImageData}
               originalImage={originalImage}
               selectedPalette={selectedPalette}
@@ -1073,6 +1073,12 @@ export const RetroImageEditor = () => {
               currentZoom={currentZoom / 100}
               showTileGrid={showTileGrid}
               showFrameGrid={showFrameGrid}
+              tileWidth={tileWidth}
+              tileHeight={tileHeight}
+              frameWidth={frameWidth}
+              frameHeight={frameHeight}
+              tileGridColor="#808080"
+              frameGridColor="#96629d"
               paletteColors={currentPaletteColors}
               onClose={() => setActiveTab(null)}
             />

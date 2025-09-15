@@ -14,11 +14,33 @@ interface ExportImageProps {
   currentZoom?: number;
   showTileGrid?: boolean;
   showFrameGrid?: boolean;
+  tileWidth?: number;
+  tileHeight?: number;
+  frameWidth?: number;
+  frameHeight?: number;
+  tileGridColor?: string;
+  frameGridColor?: string;
   paletteColors?: { r: number; g: number; b: number }[];
   onClose?: () => void;
 }
 
-export const ExportImage = ({ processedImageData, originalImage, selectedPalette, selectedResolution, currentZoom = 1, showTileGrid = false, showFrameGrid = false, paletteColors, onClose }: ExportImageProps) => {
+export const ExportImage = ({ 
+  processedImageData, 
+  originalImage, 
+  selectedPalette, 
+  selectedResolution, 
+  currentZoom = 1, 
+  showTileGrid = false, 
+  showFrameGrid = false, 
+  tileWidth = 8,
+  tileHeight = 8,
+  frameWidth = 16,
+  frameHeight = 16,
+  tileGridColor = '#808080',
+  frameGridColor = '#96629d',
+  paletteColors, 
+  onClose 
+}: ExportImageProps) => {
   const { t } = useTranslation();
   const [exportAtCurrentZoom, setExportAtCurrentZoom] = useState(false);
   const [exportWithGrids, setExportWithGrids] = useState(false);
@@ -77,21 +99,48 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
     
     // Add grids if requested
     if (exportWithGrids && hasAnyGridEnabled) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-      ctx.lineWidth = 1;
-      
-      // Draw a simple grid (this would need to be more sophisticated based on actual grid settings)
-      for (let x = 0; x < canvas.width; x += 8 * scale) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
+      // Draw tile grid
+      if (showTileGrid) {
+        ctx.strokeStyle = tileGridColor;
+        ctx.lineWidth = 1;
+        
+        // Draw vertical lines
+        for (let x = tileWidth * scale; x < canvas.width; x += tileWidth * scale) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        
+        // Draw horizontal lines
+        for (let y = tileHeight * scale; y < canvas.height; y += tileHeight * scale) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
       }
-      for (let y = 0; y < canvas.height; y += 8 * scale) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
+      
+      // Draw frame grid
+      if (showFrameGrid) {
+        ctx.strokeStyle = frameGridColor;
+        ctx.lineWidth = 3;
+        
+        // Draw vertical lines
+        for (let x = frameWidth * scale; x < canvas.width; x += frameWidth * scale) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, canvas.height);
+          ctx.stroke();
+        }
+        
+        // Draw horizontal lines
+        for (let y = frameHeight * scale; y < canvas.height; y += frameHeight * scale) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(canvas.width, y);
+          ctx.stroke();
+        }
       }
     }
     
@@ -195,6 +244,53 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
         ctx.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight);
       }
       
+      // Add grids if requested
+      if (exportWithGrids && hasAnyGridEnabled) {
+        // Draw tile grid
+        if (showTileGrid) {
+          ctx.strokeStyle = tileGridColor;
+          ctx.lineWidth = 1;
+          
+          // Draw vertical lines
+          for (let x = tileWidth * scale; x < canvas.width; x += tileWidth * scale) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+          }
+          
+          // Draw horizontal lines
+          for (let y = tileHeight * scale; y < canvas.height; y += tileHeight * scale) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+          }
+        }
+        
+        // Draw frame grid
+        if (showFrameGrid) {
+          ctx.strokeStyle = frameGridColor;
+          ctx.lineWidth = 3;
+          
+          // Draw vertical lines
+          for (let x = frameWidth * scale; x < canvas.width; x += frameWidth * scale) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvas.height);
+            ctx.stroke();
+          }
+          
+          // Draw horizontal lines
+          for (let y = frameHeight * scale; y < canvas.height; y += frameHeight * scale) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.stroke();
+          }
+        }
+      }
+      
       // Convert canvas to blob
       canvas.toBlob(async (blob) => {
         if (!blob) return;
@@ -231,7 +327,7 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
       console.error('Failed to copy image:', error);
       toast.error('Failed to copy image to clipboard');
     }
-  }, [processedImageData, originalImage, t, exportAtCurrentZoom, currentZoom]);
+  }, [processedImageData, originalImage, t, exportAtCurrentZoom, currentZoom, exportWithGrids, hasAnyGridEnabled, showTileGrid, showFrameGrid, tileWidth, tileHeight, frameWidth, frameHeight, tileGridColor, frameGridColor]);
 
   const shareOnTwitter = useCallback(() => {
     const dataURL = getImageDataURL();
