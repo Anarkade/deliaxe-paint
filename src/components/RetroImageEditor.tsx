@@ -873,7 +873,7 @@ export const RetroImageEditor = () => {
                 {/* Floating Content Sections */}
                 {activeTab === 'load-image' && (
                   <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl inset-x-[-5px] -top-[5px]"
+                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
                     data-section="load-image"
                   >
                       <LoadImage
@@ -891,7 +891,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'language' && (
                   <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl inset-x-[-5px] -top-[5px]"
+                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
                     onClick={(e) => e.stopPropagation()}
                     data-section="language"
                   >
@@ -901,7 +901,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'palette-selector' && originalImage && (
                   <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl inset-x-[-5px] -top-[5px]"
+                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
                     onClick={(e) => e.stopPropagation()}
                     data-section="palette-selector"
                   >
@@ -921,7 +921,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'resolution' && originalImage && (
                   <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl inset-x-[-5px] -top-[5px]"
+                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
                     onClick={(e) => e.stopPropagation()}
                     data-section="resolution"
                   >
@@ -937,7 +937,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'change-grids' && originalImage && (
                   <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl inset-x-[-5px] -top-[5px]"
+                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
                     onClick={(e) => e.stopPropagation()}
                     data-section="change-grids"
                   >
@@ -1071,7 +1071,7 @@ export const RetroImageEditor = () => {
 
                 {activeTab === 'export-image' && originalImage && (
                   <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl inset-x-[-5px] -top-[5px]"
+                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
                     onClick={(e) => e.stopPropagation()}
                     data-section="export-image"
                   >
