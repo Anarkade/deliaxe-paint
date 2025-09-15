@@ -121,7 +121,29 @@ interface ImagePreviewProps {
   onZoomChange?: (zoom: number) => void;
 }
 
-export const ImagePreview = ({ originalImage, processedImageData, onDownload, onLoadImageClick, originalImageSource, selectedPalette = 'original', onPaletteUpdate, showCameraPreview, onCameraPreviewChange, currentPaletteColors, onSectionOpen, showTileGrid = false, showFrameGrid = false, tileWidth = 8, tileHeight = 8, frameWidth = 16, frameHeight = 16, tileGridColor = '#808080', frameGridColor = '#96629d', autoFitKey, onZoomChange }: ImagePreviewProps) => {
+export const ImagePreview = ({ 
+  originalImage, 
+  processedImageData, 
+  onDownload, 
+  onLoadImageClick, 
+  originalImageSource, 
+  selectedPalette = 'original', 
+  onPaletteUpdate, 
+  showCameraPreview, 
+  onCameraPreviewChange, 
+  currentPaletteColors, 
+  onSectionOpen, 
+  showTileGrid = false, 
+  showFrameGrid = false, 
+  tileWidth = 8, 
+  tileHeight = 8, 
+  frameWidth = 16, 
+  frameHeight = 16, 
+  tileGridColor = '#808080', 
+  frameGridColor = '#96629d', 
+  autoFitKey, 
+  onZoomChange 
+}: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
