@@ -1058,6 +1058,7 @@ export const RetroImageEditor = () => {
                   >
           <ExportImage 
             processedImageData={processedImageData}
+            originalImage={originalImage}
             selectedPalette={selectedPalette}
             selectedResolution={selectedResolution}
             currentZoom={1}

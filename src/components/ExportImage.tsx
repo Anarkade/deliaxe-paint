@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 interface ExportImageProps {
   processedImageData: ImageData | null;
+  originalImage?: HTMLImageElement | null;
   selectedPalette: string;
   selectedResolution: string;
   currentZoom?: number;
@@ -15,7 +16,7 @@ interface ExportImageProps {
   paletteColors?: { r: number; g: number; b: number }[];
 }
 
-export const ExportImage = ({ processedImageData, selectedPalette, selectedResolution, currentZoom = 1, showGrids = false, paletteColors }: ExportImageProps) => {
+export const ExportImage = ({ processedImageData, originalImage, selectedPalette, selectedResolution, currentZoom = 1, showGrids = false, paletteColors }: ExportImageProps) => {
   const { t } = useTranslation();
   const [exportAtCurrentZoom, setExportAtCurrentZoom] = useState(false);
   const [exportWithGrids, setExportWithGrids] = useState(false);
@@ -27,22 +28,35 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
   }, []);
 
   const downloadPNG = useCallback(() => {
-    if (!processedImageData) return;
+    if (!processedImageData && !originalImage) return;
     
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
     const scale = exportAtCurrentZoom ? currentZoom : 1;
-    canvas.width = processedImageData.width * scale;
-    canvas.height = processedImageData.height * scale;
     
-    if (scale !== 1) {
-      ctx.imageSmoothingEnabled = false;
-      ctx.scale(scale, scale);
+    if (processedImageData) {
+      canvas.width = processedImageData.width * scale;
+      canvas.height = processedImageData.height * scale;
+      
+      if (scale !== 1) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.scale(scale, scale);
+      }
+      
+      ctx.putImageData(processedImageData, 0, 0);
+    } else if (originalImage) {
+      canvas.width = originalImage.width * scale;
+      canvas.height = originalImage.height * scale;
+      
+      if (scale !== 1) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.scale(scale, scale);
+      }
+      
+      ctx.drawImage(originalImage, 0, 0);
     }
-    
-    ctx.putImageData(processedImageData, 0, 0);
     
     // Add grids if requested
     if (exportWithGrids && showGrids) {
@@ -82,21 +96,27 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
     link.click();
     
     toast.success(t('imageDownloaded'));
-  }, [processedImageData, selectedPalette, selectedResolution, t, exportAtCurrentZoom, exportWithGrids, currentZoom, showGrids, paletteColors, createIndexedPNG]);
+  }, [processedImageData, originalImage, selectedPalette, selectedResolution, t, exportAtCurrentZoom, exportWithGrids, currentZoom, showGrids, paletteColors, createIndexedPNG]);
 
   const getImageDataURL = useCallback(() => {
-    if (!processedImageData) return null;
+    if (!processedImageData && !originalImage) return null;
     
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
     
-    canvas.width = processedImageData.width;
-    canvas.height = processedImageData.height;
-    ctx.putImageData(processedImageData, 0, 0);
+    if (processedImageData) {
+      canvas.width = processedImageData.width;
+      canvas.height = processedImageData.height;
+      ctx.putImageData(processedImageData, 0, 0);
+    } else if (originalImage) {
+      canvas.width = originalImage.width;
+      canvas.height = originalImage.height;
+      ctx.drawImage(originalImage, 0, 0);
+    }
     
     return canvas.toDataURL('image/png');
-  }, [processedImageData]);
+  }, [processedImageData, originalImage]);
 
   const saveToDropbox = useCallback(() => {
     const dataURL = getImageDataURL();
@@ -115,16 +135,22 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
   }, [getImageDataURL]);
 
   const copyToClipboard = useCallback(async () => {
-    if (!processedImageData) return;
+    if (!processedImageData && !originalImage) return;
     
     try {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       
-      canvas.width = processedImageData.width;
-      canvas.height = processedImageData.height;
-      ctx.putImageData(processedImageData, 0, 0);
+      if (processedImageData) {
+        canvas.width = processedImageData.width;
+        canvas.height = processedImageData.height;
+        ctx.putImageData(processedImageData, 0, 0);
+      } else if (originalImage) {
+        canvas.width = originalImage.width;
+        canvas.height = originalImage.height;
+        ctx.drawImage(originalImage, 0, 0);
+      }
       
       // Convert canvas to blob
       canvas.toBlob(async (blob) => {
@@ -162,7 +188,7 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
       console.error('Failed to copy image:', error);
       toast.error('Failed to copy image to clipboard');
     }
-  }, [processedImageData, t]);
+  }, [processedImageData, originalImage, t]);
 
   const shareOnTwitter = useCallback(() => {
     const dataURL = getImageDataURL();
@@ -181,7 +207,7 @@ export const ExportImage = ({ processedImageData, selectedPalette, selectedResol
   }, [getImageDataURL, selectedPalette, selectedResolution]);
 
 
-  if (!processedImageData) {
+  if (!processedImageData && !originalImage) {
     return (
       <Card className="p-6 border-elegant-border bg-card">
         <div className="text-center text-muted-foreground">
