@@ -38,8 +38,8 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
     const scale = exportAtCurrentZoom ? currentZoom : 1;
     
     if (processedImageData) {
-      const scaledWidth = Math.floor(processedImageData.width * scale);
-      const scaledHeight = Math.floor(processedImageData.height * scale);
+      const scaledWidth = Math.round(processedImageData.width * scale);
+      const scaledHeight = Math.round(processedImageData.height * scale);
       
       canvas.width = scaledWidth;
       canvas.height = scaledHeight;
@@ -61,8 +61,8 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
         ctx.putImageData(processedImageData, 0, 0);
       }
     } else if (originalImage) {
-      const scaledWidth = Math.floor(originalImage.width * scale);
-      const scaledHeight = Math.floor(originalImage.height * scale);
+      const scaledWidth = Math.round(originalImage.width * scale);
+      const scaledHeight = Math.round(originalImage.height * scale);
       
       canvas.width = scaledWidth;
       canvas.height = scaledHeight;
@@ -158,8 +158,8 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
       const scale = exportAtCurrentZoom ? currentZoom : 1;
       
       if (processedImageData) {
-        const scaledWidth = Math.floor(processedImageData.width * scale);
-        const scaledHeight = Math.floor(processedImageData.height * scale);
+        const scaledWidth = Math.round(processedImageData.width * scale);
+        const scaledHeight = Math.round(processedImageData.height * scale);
         
         canvas.width = scaledWidth;
         canvas.height = scaledHeight;
@@ -181,8 +181,8 @@ export const ExportImage = ({ processedImageData, originalImage, selectedPalette
           ctx.putImageData(processedImageData, 0, 0);
         }
       } else if (originalImage) {
-        const scaledWidth = Math.floor(originalImage.width * scale);
-        const scaledHeight = Math.floor(originalImage.height * scale);
+        const scaledWidth = Math.round(originalImage.width * scale);
+        const scaledHeight = Math.round(originalImage.height * scale);
         
         canvas.width = scaledWidth;
         canvas.height = scaledHeight;
