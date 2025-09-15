@@ -18,6 +18,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
   const [showCameraPreview, setShowCameraPreview] = useState(false);
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
+  const [cameraError, setCameraError] = useState<string>('');
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -66,6 +67,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
   }, [getAvailableCameras]);
 
   const startCameraPreview = useCallback(async () => {
+    setCameraError(''); // Clear any previous errors
     try {
       const constraints: MediaStreamConstraints = {
         video: availableCameras.length > 0 ? {
@@ -80,10 +82,22 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
         videoRef.current.play();
         setShowCameraPreview(true);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Camera access denied:', error);
+      let errorMessage = t('cameraError');
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage = t('cameraNotAvailable');
+      } else if (error.name === 'AbortError' || error.message.includes('Timeout')) {
+        errorMessage = t('cameraTimeout');
+      } else if (error.name === 'NotReadableError' || error.message.includes('Could not start')) {
+        errorMessage = t('cameraNotReadable');
+      }
+      
+      setCameraError(errorMessage);
+      setShowCameraPreview(true); // Still show the preview area to display the error
     }
-  }, [availableCameras, currentCameraIndex]);
+  }, [availableCameras, currentCameraIndex, t]);
 
   const stopCameraPreview = useCallback(() => {
     if (streamRef.current) {
@@ -91,6 +105,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
       streamRef.current = null;
     }
     setShowCameraPreview(false);
+    setCameraError(''); // Clear error when closing
   }, []);
 
   const switchCamera = useCallback(async () => {
@@ -98,14 +113,43 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
     
     const nextIndex = (currentCameraIndex + 1) % availableCameras.length;
     setCurrentCameraIndex(nextIndex);
+    setCameraError(''); // Clear error when switching cameras
     
-    if (showCameraPreview) {
-      stopCameraPreview();
-      setTimeout(() => {
-        startCameraPreview();
-      }, 100);
+    if (showCameraPreview && streamRef.current) {
+      // Stop current stream
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+      
+      // Start new camera without hiding the preview
+      try {
+        const constraints: MediaStreamConstraints = {
+          video: {
+            deviceId: availableCameras[nextIndex]?.deviceId
+          }
+        };
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        streamRef.current = stream;
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play();
+        }
+      } catch (error: any) {
+        console.error('Camera switch error:', error);
+        let errorMessage = t('cameraError');
+        
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          errorMessage = t('cameraNotAvailable');
+        } else if (error.name === 'AbortError' || error.message.includes('Timeout')) {
+          errorMessage = t('cameraTimeout');
+        } else if (error.name === 'NotReadableError' || error.message.includes('Could not start')) {
+          errorMessage = t('cameraNotReadable');
+        }
+        
+        setCameraError(errorMessage);
+      }
     }
-  }, [availableCameras, currentCameraIndex, showCameraPreview, stopCameraPreview, startCameraPreview]);
+  }, [availableCameras, currentCameraIndex, showCameraPreview, t]);
 
   const handleCameraCapture = useCallback(async () => {
     if (!videoRef.current || !streamRef.current) {
@@ -231,29 +275,54 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
             </label>
             
             {showCameraPreview && (
-              <div className="relative mb-2 bg-black rounded-md overflow-hidden">
-                <video
-                  ref={videoRef}
-                  className="w-full h-48 object-cover"
-                  autoPlay
-                  muted
-                  playsInline
-                />
-                <div className="absolute top-2 right-2 flex gap-2">
+              <div className="relative mb-2 bg-black rounded-md overflow-hidden w-full">
+                {!cameraError ? (
+                  <video
+                    ref={videoRef}
+                    className="w-full h-auto object-contain aspect-video"
+                    autoPlay
+                    muted
+                    playsInline
+                  />
+                ) : (
+                  <div className="w-full aspect-video bg-black flex items-center justify-center">
+                    <div className="text-center text-white p-4">
+                      <Camera className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm">{cameraError}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Camera controls positioned at bottom center */}
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3">
+                  {!cameraError && (
+                    <Button
+                      onClick={handleCameraCapture}
+                      variant="highlighted"
+                      size="sm"
+                      className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm"
+                    >
+                      <Camera className="h-5 w-5" />
+                    </Button>
+                  )}
+                  
                   {availableCameras.length > 1 && (
                     <Button
                       onClick={switchCamera}
                       variant="highlighted"
                       size="sm"
+                      className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm"
                       title={getCameraDisplayName(availableCameras[currentCameraIndex], currentCameraIndex)}
                     >
                       <RotateCcw className="h-4 w-4" />
                     </Button>
                   )}
+                  
                   <Button
                     onClick={stopCameraPreview}
                     variant="highlighted"
                     size="sm"
+                    className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -271,15 +340,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                   <Eye className="mr-2 h-4 w-4" />
                   {t('preview')}
                 </Button>
-              ) : (
-                <Button 
-                  onClick={handleCameraCapture}
-                  variant="highlighted"
-                  className="flex-1"
-                >
-                  <Camera className="h-5 w-5" />
-                </Button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
