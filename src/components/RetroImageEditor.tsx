@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { Upload, Palette, Eye, Monitor, Download, Gamepad2, Grid3X3, Globe, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { processMegaDriveImage, extractColorsFromImageData } from '@/lib/colorQuantization';
+import { processMegaDriveImage, extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette } from '@/lib/colorQuantization';
 import { analyzePNGFile } from '@/lib/pngAnalyzer';
 
 interface HistoryState {
@@ -414,6 +414,20 @@ export const RetroImageEditor = () => {
             }
             
             ctx.putImageData(targetData, 0, 0);
+            
+            // Convert to PNG-8 indexed format after unscaling
+            const unscaledImageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+            const colors = extractColorsFromImageData(unscaledImageData);
+            
+            // If more than 256 colors, quantize to 256 most common
+            let finalPalette = colors;
+            if (colors.length > 256) {
+              finalPalette = medianCutQuantization(colors, 256);
+            }
+            
+            // Apply the quantized palette to create PNG-8 indexed format
+            const indexedImageData = applyQuantizedPalette(unscaledImageData, finalPalette);
+            ctx.putImageData(indexedImageData, 0, 0);
           }
         } else {
           switch (scalingMode) {
