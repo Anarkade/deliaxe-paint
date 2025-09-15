@@ -734,12 +734,20 @@ export const ImagePreview = ({ originalImage, processedImageData, onDownload, on
                 <span className="text-muted-foreground">{t('originalLabel')}</span>
                 <span className="text-foreground font-semibold">{originalImage.width}×{originalImage.height}</span>
                 <span className="text-muted-foreground text-xs">{originalFormat}</span>
+                {!processedImageData && (
+                  <span className="text-muted-foreground text-xs">
+                    ({Math.round(originalImage.width * (zoom[0] / 100))}×{Math.round(originalImage.height * (zoom[0] / 100))} {t('zoomedResolution')})
+                  </span>
+                )}
               </div>
               {processedImageData && (
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">{t('processedLabel')}</span>
                   <span className="text-foreground font-semibold">{processedImageData.width}×{processedImageData.height}</span>
                   <span className="text-muted-foreground text-xs">{processedFormat}</span>
+                  <span className="text-muted-foreground text-xs">
+                    ({Math.round(processedImageData.width * (zoom[0] / 100))}×{Math.round(processedImageData.height * (zoom[0] / 100))} {t('zoomedResolution')})
+                  </span>
                 </div>
               )}
             </div>

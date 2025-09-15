@@ -202,6 +202,9 @@ interface Translation {
   changeGridsDescription: string;
   exportImageDescription: string;
 
+  // Zoomed resolution text
+  zoomedResolution: string;
+
   // Language names
   languageNames: Record<Language, string>;
 }
@@ -359,6 +362,7 @@ const baseTranslation: Translation = {
   changeResolutionDescription: 'Choose target resolution and scaling mode',
   changeGridsDescription: 'Configure tile and frame grid overlays',
   exportImageDescription: 'Download or share your processed image',
+  zoomedResolution: 'zoomed',
   languageNames: {
     'en': 'English',
     'es-ES': 'Español (España)',
@@ -427,6 +431,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Ajusta las dimensiones de la imagen y el escalado para sistemas retro',
     changeGridsDesc: 'Añade cuadrículas visuales y superposiciones a tu imagen',
     exportImageDesc: 'Guarda tu imagen con estilo retro con configuraciones personalizadas',
+    zoomedResolution: 'con zoom',
     colorsPalette: 'paleta de colores',
     paletteWithCount: 'Paleta de {count} colores',
     processImageFirst: 'Procesa una imagen primero para habilitar las opciones de exportación',
@@ -648,6 +653,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDescription: 'Elegí la resolución objetivo y el modo de escalado',
     changeGridsDescription: 'Configurá las cuadrículas de mosaicos y marcos',
     exportImageDescription: 'Descargá o compartí tu imagen procesada',
+    zoomedResolution: 'con zoom',
     languageNames: {
       'en': 'English (Inglés)',
       'es-ES': 'Español (España)',
@@ -775,6 +781,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDescription: 'Tria la resolució objectiu i el mode d\'escalat',
     changeGridsDescription: 'Configura les graelles de mosaic i marcs',
     exportImageDescription: 'Descarrega o comparteix la teva imatge processada',
+    zoomedResolution: 'amb zoom',
     languageNames: {
       'en': 'English (Anglès)',
       'es-ES': 'Español (Castellà)',
@@ -823,6 +830,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Ajustez les dimensions de l\'image et la mise à l\'échelle pour les systèmes rétro',
     changeGridsDesc: 'Ajoutez des grilles visuelles et des superpositions à votre image',
     exportImageDesc: 'Sauvegardez votre image au style rétro avec des paramètres personnalisés',
+    zoomedResolution: 'zoomé',
   },
   'de': { 
     ...baseTranslation,
@@ -852,6 +860,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Passen Sie Bildabmessungen und Skalierung für Retro-Systeme an',
     changeGridsDesc: 'Fügen Sie visuelle Raster und Überlagerungen zu Ihrem Bild hinzu',
     exportImageDesc: 'Speichern Sie Ihr Retro-Bild mit benutzerdefinierten Einstellungen',
+    zoomedResolution: 'gezoomt',
   },
   'it': { 
     ...baseTranslation,
@@ -881,6 +890,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Regola le dimensioni dell\'immagine e il ridimensionamento per sistemi retro',
     changeGridsDesc: 'Aggiungi griglie visive e sovrapposizioni alla tua immagine',
     exportImageDesc: 'Salva la tua immagine in stile retro con impostazioni personalizzate',
+    zoomedResolution: 'zoomato',
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -910,6 +920,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Ajuste as dimensões da imagem e o dimensionamento para sistemas retro',
     changeGridsDesc: 'Adicione grelhas visuais e sobreposições à sua imagem',
     exportImageDesc: 'Guarde a sua imagem no estilo retro com definições personalizadas',
+    zoomedResolution: 'com zoom',
   },
   'pt-BR': { 
     ...baseTranslation,
@@ -939,6 +950,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Ajuste as dimensões da imagem e o dimensionamento para sistemas retro',
     changeGridsDesc: 'Adicione grades visuais e sobreposições à sua imagem',
     exportImageDesc: 'Salve sua imagem no estilo retro com configurações personalizadas',
+    zoomedResolution: 'com zoom',
   },
   'ru': { 
     ...baseTranslation,
@@ -968,6 +980,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Настройте размеры изображения и масштабирование для ретро-систем',
     changeGridsDesc: 'Добавьте визуальные сетки и наложения к вашему изображению',
     exportImageDesc: 'Сохраните ваше изображение в ретро-стиле с пользовательскими настройками',
+    zoomedResolution: 'с масштабом',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -997,6 +1010,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: '调整图片尺寸和复古系统缩放',
     changeGridsDesc: '为你的图片添加视觉网格和叠加层',
     exportImageDesc: '用自定义设置保存你的复古风格图片',
+    zoomedResolution: '缩放',
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -1026,6 +1040,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: '調整圖片尺寸和復古系統縮放',
     changeGridsDesc: '為你的圖片添加視覺網格和疊加層',
     exportImageDesc: '用自訂設定儲存你的復古風格圖片',
+    zoomedResolution: '縮放',
   },
   'ja': { 
     ...baseTranslation,
@@ -1055,6 +1070,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'レトロシステム用に画像の寸法とスケーリングを調整',
     changeGridsDesc: 'ビジュアルグリッドとオーバーレイを画像に追加',
     exportImageDesc: 'カスタム設定でレトロスタイルの画像を保存',
+    zoomedResolution: 'ズーム',
   },
   'pl': { 
     ...baseTranslation,
@@ -1083,6 +1099,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDescription: 'Wybierz docelową rozdzielczość i tryb skalowania',
     changeGridsDescription: 'Skonfiguruj siatki kafli i ramek',
     exportImageDescription: 'Pobierz lub udostępnij przetworzony obraz',
+    zoomedResolution: 'powiększony',
   },
   'tr': { 
     ...baseTranslation,
@@ -1111,6 +1128,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDescription: 'Hedef çözünürlük ve ölçekleme modu seçin',
     changeGridsDescription: 'Karo ve çerçeve ızgaralarını yapılandırın',
     exportImageDescription: 'İşlenmiş resminizi indirin veya paylaşın',
+    zoomedResolution: 'yakınlaştırılmış',
   },
   'eu': { 
     ...baseTranslation,
@@ -1139,6 +1157,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDescription: 'Helburu bereizmena eta eskalatzeko modua aukeratu',
     changeGridsDescription: 'Baldosa eta marko sareak konfiguratu',
     exportImageDescription: 'Zure prozesatutako irudia deskargatu edo partekatu',
+    zoomedResolution: 'zoom-arekin',
   },
   'oc': { 
     ...baseTranslation,
@@ -1167,6 +1186,7 @@ const translations: Record<Language, Translation> = {
     changeResolutionDescription: 'Causir la resolucion objectiu e lo mòde d\'escalada',
     changeGridsDescription: 'Configurar las grasilhas de teulas e quadres',
     exportImageDescription: 'Telecargar o partejar vòstre imatge tractat',
+    zoomedResolution: 'amb zoom',
   },
 };
 
