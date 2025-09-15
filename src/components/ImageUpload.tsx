@@ -241,7 +241,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
             </div>
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-2 border-l border-elegant-border pl-3">
             <label className="block text-xs font-medium text-foreground">
               <Clipboard className="inline mr-1 h-3 w-3" />
               {t('loadFromClipboard')}
@@ -259,17 +259,19 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
         </div>
 
         {/* URL input - full width */}
-        <div className="space-y-2">
-          <label className="block text-xs font-medium text-foreground">
-            <Link className="inline mr-1 h-3 w-3" />
-            {t('fromUrl')}
-          </label>
-          <Input
-            type="url"
-            placeholder="https://..."
-            onChange={handleUrlUpload}
-            className="bg-console-bg border-pixel-grid h-9 text-sm"
-          />
+        <div className="border-t border-elegant-border pt-4">
+          <div className="space-y-2">
+            <label className="block text-xs font-medium text-foreground">
+              <Link className="inline mr-1 h-3 w-3" />
+              {t('fromUrl')}
+            </label>
+            <Input
+              type="url"
+              placeholder="https://..."
+              onChange={handleUrlUpload}
+              className="bg-console-bg border-pixel-grid h-9 text-sm"
+            />
+          </div>
         </div>
           
         {/* Camera section - separated with more space */}
