@@ -221,17 +221,47 @@ export const ImagePreview = ({
     }
   }, [selectedCameraId]);
 
-  // Compute camera preview height to fit viewport
+  // Compute camera preview height to fit available space properly
   useEffect(() => {
     const compute = () => {
-      // Reserve space for header/controls (approximate)
-      const reserved = 260;
-      setCameraPreviewHeight(Math.max(200, window.innerHeight - reserved));
+      if (videoRef.current && videoRef.current.videoHeight > 0) {
+        // Get actual video dimensions
+        const videoWidth = videoRef.current.videoWidth;
+        const videoHeight = videoRef.current.videoHeight;
+        const aspectRatio = videoHeight / videoWidth;
+        
+        // Calculate height based on container width and aspect ratio
+        const height = containerWidth * aspectRatio;
+        setCameraPreviewHeight(Math.max(200, height));
+      } else {
+        // Fallback: use viewport-based calculation
+        const reserved = 300; // More space for UI elements
+        const viewportHeight = window.innerHeight - reserved;
+        const calculatedHeight = Math.min(viewportHeight, containerWidth * 0.75); // 4:3 aspect ratio fallback
+        setCameraPreviewHeight(Math.max(200, calculatedHeight));
+      }
     };
+    
+    // Initial computation
     compute();
+    
+    // Listen for video metadata loaded
+    const video = videoRef.current;
+    if (video) {
+      video.addEventListener('loadedmetadata', compute);
+      video.addEventListener('resize', compute);
+    }
+    
     window.addEventListener('resize', compute);
-    return () => window.removeEventListener('resize', compute);
-  }, []);
+    
+    return () => {
+      window.removeEventListener('resize', compute);
+      if (video) {
+        video.removeEventListener('loadedmetadata', compute);
+        video.removeEventListener('resize', compute);
+      }
+    };
+  }, [containerWidth]);
 
   // Stop camera preview
   const stopCameraPreview = useCallback(() => {
