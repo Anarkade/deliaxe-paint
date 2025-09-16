@@ -46,10 +46,10 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
           return;
         }
       }
-      alert('No image found in clipboard');
+      alert(t('noImageFoundInClipboard'));
     } catch (error) {
       console.error('Failed to read clipboard:', error);
-      alert('Failed to read clipboard. Please make sure you have an image copied.');
+      alert(t('failedToReadClipboard'));
     }
   }, [onImageLoad]);
 
@@ -239,7 +239,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
       if (file.type.startsWith('image/')) {
         onImageLoad(file);
       } else {
-        alert('Please drop an image file');
+        alert(t('pleaseDropImageFile'));
       }
     }
   }, [onImageLoad]);

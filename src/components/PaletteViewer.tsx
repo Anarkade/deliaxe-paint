@@ -373,7 +373,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                           opacity: color.transparent ? 0.5 : 1
                         }}
                         onClick={() => selectNewColor(index, selectedPalette)}
-                        title="Click to change color"
+                        title={t('clickToChangeColor')}
                       >
                         {color.transparent && (
                           <div className="absolute inset-0 flex items-center justify-center">

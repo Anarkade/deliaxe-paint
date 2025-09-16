@@ -189,7 +189,7 @@ export const ExportImage = ({
     if (!dataURL) return;
     
     // Dropbox integration would require Dropbox API
-    toast.info('Dropbox integration coming soon!');
+    toast.info(t('dropboxComingSoon'));
   }, [getImageDataURL]);
 
   const saveToGoogleDrive = useCallback(() => {
@@ -197,7 +197,7 @@ export const ExportImage = ({
     if (!dataURL) return;
     
     // Google Drive integration would require Google Drive API
-    toast.info('Google Drive integration coming soon!');
+    toast.info(t('googleDriveComingSoon'));
   }, [getImageDataURL]);
 
   const copyToClipboard = useCallback(async () => {
@@ -320,12 +320,12 @@ export const ExportImage = ({
           }
         } catch (error) {
           console.error('Failed to copy image:', error);
-          toast.error('Failed to copy image to clipboard');
+          toast.error(t('copyImageError'));
         }
       }, 'image/png');
     } catch (error) {
       console.error('Failed to copy image:', error);
-      toast.error('Failed to copy image to clipboard');
+      toast.error(t('copyImageError'));
     }
   }, [processedImageData, originalImage, t, exportAtCurrentZoom, currentZoom, exportWithGrids, hasAnyGridEnabled, showTileGrid, showFrameGrid, tileWidth, tileHeight, frameWidth, frameHeight, tileGridColor, frameGridColor]);
 

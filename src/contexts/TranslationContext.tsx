@@ -210,6 +210,16 @@ interface Translation {
 
   // Language names
   languageNames: Record<Language, string>;
+  
+  // Missing alert/error messages
+  noImageFoundInClipboard: string;
+  failedToReadClipboard: string;
+  pleaseDropImageFile: string;
+  clipboardError: string;
+  copyImageError: string;
+  clickToChangeColor: string;
+  dropboxComingSoon: string;
+  googleDriveComingSoon: string;
 }
 
 const alignmentTranslations = {
@@ -390,7 +400,17 @@ const baseTranslation: Translation = {
     'th': 'ไทย',
     'ko': '한국어',
     'cs': 'Čeština'
-  }
+  },
+  
+  // Missing alert/error messages
+  noImageFoundInClipboard: 'No image found in clipboard',
+  failedToReadClipboard: 'Failed to read clipboard. Please make sure you have an image copied.',
+  pleaseDropImageFile: 'Please drop an image file',
+  clipboardError: 'Failed to copy image to clipboard',
+  copyImageError: 'Failed to copy image to clipboard',
+  clickToChangeColor: 'Click to change color',
+  dropboxComingSoon: 'Dropbox integration coming soon!',
+  googleDriveComingSoon: 'Google Drive integration coming soon!'
 };
 
 const translations: Record<Language, Translation> = {
@@ -567,7 +587,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย',
       'ko': '한국어',
       'cs': 'Čeština'
-    }
+    },
+    
+    // Spanish translations for new keys
+    noImageFoundInClipboard: 'No se encontró imagen en el portapapeles',
+    failedToReadClipboard: 'Error al leer el portapapeles. Asegúrate de tener una imagen copiada.',
+    pleaseDropImageFile: 'Por favor, suelta un archivo de imagen',
+    clipboardError: 'Error al copiar imagen al portapapeles',
+    copyImageError: 'Error al copiar imagen al portapapeles',
+    clickToChangeColor: 'Haz clic para cambiar color',
+    dropboxComingSoon: '¡Integración con Dropbox próximamente!',
+    googleDriveComingSoon: '¡Integración con Google Drive próximamente!'
   },
   'th': {
     ...baseTranslation,
@@ -740,7 +770,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย',
       'ko': 'เกาหลี (한국어)',
       'cs': 'เช็ก (Čeština)'
-    }
+    },
+    
+    // Thai translations for new keys
+    noImageFoundInClipboard: 'ไม่พบภาพในคลิปบอร์ด',
+    failedToReadClipboard: 'อ่านคลิปบอร์ดไม่สำเร็จ กรุณาตรวจสอบว่าได้คัดลอกภาพแล้ว',
+    pleaseDropImageFile: 'กรุณาวางไฟล์ภาพ',
+    clipboardError: 'คัดลอกภาพไปยังคลิปบอร์ดไม่สำเร็จ',
+    copyImageError: 'คัดลอกภาพไปยังคลิปบอร์ดไม่สำเร็จ',
+    clickToChangeColor: 'คลิกเพื่อเปลี่ยนสี',
+    dropboxComingSoon: 'การผสานรวม Dropbox เร็วๆ นี้!',
+    googleDriveComingSoon: 'การผสานรวม Google Drive เร็วๆ นี้!'
   },
   'ko': {
     ...baseTranslation,
@@ -913,7 +953,17 @@ const translations: Record<Language, Translation> = {
       'th': '태국어 (ไทย)',
       'ko': '한국어',
       'cs': '체코어 (Čeština)'
-    }
+    },
+    
+    // Korean translations for new keys
+    noImageFoundInClipboard: '클립보드에서 이미지를 찾을 수 없습니다',
+    failedToReadClipboard: '클립보드 읽기에 실패했습니다. 이미지가 복사되었는지 확인하세요.',
+    pleaseDropImageFile: '이미지 파일을 드롭해주세요',
+    clipboardError: '클립보드에 이미지 복사 실패',
+    copyImageError: '클립보드에 이미지 복사 실패',
+    clickToChangeColor: '클릭하여 색상 변경',
+    dropboxComingSoon: 'Dropbox 통합 곧 출시!',
+    googleDriveComingSoon: 'Google Drive 통합 곧 출시!'
   },
   'cs': {
     ...baseTranslation,
@@ -1086,7 +1136,17 @@ const translations: Record<Language, Translation> = {
       'th': 'Thajština (ไทย)',
       'ko': 'Korejština (한국어)',
       'cs': 'Čeština'
-    }
+    },
+    
+    // Czech translations for new keys
+    noImageFoundInClipboard: 'V schránce nebyl nalezen žádný obrázek',
+    failedToReadClipboard: 'Chyba při čtení schránky. Ujistěte se, že máte zkopírovaný obrázek.',
+    pleaseDropImageFile: 'Prosím přetáhněte soubor s obrázkem',
+    clipboardError: 'Chyba při kopírování obrázku do schránky',
+    copyImageError: 'Chyba při kopírování obrázku do schránky',
+    clickToChangeColor: 'Klikněte pro změnu barvy',
+    dropboxComingSoon: 'Integrace s Dropbox již brzy!',
+    googleDriveComingSoon: 'Integrace s Google Drive již brzy!'
   },
   'es-LA': { 
     ...baseTranslation,
@@ -1196,6 +1256,7 @@ const translations: Record<Language, Translation> = {
     zxSpectrum: 'ZX Spectrum (16 colors)',
     undo: 'Desfer',
     redo: 'Refer',
+    consolePlatform: 'Consola/Plataforma',
     paletteColors: 'Colors de la Paleta',
     colorPalette: 'Paleta de colors',
     extractColors: 'Extreure Colors',
@@ -1207,12 +1268,111 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Ajusta les dimensions de la imatge i l\'escalat per sistemes retro',
     changeGridsDesc: 'Afegeix graelles visuals i superposicions a la teva imatge',
     exportImageDesc: 'Desa la teva imatge amb estil retro amb configuracions personalitzades',
-    zoomedResolution: 'amb zoom',
     colorsPalette: 'paleta de colors',
     paletteWithCount: 'Paleta de {count} colors',
     processImageFirst: 'Processa una imatge primer per habilitar les opcions d\'exportació',
+    scalingMode: 'Mode d\'Escalat',
+    stretch: 'Estirar',
+    center: 'Centrar',
+    fit: 'Ajustar',
+    dontScale: 'No escalar',
+    downloadPng: 'Descarregar PNG',
+    copyToClipboard: 'Copiar al portapapers',
+    imageCopiedToClipboard: 'Imatge copiada al portapapers!',
+    shareOnTwitter: 'Compartir a Twitter',
     language: 'Idioma',
     changeLanguage: 'Canviar Idioma',
+    original: 'Original',
+    processed: 'Processada',
+    fitToWidth: 'Ajustar a l\'amplada',
+    noImageLoaded: 'Cap imatge carregada',
+    zoom: 'Zoom',
+    tileGrid: 'Graella de rajoles',
+    framesGrid: 'Graella de marcs',
+    tileSize: 'Mida de rajola',
+    frameSize: 'Mida de marc',
+    tileWidth: 'Amplada',
+    tileHeight: 'Alçada',
+    tileGridColor: 'Color graella de rajoles',
+    frameWidth: 'Amplada',
+    frameHeight: 'Alçada',
+    frameGridColor: 'Color graella de marcs',
+    originalIndexedPng: 'Original:',
+    integerScaling: 'Escalat enter',
+    width: 'Amplada',
+    height: 'Alçada',
+    resolution: 'Resolució',
+    targetResolution: 'Resolució Objectiu',
+    originalSize: 'Original',
+    keepOriginalSize: 'Mantenir mida original',
+    unscaledSize: 'Resolució sense escalar',
+    removeScaling: 'Eliminar escalat del pixel art',
+    gameBoyRes: 'Game Boy',
+    amstradCpc0: 'Amstrad CPC mode 0',
+    megaDriveNtscH32: 'Mega Drive NTSC H32, SNES, NES',
+    megaDrivePalH32: 'Mega Drive PAL H32, NES',
+    neoGeoCd: 'Neo Geo CD',
+    amstradCpc1: 'Amstrad CPC mode 1',
+    megaDriveNtscH40: 'Mega Drive NTSC H40, Neo Geo',
+    megaDrivePalH40: 'Mega Drive PAL H40',
+    amstradCpc2: 'Amstrad CPC mode 2',
+    stretchToFit: 'Estirar per ajustar',
+    centerWithBars: 'Centrar amb barres negres',
+    scaleToFit: 'Escalar per ajustar',
+    imageLoaded: 'Imatge carregada amb èxit!',
+    imageLoadError: 'Error en carregar la imatge',
+    imageDownloaded: 'Imatge descarregada!',
+    imageTooLarge: 'Imatge massa gran! La mida màxima és 2048x2048px',
+    exportSuccess: 'Exportació completada amb èxit!',
+    loadImageToStart: 'Carrega una imatge per començar a editar',
+    originalLabel: 'Original:',
+    processedLabel: 'Processada:',
+    canvasNotSupported: 'Canvas no suportat',
+    targetResolutionTooLarge: 'Resolució objectiu massa gran! El màxim és 4096px',
+    imageTooLargeToProcess: 'Imatge massa gran per processar. Prova amb una imatge o resolució més petita.',
+    errorProcessingImage: 'Error en processar la imatge',
+    chooseFile: 'Triar Fitxer',
+    noFileChosen: 'Cap fitxer triat',
+    pageNotFound: '404',
+    oopsPageNotFound: 'Vaja! Pàgina no trobada',
+    returnToHome: 'Tornar a l\'Inici',
+    unlimitedColors: 'Il·limitat',
+    gameBoyColors: '4 colors (verd)',
+    megaDrive16: 'Mega Drive (16 colors)',
+    megaDrive16Colors: '16 colors (RGB 3-3-3)',
+    megaDriveMultiColors: '64 colors (4×16)',
+    megaDriveSingleColors: '16 colors (9-bit)',
+    neoGeoMultiColors: '4096 colors (16×256)',
+    neoGeoSingleColors: '16 colors (15-bit)',
+    zxSpectrumColors: '16 colors (4-bit)',
+    alignment: 'Alineació',
+    alignTopLeft: 'Dalt Esquerra',
+    alignTopCenter: 'Dalt Centre',
+    alignTopRight: 'Dalt Dreta',
+    alignMiddleLeft: 'Mig Esquerra',
+    alignMiddleCenter: 'Mig Centre',
+    alignMiddleRight: 'Mig Dreta',
+    alignBottomLeft: 'Baix Esquerra',
+    alignBottomCenter: 'Baix Centre',
+    alignBottomRight: 'Baix Dreta',
+    showTileGrid: 'Mostrar graella de rajoles',
+    showFrameGrid: 'Mostrar graella de marcs',
+    loadFromClipboard: 'Carregar des del portapapers',
+    changeCamera: 'Canviar càmera',
+    cameraError: 'Error de Càmera',
+    cameraNotAvailable: 'Càmera no disponible o accés denegat',
+    cameraTimeout: 'Temps d\'espera de càmera esgotat - torna-ho a provar',
+    cameraNotReadable: 'No s\'ha pogut iniciar la càmera - comprova els permisos',
+    exportAtCurrentZoom: 'Exportar amb zoom actual',
+    exportAtOriginalSize: 'Exportar a mida original',
+    exportWithGrids: 'Exportar amb graelles',
+    exportWithoutGrids: 'Exportar sense graelles',
+    loadImageDescription: 'Puja, captura o enganxa una imatge per començar a editar',
+    changePaletteDescription: 'Selecciona una paleta de colors de consola retro per aplicar',
+    changeResolutionDescription: 'Tria la resolució objectiu i el mode d\'escalat',
+    changeGridsDescription: 'Configura les graelles de rajoles i marcs',
+    exportImageDescription: 'Descarrega o comparteix la teva imatge processada',
+    zoomedResolution: 'amb zoom',
     languageNames: {
       'en': 'English (Anglès)',
       'es-ES': 'Español (Castellà)',
@@ -1234,7 +1394,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Tailandès)',
       'ko': '한국어 (Coreà)',
       'cs': 'Čeština (Txec)'
-    }
+    },
+    
+    // Catalan translations for new keys
+    noImageFoundInClipboard: 'No s\'ha trobat cap imatge al portapapers',
+    failedToReadClipboard: 'Error en llegir el portapapers. Assegura\'t de tenir una imatge copiada.',
+    pleaseDropImageFile: 'Si us plau, deixa anar un fitxer d\'imatge',
+    clipboardError: 'Error en copiar imatge al portapapers',
+    copyImageError: 'Error en copiar imatge al portapapers',
+    clickToChangeColor: 'Fes clic per canviar color',
+    dropboxComingSoon: 'Integració amb Dropbox properament!',
+    googleDriveComingSoon: 'Integració amb Google Drive properament!'
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -1308,7 +1478,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (泰语)',
       'ko': '한국어 (韩语)',
       'cs': 'Čeština (捷克语)'
-    }
+    },
+    
+    // Chinese Simplified translations for new keys
+    noImageFoundInClipboard: '剪贴板中未找到图片',
+    failedToReadClipboard: '读取剪贴板失败。请确保已复制图片。',
+    pleaseDropImageFile: '请拖放图片文件',
+    clipboardError: '复制图片到剪贴板失败',
+    copyImageError: '复制图片到剪贴板失败',
+    clickToChangeColor: '点击更改颜色',
+    dropboxComingSoon: 'Dropbox集成即将推出！',
+    googleDriveComingSoon: 'Google Drive集成即将推出！'
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -1382,7 +1562,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (泰語)',
       'ko': '한국어 (韓語)',
       'cs': 'Čeština (捷克語)'
-    }
+    },
+    
+    // Chinese Traditional translations for new keys
+    noImageFoundInClipboard: '剪貼簿中未找到圖片',
+    failedToReadClipboard: '讀取剪貼簿失敗。請確保已複製圖片。',
+    pleaseDropImageFile: '請拖放圖片檔案',
+    clipboardError: '複製圖片到剪貼簿失敗',
+    copyImageError: '複製圖片到剪貼簿失敗',
+    clickToChangeColor: '點擊更改顏色',
+    dropboxComingSoon: 'Dropbox整合即將推出！',
+    googleDriveComingSoon: 'Google Drive整合即將推出！'
   },
   'ja': { 
     ...baseTranslation,
@@ -1456,7 +1646,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (タイ語)',
       'ko': '한국어 (韓国語)',
       'cs': 'Čeština (チェコ語)'
-    }
+    },
+    
+    // Japanese translations for new keys
+    noImageFoundInClipboard: 'クリップボードに画像が見つかりません',
+    failedToReadClipboard: 'クリップボードの読み取りに失敗しました。画像がコピーされていることを確認してください。',
+    pleaseDropImageFile: '画像ファイルをドロップしてください',
+    clipboardError: 'クリップボードへの画像コピーに失敗',
+    copyImageError: 'クリップボードへの画像コピーに失敗',
+    clickToChangeColor: 'クリックして色を変更',
+    dropboxComingSoon: 'Dropbox統合近日公開！',
+    googleDriveComingSoon: 'Google Drive統合近日公開！'
   },
   'it': { 
     ...baseTranslation,
@@ -1530,7 +1730,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Tailandese)',
       'ko': '한국어 (Coreano)',
       'cs': 'Čeština (Ceco)'
-    }
+    },
+    
+    // Italian translations for new keys
+    noImageFoundInClipboard: 'Nessuna immagine trovata negli appunti',
+    failedToReadClipboard: 'Lettura appunti fallita. Assicurati di aver copiato un\'immagine.',
+    pleaseDropImageFile: 'Per favore rilascia un file immagine',
+    clipboardError: 'Errore nel copiare l\'immagine negli appunti',
+    copyImageError: 'Errore nel copiare l\'immagine negli appunti',
+    clickToChangeColor: 'Clicca per cambiare colore',
+    dropboxComingSoon: 'Integrazione Dropbox in arrivo!',
+    googleDriveComingSoon: 'Integrazione Google Drive in arrivo!'
   },
   'de': { 
     ...baseTranslation,
@@ -1604,7 +1814,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Thailändisch)',
       'ko': '한국어 (Koreanisch)',
       'cs': 'Čeština (Tschechisch)'
-    }
+    },
+    
+    // German translations for new keys
+    noImageFoundInClipboard: 'Kein Bild in der Zwischenablage gefunden',
+    failedToReadClipboard: 'Fehler beim Lesen der Zwischenablage. Stellen Sie sicher, dass ein Bild kopiert wurde.',
+    pleaseDropImageFile: 'Bitte eine Bilddatei ablegen',
+    clipboardError: 'Fehler beim Kopieren des Bildes in die Zwischenablage',
+    copyImageError: 'Fehler beim Kopieren des Bildes in die Zwischenablage',
+    clickToChangeColor: 'Klicken zum Ändern der Farbe',
+    dropboxComingSoon: 'Dropbox-Integration bald verfügbar!',
+    googleDriveComingSoon: 'Google Drive-Integration bald verfügbar!'
   },
   'fr': { 
     ...baseTranslation,
@@ -1678,7 +1898,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Thaï)',
       'ko': '한국어 (Coréen)',
       'cs': 'Čeština (Tchèque)'
-    }
+    },
+    
+    // French translations for new keys
+    noImageFoundInClipboard: 'Aucune image trouvée dans le presse-papiers',
+    failedToReadClipboard: 'Échec de lecture du presse-papiers. Assurez-vous d\'avoir copié une image.',
+    pleaseDropImageFile: 'Veuillez déposer un fichier image',
+    clipboardError: 'Erreur de copie de l\'image dans le presse-papiers',
+    copyImageError: 'Erreur de copie de l\'image dans le presse-papiers',
+    clickToChangeColor: 'Cliquez pour changer la couleur',
+    dropboxComingSoon: 'Intégration Dropbox bientôt disponible !',
+    googleDriveComingSoon: 'Intégration Google Drive bientôt disponible !'
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -1703,7 +1933,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Tailandês)',
       'ko': '한국어 (Coreano)',
       'cs': 'Čeština (Checo)'
-    }
+    },
+    
+    // Portuguese (Portugal) translations for new keys
+    noImageFoundInClipboard: 'Nenhuma imagem encontrada na área de transferência',
+    failedToReadClipboard: 'Falha ao ler a área de transferência. Certifique-se de ter copiado uma imagem.',
+    pleaseDropImageFile: 'Por favor, solte um ficheiro de imagem',
+    clipboardError: 'Erro ao copiar imagem para a área de transferência',
+    copyImageError: 'Erro ao copiar imagem para a área de transferência',
+    clickToChangeColor: 'Clique para alterar cor',
+    dropboxComingSoon: 'Integração Dropbox em breve!',
+    googleDriveComingSoon: 'Integração Google Drive em breve!'
   },
   'ru': { 
     ...baseTranslation,
@@ -1728,7 +1968,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Тайский)',
       'ko': '한국어 (Корейский)',
       'cs': 'Čeština (Чешский)'
-    }
+    },
+    
+    // Russian translations for new keys
+    noImageFoundInClipboard: 'Изображение в буфере обмена не найдено',
+    failedToReadClipboard: 'Не удалось прочитать буфер обмена. Убедитесь, что изображение скопировано.',
+    pleaseDropImageFile: 'Пожалуйста, перетащите файл изображения',
+    clipboardError: 'Ошибка копирования изображения в буфер обмена',
+    copyImageError: 'Ошибка копирования изображения в буфер обмена',
+    clickToChangeColor: 'Нажмите, чтобы изменить цвет',
+    dropboxComingSoon: 'Интеграция с Dropbox скоро!',
+    googleDriveComingSoon: 'Интеграция с Google Drive скоро!'
   },
   'pt-BR': { 
     ...baseTranslation,
@@ -1753,7 +2003,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Tailandês)',
       'ko': '한국어 (Coreano)',
       'cs': 'Čeština (Tcheco)'
-    }
+    },
+    
+    // Portuguese (Brazil) translations for new keys
+    noImageFoundInClipboard: 'Nenhuma imagem encontrada na área de transferência',
+    failedToReadClipboard: 'Falha ao ler a área de transferência. Certifique-se de ter copiado uma imagem.',
+    pleaseDropImageFile: 'Por favor, solte um arquivo de imagem',
+    clipboardError: 'Erro ao copiar imagem para a área de transferência',
+    copyImageError: 'Erro ao copiar imagem para a área de transferência',
+    clickToChangeColor: 'Clique para alterar cor',
+    dropboxComingSoon: 'Integração Dropbox em breve!',
+    googleDriveComingSoon: 'Integração Google Drive em breve!'
   },
   'pl': { 
     ...baseTranslation,
@@ -1778,7 +2038,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Tajski)',
       'ko': '한국어 (Koreański)',
       'cs': 'Čeština (Czeski)'
-    }
+    },
+    
+    // Polish translations for new keys
+    noImageFoundInClipboard: 'Nie znaleziono obrazu w schowku',
+    failedToReadClipboard: 'Nie udało się odczytać schowka. Upewnij się, że obraz został skopiowany.',
+    pleaseDropImageFile: 'Proszę upuścić plik obrazu',
+    clipboardError: 'Błąd kopiowania obrazu do schowka',
+    copyImageError: 'Błąd kopiowania obrazu do schowka',
+    clickToChangeColor: 'Kliknij, aby zmienić kolor',
+    dropboxComingSoon: 'Integracja z Dropbox wkrótce!',
+    googleDriveComingSoon: 'Integracja z Google Drive wkrótce!'
   },
   'tr': { 
     ...baseTranslation,
@@ -1803,7 +2073,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Tay dili)',
       'ko': '한국어 (Korece)',
       'cs': 'Čeština (Çekçe)'
-    }
+    },
+    
+    // Turkish translations for new keys
+    noImageFoundInClipboard: 'Panoda resim bulunamadı',
+    failedToReadClipboard: 'Pano okunamadı. Bir resim kopyaladığınızdan emin olun.',
+    pleaseDropImageFile: 'Lütfen bir resim dosyası bırakın',
+    clipboardError: 'Resmi panoya kopyalama hatası',
+    copyImageError: 'Resmi panoya kopyalama hatası',
+    clickToChangeColor: 'Rengi değiştirmek için tıklayın',
+    dropboxComingSoon: 'Dropbox entegrasyonu yakında!',
+    googleDriveComingSoon: 'Google Drive entegrasyonu yakında!'
   },
   'eu': { 
     ...baseTranslation,
@@ -1828,7 +2108,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Tailandiera)',
       'ko': '한국어 (Koreera)',
       'cs': 'Čeština (Txekiera)'
-    }
+    },
+    
+    // Basque translations for new keys
+    noImageFoundInClipboard: 'Ez da irudirik aurkitu arbelean',
+    failedToReadClipboard: 'Ezin izan da arbela irakurri. Ziurtatu irudi bat kopiatu duzula.',
+    pleaseDropImageFile: 'Mesedez, jaregin irudi fitxategi bat',
+    clipboardError: 'Errorea irudia arbelean kopiatzean',
+    copyImageError: 'Errorea irudia arbelean kopiatzean',
+    clickToChangeColor: 'Egin klik kolorea aldatzeko',
+    dropboxComingSoon: 'Dropbox integrazioa laster!',
+    googleDriveComingSoon: 'Google Drive integrazioa laster!'
   },
   'oc': { 
     ...baseTranslation,
@@ -1853,7 +2143,17 @@ const translations: Record<Language, Translation> = {
       'th': 'ไทย (Tailandés)',
       'ko': '한국어 (Corean)',
       'cs': 'Čeština (Chèc)'
-    }
+    },
+    
+    // Aranese translations for new keys
+    noImageFoundInClipboard: 'Pas cap d\'imatge trobada eth còpia-apega',
+    failedToReadClipboard: 'Error a legir eth còpia-apega. Assegura-te d\'auer copiat ua imatge.',
+    pleaseDropImageFile: 'Per favor, deixa anar un fichèr d\'imatge',
+    clipboardError: 'Error a copiar era imatge ath còpia-apega',
+    copyImageError: 'Error a copiar era imatge ath còpia-apega',
+    clickToChangeColor: 'Clica entà cambiar era color',
+    dropboxComingSoon: 'Integració damb Dropbox lèu!',
+    googleDriveComingSoon: 'Integració damb Google Drive lèu!'
   }
 };
 
