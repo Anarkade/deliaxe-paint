@@ -490,11 +490,12 @@ export const ImagePreview = ({
     expectingProcessedChange.current = false;
   }, [shouldAutoFit, containerWidth, originalImage, fitToWidth]);
 
-  // Calculate adaptive height based on image and zoom
+  // Calculate adaptive height based on image and zoom - ensure proper synchronization
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (originalImage && containerWidth > 0) {
-        const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
+        // Always use the correct current image dimensions
+        const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
         const currentZoom = zoom[0] / 100;
         
         const displayHeight = currentImage.height * currentZoom;
@@ -508,7 +509,7 @@ export const ImagePreview = ({
         // When no image is loaded, use minimal height
         setPreviewHeight(120);
       }
-    }, 100);
+    }, 50); // Reduced timeout for faster response
 
     return () => clearTimeout(timeoutId);
   }, [originalImage, processedImageData, zoom, containerWidth, showOriginal]);
@@ -752,51 +753,63 @@ export const ImagePreview = ({
               }}
             />
             {/* Tile Grid */}
-            {showTileGrid && (
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(to right, ${tileGridColor} 1px, transparent 1px),
-                    linear-gradient(to bottom, ${tileGridColor} 1px, transparent 1px)
-                  `,
-                  backgroundSize: `${tileWidth * (zoom[0] / 100)}px ${tileHeight * (zoom[0] / 100)}px`,
-                  width: `${((showOriginal ? originalImage?.width : (processedImageData?.width ?? originalImage?.width)) || 0) * (zoom[0] / 100)}px`,
-                  height: `${((showOriginal ? originalImage?.height : (processedImageData?.height ?? originalImage?.height)) || 0) * (zoom[0] / 100)}px`,
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
-                  backgroundPosition: '0 0',
-                  // Add border to ensure edge lines are visible
-                  borderRight: `1px solid ${tileGridColor}`,
-                  borderBottom: `1px solid ${tileGridColor}`
-                }}
-              />
-            )}
+            {showTileGrid && (() => {
+              const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
+              const gridWidth = currentImage.width * (zoom[0] / 100);
+              const gridHeight = currentImage.height * (zoom[0] / 100);
+              
+              return (
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(to right, ${tileGridColor} 1px, transparent 1px),
+                      linear-gradient(to bottom, ${tileGridColor} 1px, transparent 1px)
+                    `,
+                    backgroundSize: `${tileWidth * (zoom[0] / 100)}px ${tileHeight * (zoom[0] / 100)}px`,
+                    width: `${gridWidth}px`,
+                    height: `${gridHeight}px`,
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
+                    backgroundPosition: '0 0',
+                    // Add border to ensure edge lines are visible
+                    borderRight: `1px solid ${tileGridColor}`,
+                    borderBottom: `1px solid ${tileGridColor}`
+                  }}
+                />
+              );
+            })()}
             {/* Frame Grid */}
-            {showFrameGrid && (
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(to right, ${frameGridColor} 3px, transparent 3px),
-                    linear-gradient(to bottom, ${frameGridColor} 3px, transparent 3px)
-                  `,
-                  backgroundSize: `${frameWidth * (zoom[0] / 100)}px ${frameHeight * (zoom[0] / 100)}px`,
-                  width: `${((showOriginal ? originalImage?.width : (processedImageData?.width ?? originalImage?.width)) || 0) * (zoom[0] / 100)}px`,
-                  height: `${((showOriginal ? originalImage?.height : (processedImageData?.height ?? originalImage?.height)) || 0) * (zoom[0] / 100)}px`,
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
-                  backgroundPosition: '0 0',
-                  // Add border to ensure edge lines are visible  
-                  borderRight: `3px solid ${frameGridColor}`,
-                  borderBottom: `3px solid ${frameGridColor}`
-                }}
-              />
-            )}
+            {showFrameGrid && (() => {
+              const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
+              const gridWidth = currentImage.width * (zoom[0] / 100);
+              const gridHeight = currentImage.height * (zoom[0] / 100);
+              
+              return (
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(to right, ${frameGridColor} 3px, transparent 3px),
+                      linear-gradient(to bottom, ${frameGridColor} 3px, transparent 3px)
+                    `,
+                    backgroundSize: `${frameWidth * (zoom[0] / 100)}px ${frameHeight * (zoom[0] / 100)}px`,
+                    width: `${gridWidth}px`,
+                    height: `${gridHeight}px`,
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
+                    backgroundPosition: '0 0',
+                    // Add border to ensure edge lines are visible  
+                    borderRight: `3px solid ${frameGridColor}`,
+                    borderBottom: `3px solid ${frameGridColor}`
+                  }}
+                />
+              );
+            })()}
           </div>
         ) : showCameraPreview ? (
           <div className="relative w-full">
