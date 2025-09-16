@@ -1061,7 +1061,11 @@ export const RetroImageEditor = () => {
 
         {/* Main Content - Flex-grow to fill available space with minimal padding */}
         <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-12' : ''}`}>
-        <div className={`w-full flex-1 px-[5px] pt-[5px] pb-[5px] ${isVerticalLayout ? 'max-w-[calc(100%-3rem-10px)]' : 'max-w-[calc(100%-10px)]'}`}>
+        <div className={`w-full flex-1 px-[5px] pt-[5px] pb-[5px] ${
+          originalImage 
+            ? (isVerticalLayout ? 'max-w-[calc(100%-3rem-10px)]' : 'max-w-[calc(100%-10px)]')
+            : 'max-w-none'
+        }`}>
           <div className="w-full flex flex-col space-y-[5px]">
             {/* Image Preview with minimal consistent spacing */}
               <div className="relative w-full">
@@ -1098,7 +1102,9 @@ export const RetroImageEditor = () => {
                 {/* Floating Content Sections */}
                 {activeTab === 'load-image' && (
                   <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
+                    className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] top-0 ${
+                      originalImage ? 'right-0' : 'right-[-5px]'
+                    }`}
                     data-section="load-image"
                   >
                       <LoadImage
