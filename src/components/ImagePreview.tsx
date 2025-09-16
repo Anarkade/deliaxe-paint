@@ -194,6 +194,50 @@ export const ImagePreview = ({
     getCameras();
   }, [currentCameraId]);
 
+  // Calculate maximum available viewport space and scale camera preview proportionally
+  const calculateCameraPreviewSize = useCallback(() => {
+    if (!videoRef.current || videoRef.current.videoHeight === 0) return;
+
+    // Get actual camera resolution
+    const cameraWidth = videoRef.current.videoWidth;
+    const cameraHeight = videoRef.current.videoHeight;
+    
+    if (cameraWidth === 0 || cameraHeight === 0) return;
+
+    // Calculate available viewport space
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+
+    // Get toolbar/container positions to calculate available space
+    const containerEl = containerRef.current;
+    if (!containerEl) return;
+
+    const containerRect = containerEl.getBoundingClientRect();
+    
+    // Available space: from container top to bottom of viewport
+    const availableHeight = viewport.height - containerRect.top - 20; // 20px bottom padding
+    
+    // Available width: container width (already accounts for toolbars/scrollbars)
+    const availableWidth = containerEl.clientWidth;
+    
+    // Calculate scale to fit camera resolution proportionally within available space
+    const scaleX = availableWidth / cameraWidth;
+    const scaleY = availableHeight / cameraHeight;
+    
+    // Use the smaller scale to ensure both dimensions fit
+    const scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond original resolution
+    
+    // Calculate final preview dimensions
+    const previewWidth = Math.floor(cameraWidth * scale);
+    const previewHeight = Math.floor(cameraHeight * scale);
+    
+    // Set the calculated height (width will be handled by CSS)
+    setCameraPreviewHeight(Math.max(200, previewHeight));
+    setContainerWidth(previewWidth); // Update container width to match preview
+  }, []);
+
   // Start camera preview
   const startCameraPreview = useCallback(async () => {
     try {
@@ -206,13 +250,18 @@ export const ImagePreview = ({
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play();
+        
+        // Wait for video metadata to load before calculating size
+        videoRef.current.addEventListener('loadedmetadata', () => {
+          calculateCameraPreviewSize();
+        }, { once: true });
       }
       
       onCameraPreviewChange?.(true);
     } catch (error) {
       console.error('Camera access denied:', error);
     }
-  }, [currentCameraId, onCameraPreviewChange]);
+  }, [currentCameraId, onCameraPreviewChange, calculateCameraPreviewSize]);
 
   // Apply selected camera from parent
   useEffect(() => {
@@ -221,47 +270,34 @@ export const ImagePreview = ({
     }
   }, [selectedCameraId]);
 
-  // Compute camera preview height to fit available space properly
+  // Camera preview sizing effect
   useEffect(() => {
-    const compute = () => {
-      if (videoRef.current && videoRef.current.videoHeight > 0) {
-        // Get actual video dimensions
-        const videoWidth = videoRef.current.videoWidth;
-        const videoHeight = videoRef.current.videoHeight;
-        const aspectRatio = videoHeight / videoWidth;
+    if (!showCameraPreview) return;
 
-        // Desired height from container width and aspect
-        const desiredHeight = containerWidth * aspectRatio;
-        setCameraPreviewHeight(Math.max(200, desiredHeight));
-      } else {
-        // Fallback: assume 4:3 when metadata not ready
-        const fallbackHeight = containerWidth * 0.75;
-        setCameraPreviewHeight(Math.max(200, fallbackHeight));
-      }
-    };
-
-    // Initial computation
-    compute();
+    // Initial calculation
+    const timer = setTimeout(calculateCameraPreviewSize, 100);
 
     // Listen for video metadata loaded
     const video = videoRef.current;
     if (video) {
-      video.addEventListener('loadedmetadata', compute);
-      video.addEventListener('resize', compute);
+      video.addEventListener('loadedmetadata', calculateCameraPreviewSize);
+      video.addEventListener('resize', calculateCameraPreviewSize);
     }
 
-    window.addEventListener('resize', compute);
-    window.addEventListener('orientationchange', compute);
+    // Recalculate on window resize/orientation change
+    window.addEventListener('resize', calculateCameraPreviewSize);
+    window.addEventListener('orientationchange', calculateCameraPreviewSize);
 
     return () => {
-      window.removeEventListener('resize', compute);
-      window.removeEventListener('orientationchange', compute);
+      clearTimeout(timer);
+      window.removeEventListener('resize', calculateCameraPreviewSize);
+      window.removeEventListener('orientationchange', calculateCameraPreviewSize);
       if (video) {
-        video.removeEventListener('loadedmetadata', compute);
-        video.removeEventListener('resize', compute);
+        video.removeEventListener('loadedmetadata', calculateCameraPreviewSize);
+        video.removeEventListener('resize', calculateCameraPreviewSize);
       }
     };
-  }, [containerWidth]);
+  }, [showCameraPreview, calculateCameraPreviewSize]);
 
   // Stop camera preview
   const stopCameraPreview = useCallback(() => {
