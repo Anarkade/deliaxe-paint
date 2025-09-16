@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { LoadImage } from './LoadImage';
+import { CameraSelector } from './CameraSelector';
 import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
 import { ResolutionSelector, ResolutionType, CombinedScalingMode } from './ResolutionSelector';
 import { ImagePreview } from './ImagePreview';
@@ -39,6 +40,7 @@ export const RetroImageEditor = () => {
   const [activeTab, setActiveTab] = useState<string>('load-image');
   const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
   const [showCameraPreview, setShowCameraPreview] = useState(false);
+  const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
   const [isOriginalPNG8Indexed, setIsOriginalPNG8Indexed] = useState(false);
   const [isVerticalLayout, setIsVerticalLayout] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
@@ -1083,18 +1085,19 @@ export const RetroImageEditor = () => {
                   }}
                   showCameraPreview={showCameraPreview}
                   onCameraPreviewChange={setShowCameraPreview}
+                  selectedCameraId={selectedCameraId || undefined}
                   currentPaletteColors={currentPaletteColors}
                   onSectionOpen={() => {
                     // Handle any additional logic when sections are opened
                   }}
-              showTileGrid={showTileGrid}
-              showFrameGrid={showFrameGrid}
-              tileWidth={tileWidth}
-              tileHeight={tileHeight}
-              frameWidth={frameWidth}
-              frameHeight={frameHeight}
-              tileGridColor={tileGridColor}
-              frameGridColor={frameGridColor}
+                  showTileGrid={showTileGrid}
+                  showFrameGrid={showFrameGrid}
+                  tileWidth={tileWidth}
+                  tileHeight={tileHeight}
+                  frameWidth={frameWidth}
+                  frameHeight={frameHeight}
+                  tileGridColor={tileGridColor}
+                  frameGridColor={frameGridColor}
                   autoFitKey={`${selectedResolution}|${scalingMode}`}
                   onZoomChange={setCurrentZoom}
                 />
@@ -1112,11 +1115,29 @@ export const RetroImageEditor = () => {
                           loadImage(source);
                         }}
                         onCameraPreviewRequest={() => {
-                          setShowCameraPreview(true);
-                          setActiveTab(null);
+                          setActiveTab('select-camera');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
                         }}
                         onClose={() => setActiveTab(null)}
                      />
+                  </div>
+                )}
+
+                {activeTab === 'select-camera' && (
+                  <div 
+                    className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] top-0 ${
+                      originalImage ? 'right-0' : 'right-[-5px]'
+                    }`}
+                    data-section="select-camera"
+                  >
+                    <CameraSelector 
+                      onSelect={(cameraId) => {
+                        setSelectedCameraId(cameraId);
+                        setShowCameraPreview(true);
+                        setActiveTab(null);
+                      }}
+                      onClose={() => setActiveTab('load-image')}
+                    />
                   </div>
                 )}
 

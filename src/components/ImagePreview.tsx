@@ -107,6 +107,7 @@ interface ImagePreviewProps {
   onPaletteUpdate?: (colors: any[]) => void;
   showCameraPreview?: boolean;
   onCameraPreviewChange?: (show: boolean) => void;
+  selectedCameraId?: string;
   currentPaletteColors?: any[];
   onSectionOpen?: () => void; // New callback for section opening
   showTileGrid?: boolean;
@@ -131,6 +132,7 @@ export const ImagePreview = ({
   onPaletteUpdate, 
   showCameraPreview, 
   onCameraPreviewChange, 
+  selectedCameraId,
   currentPaletteColors, 
   onSectionOpen, 
   showTileGrid = false, 
@@ -154,6 +156,7 @@ export const ImagePreview = ({
   const [sliderValue, setSliderValue] = useState<number[]>([100]);
   const [containerWidth, setContainerWidth] = useState(0);
   const [previewHeight, setPreviewHeight] = useState(400);
+  const [cameraPreviewHeight, setCameraPreviewHeight] = useState(400);
   const [originalFormat, setOriginalFormat] = useState<string>('');
   const [processedFormat, setProcessedFormat] = useState<string>('');
   const [isIndexedPNG, setIsIndexedPNG] = useState<boolean>(false);
@@ -210,6 +213,25 @@ export const ImagePreview = ({
       console.error('Camera access denied:', error);
     }
   }, [currentCameraId, onCameraPreviewChange]);
+
+  // Apply selected camera from parent
+  useEffect(() => {
+    if (selectedCameraId) {
+      setCurrentCameraId(selectedCameraId);
+    }
+  }, [selectedCameraId]);
+
+  // Compute camera preview height to fit viewport
+  useEffect(() => {
+    const compute = () => {
+      // Reserve space for header/controls (approximate)
+      const reserved = 260;
+      setCameraPreviewHeight(Math.max(200, window.innerHeight - reserved));
+    };
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, []);
 
   // Stop camera preview
   const stopCameraPreview = useCallback(() => {
@@ -635,7 +657,7 @@ export const ImagePreview = ({
       <div 
         ref={containerRef}
         className={`relative bg-elegant-bg flex items-center justify-center overflow-hidden p-0 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-        style={{ height: originalImage ? `${previewHeight}px` : '120px' }}
+        style={{ height: showCameraPreview ? `${cameraPreviewHeight}px` : (originalImage ? `${previewHeight}px` : '120px') }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -706,7 +728,7 @@ export const ImagePreview = ({
           <div className="relative w-full">
             <video
               ref={videoRef}
-              className="w-full h-full object-cover rounded-md"
+              className="w-full h-full object-contain rounded-md"
               autoPlay
               muted
               playsInline
