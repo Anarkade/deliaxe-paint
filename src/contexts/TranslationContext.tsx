@@ -81,6 +81,7 @@ interface Translation {
   
   // Settings
   language: string;
+  changeLanguage: string;
   
   // Preview
   original: string;
@@ -285,6 +286,7 @@ const baseTranslation: Translation = {
   imageCopiedToClipboard: 'Image copied to clipboard!',
   shareOnTwitter: 'Share on Twitter',
   language: 'Language',
+  changeLanguage: 'Change Language',
   original: 'Original',
   processed: 'Processed',
   fitToWidth: 'Fit to width',
@@ -449,6 +451,7 @@ const translations: Record<Language, Translation> = {
     imageCopiedToClipboard: '¡Imagen copiada al portapapeles!',
     shareOnTwitter: 'Compartir en Twitter',
     language: 'Idioma',
+    changeLanguage: 'Cambiar Idioma',
     original: 'Original',
     processed: 'Procesada',
     fitToWidth: 'Ajustar al ancho',
@@ -618,6 +621,7 @@ const translations: Record<Language, Translation> = {
     imageCopiedToClipboard: '¡Imagen copiada al portapapeles!',
     shareOnTwitter: 'Compartir en Twitter',
     language: 'Idioma',
+    changeLanguage: 'Cambiar Idioma',
     original: 'Original',
     processed: 'Procesada',
     fitToWidth: 'Ajustar al ancho',
@@ -737,6 +741,7 @@ const translations: Record<Language, Translation> = {
     imageCopiedToClipboard: 'Imatge copiada al porta-retalls!',
     shareOnTwitter: 'Compartir a Twitter',
     language: 'Idioma',
+    changeLanguage: 'Canviar Idioma',
     original: 'Original',
     processed: 'Processada',
     fitToWidth: 'Ajustar a l\'amplada',
@@ -839,6 +844,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'zoomé',
     unscaledSize: 'Non mis à l\'échelle',
     removeScaling: 'Supprimer la mise à l\'échelle du pixel art',
+    language: 'Langue',
+    changeLanguage: 'Changer de Langue',
   },
   'de': { 
     ...baseTranslation,
@@ -871,6 +878,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'gezoomt',
     unscaledSize: 'Nicht skaliert',
     removeScaling: 'Skalierung vom Pixel-Art entfernen',
+    language: 'Sprache',
+    changeLanguage: 'Sprache Ändern',
   },
   'it': { 
     ...baseTranslation,
@@ -903,6 +912,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'zoomato',
     unscaledSize: 'Non ridimensionato',
     removeScaling: 'Rimuovi ridimensionamento dalla pixel art',
+    language: 'Lingua',
+    changeLanguage: 'Cambia Lingua',
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -935,6 +946,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'com zoom',
     unscaledSize: 'Não dimensionado',
     removeScaling: 'Remover dimensionamento da pixel art',
+    language: 'Idioma',
+    changeLanguage: 'Alterar Idioma',
   },
   'pt-BR': { 
     ...baseTranslation,
@@ -967,6 +980,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'com zoom',
     unscaledSize: 'Não dimensionado',
     removeScaling: 'Remover dimensionamento da pixel art',
+    language: 'Idioma',
+    changeLanguage: 'Alterar Idioma',
   },
   'ru': { 
     ...baseTranslation,
@@ -999,6 +1014,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'с масштабом',
     unscaledSize: 'Без масштаба',
     removeScaling: 'Убрать масштабирование с пиксель-арта',
+    language: 'Язык',
+    changeLanguage: 'Изменить Язык',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -1031,6 +1048,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: '缩放',
     unscaledSize: '未缩放',
     removeScaling: '移除像素艺术的缩放',
+    language: '语言',
+    changeLanguage: '更改语言',
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -1063,6 +1082,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: '縮放',
     unscaledSize: '未縮放',
     removeScaling: '移除像素藝術的縮放',
+    language: '語言',
+    changeLanguage: '更改語言',
   },
   'ja': { 
     ...baseTranslation,
@@ -1095,6 +1116,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'ズーム',
     unscaledSize: '非スケール',
     removeScaling: 'ピクセルアートからスケーリングを除去',
+    language: '言語',
+    changeLanguage: '言語を変更',
   },
   'pl': { 
     ...baseTranslation,
@@ -1126,6 +1149,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'powiększony',
     unscaledSize: 'Nieskalowany',
     removeScaling: 'Usuń skalowanie z pixel art',
+    language: 'Język',
+    changeLanguage: 'Zmień Język',
   },
   'tr': { 
     ...baseTranslation,
@@ -1157,6 +1182,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'yakınlaştırılmış',
     unscaledSize: 'Ölçeksiz',
     removeScaling: 'Piksel sanatından ölçeklendirmeyi kaldır',
+    language: 'Dil',
+    changeLanguage: 'Dil Değiştir',
   },
   'eu': { 
     ...baseTranslation,
@@ -1188,6 +1215,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'zoom-arekin',
     unscaledSize: 'Eskalik gabe',
     removeScaling: 'Pixel arteko eskala kendu',
+    language: 'Hizkuntza',
+    changeLanguage: 'Hizkuntza Aldatu',
   },
   'oc': { 
     ...baseTranslation,
@@ -1219,6 +1248,8 @@ const translations: Record<Language, Translation> = {
     zoomedResolution: 'amb zoom',
     unscaledSize: 'Pas escalat',
     removeScaling: 'Levar l\'escalada del pixel art',
+    language: 'Lenga',
+    changeLanguage: 'Cambiar de Lenga',
   },
 };
 

@@ -963,9 +963,9 @@ export const RetroImageEditor = () => {
                       <Globe className="w-5 h-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{t('language')}</p>
-                  </TooltipContent>
+                   <TooltipContent>
+                     <p>{t('changeLanguage')}</p>
+                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
@@ -1045,7 +1045,7 @@ export const RetroImageEditor = () => {
                   onClick={() => handleTabClick('language')}
                   className="flex items-center justify-center h-8 w-8 p-0"
                   style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                  title={t('language')}
+                  title={t('changeLanguage')}
                 >
                   <Globe className="h-4 w-4" />
                 </Button>
