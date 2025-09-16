@@ -408,6 +408,9 @@ export const ImagePreview = ({
         const calculatedHeight = Math.max(minHeight, displayHeight + padding);
         
         setPreviewHeight(calculatedHeight);
+      } else {
+        // When no image is loaded, use minimal height
+        setPreviewHeight(120);
       }
     }, 100);
 
@@ -632,7 +635,7 @@ export const ImagePreview = ({
       <div 
         ref={containerRef}
         className={`relative bg-elegant-bg flex items-center justify-center overflow-hidden p-0 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-        style={{ height: `${previewHeight}px` }}
+        style={{ height: originalImage ? `${previewHeight}px` : '120px' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -738,10 +741,10 @@ export const ImagePreview = ({
             </div>
           </div>
         ) : (
-          <div className="w-full bg-card/50 rounded-lg border-2 border-dashed border-elegant-border flex items-center justify-center" style={{ minHeight: showCameraPreview ? 'auto' : '300px' }}>
-            <div className="text-center text-muted-foreground">
-              <p className="text-lg">{t('loadImage')}</p>
-              <p className="text-sm">{t('noImageLoaded')}</p>
+          <div className="w-full bg-card/50 rounded-lg border-2 border-dashed border-elegant-border flex items-center justify-center" style={{ minHeight: '80px' }}>
+            <div className="text-center text-muted-foreground py-2">
+              <p className="text-base">{t('loadImage')}</p>
+              <p className="text-xs">{t('noImageLoaded')}</p>
             </div>
           </div>
         )}
