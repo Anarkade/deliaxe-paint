@@ -1014,7 +1014,7 @@ export const RetroImageEditor = () => {
           <aside className="fixed left-0 top-0 h-full w-12 flex flex-col bg-card border-r border-elegant-border z-50">
             <div className="flex flex-col items-center py-1 space-y-1 h-full">
               {/* Logo */}
-              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div className="flex flex-col items-center gap-1 flex-shrink-0 mb-3">
                 <img src="/logo.gif" alt="Vintage Palette Studio" className="h-8 w-8" />
               </div>
               
