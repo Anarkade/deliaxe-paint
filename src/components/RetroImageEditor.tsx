@@ -67,7 +67,7 @@ export const RetroImageEditor = () => {
 
       // Toolbar shortcuts
       switch (key) {
-        case 'l':
+        case 'i':
           event.preventDefault();
           handleTabClick('load-image');
           break;
@@ -86,6 +86,10 @@ export const RetroImageEditor = () => {
         case 'e':
           event.preventDefault();
           handleTabClick('export-image');
+          break;
+        case 'l':
+          event.preventDefault();
+          handleTabClick('language');
           break;
         default:
           break;
