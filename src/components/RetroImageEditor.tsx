@@ -57,7 +57,6 @@ export const RetroImageEditor = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingOperation, setProcessingOperation] = useState<string>('');
-  const [performanceWarnings, setPerformanceWarnings] = useState<string[]>([]);
   
   // Grid state
   const [showTileGrid, setShowTileGrid] = useState(false);
@@ -227,16 +226,6 @@ export const RetroImageEditor = () => {
         return;
       }
       
-      if (shouldOptimize) {
-        const recommendations = performanceMonitor.getOptimizationRecommendations(imageDimensions);
-        setPerformanceWarnings(recommendations);
-        
-        if (recommendations.length > 0) {
-          toast.warning(`Large image detected: ${img.width}×${img.height} pixels. Processing may be slower.`);
-        }
-      } else {
-        setPerformanceWarnings([]);
-      }
       
       setOriginalImage(img);
       setProcessedImageData(null);
@@ -1240,30 +1229,6 @@ export const RetroImageEditor = () => {
           </div>
         )}
 
-        {/* Performance Warnings */}
-        {performanceWarnings.length > 0 && (
-          <div className="fixed top-4 left-4 z-50 bg-yellow-50 border border-yellow-200 rounded-lg p-4 shadow-lg max-w-sm">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-medium text-yellow-800 mb-1">Performance Tips</h4>
-                <ul className="text-xs text-yellow-700 space-y-1">
-                  {performanceWarnings.map((warning, index) => (
-                    <li key={index}>• {warning}</li>
-                  ))}
-                </ul>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setPerformanceWarnings([])}
-                  className="mt-2 h-6 text-xs"
-                >
-                  Dismiss
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
         
         <div className="w-full flex-1 px-[5px] pt-[5px] pb-[5px]">
           <div className="w-full flex flex-col space-y-[5px]">
