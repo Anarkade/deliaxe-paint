@@ -224,38 +224,47 @@ export const ImagePreview = ({
   // Compute camera preview height to fit available space properly
   useEffect(() => {
     const compute = () => {
+      const containerEl = containerRef.current;
+      const rectTop = containerEl ? containerEl.getBoundingClientRect().top : 0;
+      // Space available from container top to bottom of viewport (minus small padding)
+      const availableViewportHeight = Math.max(200, window.innerHeight - rectTop - 16);
+
       if (videoRef.current && videoRef.current.videoHeight > 0) {
         // Get actual video dimensions
         const videoWidth = videoRef.current.videoWidth;
         const videoHeight = videoRef.current.videoHeight;
         const aspectRatio = videoHeight / videoWidth;
-        
-        // Calculate height based on container width and aspect ratio
-        const height = containerWidth * aspectRatio;
+
+        // Desired height from container width and aspect
+        const desiredHeight = containerWidth * aspectRatio;
+        // Clamp to available viewport height so full video fits on screen
+        const height = Math.min(desiredHeight, availableViewportHeight);
         setCameraPreviewHeight(Math.max(200, height));
       } else {
-        // Fallback: use viewport-based calculation
-        const reserved = 300; // More space for UI elements
-        const viewportHeight = window.innerHeight - reserved;
-        const calculatedHeight = Math.min(viewportHeight, containerWidth * 0.75); // 4:3 aspect ratio fallback
-        setCameraPreviewHeight(Math.max(200, calculatedHeight));
+        // Fallback: use viewport-based calculation with a 4:3 assumption
+        const fallbackHeight = Math.min(availableViewportHeight, containerWidth * 0.75);
+        setCameraPreviewHeight(Math.max(200, fallbackHeight));
       }
     };
-    
+
     // Initial computation
     compute();
-    
+
     // Listen for video metadata loaded
     const video = videoRef.current;
     if (video) {
       video.addEventListener('loadedmetadata', compute);
       video.addEventListener('resize', compute);
     }
-    
+
     window.addEventListener('resize', compute);
-    
+    window.addEventListener('orientationchange', compute);
+    window.addEventListener('scroll', compute, { passive: true } as any);
+
     return () => {
       window.removeEventListener('resize', compute);
+      window.removeEventListener('orientationchange', compute);
+      window.removeEventListener('scroll', compute);
       if (video) {
         video.removeEventListener('loadedmetadata', compute);
         video.removeEventListener('resize', compute);
