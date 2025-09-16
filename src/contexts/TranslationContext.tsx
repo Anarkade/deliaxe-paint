@@ -267,7 +267,7 @@ const baseTranslation: Translation = {
   copyright: '',
   company: '',
   uploadImage: 'Upload Image',
-  dragDropText: 'Drag and drop an image here, or click to select',
+  dragDropText: 'Load, drag and drop or paste an image',
   orText: 'or',
   loadFromUrl: 'Load from URL',
   loadFromCamera: 'Load from Camera',
