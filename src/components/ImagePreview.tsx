@@ -500,7 +500,7 @@ export const ImagePreview = ({
         
         const displayHeight = currentImage.height * currentZoom;
         
-        const padding = 40;
+        const padding = 0;
         const minHeight = 150;
         const calculatedHeight = Math.max(minHeight, displayHeight + padding);
         
@@ -742,72 +742,68 @@ export const ImagePreview = ({
         onTouchEnd={handleTouchEnd}
       >
         {originalImage ? (
-          <div className="relative">
-            <canvas
-              ref={canvasRef}
-              style={{ 
-                imageRendering: 'pixelated',
-                transform: `scale(${zoom[0] / 100}) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
-                transformOrigin: 'center',
-                pointerEvents: 'none'
-              }}
-            />
-            {/* Tile Grid */}
-            {showTileGrid && (() => {
+          <div className="relative w-full h-full">
+            {(() => {
               const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
-              const gridWidth = currentImage.width * (zoom[0] / 100);
-              const gridHeight = currentImage.height * (zoom[0] / 100);
+              if (!currentImage) return null;
+              const baseWidth = currentImage.width;
+              const baseHeight = currentImage.height;
               
               return (
                 <div
-                  className="absolute pointer-events-none"
+                  className="absolute"
                   style={{
-                    backgroundImage: `
-                      linear-gradient(to right, ${tileGridColor} 1px, transparent 1px),
-                      linear-gradient(to bottom, ${tileGridColor} 1px, transparent 1px)
-                    `,
-                    backgroundSize: `${tileWidth * (zoom[0] / 100)}px ${tileHeight * (zoom[0] / 100)}px`,
-                    width: `${gridWidth}px`,
-                    height: `${gridHeight}px`,
-                    position: 'absolute',
+                    width: `${baseWidth}px`,
+                    height: `${baseHeight}px`,
                     top: '50%',
                     left: '50%',
-                    transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
-                    backgroundPosition: '0 0',
-                    // Add border to ensure edge lines are visible
-                    borderRight: `1px solid ${tileGridColor}`,
-                    borderBottom: `1px solid ${tileGridColor}`
+                    transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px) scale(${zoom[0] / 100})`,
+                    transformOrigin: 'center',
+                    pointerEvents: 'none'
                   }}
-                />
-              );
-            })()}
-            {/* Frame Grid */}
-            {showFrameGrid && (() => {
-              const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
-              const gridWidth = currentImage.width * (zoom[0] / 100);
-              const gridHeight = currentImage.height * (zoom[0] / 100);
-              
-              return (
-                <div
-                  className="absolute pointer-events-none"
-                  style={{
-                    backgroundImage: `
-                      linear-gradient(to right, ${frameGridColor} 3px, transparent 3px),
-                      linear-gradient(to bottom, ${frameGridColor} 3px, transparent 3px)
-                    `,
-                    backgroundSize: `${frameWidth * (zoom[0] / 100)}px ${frameHeight * (zoom[0] / 100)}px`,
-                    width: `${gridWidth}px`,
-                    height: `${gridHeight}px`,
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
-                    backgroundPosition: '0 0',
-                    // Add border to ensure edge lines are visible  
-                    borderRight: `3px solid ${frameGridColor}`,
-                    borderBottom: `3px solid ${frameGridColor}`
-                  }}
-                />
+                >
+                  <canvas
+                    ref={canvasRef}
+                    style={{ 
+                      imageRendering: 'pixelated',
+                      width: '100%',
+                      height: '100%',
+                      display: 'block'
+                    }}
+                  />
+                  {/* Tile Grid */}
+                  {showTileGrid && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        backgroundImage: `
+                          linear-gradient(to right, ${tileGridColor} 1px, transparent 1px),
+                          linear-gradient(to bottom, ${tileGridColor} 1px, transparent 1px)
+                        `,
+                        backgroundSize: `${tileWidth}px ${tileHeight}px`,
+                        // Ensure edge lines are visible
+                        borderRight: `1px solid ${tileGridColor}`,
+                        borderBottom: `1px solid ${tileGridColor}`
+                      }}
+                    />
+                  )}
+                  {/* Frame Grid */}
+                  {showFrameGrid && (
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        backgroundImage: `
+                          linear-gradient(to right, ${frameGridColor} 3px, transparent 3px),
+                          linear-gradient(to bottom, ${frameGridColor} 3px, transparent 3px)
+                        `,
+                        backgroundSize: `${frameWidth}px ${frameHeight}px`,
+                        // Ensure edge lines are visible  
+                        borderRight: `3px solid ${frameGridColor}`,
+                        borderBottom: `3px solid ${frameGridColor}`
+                      }}
+                    />
+                  )}
+                </div>
               );
             })()}
           </div>
