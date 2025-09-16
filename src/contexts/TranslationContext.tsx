@@ -122,6 +122,11 @@ interface Translation {
   megaDriveNtscH40: string;
   megaDrivePalH40: string;
   amstradCpc2: string;
+  msxZxSpectrum: string;
+  msxPlatform: string;
+  cpsArcade: string;
+  pspPlatform: string;
+  msxHiRes: string;
   
   // Scaling modes
   stretchToFit: string;
@@ -350,6 +355,11 @@ const baseTranslation: Translation = {
   megaDriveNtscH40: 'Mega Drive NTSC H40, Neo Geo',
   megaDrivePalH40: 'Mega Drive PAL H40',
   amstradCpc2: 'Amstrad CPC mode 2',
+  msxZxSpectrum: 'MSX, ZX Spectrum',
+  msxPlatform: 'MSX',
+  cpsArcade: 'CPS1, CPS2, CPS3',
+  pspPlatform: 'PSP',
+  msxHiRes: 'MSX',
   stretchToFit: 'Stretch to fit',
   centerWithBars: 'Center with black bars',
   scaleToFit: 'Scale to fit',
@@ -483,6 +493,11 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Cambiar Resolución [R]',
     changeGridsDesc: 'Cambiar Cuadrículas [G]',
     exportImageDesc: 'Exportar Imagen [E]',
+    msxZxSpectrum: 'MSX, ZX Spectrum',
+    msxPlatform: 'MSX',
+    cpsArcade: 'CPS1, CPS2, CPS3',
+    pspPlatform: 'PSP',
+    msxHiRes: 'MSX',
     changeLanguage: 'Cambiar Idioma [L]',
   },
   'es-LA': { 
@@ -499,6 +514,11 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Cambiar Resolución [R]',
     changeGridsDesc: 'Cambiar Cuadrículas [G]',
     exportImageDesc: 'Exportar Imagen [E]',
+    msxZxSpectrum: 'MSX, ZX Spectrum',
+    msxPlatform: 'MSX',
+    cpsArcade: 'CPS1, CPS2, CPS3',
+    pspPlatform: 'PSP',
+    msxHiRes: 'MSX',
     changeLanguage: 'Cambiar Idioma [L]',
   },
   'ca': { 
@@ -515,6 +535,11 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Canviar Resolució [R]',
     changeGridsDesc: 'Canviar Quadrícules [G]',
     exportImageDesc: 'Exportar Imatge [E]',
+    msxZxSpectrum: 'MSX, ZX Spectrum',
+    msxPlatform: 'MSX',
+    cpsArcade: 'CPS1, CPS2, CPS3',
+    pspPlatform: 'PSP',
+    msxHiRes: 'MSX',
     changeLanguage: 'Canviar Idioma [L]',
   },
   'zh-CN': { 
