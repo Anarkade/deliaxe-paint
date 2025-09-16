@@ -518,6 +518,9 @@ export const RetroImageEditor = () => {
       return;
     }
 
+    // Declare canvas outside try block for cleanup
+    let canvas: HTMLCanvasElement | null = null;
+    
     try {
       // Check cache first
       const imageHash = hashImage(originalImage);
@@ -541,7 +544,9 @@ export const RetroImageEditor = () => {
       setProcessingOperation(`Processing with ${selectedPalette} palette...`);
 
       // Use canvas pool for memory efficiency
-      const { canvas, ctx } = getCanvas(originalImage.width, originalImage.height);
+      const canvasResult = getCanvas(originalImage.width, originalImage.height);
+      canvas = canvasResult.canvas;
+      const ctx = canvasResult.ctx;
       
       if (!ctx) {
         toast.error(t('canvasNotSupported'));
@@ -775,15 +780,26 @@ export const RetroImageEditor = () => {
         
         // Get fresh image data from original for palette conversion
         const originalImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
-        applyPaletteConversion(originalImageData, selectedPalette, originalPaletteColors);
-        ctx.putImageData(originalImageData, 0, 0);
-        imageData = originalImageData;
+        setProcessingProgress(75);
+        const processedImageData = await applyPaletteConversion(originalImageData, selectedPalette, originalPaletteColors);
+        ctx.putImageData(processedImageData, 0, 0);
+        imageData = processedImageData;
       }
 
       // Ensure currentPaletteColors is set for export functionality
       if (selectedPalette === 'original') {
         setCurrentPaletteColors(originalPaletteColors);
       }
+
+      // Cache the result for future use (fix parameter order)
+      imageProcessingCache.cacheProcessedImage(
+        hashImage(originalImage),
+        selectedPalette,
+        selectedResolution,
+        scalingMode,
+        imageData,
+        currentPaletteColors
+      );
 
       setProcessedImageData(imageData);
       
@@ -795,14 +811,28 @@ export const RetroImageEditor = () => {
         scaling: scalingMode
       });
 
+      // End performance monitoring
+      setProcessingProgress(100);
+      performanceMonitor.endMeasurement({ width: targetWidth, height: targetHeight });
+
     } catch (error) {
       toast.error(t('errorProcessingImage'));
       console.error('processImage error:', error);
+    } finally {
+      // Clean up processing state
+      if (canvas) {
+        returnCanvas(canvas);
+      }
+      setIsProcessing(false);
+      setProcessingProgress(0);
+      setProcessingOperation('');
     }
   }, [originalImage, selectedPalette, selectedResolution, scalingMode, saveToHistory]);
 
-  const applyPaletteConversion = (imageData: ImageData, palette: PaletteType, customColors?: any[]) => {
-    const data = imageData.data;
+  // Async palette conversion with Web Worker support
+  const applyPaletteConversion = async (imageData: ImageData, palette: PaletteType, customColors?: any[]): Promise<ImageData> => {
+    const data = new Uint8ClampedArray(imageData.data);
+    const resultImageData = new ImageData(data, imageData.width, imageData.height);
     
     switch (palette) {
       case 'gameboy':
@@ -908,27 +938,49 @@ export const RetroImageEditor = () => {
         break;
       
       case 'megadrive':
-        // Always use processMegaDriveImage to ensure proper RGB 3-3-3 quantization to exactly 16 colors
-        // Don't pass custom colors as they may contain thousands of colors from the original image
-        const megaDriveResult = processMegaDriveImage(imageData);
-        
-        // Replace the current image data with the processed data
-        const processedData = megaDriveResult.imageData.data;
-        for (let i = 0; i < data.length; i++) {
-          data[i] = processedData[i];
+        try {
+          // Use Web Worker for Mega Drive processing to prevent UI blocking
+          setProcessingOperation('Processing Mega Drive palette...');
+          
+          const megaDriveResult = await imageProcessor.processMegaDriveImage(
+            imageData,
+            customColors,
+            (progress) => setProcessingProgress(progress)
+          );
+          
+          // Replace the current image data with the processed data
+          const processedData = megaDriveResult.imageData.data;
+          for (let i = 0; i < data.length; i++) {
+            data[i] = processedData[i];
+          }
+          
+          // Update the current palette colors for the palette viewer - exactly 16 colors
+          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({
+            r: color.r,
+            g: color.g,
+            b: color.b
+          })));
+        } catch (error) {
+          console.error('Mega Drive processing error:', error);
+          // Fallback to synchronous processing
+          const megaDriveResult = processMegaDriveImage(imageData);
+          const processedData = megaDriveResult.imageData.data;
+          for (let i = 0; i < data.length; i++) {
+            data[i] = processedData[i];
+          }
+          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({
+            r: color.r,
+            g: color.g,
+            b: color.b
+          })));
         }
-        
-        // Update the current palette colors for the palette viewer - exactly 16 colors
-        setCurrentPaletteColors(megaDriveResult.palette.map(color => ({
-          r: color.r,
-          g: color.g,
-          b: color.b
-        })));
         break;
         
       default:
         break;
     }
+    
+    return resultImageData;
   };
 
   const downloadImage = useCallback(() => {
@@ -1164,6 +1216,55 @@ export const RetroImageEditor = () => {
 
         {/* Main Content - Flex-grow to fill available space with minimal padding */}
         <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-12' : ''}`}>
+        
+        {/* Image Processing Progress Indicator */}
+        {isProcessing && (
+          <div className="fixed top-4 right-4 z-50 bg-card border border-elegant-border rounded-lg p-4 shadow-lg min-w-64">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">
+                  {processingOperation || 'Processing...'}
+                </p>
+                <Progress value={processingProgress} className="mt-1 h-2" />
+              </div>
+              <Button
+                variant="ghost" 
+                size="sm"
+                onClick={() => imageProcessor.cancelProcessing()}
+                className="h-6 w-6 p-0"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Performance Warnings */}
+        {performanceWarnings.length > 0 && (
+          <div className="fixed top-4 left-4 z-50 bg-yellow-50 border border-yellow-200 rounded-lg p-4 shadow-lg max-w-sm">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-medium text-yellow-800 mb-1">Performance Tips</h4>
+                <ul className="text-xs text-yellow-700 space-y-1">
+                  {performanceWarnings.map((warning, index) => (
+                    <li key={index}>• {warning}</li>
+                  ))}
+                </ul>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setPerformanceWarnings([])}
+                  className="mt-2 h-6 text-xs"
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="w-full flex-1 px-[5px] pt-[5px] pb-[5px]">
           <div className="w-full flex flex-col space-y-[5px]">
             {/* Image Preview with minimal consistent spacing */}
