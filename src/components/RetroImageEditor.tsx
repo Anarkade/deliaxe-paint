@@ -52,73 +52,6 @@ export const RetroImageEditor = () => {
   const [showTileGrid, setShowTileGrid] = useState(false);
   const [showFrameGrid, setShowFrameGrid] = useState(false);
   const [tileWidth, setTileWidth] = useState(8);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle shortcuts when not typing in input fields
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-
-      const key = event.key.toLowerCase();
-      
-      // ESC key to close any open sections
-      if (key === 'escape') {
-        setActiveTab('');
-        return;
-      }
-
-      // Toolbar shortcuts
-      switch (key) {
-        case 'i':
-          event.preventDefault();
-          handleTabClick('load-image');
-          break;
-        case 'p':
-          event.preventDefault();
-          if (!originalImage) {
-            toast.error(t('loadImageToStart'));
-          } else {
-            handleTabClick('palette-selector');
-          }
-          break;
-        case 'r':
-          event.preventDefault();
-          if (!originalImage) {
-            toast.error(t('loadImageToStart'));
-          } else {
-            handleTabClick('resolution');
-          }
-          break;
-        case 'g':
-          event.preventDefault();
-          if (!originalImage) {
-            toast.error(t('loadImageToStart'));
-          } else {
-            handleTabClick('change-grids');
-          }
-          break;
-        case 'e':
-          event.preventDefault();
-          if (!originalImage) {
-            toast.error(t('loadImageToStart'));
-          } else {
-            handleTabClick('export-image');
-          }
-          break;
-        case 'l':
-          event.preventDefault();
-          handleTabClick('language');
-          break;
-        default:
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [originalImage, t]);
   const [tileHeight, setTileHeight] = useState(8);
   const [frameWidth, setFrameWidth] = useState(16);
   const [frameHeight, setFrameHeight] = useState(16);
@@ -318,6 +251,100 @@ export const RetroImageEditor = () => {
       console.error('Image loading error:', error);
     }
   }, [t, activeTab]);
+
+  // Clipboard loading function
+  const loadFromClipboard = useCallback(async () => {
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
+          const blob = await item.getType(item.types.find(type => type.startsWith('image/')) || '');
+          const file = new File([blob], 'clipboard-image.png', { type: blob.type });
+          loadImage(file);
+          toast.success('Image loaded from clipboard');
+          return;
+        }
+      }
+      toast.error(t('noImageFoundInClipboard'));
+    } catch (error) {
+      console.error('Failed to read clipboard:', error);
+      toast.error(t('failedToReadClipboard'));
+    }
+  }, [loadImage, t]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle shortcuts when not typing in input fields
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      
+      // Ctrl+V for clipboard paste
+      if ((event.ctrlKey || event.metaKey) && key === 'v') {
+        event.preventDefault();
+        loadFromClipboard();
+        return;
+      }
+      
+      // ESC key to close any open sections
+      if (key === 'escape') {
+        setActiveTab('');
+        return;
+      }
+
+      // Toolbar shortcuts
+      switch (key) {
+        case 'i':
+          event.preventDefault();
+          handleTabClick('load-image');
+          break;
+        case 'p':
+          event.preventDefault();
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            handleTabClick('palette-selector');
+          }
+          break;
+        case 'r':
+          event.preventDefault();
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            handleTabClick('resolution');
+          }
+          break;
+        case 'g':
+          event.preventDefault();
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            handleTabClick('change-grids');
+          }
+          break;
+        case 'e':
+          event.preventDefault();
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            handleTabClick('export-image');
+          }
+          break;
+        case 'l':
+          event.preventDefault();
+          handleTabClick('language');
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [originalImage, t, loadFromClipboard]);
 
   const handleLoadImageClick = useCallback((source: File | string) => {
     // Reset everything first, then load the new image
