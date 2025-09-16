@@ -224,11 +224,6 @@ export const ImagePreview = ({
   // Compute camera preview height to fit available space properly
   useEffect(() => {
     const compute = () => {
-      const containerEl = containerRef.current;
-      const rectTop = containerEl ? containerEl.getBoundingClientRect().top : 0;
-      // Space available from container top to bottom of viewport (minus small padding)
-      const availableViewportHeight = Math.max(200, window.innerHeight - rectTop - 16);
-
       if (videoRef.current && videoRef.current.videoHeight > 0) {
         // Get actual video dimensions
         const videoWidth = videoRef.current.videoWidth;
@@ -237,12 +232,10 @@ export const ImagePreview = ({
 
         // Desired height from container width and aspect
         const desiredHeight = containerWidth * aspectRatio;
-        // Clamp to available viewport height so full video fits on screen
-        const height = Math.min(desiredHeight, availableViewportHeight);
-        setCameraPreviewHeight(Math.max(200, height));
+        setCameraPreviewHeight(Math.max(200, desiredHeight));
       } else {
-        // Fallback: use viewport-based calculation with a 4:3 assumption
-        const fallbackHeight = Math.min(availableViewportHeight, containerWidth * 0.75);
+        // Fallback: assume 4:3 when metadata not ready
+        const fallbackHeight = containerWidth * 0.75;
         setCameraPreviewHeight(Math.max(200, fallbackHeight));
       }
     };
@@ -259,12 +252,10 @@ export const ImagePreview = ({
 
     window.addEventListener('resize', compute);
     window.addEventListener('orientationchange', compute);
-    window.addEventListener('scroll', compute, { passive: true } as any);
 
     return () => {
       window.removeEventListener('resize', compute);
       window.removeEventListener('orientationchange', compute);
-      window.removeEventListener('scroll', compute);
       if (video) {
         video.removeEventListener('loadedmetadata', compute);
         video.removeEventListener('resize', compute);
