@@ -2,9 +2,11 @@ import { useCallback, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Download, Cloud, Upload, Share, Copy, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { createPNG8IndexedBlob } from '@/lib/pngIndexedEncoder';
 
 interface ExportImageProps {
   processedImageData: ImageData | null;
@@ -44,14 +46,24 @@ export const ExportImage = ({
   const { t } = useTranslation();
   const [exportAtCurrentZoom, setExportAtCurrentZoom] = useState(false);
   const [exportWithGrids, setExportWithGrids] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'png24' | 'png8'>('png8');
   
   // Check if any grids are enabled to determine if export with grids should be enabled
   const hasAnyGridEnabled = showTileGrid || showFrameGrid;
 
-  const createIndexedPNG = useCallback((canvas: HTMLCanvasElement, palette: { r: number; g: number; b: number }[]) => {
-    // This is a simplified approach - actual PNG-8 with indexed colors requires more complex implementation
-    // For now, we'll use regular PNG export but with reduced colors
-    return canvas.toDataURL('image/png');
+  const createIndexedPNG = useCallback((canvas: HTMLCanvasElement, palette: { r: number; g: number; b: number }[]): string => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return canvas.toDataURL('image/png');
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    
+    try {
+      const blob = createPNG8IndexedBlob(imageData, palette);
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.warn('Failed to create PNG-8 indexed format, falling back to PNG-24:', error);
+      return canvas.toDataURL('image/png');
+    }
   }, []);
 
   const downloadPNG = useCallback(() => {
@@ -146,18 +158,22 @@ export const ExportImage = ({
     
     let dataURL: string;
     const retroPalettes = ['gameboy', 'megadrive'];
+    const shouldUseIndexed = exportFormat === 'png8' && retroPalettes.includes(selectedPalette) && paletteColors && paletteColors.length > 0;
     
-    if (retroPalettes.includes(selectedPalette) && paletteColors && paletteColors.length > 0) {
-      // Export as indexed PNG when palette is available
+    if (shouldUseIndexed) {
+      // Export as PNG-8 indexed format
       dataURL = createIndexedPNG(canvas, paletteColors);
     } else {
+      // Export as PNG-24 RGB format
       dataURL = canvas.toDataURL('image/png');
     }
+    
+    const formatSuffix = shouldUseIndexed ? '-png8' : '-png24';
     
     const link = document.createElement('a');
     const zoomSuffix = exportAtCurrentZoom ? `-${Math.round(currentZoom * 100)}pct` : '';
     const gridSuffix = exportWithGrids ? '-with-grids' : '';
-    link.download = `retro-image-${selectedPalette}-${selectedResolution}${zoomSuffix}${gridSuffix}.png`;
+    link.download = `retro-image-${selectedPalette}-${selectedResolution}${zoomSuffix}${gridSuffix}${formatSuffix}.png`;
     link.href = dataURL;
     link.click();
     
@@ -409,6 +425,27 @@ export const ExportImage = ({
               </label>
             </div>
           </div>
+          
+          {['gameboy', 'megadrive'].includes(selectedPalette) && paletteColors && paletteColors.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Export Format</label>
+              <Select value={exportFormat} onValueChange={(value: 'png24' | 'png8') => setExportFormat(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="png8">PNG-8 Indexed ({paletteColors.length} colors)</SelectItem>
+                  <SelectItem value="png24">PNG-24 RGB (24-bit)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {exportFormat === 'png8' 
+                  ? 'Smaller file size, perfect for retro palettes' 
+                  : 'Larger file size, full color depth'
+                }
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3 pt-2">
             <Button
