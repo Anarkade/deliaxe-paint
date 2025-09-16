@@ -1326,9 +1326,9 @@ export const RetroImageEditor = () => {
       </div>
 
       {/* Footer - Full width, at bottom of document */}
-      <footer className="border-t border-elegant-border bg-card flex-shrink-0 w-full">
+      <footer className={`border-t border-elegant-border bg-card flex-shrink-0 w-full ${isVerticalLayout ? 'ml-12' : ''}`}>
         <div className="w-full px-[5px] py-[5px]">
-          <p className="text-sm text-muted-foreground text-center" style={{ marginRight: isVerticalLayout ? '0' : '15px' }}>©2025 Anarkade</p>
+          <p className="text-sm text-muted-foreground text-center">©2025 Anarkade</p>
         </div>
       </footer>
     </div>
