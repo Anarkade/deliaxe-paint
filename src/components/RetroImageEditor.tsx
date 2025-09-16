@@ -818,6 +818,37 @@ export const RetroImageEditor = () => {
     }
   }, [originalImage, selectedPalette, selectedResolution, scalingMode, saveToHistory]);
 
+  // Helper function to apply a fixed palette to image data using color matching
+  const applyFixedPalette = (data: Uint8ClampedArray, palette: number[][]) => {
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Find the closest color in the palette using Euclidean distance
+      let minDistance = Infinity;
+      let closestColor = palette[0];
+      
+      for (const paletteColor of palette) {
+        const distance = Math.sqrt(
+          Math.pow(r - paletteColor[0], 2) +
+          Math.pow(g - paletteColor[1], 2) +
+          Math.pow(b - paletteColor[2], 2)
+        );
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestColor = paletteColor;
+        }
+      }
+      
+      data[i] = closestColor[0];     // R
+      data[i + 1] = closestColor[1]; // G
+      data[i + 2] = closestColor[2]; // B
+      // Alpha channel (i + 3) remains unchanged
+    }
+  };
+
   // Async palette conversion with Web Worker support
   const applyPaletteConversion = async (imageData: ImageData, palette: PaletteType, customColors?: any[]): Promise<ImageData> => {
     const data = new Uint8ClampedArray(imageData.data);
@@ -963,6 +994,54 @@ export const RetroImageEditor = () => {
             b: color.b
           })));
         }
+        break;
+
+      case 'cga0':
+        const cga0Palette = [[0, 0, 0], [255, 85, 255], [85, 255, 255], [255, 255, 255]];
+        applyFixedPalette(data, cga0Palette);
+        setCurrentPaletteColors(cga0Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+        break;
+
+      case 'cga1':
+        const cga1Palette = [[0, 0, 0], [85, 255, 85], [255, 85, 85], [255, 255, 85]];
+        applyFixedPalette(data, cga1Palette);
+        setCurrentPaletteColors(cga1Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+        break;
+
+      case 'cga2':
+        const cga2Palette = [[0, 0, 0], [255, 85, 85], [85, 255, 255], [255, 255, 255]];
+        applyFixedPalette(data, cga2Palette);
+        setCurrentPaletteColors(cga2Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+        break;
+
+      case 'gameboyRealistic':
+        const gbRealisticPalette = [[56, 72, 40], [96, 112, 40], [160, 168, 48], [208, 224, 64]];
+        applyFixedPalette(data, gbRealisticPalette);
+        setCurrentPaletteColors(gbRealisticPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+        break;
+
+      case 'amstradCpc':
+        const amstradCpcPalette = [[0, 0, 0], [128, 128, 128], [255, 255, 255], [128, 0, 0], [255, 0, 0], [255, 128, 128], [255, 127, 0], [255, 255, 128], [255, 255, 0], [128, 128, 0], [0, 128, 0], [0, 255, 0], [128, 255, 0], [128, 255, 128], [0, 255, 128], [0, 128, 128], [0, 255, 255], [128, 255, 255], [0, 128, 255], [0, 0, 255], [0, 0, 128], [128, 0, 255], [128, 128, 255], [255, 128, 255], [255, 0, 255], [255, 0, 128], [128, 0, 128]];
+        applyFixedPalette(data, amstradCpcPalette);
+        setCurrentPaletteColors(amstradCpcPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+        break;
+
+      case 'nes':
+        const nesPalette = [[88, 88, 88], [0, 35, 124], [13, 16, 153], [48, 0, 146], [79, 0, 108], [96, 0, 53], [92, 5, 0], [70, 24, 0], [39, 45, 0], [9, 62, 0], [0, 69, 0], [0, 65, 6], [0, 53, 69], [0, 0, 0], [0, 0, 0], [0, 0, 0], [161, 161, 161], [11, 83, 215], [51, 55, 254], [102, 33, 247], [149, 21, 190], [172, 22, 110], [166, 39, 33], [134, 67, 0], [89, 98, 0], [45, 122, 0], [12, 133, 0], [58, 217, 116], [57, 195, 223], [66, 66, 66], [0, 0, 0], [0, 0, 0], [255, 255, 255], [81, 165, 254], [128, 132, 254], [188, 106, 254], [249, 91, 254], [254, 94, 196], [254, 115, 105], [228, 147, 33], [174, 182, 0], [121, 211, 0], [81, 223, 33], [58, 215, 116], [57, 195, 223], [66, 66, 66], [0, 0, 0], [0, 0, 0], [255, 255, 255], [181, 217, 254], [202, 202, 254], [227, 190, 254], [249, 183, 254], [254, 186, 231], [254, 195, 188], [244, 209, 153], [222, 224, 134], [198, 236, 135], [178, 242, 157], [167, 240, 195], [168, 231, 240], [172, 172, 172], [0, 0, 0], [0, 0, 0]];
+        applyFixedPalette(data, nesPalette);
+        setCurrentPaletteColors(nesPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+        break;
+
+      case 'commodore64':
+        const c64Palette = [[0, 0, 0], [98, 98, 98], [137, 137, 137], [173, 173, 173], [255, 255, 255], [159, 78, 68], [203, 126, 117], [109, 84, 18], [161, 104, 60], [201, 212, 135], [154, 226, 155], [92, 171, 94], [106, 191, 198], [136, 126, 203], [80, 69, 155], [160, 87, 163]];
+        applyFixedPalette(data, c64Palette);
+        setCurrentPaletteColors(c64Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+        break;
+
+      case 'zxSpectrum':
+        const zxPalette = [[0, 0, 0], [0, 0, 216], [0, 0, 255], [216, 0, 0], [255, 0, 0], [216, 0, 216], [255, 0, 255], [0, 216, 0], [0, 255, 0], [0, 216, 216], [0, 255, 255], [216, 216, 0], [255, 255, 0], [216, 216, 216], [255, 255, 255]];
+        applyFixedPalette(data, zxPalette);
+        setCurrentPaletteColors(zxPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
         break;
         
       default:

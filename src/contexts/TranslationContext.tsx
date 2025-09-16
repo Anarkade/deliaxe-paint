@@ -166,6 +166,20 @@ interface Translation {
   neoGeoSingleColors: string;
   zxSpectrumColors: string;
 
+  // New palettes
+  cgaPalette0: string;
+  cgaPalette1: string; 
+  cgaPalette2: string;
+  gameBoyRealistic: string;
+  amstradCpc: string;
+  nesPalette: string;
+  commodore64: string;
+  zxSpectrumPalette: string;
+  cgaColors: string;
+  amstradCpcColors: string;
+  nesColors: string;
+  commodore64Colors: string;
+
   // Alignment options
   alignment: string;
   alignTopLeft: string;
@@ -365,6 +379,20 @@ const baseTranslation: Translation = {
   neoGeoMultiColors: '4096 colors (16×256)',
   neoGeoSingleColors: '16 colors (15-bit)',
   zxSpectrumColors: '16 colors (4-bit)',
+
+  // New palettes
+  cgaPalette0: 'CGA Palette 0',
+  cgaPalette1: 'CGA Palette 1',
+  cgaPalette2: 'CGA Palette 2', 
+  gameBoyRealistic: 'Game Boy (Realistic)',
+  amstradCpc: 'Amstrad CPC',
+  nesPalette: 'NES',
+  commodore64: 'Commodore 64',
+  zxSpectrumPalette: 'ZX Spectrum',
+  cgaColors: '4 colors (CGA)',
+  amstradCpcColors: '27 colors',
+  nesColors: '64 colors',
+  commodore64Colors: '16 colors',
   ...alignmentTranslations,
   showTileGrid: 'Show tile grid',
   showFrameGrid: 'Show frame grid',
@@ -460,6 +488,20 @@ const translations: Record<Language, Translation> = {
     undo: 'Deshacer',
     redo: 'Rehacer',
     consolePlatform: 'Consola/Plataforma',
+
+    // New palettes (Spanish)
+    cgaPalette0: 'CGA Paleta 0',
+    cgaPalette1: 'CGA Paleta 1',
+    cgaPalette2: 'CGA Paleta 2',
+    gameBoyRealistic: 'Game Boy (Realista)',
+    amstradCpc: 'Amstrad CPC',
+    nesPalette: 'NES',
+    commodore64: 'Commodore 64',
+    zxSpectrumPalette: 'ZX Spectrum',
+    cgaColors: '4 colores (CGA)',
+    amstradCpcColors: '27 colores',
+    nesColors: '64 colores',
+    commodore64Colors: '16 colores',
     paletteColors: 'Colores de la Paleta',
     colorPalette: 'Paleta de colores',
     extractColors: 'Extraer Colores',
