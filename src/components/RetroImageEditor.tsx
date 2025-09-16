@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Upload, Palette, Eye, Monitor, Download, Gamepad2, Grid3X3, Globe, X } from 'lucide-react';
+import { Upload, Palette, Eye, Monitor, Download, Grid3X3, Globe, X } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { processMegaDriveImage, extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette } from '@/lib/colorQuantization';
@@ -924,7 +924,11 @@ export const RetroImageEditor = () => {
       {/* Header */}
       {!isVerticalLayout && (
         <header className="border-b border-elegant-border bg-card px-3 py-1.5 w-full flex-shrink-0">
-          <div className="w-full max-w-none flex items-center justify-center">
+          <div className="w-full max-w-none flex items-center justify-between">
+            {/* Logo on the left */}
+            <div className="flex items-center">
+              <img src="/logo.gif" alt="Vintage Palette Studio" className="h-8 w-8" />
+            </div>
             {/* Horizontally centered section buttons */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <Button
@@ -1011,7 +1015,7 @@ export const RetroImageEditor = () => {
             <div className="flex flex-col items-center py-1 space-y-1 h-full">
               {/* Logo */}
               <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                <Gamepad2 className="h-8 w-8" style={{ color: '#7d1b2d' }} />
+                <img src="/logo.gif" alt="Vintage Palette Studio" className="h-8 w-8" />
               </div>
               
               {/* Section buttons */}
