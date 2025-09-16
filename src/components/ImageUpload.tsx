@@ -20,6 +20,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
   const [currentCameraIndex, setCurrentCameraIndex] = useState(0);
   const [cameraError, setCameraError] = useState<string>('');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [showCameraSelector, setShowCameraSelector] = useState(false);
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -203,8 +204,55 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
     if (camera.label) {
       return camera.label;
     }
-    // Fallback names for mobile/unnamed cameras
-    return `Camera ${index + 1}`;
+    // Fallback names for mobile/unnamed cameras using translations
+    const cameraNames = [t('camera1'), t('camera2'), t('camera3')];
+    return cameraNames[index] || `${t('camera1').replace('1', String(index + 1))}`;
+  }, [t]);
+
+  const handleCameraPreviewRequest = useCallback(async () => {
+    // Get available cameras first
+    await getAvailableCameras();
+    setShowCameraSelector(true);
+  }, [getAvailableCameras]);
+
+  const handleCameraSelection = useCallback(async (cameraIndex: number) => {
+    setCurrentCameraIndex(cameraIndex);
+    setShowCameraSelector(false);
+    setCameraError(''); // Clear any previous errors
+    
+    try {
+      const constraints: MediaStreamConstraints = {
+        video: availableCameras.length > 0 ? {
+          deviceId: availableCameras[cameraIndex]?.deviceId
+        } : true
+      };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      streamRef.current = stream;
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setShowCameraPreview(true);
+      }
+    } catch (error: any) {
+      console.error('Camera access denied:', error);
+      let errorMessage = t('cameraError');
+      
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        errorMessage = t('cameraNotAvailable');
+      } else if (error.name === 'AbortError' || error.message.includes('Timeout')) {
+        errorMessage = t('cameraTimeout');
+      } else if (error.name === 'NotReadableError' || error.message.includes('Could not start')) {
+        errorMessage = t('cameraNotReadable');
+      }
+      
+      setCameraError(errorMessage);
+      setShowCameraPreview(true); // Still show the preview area to display the error
+    }
+  }, [availableCameras, t]);
+
+  const closeCameraSelector = useCallback(() => {
+    setShowCameraSelector(false);
   }, []);
 
   // Drag and drop handlers
@@ -246,6 +294,57 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
 
   if (hideSection) {
     return null;
+  }
+
+  // Show camera selector dialog
+  if (showCameraSelector) {
+    return (
+      <Card className="p-5 border-pixel-grid bg-card">
+        <div className="relative">
+          {/* Close button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={closeCameraSelector}
+            className="absolute top-0 right-0 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+                <Camera className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+                {t('selectCamera')}
+              </h3>
+            </div>
+            
+            {availableCameras.length === 0 ? (
+              <div className="text-center py-8">
+                <Camera className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                  {t('noCamerasDetected')}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {availableCameras.map((camera, index) => (
+                  <Button
+                    key={camera.deviceId || index}
+                    onClick={() => handleCameraSelection(index)}
+                    variant="highlighted"
+                    className="w-full justify-start text-left"
+                  >
+                    <Camera className="mr-2 h-4 w-4" />
+                    {getCameraDisplayName(camera, index)}
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
   }
 
   return (
@@ -396,7 +495,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
             
             {!showCameraPreview && (
               <Button 
-                onClick={onCameraPreviewRequest || startCameraPreview}
+                onClick={onCameraPreviewRequest || handleCameraPreviewRequest}
                 variant="highlighted"
                 size="sm"
                 className="w-full text-xs whitespace-pre-wrap leading-tight"

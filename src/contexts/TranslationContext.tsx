@@ -220,6 +220,11 @@ interface Translation {
   clickToChangeColor: string;
   dropboxComingSoon: string;
   googleDriveComingSoon: string;
+  selectCamera: string;
+  noCamerasDetected: string;
+  camera1: string;
+  camera2: string;
+  camera3: string;
 }
 
 const alignmentTranslations = {
@@ -410,7 +415,12 @@ const baseTranslation: Translation = {
   copyImageError: 'Failed to copy image to clipboard',
   clickToChangeColor: 'Click to change color',
   dropboxComingSoon: 'Dropbox integration coming soon!',
-  googleDriveComingSoon: 'Google Drive integration coming soon!'
+  googleDriveComingSoon: 'Google Drive integration coming soon!',
+  selectCamera: 'Select camera',
+  noCamerasDetected: 'No cameras detected, please close and try again after connecting, activating and enabling a camera',
+  camera1: 'Camera 1',
+  camera2: 'Camera 2',
+  camera3: 'Camera 3'
 };
 
 const translations: Record<Language, Translation> = {
@@ -597,7 +607,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Error al copiar imagen al portapapeles',
     clickToChangeColor: 'Haz clic para cambiar color',
     dropboxComingSoon: '¡Integración con Dropbox próximamente!',
-    googleDriveComingSoon: '¡Integración con Google Drive próximamente!'
+    googleDriveComingSoon: '¡Integración con Google Drive próximamente!',
+    selectCamera: 'Seleccionar cámara',
+    noCamerasDetected: 'No se detectaron cámaras, cierre e intente nuevamente después de conectar, activar y habilitar una cámara',
+    camera1: 'Cámara 1',
+    camera2: 'Cámara 2',
+    camera3: 'Cámara 3'
   },
   'th': {
     ...baseTranslation,
@@ -780,7 +795,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'คัดลอกภาพไปยังคลิปบอร์ดไม่สำเร็จ',
     clickToChangeColor: 'คลิกเพื่อเปลี่ยนสี',
     dropboxComingSoon: 'การผสานรวม Dropbox เร็วๆ นี้!',
-    googleDriveComingSoon: 'การผสานรวม Google Drive เร็วๆ นี้!'
+    googleDriveComingSoon: 'การผสานรวม Google Drive เร็วๆ นี้!',
+    selectCamera: 'เลือกกล้อง',
+    noCamerasDetected: 'ไม่พบกล้อง โปรดปิดและลองอีกครั้งหลังจากเชื่อมต่อ เปิดใช้งาน และอนุญาตกล้อง',
+    camera1: 'กล้อง 1',
+    camera2: 'กล้อง 2',
+    camera3: 'กล้อง 3'
   },
   'ko': {
     ...baseTranslation,
@@ -963,7 +983,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: '클립보드에 이미지 복사 실패',
     clickToChangeColor: '클릭하여 색상 변경',
     dropboxComingSoon: 'Dropbox 통합 곧 출시!',
-    googleDriveComingSoon: 'Google Drive 통합 곧 출시!'
+    googleDriveComingSoon: 'Google Drive 통합 곧 출시!',
+    selectCamera: '카메라 선택',
+    noCamerasDetected: '카메라가 감지되지 않습니다. 카메라를 연결, 활성화 및 활성화한 후 닫고 다시 시도하십시오',
+    camera1: '카메라 1',
+    camera2: '카메라 2',
+    camera3: '카메라 3'
   },
   'cs': {
     ...baseTranslation,
@@ -1146,7 +1171,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Chyba při kopírování obrázku do schránky',
     clickToChangeColor: 'Klikněte pro změnu barvy',
     dropboxComingSoon: 'Integrace s Dropbox již brzy!',
-    googleDriveComingSoon: 'Integrace s Google Drive již brzy!'
+    googleDriveComingSoon: 'Integrace s Google Drive již brzy!',
+    selectCamera: 'Vybrat kameru',
+    noCamerasDetected: 'Nebyly nalezeny žádné kamery, zavřete a zkuste to znovu po připojení, aktivaci a povolení kamery',
+    camera1: 'Kamera 1',
+    camera2: 'Kamera 2',
+    camera3: 'Kamera 3'
   },
   'es-LA': { 
     ...baseTranslation,
@@ -1404,7 +1434,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Error en copiar imatge al portapapers',
     clickToChangeColor: 'Fes clic per canviar color',
     dropboxComingSoon: 'Integració amb Dropbox properament!',
-    googleDriveComingSoon: 'Integració amb Google Drive properament!'
+    googleDriveComingSoon: 'Integració amb Google Drive properament!',
+    selectCamera: 'Seleccionar càmera',
+    noCamerasDetected: 'No s\'han detectat càmeres, tanqueu i torneu-ho a provar després de connectar, activar i habilitar una càmera',
+    camera1: 'Càmera 1',
+    camera2: 'Càmera 2',
+    camera3: 'Càmera 3'
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -1488,7 +1523,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: '复制图片到剪贴板失败',
     clickToChangeColor: '点击更改颜色',
     dropboxComingSoon: 'Dropbox集成即将推出！',
-    googleDriveComingSoon: 'Google Drive集成即将推出！'
+    googleDriveComingSoon: 'Google Drive集成即将推出！',
+    selectCamera: '选择摄像头',
+    noCamerasDetected: '未检测到摄像头，请在连接、激活和启用摄像头后关闭并重试',
+    camera1: '摄像头 1',
+    camera2: '摄像头 2',
+    camera3: '摄像头 3'
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -1572,7 +1612,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: '複製圖片到剪貼簿失敗',
     clickToChangeColor: '點擊更改顏色',
     dropboxComingSoon: 'Dropbox整合即將推出！',
-    googleDriveComingSoon: 'Google Drive整合即將推出！'
+    googleDriveComingSoon: 'Google Drive整合即將推出！',
+    selectCamera: '選擇攝影機',
+    noCamerasDetected: '未偵測到攝影機，請在連接、啟動和啟用攝影機後關閉並重試',
+    camera1: '攝影機 1',
+    camera2: '攝影機 2',
+    camera3: '攝影機 3'
   },
   'ja': { 
     ...baseTranslation,
@@ -1656,7 +1701,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'クリップボードへの画像コピーに失敗',
     clickToChangeColor: 'クリックして色を変更',
     dropboxComingSoon: 'Dropbox統合近日公開！',
-    googleDriveComingSoon: 'Google Drive統合近日公開！'
+    googleDriveComingSoon: 'Google Drive統合近日公開！',
+    selectCamera: 'カメラを選択',
+    noCamerasDetected: 'カメラが検出されませんでした。カメラを接続、有効化、許可してから閉じて再試行してください',
+    camera1: 'カメラ 1',
+    camera2: 'カメラ 2',
+    camera3: 'カメラ 3'
   },
   'it': { 
     ...baseTranslation,
@@ -1740,7 +1790,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Errore nel copiare l\'immagine negli appunti',
     clickToChangeColor: 'Clicca per cambiare colore',
     dropboxComingSoon: 'Integrazione Dropbox in arrivo!',
-    googleDriveComingSoon: 'Integrazione Google Drive in arrivo!'
+    googleDriveComingSoon: 'Integrazione Google Drive in arrivo!',
+    selectCamera: 'Seleziona fotocamera',
+    noCamerasDetected: 'Nessuna fotocamera rilevata, chiudi e riprova dopo aver collegato, attivato e abilitato una fotocamera',
+    camera1: 'Fotocamera 1',
+    camera2: 'Fotocamera 2',
+    camera3: 'Fotocamera 3'
   },
   'de': { 
     ...baseTranslation,
@@ -1824,7 +1879,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Fehler beim Kopieren des Bildes in die Zwischenablage',
     clickToChangeColor: 'Klicken zum Ändern der Farbe',
     dropboxComingSoon: 'Dropbox-Integration bald verfügbar!',
-    googleDriveComingSoon: 'Google Drive-Integration bald verfügbar!'
+    googleDriveComingSoon: 'Google Drive-Integration bald verfügbar!',
+    selectCamera: 'Kamera auswählen',
+    noCamerasDetected: 'Keine Kameras erkannt, bitte schließen und erneut versuchen nach dem Anschließen, Aktivieren und Freigeben einer Kamera',
+    camera1: 'Kamera 1',
+    camera2: 'Kamera 2',
+    camera3: 'Kamera 3'
   },
   'fr': { 
     ...baseTranslation,
@@ -1908,7 +1968,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Erreur de copie de l\'image dans le presse-papiers',
     clickToChangeColor: 'Cliquez pour changer la couleur',
     dropboxComingSoon: 'Intégration Dropbox bientôt disponible !',
-    googleDriveComingSoon: 'Intégration Google Drive bientôt disponible !'
+    googleDriveComingSoon: 'Intégration Google Drive bientôt disponible !',
+    selectCamera: 'Sélectionner la caméra',
+    noCamerasDetected: 'Aucune caméra détectée, veuillez fermer et réessayer après avoir connecté, activé et autorisé une caméra',
+    camera1: 'Caméra 1',
+    camera2: 'Caméra 2',
+    camera3: 'Caméra 3'
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -1943,7 +2008,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Erro ao copiar imagem para a área de transferência',
     clickToChangeColor: 'Clique para alterar cor',
     dropboxComingSoon: 'Integração Dropbox em breve!',
-    googleDriveComingSoon: 'Integração Google Drive em breve!'
+    googleDriveComingSoon: 'Integração Google Drive em breve!',
+    selectCamera: 'Selecionar câmera',
+    noCamerasDetected: 'Nenhuma câmera detectada, feche e tente novamente após conectar, ativar e habilitar uma câmera',
+    camera1: 'Câmera 1',
+    camera2: 'Câmera 2',
+    camera3: 'Câmera 3'
   },
   'ru': { 
     ...baseTranslation,
@@ -1978,7 +2048,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Ошибка копирования изображения в буфер обмена',
     clickToChangeColor: 'Нажмите, чтобы изменить цвет',
     dropboxComingSoon: 'Интеграция с Dropbox скоро!',
-    googleDriveComingSoon: 'Интеграция с Google Drive скоро!'
+    googleDriveComingSoon: 'Интеграция с Google Drive скоро!',
+    selectCamera: 'Выбрать камеру',
+    noCamerasDetected: 'Камеры не обнаружены, закройте и попробуйте снова после подключения, активации и включения камеры',
+    camera1: 'Камера 1',
+    camera2: 'Камера 2',
+    camera3: 'Камера 3'
   },
   'pt-BR': { 
     ...baseTranslation,
@@ -2013,7 +2088,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Erro ao copiar imagem para a área de transferência',
     clickToChangeColor: 'Clique para alterar cor',
     dropboxComingSoon: 'Integração Dropbox em breve!',
-    googleDriveComingSoon: 'Integração Google Drive em breve!'
+    googleDriveComingSoon: 'Integração Google Drive em breve!',
+    selectCamera: 'Selecionar câmera',
+    noCamerasDetected: 'Nenhuma câmera detectada, feche e tente novamente após conectar, ativar e habilitar uma câmera',
+    camera1: 'Câmera 1',
+    camera2: 'Câmera 2',
+    camera3: 'Câmera 3'
   },
   'pl': { 
     ...baseTranslation,
@@ -2048,7 +2128,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Błąd kopiowania obrazu do schowka',
     clickToChangeColor: 'Kliknij, aby zmienić kolor',
     dropboxComingSoon: 'Integracja z Dropbox wkrótce!',
-    googleDriveComingSoon: 'Integracja z Google Drive wkrótce!'
+    googleDriveComingSoon: 'Integracja z Google Drive wkrótce!',
+    selectCamera: 'Wybierz kamerę',
+    noCamerasDetected: 'Nie wykryto kamer, zamknij i spróbuj ponownie po podłączeniu, aktywacji i włączeniu kamery',
+    camera1: 'Kamera 1',
+    camera2: 'Kamera 2',
+    camera3: 'Kamera 3'
   },
   'tr': { 
     ...baseTranslation,
@@ -2083,7 +2168,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Resmi panoya kopyalama hatası',
     clickToChangeColor: 'Rengi değiştirmek için tıklayın',
     dropboxComingSoon: 'Dropbox entegrasyonu yakında!',
-    googleDriveComingSoon: 'Google Drive entegrasyonu yakında!'
+    googleDriveComingSoon: 'Google Drive entegrasyonu yakında!',
+    selectCamera: 'Kamera seç',
+    noCamerasDetected: 'Kamera algılanmadı, kamerayı bağladıktan, etkinleştirdikten ve izin verdikten sonra kapatıp tekrar deneyin',
+    camera1: 'Kamera 1',
+    camera2: 'Kamera 2',
+    camera3: 'Kamera 3'
   },
   'eu': { 
     ...baseTranslation,
@@ -2118,7 +2208,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Errorea irudia arbelean kopiatzean',
     clickToChangeColor: 'Egin klik kolorea aldatzeko',
     dropboxComingSoon: 'Dropbox integrazioa laster!',
-    googleDriveComingSoon: 'Google Drive integrazioa laster!'
+    googleDriveComingSoon: 'Google Drive integrazioa laster!',
+    selectCamera: 'Kamera hautatu',
+    noCamerasDetected: 'Ez da kamerarik aurkitu, itxi eta saiatu berriro kamera konektatu, aktibatu eta gaitu ondoren',
+    camera1: 'Kamera 1',
+    camera2: 'Kamera 2',
+    camera3: 'Kamera 3'
   },
   'oc': { 
     ...baseTranslation,
@@ -2153,7 +2248,12 @@ const translations: Record<Language, Translation> = {
     copyImageError: 'Error a copiar era imatge ath còpia-apega',
     clickToChangeColor: 'Clica entà cambiar era color',
     dropboxComingSoon: 'Integració damb Dropbox lèu!',
-    googleDriveComingSoon: 'Integració damb Google Drive lèu!'
+    googleDriveComingSoon: 'Integració damb Google Drive lèu!',
+    selectCamera: 'Seleccionar camèra',
+    noCamerasDetected: 'Cap camèra detectada, tampatz e tornatz ensajar après de connectar, activar e habilitar ua camèra',
+    camera1: 'Camèra 1',
+    camera2: 'Camèra 2',
+    camera3: 'Camèra 3'
   }
 };
 
