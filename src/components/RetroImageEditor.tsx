@@ -76,7 +76,7 @@ export const RetroImageEditor = () => {
           if (!originalImage) {
             toast.error(t('loadImageToStart'));
           } else {
-            handleTabClick('change-palette');
+            handleTabClick('palette-selector');
           }
           break;
         case 'r':
@@ -84,7 +84,7 @@ export const RetroImageEditor = () => {
           if (!originalImage) {
             toast.error(t('loadImageToStart'));
           } else {
-            handleTabClick('change-resolution');
+            handleTabClick('resolution');
           }
           break;
         case 'g':
@@ -92,7 +92,7 @@ export const RetroImageEditor = () => {
           if (!originalImage) {
             toast.error(t('loadImageToStart'));
           } else {
-            handleTabClick('change-grid');
+            handleTabClick('change-grids');
           }
           break;
         case 'e':
