@@ -453,6 +453,8 @@ export const RetroImageEditor = () => {
     // If all settings are original, don't process - keep the original image
     if (selectedPalette === 'original' && selectedResolution === 'original') {
       setProcessedImageData(null); // Clear processed data to show original
+      // Set current palette to original palette for PNG-8 export capability
+      setCurrentPaletteColors(originalPaletteColors);
       return;
     }
 
@@ -695,6 +697,11 @@ export const RetroImageEditor = () => {
         applyPaletteConversion(originalImageData, selectedPalette, originalPaletteColors);
         ctx.putImageData(originalImageData, 0, 0);
         imageData = originalImageData;
+      }
+
+      // Ensure currentPaletteColors is set for export functionality
+      if (selectedPalette === 'original') {
+        setCurrentPaletteColors(originalPaletteColors);
       }
 
       setProcessedImageData(imageData);
@@ -1396,7 +1403,7 @@ export const RetroImageEditor = () => {
               frameHeight={frameHeight}
               tileGridColor={tileGridColor}
               frameGridColor={frameGridColor}
-              paletteColors={currentPaletteColors}
+              paletteColors={selectedPalette !== 'original' ? currentPaletteColors : (isOriginalPNG8Indexed ? originalPaletteColors : currentPaletteColors)}
               onClose={() => setActiveTab(null)}
             />
                   </div>

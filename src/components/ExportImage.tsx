@@ -157,8 +157,8 @@ export const ExportImage = ({
     }
     
     let dataURL: string;
-    const retroPalettes = ['gameboy', 'megadrive'];
-    const shouldUseIndexed = exportFormat === 'png8' && retroPalettes.includes(selectedPalette) && paletteColors && paletteColors.length > 0;
+    // Use PNG-8 when format is selected and we have palette colors (up to 256 colors)
+    const shouldUseIndexed = exportFormat === 'png8' && paletteColors && paletteColors.length > 0 && paletteColors.length <= 256;
     
     if (shouldUseIndexed) {
       // Export as PNG-8 indexed format
@@ -426,7 +426,7 @@ export const ExportImage = ({
             </div>
           </div>
           
-          {['gameboy', 'megadrive'].includes(selectedPalette) && paletteColors && paletteColors.length > 0 && (
+          {paletteColors && paletteColors.length > 0 && paletteColors.length <= 256 && (
             <div className="space-y-2">
               <label className="text-sm font-medium">Export Format</label>
               <Select value={exportFormat} onValueChange={(value: 'png24' | 'png8') => setExportFormat(value)}>
