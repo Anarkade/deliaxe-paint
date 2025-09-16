@@ -1104,7 +1104,8 @@ export const RetroImageEditor = () => {
     }
   }, [originalImage, selectedPalette, selectedResolution, scalingMode, processImage]);
 
-  const sortedLanguages = [...languages].sort((a, b) => 
+  const languagesSafe = Array.isArray(languages) ? languages : [];
+  const sortedLanguages = [...languagesSafe].sort((a, b) => 
     getLanguageName(a).localeCompare(getLanguageName(b))
   );
 

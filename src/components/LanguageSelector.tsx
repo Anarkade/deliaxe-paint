@@ -14,7 +14,8 @@ interface LanguageSelectorProps {
 export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelectorProps) => {
   const { currentLanguage, changeLanguage, languages, getLanguageName, t } = useTranslation();
 
-  const sortedLanguages = [...languages].sort((a, b) => 
+  const languagesSafe = Array.isArray(languages) ? languages : [];
+  const sortedLanguages = [...languagesSafe].sort((a, b) => 
     getLanguageName(a).localeCompare(getLanguageName(b))
   );
 
