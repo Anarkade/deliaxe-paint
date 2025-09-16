@@ -32,7 +32,7 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{t('language')}</p>
+            <p>{t('changeLanguage')}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -54,25 +54,25 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
       <div className="flex items-center gap-3 mb-4">
         <Globe className="h-6 w-6 text-primary" />
         <h3 className="text-xl font-bold text-primary">
-          {t('language')}
+          {t('changeLanguage')}
         </h3>
       </div>
       
         <RadioGroup 
           value={currentLanguage} 
           onValueChange={(value) => changeLanguage(value as Language)}
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1"
+          className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-0"
         >
         {sortedLanguages.map((lang) => (
-          <div key={lang} className="flex items-start space-x-2 py-1">
+          <div key={lang} className="flex items-center space-x-2 py-0.5">
             <RadioGroupItem 
               value={lang} 
               id={`lang-${lang}`}
-              className="border-elegant-border text-bone-white data-[state=checked]:bg-primary data-[state=checked]:border-primary mt-0.5 flex-shrink-0"
+              className="border-elegant-border text-bone-white data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
             />
             <Label 
               htmlFor={`lang-${lang}`} 
-              className="text-bone-white cursor-pointer hover:text-primary text-sm leading-tight break-words hyphens-auto max-w-[8rem] whitespace-pre-wrap"
+              className="text-bone-white cursor-pointer hover:text-primary text-sm leading-none whitespace-nowrap"
             >
               {getLanguageName(lang)}
             </Label>
