@@ -2,7 +2,8 @@ import { useCallback, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Download, Cloud, Upload, Share, Copy, X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -427,23 +428,18 @@ export const ExportImage = ({
           </div>
           
           {paletteColors && paletteColors.length > 0 && paletteColors.length <= 256 && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <label className="text-sm font-medium">Export Format</label>
-              <Select value={exportFormat} onValueChange={(value: 'png24' | 'png8') => setExportFormat(value)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="png8">PNG-8 Indexed ({paletteColors.length} colors)</SelectItem>
-                  <SelectItem value="png24">PNG-24 RGB (24-bit)</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                {exportFormat === 'png8' 
-                  ? 'Smaller file size, perfect for retro palettes' 
-                  : 'Larger file size, full color depth'
-                }
-              </p>
+              <RadioGroup value={exportFormat} onValueChange={(value: 'png24' | 'png8') => setExportFormat(value)}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="png8" id="png8" />
+                  <Label htmlFor="png8" className="text-sm">PNG-8 Indexed ({paletteColors.length} colors)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="png24" id="png24" />
+                  <Label htmlFor="png24" className="text-sm">PNG-24 RGB (24-bit)</Label>
+                </div>
+              </RadioGroup>
             </div>
           )}
 
