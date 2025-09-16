@@ -11,11 +11,16 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
-import { Upload, Palette, Eye, Monitor, Download, Grid3X3, Globe, X } from 'lucide-react';
+import { Upload, Palette, Eye, Monitor, Download, Grid3X3, Globe, X, AlertTriangle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { processMegaDriveImage, extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette } from '@/lib/colorQuantization';
 import { analyzePNGFile } from '@/lib/pngAnalyzer';
+import { useImageProcessor } from '@/hooks/useImageProcessor';
+import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+import { useCanvasPool } from '@/utils/canvasPool';
+import { imageProcessingCache, hashImage, hashImageData } from '@/utils/imageCache';
 
 interface HistoryState {
   imageData: ImageData | null;
@@ -48,6 +53,12 @@ export const RetroImageEditor = () => {
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [currentZoom, setCurrentZoom] = useState(100);
   
+  // Performance and processing state
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingProgress, setProcessingProgress] = useState(0);
+  const [processingOperation, setProcessingOperation] = useState<string>('');
+  const [performanceWarnings, setPerformanceWarnings] = useState<string[]>([]);
+  
   // Grid state
   const [showTileGrid, setShowTileGrid] = useState(false);
   const [showFrameGrid, setShowFrameGrid] = useState(false);
@@ -62,6 +73,11 @@ export const RetroImageEditor = () => {
   const [historyIndex, setHistoryIndex] = useState(-1);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  // Performance monitoring hooks
+  const imageProcessor = useImageProcessor();
+  const performanceMonitor = usePerformanceMonitor();
+  const { getCanvas, returnCanvas } = useCanvasPool();
 
   const checkOrientation = useCallback(() => {
     const isLandscape = window.innerWidth >= window.innerHeight;
@@ -181,9 +197,11 @@ export const RetroImageEditor = () => {
     setIsOriginalPNG8Indexed(false);
   }, []);
 
-  // Optimized image loading with memory management
+  // Optimized image loading with memory management and performance monitoring
   const loadImage = useCallback(async (source: File | string) => {
     try {
+      performanceMonitor.startMeasurement('image_loading');
+      
       const img = new Image();
       img.crossOrigin = 'anonymous';
       
@@ -200,26 +218,64 @@ export const RetroImageEditor = () => {
         }
       });
       
-      // Performance check: Validate image size to prevent memory issues
+      // Performance check: Validate image size and provide recommendations
+      const imageDimensions = { width: img.width, height: img.height };
+      const shouldOptimize = performanceMonitor.shouldOptimizeProcessing(imageDimensions);
+      
       if (img.width > MAX_IMAGE_SIZE || img.height > MAX_IMAGE_SIZE) {
         toast.error(t('imageTooLarge'));
         return;
+      }
+      
+      if (shouldOptimize) {
+        const recommendations = performanceMonitor.getOptimizationRecommendations(imageDimensions);
+        setPerformanceWarnings(recommendations);
+        
+        if (recommendations.length > 0) {
+          toast.warning(`Large image detected: ${img.width}×${img.height} pixels. Processing may be slower.`);
+        }
+      } else {
+        setPerformanceWarnings([]);
       }
       
       setOriginalImage(img);
       setProcessedImageData(null);
       setOriginalImageSource(source);
       
-      // Extract original palette using optimized sampling for large images
-      const tempCanvas = document.createElement('canvas');
-      const tempCtx = tempCanvas.getContext('2d');
-      if (tempCtx) {
-        tempCanvas.width = img.width;
-        tempCanvas.height = img.height;
-        tempCtx.drawImage(img, 0, 0);
-        const originalImageData = tempCtx.getImageData(0, 0, img.width, img.height);
-        const originalColors = extractColorsFromImageData(originalImageData);
-        setOriginalPaletteColors(originalColors);
+      // Extract original palette using Web Worker for better performance
+      const imageHash = hashImage(img);
+      const cachedAnalysis = imageProcessingCache.getCachedColorAnalysis(imageHash);
+      
+      if (cachedAnalysis) {
+        setOriginalPaletteColors(cachedAnalysis.colors);
+      } else {
+        // Use canvas pool for memory efficiency
+        const { canvas, ctx } = getCanvas(img.width, img.height);
+        ctx.drawImage(img, 0, 0);
+        const originalImageData = ctx.getImageData(0, 0, img.width, img.height);
+        
+        try {
+          setIsProcessing(true);
+          setProcessingOperation('Analyzing colors...');
+          
+          const originalColors = await imageProcessor.extractColors(
+            originalImageData,
+            (progress) => setProcessingProgress(progress)
+          );
+          
+          setOriginalPaletteColors(originalColors);
+          imageProcessingCache.cacheColorAnalysis(imageHash, originalColors, 'extracted');
+        } catch (error) {
+          console.error('Error extracting colors:', error);
+          // Fallback to synchronous processing
+          const originalColors = extractColorsFromImageData(originalImageData);
+          setOriginalPaletteColors(originalColors);
+        } finally {
+          returnCanvas(canvas);
+          setIsProcessing(false);
+          setProcessingProgress(0);
+          setProcessingOperation('');
+        }
       }
       
       // Async PNG analysis to avoid blocking UI
@@ -235,6 +291,7 @@ export const RetroImageEditor = () => {
       setSelectedResolution('original');
       setScalingMode('fit');
       
+      performanceMonitor.endMeasurement(imageDimensions);
       toast.success(t('imageLoaded'));
       
       // Clear history to free memory
@@ -249,8 +306,11 @@ export const RetroImageEditor = () => {
     } catch (error) {
       toast.error(t('imageLoadError'));
       console.error('Image loading error:', error);
+      setIsProcessing(false);
+      setProcessingProgress(0);
+      setProcessingOperation('');
     }
-  }, [t, activeTab]);
+  }, [t, activeTab, performanceMonitor, imageProcessor, getCanvas, returnCanvas]);
 
   // Clipboard loading function
   const loadFromClipboard = useCallback(async () => {
@@ -447,7 +507,7 @@ export const RetroImageEditor = () => {
     return null; // No uniform scaling detected
   }, []);
 
-  const processImage = useCallback(() => {
+  const processImage = useCallback(async () => {
     if (!originalImage) return;
 
     // If all settings are original, don't process - keep the original image
@@ -459,15 +519,36 @@ export const RetroImageEditor = () => {
     }
 
     try {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      // Check cache first
+      const imageHash = hashImage(originalImage);
+      const cachedResult = imageProcessingCache.getCachedProcessedImage(
+        imageHash,
+        selectedPalette,
+        selectedResolution,
+        scalingMode
+      );
+
+      if (cachedResult) {
+        setProcessedImageData(cachedResult.imageData);
+        setCurrentPaletteColors(cachedResult.paletteColors);
+        return;
+      }
+
+      // Start performance monitoring
+      performanceMonitor.startMeasurement('image_processing');
+      setIsProcessing(true);
+      setProcessingProgress(0);
+      setProcessingOperation(`Processing with ${selectedPalette} palette...`);
+
+      // Use canvas pool for memory efficiency
+      const { canvas, ctx } = getCanvas(originalImage.width, originalImage.height);
+      
       if (!ctx) {
         toast.error(t('canvasNotSupported'));
         return;
       }
 
-      // For PNG-8 indexed images, preserve format by using a temporary canvas
-      // that maintains the indexed color handling
+      // For PNG-8 indexed images, preserve format by using optimized settings
       if (isOriginalPNG8Indexed && selectedPalette === 'original') {
         ctx.imageSmoothingEnabled = false; // Preserve indexed colors
       }
