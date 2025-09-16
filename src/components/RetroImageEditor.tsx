@@ -48,6 +48,53 @@ export const RetroImageEditor = () => {
   const [showTileGrid, setShowTileGrid] = useState(false);
   const [showFrameGrid, setShowFrameGrid] = useState(false);
   const [tileWidth, setTileWidth] = useState(8);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle shortcuts when not typing in input fields
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const key = event.key.toLowerCase();
+      
+      // ESC key to close any open sections
+      if (key === 'escape') {
+        setActiveTab('');
+        return;
+      }
+
+      // Toolbar shortcuts
+      switch (key) {
+        case 'l':
+          event.preventDefault();
+          handleTabClick('load-image');
+          break;
+        case 'p':
+          event.preventDefault();
+          handleTabClick('change-palette');
+          break;
+        case 'r':
+          event.preventDefault();
+          handleTabClick('change-resolution');
+          break;
+        case 'g':
+          event.preventDefault();
+          handleTabClick('change-grid');
+          break;
+        case 'e':
+          event.preventDefault();
+          handleTabClick('export-image');
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
   const [tileHeight, setTileHeight] = useState(8);
   const [frameWidth, setFrameWidth] = useState(16);
   const [frameHeight, setFrameHeight] = useState(16);
