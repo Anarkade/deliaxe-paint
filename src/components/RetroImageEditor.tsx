@@ -73,19 +73,35 @@ export const RetroImageEditor = () => {
           break;
         case 'p':
           event.preventDefault();
-          handleTabClick('change-palette');
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            handleTabClick('change-palette');
+          }
           break;
         case 'r':
           event.preventDefault();
-          handleTabClick('change-resolution');
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            handleTabClick('change-resolution');
+          }
           break;
         case 'g':
           event.preventDefault();
-          handleTabClick('change-grid');
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            handleTabClick('change-grid');
+          }
           break;
         case 'e':
           event.preventDefault();
-          handleTabClick('export-image');
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            handleTabClick('export-image');
+          }
           break;
         case 'l':
           event.preventDefault();
@@ -98,7 +114,7 @@ export const RetroImageEditor = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [originalImage, t]);
   const [tileHeight, setTileHeight] = useState(8);
   const [frameWidth, setFrameWidth] = useState(16);
   const [frameHeight, setFrameHeight] = useState(16);
