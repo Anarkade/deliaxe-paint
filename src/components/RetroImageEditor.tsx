@@ -206,7 +206,11 @@ export const RetroImageEditor = () => {
     }
     
     setActiveTab(tabId);
-    // Note: intentionally avoid any scrolling when toggling sections
+    
+    // Scroll to top when opening sections
+    if (tabId) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const saveToHistory = useCallback((state: HistoryState) => {
