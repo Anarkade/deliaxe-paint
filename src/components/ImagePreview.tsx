@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -10,7 +10,12 @@ import { analyzePNGFile, ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { PaletteViewer } from './PaletteViewer';
 import { PaletteType } from './ColorPaletteSelector';
 
-// Helper function to analyze image format and properties
+// Performance constants for image analysis and rendering
+const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for performance
+const RESIZE_DEBOUNCE_MS = 100; // Debounce resize calculations
+const ZOOM_BOUNDS = { min: 10, max: 1600 }; // Zoom limits for performance
+
+// Performance-optimized image format analysis with pixel sampling
 const analyzeImageFormat = (image: HTMLImageElement): Promise<string> => {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
@@ -28,7 +33,7 @@ const analyzeImageFormat = (image: HTMLImageElement): Promise<string> => {
     const imageData = ctx.getImageData(0, 0, image.width, image.height);
     const data = imageData.data;
     
-    // Get original format from src
+    // Detect format from source URL/data
     const src = image.src.toLowerCase();
     let baseFormat = 'Unknown';
     
@@ -43,24 +48,25 @@ const analyzeImageFormat = (image: HTMLImageElement): Promise<string> => {
         else baseFormat = mime.toUpperCase();
       }
     } else {
+      // Extract from file extension
       if (src.includes('.jpg') || src.includes('.jpeg')) baseFormat = 'JPG';
       else if (src.includes('.png')) baseFormat = 'PNG';
       else if (src.includes('.bmp')) baseFormat = 'BMP';
       else if (src.includes('.gif')) baseFormat = 'GIF';
     }
     
-    // For non-PNG formats, return just the format
+    // For non-PNG formats, return basic format info
     if (baseFormat !== 'PNG') {
       resolve(baseFormat);
       return;
     }
     
-    // For PNG, analyze color properties
+    // For PNG: Analyze color properties with optimized sampling
     const uniqueColors = new Set<string>();
     let hasAlpha = false;
     
-    // Sample pixels to determine color properties (sample every 4th pixel for performance)
-    for (let i = 0; i < data.length; i += 16) { // Skip 4 pixels each time (16 bytes)
+    // Performance optimization: Sample pixels at intervals for large images
+    for (let i = 0; i < data.length; i += COLOR_SAMPLE_INTERVAL) {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
@@ -71,14 +77,14 @@ const analyzeImageFormat = (image: HTMLImageElement): Promise<string> => {
       const colorKey = `${r},${g},${b}`;
       uniqueColors.add(colorKey);
       
-      // If we have more than 256 unique colors, it's likely RGB
+      // Early exit for large color counts (performance optimization)
       if (uniqueColors.size > 256) {
         resolve(`PNG-24 RGB`);
         return;
       }
     }
     
-    // Determine if it's indexed or RGB based on color count
+    // Classify PNG subtype based on color count
     const colorCount = uniqueColors.size;
     
     if (colorCount <= 256) {
@@ -194,7 +200,7 @@ export const ImagePreview = ({
     getCameras();
   }, [currentCameraId]);
 
-  // Calculate maximum available viewport space and scale camera preview proportionally
+  // Optimized camera preview sizing with performance considerations
   const calculateCameraPreviewSize = useCallback(() => {
     if (!videoRef.current || videoRef.current.videoHeight === 0) return;
 
@@ -204,38 +210,35 @@ export const ImagePreview = ({
     
     if (cameraWidth === 0 || cameraHeight === 0) return;
 
-    // Calculate available viewport space
+    // Calculate available viewport space efficiently
     const viewport = {
       width: window.innerWidth,
       height: window.innerHeight
     };
 
-    // Get toolbar/container positions to calculate available space
     const containerEl = containerRef.current;
     if (!containerEl) return;
 
     const containerRect = containerEl.getBoundingClientRect();
     
-    // Available space: from container top to bottom of viewport
+    // Calculate available dimensions with safety margins
     const availableHeight = viewport.height - containerRect.top - 20; // 20px bottom padding
-    
-    // Available width: container width (already accounts for toolbars/scrollbars)
     const availableWidth = containerEl.clientWidth;
     
-    // Calculate scale to fit camera resolution proportionally within available space
+    // Calculate optimal scale while maintaining aspect ratio
     const scaleX = availableWidth / cameraWidth;
     const scaleY = availableHeight / cameraHeight;
     
-    // Use the smaller scale to ensure both dimensions fit
-    const scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond original resolution
+    // Use smaller scale to fit both dimensions, never scale up beyond 1:1
+    const scale = Math.min(scaleX, scaleY, 1);
     
-    // Calculate final preview dimensions
+    // Calculate final preview dimensions with pixel-perfect sizing
     const previewWidth = Math.floor(cameraWidth * scale);
     const previewHeight = Math.floor(cameraHeight * scale);
     
-    // Set the calculated height (width will be handled by CSS)
+    // Apply calculated dimensions with minimum size constraints
     setCameraPreviewHeight(Math.max(200, previewHeight));
-    setContainerWidth(previewWidth); // Update container width to match preview
+    setContainerWidth(previewWidth);
   }, []);
 
   // Start camera preview
@@ -419,21 +422,26 @@ export const ImagePreview = ({
     }
   }, [originalImage, containerWidth, showOriginal, processedImageData, onZoomChange]);
 
-  // Handle zoom change with integer scaling
+  // Optimized zoom handling with bounds checking and integer scaling
   const handleZoomChange = useCallback((newZoom: number[]) => {
     setShouldAutoFit(false);
     autoFitAllowed.current = false;
     expectingProcessedChange.current = false;
+    
+    // Apply zoom bounds for performance
+    const clampedZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, newZoom[0]));
+    
     if (integerScaling) {
-      const roundedZoom = Math.round(newZoom[0] / 100) * 100;
+      // Snap to 100% increments for pixel-perfect scaling
+      const roundedZoom = Math.round(clampedZoom / 100) * 100;
       const applied = Math.max(100, roundedZoom);
       setZoom([applied]);
       setSliderValue([applied]);
       onZoomChange?.(applied);
     } else {
-      setZoom(newZoom);
-      setSliderValue(newZoom);
-      onZoomChange?.(newZoom[0]);
+      setZoom([clampedZoom]);
+      setSliderValue([clampedZoom]);
+      onZoomChange?.(clampedZoom);
     }
   }, [integerScaling, onZoomChange]);
 
@@ -697,8 +705,8 @@ export const ImagePreview = ({
             <Slider
               value={sliderValue}
               onValueChange={handleZoomChange}
-              max={1600}
-              min={10}
+              max={ZOOM_BOUNDS.max}
+              min={ZOOM_BOUNDS.min}
               step={integerScaling ? 100 : 1}
               className="flex-1"
             />

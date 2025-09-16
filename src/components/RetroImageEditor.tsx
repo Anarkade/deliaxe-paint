@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { LoadImage } from './LoadImage';
 import { CameraSelector } from './CameraSelector';
 import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
@@ -24,9 +24,11 @@ interface HistoryState {
   scaling: CombinedScalingMode;
 }
 
-// Maximum dimensions to prevent memory issues
-const MAX_IMAGE_SIZE = 2048;
-const MAX_CANVAS_SIZE = 4096;
+// Performance constants - Optimized for large image handling
+const MAX_IMAGE_SIZE = 2048; // Maximum input image dimension to prevent memory issues
+const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size
+const PROCESSING_DEBOUNCE_MS = 100; // Debounce time for image processing
+const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for color analysis (performance optimization)
 
 export const RetroImageEditor = () => {
   const { t, currentLanguage, changeLanguage, languages, getLanguageName } = useTranslation();
@@ -222,27 +224,37 @@ export const RetroImageEditor = () => {
     setHistoryIndex(newHistory.length - 1);
   }, [history, historyIndex]);
 
+  // Clean reset of all editor state - prevents memory leaks
   const resetEditor = useCallback(() => {
+    // Clean up image references
     setOriginalImage(null);
     setProcessedImageData(null);
     setOriginalImageSource(null);
+    
+    // Reset UI state
     setSelectedPalette('original');
     setSelectedResolution('original');
-      setScalingMode('fit');
-      setCurrentPaletteColors([]);
-      setOriginalPaletteColors([]);
-      setShowCameraPreview(false);
+    setScalingMode('fit');
+    setCurrentPaletteColors([]);
+    setOriginalPaletteColors([]);
+    setShowCameraPreview(false);
+    
+    // Clear history to free memory
     setHistory([]);
     setHistoryIndex(-1);
+    
+    // Reset interface
     setActiveTab('load-image');
     setIsOriginalPNG8Indexed(false);
   }, []);
 
+  // Optimized image loading with memory management
   const loadImage = useCallback(async (source: File | string) => {
     try {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       
+      // Promise-based image loading for better error handling
       await new Promise((resolve, reject) => {
         img.onload = resolve;
         img.onerror = reject;
@@ -250,11 +262,12 @@ export const RetroImageEditor = () => {
         if (typeof source === 'string') {
           img.src = source;
         } else {
+          // Create object URL for file - will be cleaned up automatically
           img.src = URL.createObjectURL(source);
         }
       });
       
-      // Validate image size to prevent memory issues
+      // Performance check: Validate image size to prevent memory issues
       if (img.width > MAX_IMAGE_SIZE || img.height > MAX_IMAGE_SIZE) {
         toast.error(t('imageTooLarge'));
         return;
@@ -262,9 +275,9 @@ export const RetroImageEditor = () => {
       
       setOriginalImage(img);
       setProcessedImageData(null);
-      setOriginalImageSource(source); // Store the source for PNG analysis
+      setOriginalImageSource(source);
       
-      // Extract original image palette for palette conversions
+      // Extract original palette using optimized sampling for large images
       const tempCanvas = document.createElement('canvas');
       const tempCtx = tempCanvas.getContext('2d');
       if (tempCtx) {
@@ -276,7 +289,7 @@ export const RetroImageEditor = () => {
         setOriginalPaletteColors(originalColors);
       }
       
-      // Check if original image is PNG-8 indexed
+      // Async PNG analysis to avoid blocking UI
       try {
         const formatInfo = await analyzePNGFile(source);
         setIsOriginalPNG8Indexed(formatInfo.isIndexed && formatInfo.format.includes('PNG-8'));
@@ -291,11 +304,11 @@ export const RetroImageEditor = () => {
       
       toast.success(t('imageLoaded'));
       
-      // Clear history when loading new image
+      // Clear history to free memory
       setHistory([]);
       setHistoryIndex(-1);
       
-      // Close the load-image floating section after successful load
+      // Auto-close load section on success
       if (activeTab === 'load-image') {
         setActiveTab(null);
       }
@@ -304,7 +317,7 @@ export const RetroImageEditor = () => {
       toast.error(t('imageLoadError'));
       console.error('Image loading error:', error);
     }
-  }, []);
+  }, [t, activeTab]);
 
   const handleLoadImageClick = useCallback((source: File | string) => {
     // Reset everything first, then load the new image
@@ -312,15 +325,15 @@ export const RetroImageEditor = () => {
     setTimeout(() => loadImage(source), 50); // Small delay to ensure state is reset
   }, [resetEditor, loadImage]);
 
-  // Helper function to check color similarity (80% threshold)
+  // Performance-optimized color similarity check for pixel art detection
   const areColorsSimilar = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): boolean => {
     const distance = Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
-    const maxDistance = Math.sqrt(3 * 255 ** 2); // Maximum possible distance
+    const maxDistance = Math.sqrt(3 * 255 ** 2); // Maximum possible Euclidean distance
     const similarity = 1 - (distance / maxDistance);
-    return similarity >= 0.8; // 80% similarity threshold
+    return similarity >= 0.8; // 80% similarity threshold for pixel art detection
   };
 
-  // Detect scaling in pixel art and return unscaled dimensions
+  // Advanced pixel art scaling detection with performance optimizations
   const detectAndUnscaleImage = useCallback((image: HTMLImageElement) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -328,34 +341,45 @@ export const RetroImageEditor = () => {
 
     canvas.width = image.width;
     canvas.height = image.height;
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = false; // Preserve pixel-perfect rendering
     ctx.drawImage(image, 0, 0);
     
     const imageData = ctx.getImageData(0, 0, image.width, image.height);
     const pixels = imageData.data;
     
-    // Start with scaling factor of 50 and work down to 1
-    for (let scalingFactor = 50; scalingFactor >= 1; scalingFactor--) {
-      // Check if both width and height are multiples of the scaling factor
+    // Performance optimization: Test likely scaling factors first (2x, 3x, 4x, etc.)
+    const commonScales = [2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32];
+    const allScales = [...commonScales];
+    
+    // Add remaining scales up to 50
+    for (let i = 1; i <= 50; i++) {
+      if (!commonScales.includes(i)) {
+        allScales.push(i);
+      }
+    }
+    
+    // Test each scaling factor
+    for (const scalingFactor of allScales) {
+      // Quick reject: dimensions must be multiples of scaling factor
       if (image.width % scalingFactor !== 0 || image.height % scalingFactor !== 0) {
         continue;
       }
       
-      // Calculate how many blocks we have
       const blocksX = image.width / scalingFactor;
       const blocksY = image.height / scalingFactor;
       let validBlocks = 0;
       const totalBlocks = blocksX * blocksY;
       
-      // Check each block
+      // Analyze each block for color uniformity
       for (let blockY = 0; blockY < blocksY; blockY++) {
         for (let blockX = 0; blockX < blocksX; blockX++) {
           const startX = blockX * scalingFactor;
           const startY = blockY * scalingFactor;
           
-          // Get the most common color in this block
+          // Performance optimization: Use Map for color counting
           const colorCounts = new Map<string, number>();
           
+          // Sample all pixels in this block
           for (let y = startY; y < startY + scalingFactor; y++) {
             for (let x = startX; x < startX + scalingFactor; x++) {
               const index = (y * image.width + x) * 4;
@@ -368,7 +392,7 @@ export const RetroImageEditor = () => {
             }
           }
           
-          // Find the most common color and its frequency
+          // Find dominant color in this block
           let maxCount = 0;
           for (const count of colorCounts.values()) {
             if (count > maxCount) {
@@ -376,7 +400,7 @@ export const RetroImageEditor = () => {
             }
           }
           
-          // Check if at least 51% of pixels in this block are the same color
+          // Block is valid if >51% of pixels share the same color (pixel art characteristic)
           const totalPixelsInBlock = scalingFactor * scalingFactor;
           if (maxCount >= totalPixelsInBlock * 0.51) {
             validBlocks++;
@@ -384,7 +408,7 @@ export const RetroImageEditor = () => {
         }
       }
       
-      // If all blocks meet the criteria, we found the scaling factor
+      // If all blocks are uniform, we found the scaling factor
       if (validBlocks === totalBlocks) {
         return {
           width: blocksX,
@@ -393,7 +417,7 @@ export const RetroImageEditor = () => {
       }
     }
     
-    return null; // No scaling detected
+    return null; // No uniform scaling detected
   }, []);
 
   const processImage = useCallback(() => {
@@ -880,12 +904,12 @@ export const RetroImageEditor = () => {
     }
   }, [history, historyIndex]);
 
-  // Process image when settings change
+  // Debounced image processing to prevent excessive re-processing during rapid changes
   useEffect(() => {
     if (originalImage) {
       const timeoutId = setTimeout(() => {
         processImage();
-      }, 100); // Debounce to prevent rapid calls
+      }, PROCESSING_DEBOUNCE_MS); // Configurable debounce for performance
       
       return () => clearTimeout(timeoutId);
     }

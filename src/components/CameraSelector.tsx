@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Camera, X } from 'lucide-react';
 
+// Simple component for camera selection with minimal overhead
+
 interface CameraSelectorProps {
   onSelect: (deviceId: string) => void;
   onClose: () => void;
@@ -13,13 +15,14 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
   const { t } = useTranslation();
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
 
+  // Efficiently enumerate available cameras with error handling
   const getAvailableCameras = useCallback(async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter((d) => d.kind === 'videoinput');
       setAvailableCameras(cameras);
     } catch (e) {
-      // Fail silently; UI will show empty state
+      // Graceful fallback for permission issues
       setAvailableCameras([]);
     }
   }, []);
@@ -28,6 +31,7 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
     getAvailableCameras();
   }, [getAvailableCameras]);
 
+  // Generate user-friendly camera names with fallback for unnamed devices
   const getCameraDisplayName = (camera: MediaDeviceInfo, index: number) => {
     if (camera.label) return camera.label;
     const names = [t('camera1'), t('camera2'), t('camera3')];
