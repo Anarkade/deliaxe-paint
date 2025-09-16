@@ -827,68 +827,22 @@ export const RetroImageEditor = () => {
         break;
       
       case 'megadrive':
-        // Use custom colors if provided, otherwise generate palette
-        if (customColors && customColors.length >= 1) {
-          // Apply custom Mega Drive palette
-          // Ensure we have exactly 16 colors for Mega Drive
-          const megaDrivePalette = [...customColors];
-          while (megaDrivePalette.length < 16) {
-            megaDrivePalette.push({ r: 0, g: 0, b: 0 }); // Fill with transparent black
-          }
-          
-          for (let i = 0; i < data.length; i += 4) {
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-            
-            // Find closest color in the custom palette
-            let closestIndex = 0;
-            let minDistance = Infinity;
-            
-            for (let j = 0; j < megaDrivePalette.length; j++) {
-              const dr = r - megaDrivePalette[j].r;
-              const dg = g - megaDrivePalette[j].g;
-              const db = b - megaDrivePalette[j].b;
-              const distance = dr * dr + dg * dg + db * db;
-              
-              if (distance < minDistance) {
-                minDistance = distance;
-                closestIndex = j;
-              }
-            }
-            
-            data[i] = megaDrivePalette[closestIndex].r;
-            data[i + 1] = megaDrivePalette[closestIndex].g;
-            data[i + 2] = megaDrivePalette[closestIndex].b;
-          }
-          
-          // Update the current palette colors for the palette viewer
-          setCurrentPaletteColors(megaDrivePalette);
-        } else {
-          // Extract original colors to preserve palette order if possible
-          const originalColors = extractColorsFromImageData(imageData);
-          
-          // Use advanced color quantization for Mega Drive
-          const megaDriveResult = processMegaDriveImage(imageData, originalColors.length <= 16 ? originalColors : undefined);
-          
-          // Replace the current image data with the processed data
-          const processedData = megaDriveResult.imageData.data;
-          for (let i = 0; i < data.length; i++) {
-            data[i] = processedData[i];
-          }
-          
-          // Update the current palette colors for the palette viewer - ensure exactly 16 colors
-          const finalPalette = [...megaDriveResult.palette];
-          while (finalPalette.length < 16) {
-            finalPalette.push({ r: 0, g: 0, b: 0 });
-          }
-          
-          setCurrentPaletteColors(finalPalette.map(color => ({
-            r: color.r,
-            g: color.g,
-            b: color.b
-          })));
+        // Always use processMegaDriveImage to ensure proper RGB 3-3-3 quantization to exactly 16 colors
+        // Don't pass custom colors as they may contain thousands of colors from the original image
+        const megaDriveResult = processMegaDriveImage(imageData);
+        
+        // Replace the current image data with the processed data
+        const processedData = megaDriveResult.imageData.data;
+        for (let i = 0; i < data.length; i++) {
+          data[i] = processedData[i];
         }
+        
+        // Update the current palette colors for the palette viewer - exactly 16 colors
+        setCurrentPaletteColors(megaDriveResult.palette.map(color => ({
+          r: color.r,
+          g: color.g,
+          b: color.b
+        })));
         break;
         
       default:

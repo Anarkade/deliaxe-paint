@@ -221,20 +221,19 @@ export const processMegaDriveImage = (imageData: ImageData, originalPalette?: Co
   // Step 3: Extract unique colors from RGB 3-3-3 converted image
   const uniqueColors = extractColorsFromImageData(rgb333ImageData);
   
-  // Step 4: Determine final palette
+  // Step 4: Determine final palette - always quantize to exactly 16 most representative colors
   let finalPalette: Color[];
   
-  // If original image had 16 or fewer colors, preserve the original palette order and RGB333 convert it
-  if (originalColors.length <= 16 && originalPalette && originalPalette.length <= 16) {
-    // Convert original palette to RGB 3-3-3 and preserve order
-    finalPalette = originalPalette.map(color => toRGB333(color.r, color.g, color.b));
-  } else if (uniqueColors.length <= 16) {
-    // Use the RGB 3-3-3 converted colors as-is
+  if (uniqueColors.length <= 16) {
+    // Use the RGB 3-3-3 converted colors as-is if 16 or fewer
     finalPalette = uniqueColors;
   } else {
-    // Quantize to 16 colors using median cut
+    // Always quantize to 16 colors using median cut for images with more than 16 colors
     finalPalette = medianCutQuantization(uniqueColors, 16);
   }
+  
+  // Ensure all palette colors are snapped to RGB 3-3-3 grid
+  finalPalette = finalPalette.map(color => toRGB333(color.r, color.g, color.b));
 
   // Ensure exactly 16 colors for Mega Drive - pad with transparent black if needed
   while (finalPalette.length < 16) {
