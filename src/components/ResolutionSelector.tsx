@@ -53,12 +53,17 @@ export type ResolutionType =
   | 'unscaled'
   | '160x144'
   | '160x200'
+  | '256x192'
+  | '256x212'
   | '256x224'
   | '256x240'
   | '304x224'
   | '320x200'
   | '320x224'
   | '320x240'
+  | '384x224'
+  | '480x272'
+  | '512x212'
   | '640x200';
 
 export type AlignmentMode = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-center' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
@@ -87,12 +92,17 @@ export const ResolutionSelector = ({
     { value: 'unscaled' as const, label: t('unscaledSize'), desc: t('removeScaling') },
     { value: '160x144' as const, label: '160×144', desc: t('gameBoyRes') },
     { value: '160x200' as const, label: '160×200', desc: t('amstradCpc0') },
+    { value: '256x192' as const, label: '256×192', desc: 'MSX, ZX Spectrum' },
+    { value: '256x212' as const, label: '256×212', desc: 'MSX' },
     { value: '256x224' as const, label: '256×224', desc: t('megaDriveNtscH32') },
     { value: '256x240' as const, label: '256×240', desc: t('megaDrivePalH32') },
     { value: '304x224' as const, label: '304×224', desc: t('neoGeoCd') },
     { value: '320x200' as const, label: '320×200', desc: t('amstradCpc1') },
     { value: '320x224' as const, label: '320×224', desc: t('megaDriveNtscH40') },
     { value: '320x240' as const, label: '320×240', desc: t('megaDrivePalH40') },
+    { value: '384x224' as const, label: '384×224', desc: 'CPS1, CPS2, CPS3' },
+    { value: '480x272' as const, label: '480×272', desc: 'PSP' },
+    { value: '512x212' as const, label: '512×212', desc: 'MSX' },
     { value: '640x200' as const, label: '640×200', desc: t('amstradCpc2') },
   ];
 
