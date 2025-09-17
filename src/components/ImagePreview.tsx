@@ -719,7 +719,8 @@ export const ImagePreview = ({
         style={{ 
           height: showCameraPreview ? 'auto' : (originalImage ? `${previewHeight}px` : '120px'),
           maxHeight: showCameraPreview ? 'calc(100vh - 96px)' : 'auto',
-          maxWidth: showCameraPreview ? '100%' : 'auto'
+          maxWidth: showCameraPreview ? '100%' : 'auto',
+          overflow: showCameraPreview ? 'auto' : 'hidden'
         }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
