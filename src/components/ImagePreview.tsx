@@ -866,7 +866,9 @@ export const ImagePreview = ({
                 <span className="text-muted-foreground text-xs">{originalFormat}</span>
                 {!processedImageData && (
                   <span className="text-muted-foreground text-xs">
-                    ({Math.round(originalImage.width * (zoom[0] / 100))}×{Math.round(originalImage.height * (zoom[0] / 100))} {t('zoomedResolution')})
+                    {t('zoomedDimensions')
+                      .replace('{width}', Math.round(originalImage.width * (zoom[0] / 100)).toString())
+                      .replace('{height}', Math.round(originalImage.height * (zoom[0] / 100)).toString())}
                   </span>
                 )}
               </div>
@@ -876,7 +878,9 @@ export const ImagePreview = ({
                   <span className="text-foreground font-semibold">{processedImageData.width}×{processedImageData.height}</span>
                   <span className="text-muted-foreground text-xs">{processedFormat}</span>
                   <span className="text-muted-foreground text-xs">
-                    ({Math.round(processedImageData.width * (zoom[0] / 100))}×{Math.round(processedImageData.height * (zoom[0] / 100))} {t('zoomedResolution')})
+                    {t('zoomedDimensions')
+                      .replace('{width}', Math.round(processedImageData.width * (zoom[0] / 100)).toString())
+                      .replace('{height}', Math.round(processedImageData.height * (zoom[0] / 100)).toString())}
                   </span>
                 </div>
               )}

@@ -237,6 +237,7 @@ interface Translation {
 
   // Zoomed resolution text
   zoomedResolution: string;
+  zoomedDimensions: string;
   
   // Image format labels
   png8IndexedFormat: string;
@@ -486,6 +487,7 @@ const baseTranslation: Translation = {
   png8IndexedFormat: 'PNG-8 Indexed ({count} colors palette)',
   png24RgbFormat: 'PNG-24 RGB',
   captureButton: 'Capture',
+  zoomedDimensions: '({width}×{height} zoomed)',
   
   // Additional translations needed
   png8Indexed: 'PNG-8 Indexed',
@@ -624,6 +626,7 @@ const translations: Record<Language, Translation> = {
     png8IndexedFormat: 'PNG-8 Indexado (paleta de {count} colores)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Capturar',
+    zoomedDimensions: '({width}×{height} ampliado)',
   },
   'ca': { 
     ...baseTranslation,
@@ -703,6 +706,7 @@ const translations: Record<Language, Translation> = {
     png8IndexedFormat: 'PNG-8 Indexat (paleta de {count} colors)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Capturar',
+    zoomedDimensions: '({width}×{height} ampliat)',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -753,6 +757,7 @@ const translations: Record<Language, Translation> = {
     png8IndexedFormat: 'PNG-8 索引 ({count}色调色板)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: '拍摄',
+    zoomedDimensions: '({width}×{height} 缩放)',
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -803,6 +808,7 @@ const translations: Record<Language, Translation> = {
     png8IndexedFormat: 'PNG-8 索引 ({count}色調色板)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: '拍攝',
+    zoomedDimensions: '({width}×{height} 縮放)',
   },
   'ja': { 
     ...baseTranslation,
@@ -882,6 +888,7 @@ const translations: Record<Language, Translation> = {
     png8IndexedFormat: 'PNG-8 インデックス ({count}色パレット)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'キャプチャ',
+    zoomedDimensions: '({width}×{height} ズーム)',
   },
   'it': { 
     ...baseTranslation,
@@ -932,6 +939,7 @@ const translations: Record<Language, Translation> = {
     png8IndexedFormat: 'PNG-8 Indicizzato (tavolozza di {count} colori)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Cattura',
+    zoomedDimensions: '({width}×{height} ingrandito)',
   },
   'de': { 
     ...baseTranslation,
@@ -1011,6 +1019,7 @@ const translations: Record<Language, Translation> = {
     png8IndexedFormat: 'PNG-8 Indiziert ({count} Farben Palette)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Aufnehmen',
+    zoomedDimensions: '({width}×{height} vergrößert)',
   },
   'fr': { 
     ...baseTranslation,
@@ -1090,6 +1099,7 @@ const translations: Record<Language, Translation> = {
     png8IndexedFormat: 'PNG-8 Indexé (palette de {count} couleurs)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Capturer',
+    zoomedDimensions: '({width}×{height} zoomé)',
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -1106,6 +1116,7 @@ const translations: Record<Language, Translation> = {
     png8IndexedFormat: 'PNG-8 Indexado (paleta de {count} cores)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Capturar',
+    zoomedDimensions: '({width}×{height} ampliado)',
     loadImage: 'Importar Imagem [I]',
     paletteViewer: 'Visualizador de Paleta',
     changeResolution: 'Alterar Resolução [R]',
@@ -1155,6 +1166,7 @@ const translations: Record<Language, Translation> = {
     png8IndexedFormat: 'PNG-8 Индексированный (палитра из {count} цветов)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Снимок',
+    zoomedDimensions: '({width}×{height} увеличенный)',
     loadImage: 'Импорт Изображения [I]',
     paletteViewer: 'Просмотр Палитры',
     changeResolution: 'Изменить Разрешение [R]',
