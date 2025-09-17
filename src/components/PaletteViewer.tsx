@@ -257,39 +257,50 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         return;
       }
 
-      // For 'original' palette: only show palette if it's from an indexed image
-      // Don't create palettes for non-indexed images (RGB PNG, JPG, etc.)
+      // Priority 1: Handle 'original' palette - only extract from indexed images
       if (selectedPalette === 'original') {
-        // Check if the original image is indexed
         if (originalImageSource) {
           try {
             const formatInfo = await import('@/lib/pngAnalyzer').then(m => m.analyzePNGFile(originalImageSource));
-            if (!formatInfo.isIndexed) {
-              // Non-indexed image - don't create a palette
+            if (formatInfo.isIndexed) {
+              // Try to extract palette from PNG PLTE chunk
+              const extractedPalette = await import('@/lib/pngAnalyzer').then(m => m.extractPNGPalette(originalImageSource));
+              if (extractedPalette && extractedPalette.length > 0) {
+                setPaletteColors(extractedPalette);
+                onPaletteUpdate?.(extractedPalette);
+                return;
+              }
+            } else {
+              // Non-indexed image - clear palette
               setPaletteColors([]);
               onPaletteUpdate?.([]);
               return;
             }
           } catch (error) {
-            // If we can't analyze the format, assume it's non-indexed
+            // If analysis fails, assume non-indexed and clear palette
             setPaletteColors([]);
             onPaletteUpdate?.([]);
             return;
           }
         }
         
-        // If no original image source, don't create a palette for 'original' mode
+        // If no original image source or extraction failed, clear palette for 'original' mode
         setPaletteColors([]);
         onPaletteUpdate?.([]);
         return;
       }
 
-      if (!imageData) {
-        const defaultPalette = getDefaultPalette(selectedPalette);
-        setPaletteColors(defaultPalette);
-        onPaletteUpdate?.(defaultPalette);
+      // Priority 2: Use external palette for non-original selections
+      if (externalPalette && externalPalette.length > 0) {
+        setPaletteColors(externalPalette);
+        onPaletteUpdate?.(externalPalette);
         return;
       }
+
+      // Priority 3: Use default retro palettes
+      const defaultPalette = getDefaultPalette(selectedPalette);
+      setPaletteColors(defaultPalette);
+      onPaletteUpdate?.(defaultPalette);
     };
 
     extractColors();

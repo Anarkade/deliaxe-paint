@@ -879,23 +879,29 @@ export const ImagePreview = ({
         </div>
       )}
       
-      {/* Palette Viewer - shown for indexed PNG images and retro palettes */}
-      {(((isIndexedPNG && originalImage && originalImageSource) || (selectedPalette !== 'original' && originalImage))
-        || (originalImage && processedImageData && currentPaletteColors && currentPaletteColors.length > 0)) && (
-        <div className="mt-4">
-          <PaletteViewer
-            selectedPalette={selectedPalette}
-            imageData={processedImageData}
-            onPaletteUpdate={onPaletteUpdate}
-            originalImageSource={originalImageSource}
-            externalPalette={currentPaletteColors}
-            onImageUpdate={() => {
-              // Trigger image reprocessing when palette is updated
-              onSectionOpen?.();
-            }}
-          />
-        </div>
-      )}
+      {/* Palette Viewer - only show when needed */}
+      {(() => {
+        // Only show palette viewer when:
+        // 1. selectedPalette is not 'original' (showing a retro palette), OR
+        // 2. selectedPalette is 'original' AND the image is PNG-8 indexed
+        const showPaletteViewer = selectedPalette !== 'original' || isIndexedPNG;
+        
+        return showPaletteViewer && originalImage && (
+          <div className="mt-4">
+            <PaletteViewer
+              selectedPalette={selectedPalette}
+              imageData={processedImageData}
+              onPaletteUpdate={onPaletteUpdate}
+              originalImageSource={originalImageSource}
+              externalPalette={selectedPalette !== 'original' ? currentPaletteColors : undefined}
+              onImageUpdate={() => {
+                // Trigger image reprocessing when palette is updated
+                onSectionOpen?.();
+              }}
+            />
+          </div>
+        );
+      })()}
       
     </div>
   );

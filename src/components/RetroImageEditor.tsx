@@ -231,40 +231,59 @@ export const RetroImageEditor = () => {
       setProcessedImageData(null);
       setOriginalImageSource(source);
       
-      // Extract original palette using Web Worker for better performance
-      const imageHash = hashImage(img);
-      const cachedAnalysis = imageProcessingCache.getCachedColorAnalysis(imageHash);
-      
-      if (cachedAnalysis) {
-        setOriginalPaletteColors(cachedAnalysis.colors);
-      } else {
-        // Use canvas pool for memory efficiency
-        const { canvas, ctx } = getCanvas(img.width, img.height);
-        ctx.drawImage(img, 0, 0);
-        const originalImageData = ctx.getImageData(0, 0, img.width, img.height);
+      // Async PNG analysis to determine if we should extract colors
+      let shouldExtractColors = true;
+      try {
+        const formatInfo = await analyzePNGFile(source);
+        setIsOriginalPNG8Indexed(formatInfo.isIndexed && formatInfo.format.includes('PNG-8'));
         
-        try {
-          setIsProcessing(true);
-          setProcessingOperation('Analyzing colors...');
+        // Only extract colors if it's an indexed PNG or if we need them for processing
+        shouldExtractColors = formatInfo.isIndexed;
+      } catch (error) {
+        setIsOriginalPNG8Indexed(false);
+        // For non-PNG or analysis failures, skip expensive color extraction
+        shouldExtractColors = false;
+      }
+
+      // Extract original palette only if needed (indexed images)
+      if (shouldExtractColors) {
+        const imageHash = hashImage(img);
+        const cachedAnalysis = imageProcessingCache.getCachedColorAnalysis(imageHash);
+        
+        if (cachedAnalysis) {
+          setOriginalPaletteColors(cachedAnalysis.colors);
+        } else {
+          // Use canvas pool for memory efficiency
+          const { canvas, ctx } = getCanvas(img.width, img.height);
+          ctx.drawImage(img, 0, 0);
+          const originalImageData = ctx.getImageData(0, 0, img.width, img.height);
           
-          const originalColors = await imageProcessor.extractColors(
-            originalImageData,
-            (progress) => setProcessingProgress(progress)
-          );
-          
-          setOriginalPaletteColors(originalColors);
-          imageProcessingCache.cacheColorAnalysis(imageHash, originalColors, 'extracted');
-        } catch (error) {
-          console.error('Error extracting colors:', error);
-          // Fallback to synchronous processing
-          const originalColors = extractColorsFromImageData(originalImageData);
-          setOriginalPaletteColors(originalColors);
-        } finally {
-          returnCanvas(canvas);
-          setIsProcessing(false);
-          setProcessingProgress(0);
-          setProcessingOperation('');
+          try {
+            setIsProcessing(true);
+            setProcessingOperation('Analyzing colors...');
+            
+            const originalColors = await imageProcessor.extractColors(
+              originalImageData,
+              (progress) => setProcessingProgress(progress)
+            );
+            
+            setOriginalPaletteColors(originalColors);
+            imageProcessingCache.cacheColorAnalysis(imageHash, originalColors, 'extracted');
+          } catch (error) {
+            console.error('Error extracting colors:', error);
+            // Fallback to synchronous processing
+            const originalColors = extractColorsFromImageData(originalImageData);
+            setOriginalPaletteColors(originalColors);
+          } finally {
+            returnCanvas(canvas);
+            setIsProcessing(false);
+            setProcessingProgress(0);
+            setProcessingOperation('');
+          }
         }
+      } else {
+        // Clear palette colors for non-indexed images
+        setOriginalPaletteColors([]);
       }
       
       // Async PNG analysis to avoid blocking UI
@@ -773,9 +792,13 @@ export const RetroImageEditor = () => {
         imageData = processedImageData;
       }
 
-      // Ensure currentPaletteColors is set for export functionality
+      // Only set currentPaletteColors for 'original' if the image is indexed
       if (selectedPalette === 'original') {
-        setCurrentPaletteColors(originalPaletteColors);
+        if (isOriginalPNG8Indexed) {
+          setCurrentPaletteColors(originalPaletteColors);
+        } else {
+          setCurrentPaletteColors([]);
+        }
       }
 
       // Cache the result for future use (fix parameter order)
@@ -1101,6 +1124,13 @@ export const RetroImageEditor = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [originalImage, selectedPalette, selectedResolution, scalingMode, processImage]);
+
+  // Handle palette changes - clear currentPaletteColors for 'original' on non-indexed images
+  useEffect(() => {
+    if (selectedPalette === 'original' && !isOriginalPNG8Indexed) {
+      setCurrentPaletteColors([]);
+    }
+  }, [selectedPalette, isOriginalPNG8Indexed]);
 
   const languagesSafe = Array.isArray(languages) ? languages : [];
   const sortedLanguages = [...languagesSafe].sort((a, b) => 
