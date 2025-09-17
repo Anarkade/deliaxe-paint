@@ -685,6 +685,8 @@ const translations: Record<Language, Translation> = {
     noImageLoaded: 'No hi ha imatge carregada',
     originalLabel: 'Original:',
     processedLabel: 'Processat:',
+    paletteWithCount: 'paleta de {count} colors',
+    extractColors: 'Extreure Colors',
   },
   'zh-CN': { 
     ...baseTranslation,
