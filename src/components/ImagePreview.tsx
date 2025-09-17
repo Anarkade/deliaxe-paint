@@ -162,7 +162,6 @@ export const ImagePreview = ({
   const [sliderValue, setSliderValue] = useState<number[]>([100]);
   const [containerWidth, setContainerWidth] = useState(0);
   const [previewHeight, setPreviewHeight] = useState(400);
-  const [cameraPreviewHeight, setCameraPreviewHeight] = useState(400);
   const [originalFormat, setOriginalFormat] = useState<string>('');
   const [processedFormat, setProcessedFormat] = useState<string>('');
   const [isIndexedPNG, setIsIndexedPNG] = useState<boolean>(false);
@@ -200,8 +199,8 @@ export const ImagePreview = ({
     getCameras();
   }, [currentCameraId]);
 
-  // Optimized camera preview sizing with performance considerations
-  const calculateCameraPreviewSize = useCallback(() => {
+  // Set camera aspect ratio for responsive layout
+  const setCameraAspectRatio = useCallback(() => {
     if (!videoRef.current || videoRef.current.videoHeight === 0) return;
 
     // Get actual camera resolution
@@ -210,35 +209,14 @@ export const ImagePreview = ({
     
     if (cameraWidth === 0 || cameraHeight === 0) return;
 
-    // Calculate available viewport space efficiently
-    const viewport = {
-      width: window.innerWidth,
-      height: window.innerHeight
-    };
-
+    // Calculate aspect ratio
+    const aspectRatio = cameraWidth / cameraHeight;
+    
+    // Update container to use the camera's aspect ratio
     const containerEl = containerRef.current;
-    if (!containerEl) return;
-
-    const containerRect = containerEl.getBoundingClientRect();
-    
-    // Calculate available dimensions with safety margins
-    const availableHeight = viewport.height - containerRect.top - 20; // 20px bottom padding
-    const availableWidth = containerEl.clientWidth;
-    
-    // Calculate optimal scale while maintaining aspect ratio
-    const scaleX = availableWidth / cameraWidth;
-    const scaleY = availableHeight / cameraHeight;
-    
-    // Use smaller scale to fit both dimensions, never scale up beyond 1:1
-    const scale = Math.min(scaleX, scaleY, 1);
-    
-    // Calculate final preview dimensions with pixel-perfect sizing
-    const previewWidth = Math.floor(cameraWidth * scale);
-    const previewHeight = Math.floor(cameraHeight * scale);
-    
-    // Apply calculated dimensions with minimum size constraints
-    setCameraPreviewHeight(Math.max(200, previewHeight));
-    setContainerWidth(previewWidth);
+    if (containerEl) {
+      containerEl.style.aspectRatio = aspectRatio.toString();
+    }
   }, []);
 
   // Start camera preview
@@ -254,9 +232,9 @@ export const ImagePreview = ({
         videoRef.current.srcObject = stream;
         videoRef.current.play();
         
-        // Wait for video metadata to load before calculating size
+        // Wait for video metadata to load before setting aspect ratio
         videoRef.current.addEventListener('loadedmetadata', () => {
-          calculateCameraPreviewSize();
+          setCameraAspectRatio();
         }, { once: true });
       }
       
@@ -264,7 +242,7 @@ export const ImagePreview = ({
     } catch (error) {
       console.error('Camera access denied:', error);
     }
-  }, [currentCameraId, onCameraPreviewChange, calculateCameraPreviewSize]);
+  }, [currentCameraId, onCameraPreviewChange, setCameraAspectRatio]);
 
   // Apply selected camera from parent
   useEffect(() => {
@@ -273,34 +251,28 @@ export const ImagePreview = ({
     }
   }, [selectedCameraId]);
 
-  // Camera preview sizing effect
+  // Camera preview aspect ratio effect
   useEffect(() => {
     if (!showCameraPreview) return;
 
     // Initial calculation
-    const timer = setTimeout(calculateCameraPreviewSize, 100);
+    const timer = setTimeout(setCameraAspectRatio, 100);
 
     // Listen for video metadata loaded
     const video = videoRef.current;
     if (video) {
-      video.addEventListener('loadedmetadata', calculateCameraPreviewSize);
-      video.addEventListener('resize', calculateCameraPreviewSize);
+      video.addEventListener('loadedmetadata', setCameraAspectRatio);
+      video.addEventListener('resize', setCameraAspectRatio);
     }
-
-    // Recalculate on window resize/orientation change
-    window.addEventListener('resize', calculateCameraPreviewSize);
-    window.addEventListener('orientationchange', calculateCameraPreviewSize);
 
     return () => {
       clearTimeout(timer);
-      window.removeEventListener('resize', calculateCameraPreviewSize);
-      window.removeEventListener('orientationchange', calculateCameraPreviewSize);
       if (video) {
-        video.removeEventListener('loadedmetadata', calculateCameraPreviewSize);
-        video.removeEventListener('resize', calculateCameraPreviewSize);
+        video.removeEventListener('loadedmetadata', setCameraAspectRatio);
+        video.removeEventListener('resize', setCameraAspectRatio);
       }
     };
-  }, [showCameraPreview, calculateCameraPreviewSize]);
+  }, [showCameraPreview, setCameraAspectRatio]);
 
   // Stop camera preview
   const stopCameraPreview = useCallback(() => {
@@ -741,8 +713,13 @@ export const ImagePreview = ({
 
       <div 
         ref={containerRef}
-        className={`relative bg-elegant-bg flex items-center justify-center overflow-hidden p-0 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
-        style={{ height: showCameraPreview ? `${cameraPreviewHeight}px` : (originalImage ? `${previewHeight}px` : '120px') }}
+        className={`relative bg-elegant-bg flex items-center justify-center overflow-hidden p-0 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${
+          showCameraPreview ? 'w-full max-h-[70vh] min-h-[200px]' : ''
+        }`}
+        style={{ 
+          height: showCameraPreview ? 'auto' : (originalImage ? `${previewHeight}px` : '120px'),
+          maxWidth: showCameraPreview ? '100%' : 'auto'
+        }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
