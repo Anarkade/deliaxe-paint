@@ -257,41 +257,39 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         return;
       }
 
+      // For 'original' palette: only show palette if it's from an indexed image
+      // Don't create palettes for non-indexed images (RGB PNG, JPG, etc.)
+      if (selectedPalette === 'original') {
+        // Check if the original image is indexed
+        if (originalImageSource) {
+          try {
+            const formatInfo = await import('@/lib/pngAnalyzer').then(m => m.analyzePNGFile(originalImageSource));
+            if (!formatInfo.isIndexed) {
+              // Non-indexed image - don't create a palette
+              setPaletteColors([]);
+              onPaletteUpdate?.([]);
+              return;
+            }
+          } catch (error) {
+            // If we can't analyze the format, assume it's non-indexed
+            setPaletteColors([]);
+            onPaletteUpdate?.([]);
+            return;
+          }
+        }
+        
+        // If no original image source, don't create a palette for 'original' mode
+        setPaletteColors([]);
+        onPaletteUpdate?.([]);
+        return;
+      }
+
       if (!imageData) {
         const defaultPalette = getDefaultPalette(selectedPalette);
         setPaletteColors(defaultPalette);
         onPaletteUpdate?.(defaultPalette);
         return;
       }
-
-      // Fallback to analyzing processed image data
-      const colors = new Map<string, number>();
-      const data = imageData.data;
-      
-      // Count color frequency
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        const a = data[i + 3];
-        
-        if (a > 0) { // Only include non-transparent pixels
-          const colorKey = `${r},${g},${b}`;
-          colors.set(colorKey, (colors.get(colorKey) || 0) + 1);
-        }
-      }
-      
-      // Sort by frequency and convert to array
-      const sortedColors = Array.from(colors.entries())
-        .sort((a, b) => b[1] - a[1]) // Sort by frequency (most used first)
-        .slice(0, 256) // Limit to 256 colors max
-        .map(([colorKey], index) => {
-          const [r, g, b] = colorKey.split(',').map(Number);
-          return { r, g, b };
-        });
-      
-      setPaletteColors(sortedColors);
-      onPaletteUpdate?.(sortedColors);
     };
 
     extractColors();
