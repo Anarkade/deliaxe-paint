@@ -62,7 +62,6 @@ interface Translation {
   changeResolutionDesc: string;
   changeGridsDesc: string;
   exportImageDesc: string;
-  colorsPalette: string;
   paletteWithCount: string;
   processImageFirst: string;
   
@@ -84,10 +83,8 @@ interface Translation {
   changeLanguage: string;
   
   // Preview
-  original: string;
   processed: string;
   fitToWidth: string;
-  noImageLoaded: string;
   zoom: string;
   tileGrid: string;
   framesGrid: string;
@@ -189,6 +186,14 @@ interface Translation {
   nesColors: string;
   commodore64Colors: string;
 
+  // Missing UI translations
+  noImageLoaded: string;
+  original: string;
+  png8Indexed: string;
+  colorsPalette: string;
+  zoomed: string;
+  changePalette: string;
+  
   // Alignment options
   alignment: string;
   alignTopLeft: string;
@@ -470,7 +475,12 @@ const baseTranslation: Translation = {
   noCamerasDetected: 'No cameras detected, please close and try again after connecting, activating and enabling a camera',
   camera1: 'Camera 1',
   camera2: 'Camera 2',
-  camera3: 'Camera 3'
+  camera3: 'Camera 3',
+  
+  // Additional translations needed
+  png8Indexed: 'PNG-8 Indexed',
+  zoomed: 'zoomed',
+  changePalette: 'Change Palette [P]'
 };
 
 const translations: Record<Language, Translation> = {
@@ -590,6 +600,11 @@ const translations: Record<Language, Translation> = {
     frameGridColor: 'Color de cuadrícula de marcos',
     downloadPng: 'Descargar PNG',
     copyToClipboard: 'Copiar al portapapeles',
+    
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indexado',
+    zoomed: 'ampliado',
+    changePalette: 'Cambiar Paleta [P]',
   },
   'ca': { 
     ...baseTranslation,
@@ -655,6 +670,11 @@ const translations: Record<Language, Translation> = {
     frameGridColor: 'Color de quadrícula de fotogrames',
     downloadPng: 'Descarregar PNG',
     copyToClipboard: 'Copiar al porta-retalls',
+    
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indexat',
+    zoomed: 'ampliat',
+    changePalette: 'Canviar Paleta [P]',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -792,6 +812,11 @@ const translations: Record<Language, Translation> = {
     frameGridColor: 'フレームグリッド色',
     downloadPng: 'PNG ダウンロード',
     copyToClipboard: 'クリップボードにコピー',
+    
+    // Additional translations needed
+    png8Indexed: 'PNG-8 インデックス',
+    zoomed: 'ズーム',
+    changePalette: 'パレット変更 [P]',
   },
   'it': { 
     ...baseTranslation,
@@ -893,6 +918,11 @@ const translations: Record<Language, Translation> = {
     frameGridColor: 'Frame-Raster-Farbe',
     downloadPng: 'PNG herunterladen',
     copyToClipboard: 'In Zwischenablage kopieren',
+    
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indiziert',
+    zoomed: 'vergrößert',
+    changePalette: 'Palette ändern [P]',
   },
   'fr': { 
     ...baseTranslation,
@@ -958,6 +988,11 @@ const translations: Record<Language, Translation> = {
     frameGridColor: 'Couleur grille cadres',
     downloadPng: 'Télécharger PNG',
     copyToClipboard: 'Copier dans le presse-papiers',
+    
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indexé',
+    zoomed: 'zoomé',
+    changePalette: 'Changer Palette [P]',
   },
   'pt-PT': { 
     ...baseTranslation,

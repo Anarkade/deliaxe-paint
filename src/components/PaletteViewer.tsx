@@ -318,7 +318,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       
       <div className="space-y-4">
           <div className="text-xs text-muted-foreground">
-            <p>{t('paletteInstructions')}</p>
+            <p>{t('clickToChangeColor')}</p>
           </div>
           
           <div className="grid gap-4 w-full" style={{ 
