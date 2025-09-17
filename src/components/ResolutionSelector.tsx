@@ -64,7 +64,9 @@ export type ResolutionType =
   | '384x224'
   | '480x272'
   | '512x212'
-  | '640x200';
+  | '320x256'
+  | '640x200'
+  | '640x256';
 
 export type AlignmentMode = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-center' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 export type ScalingMode = 'stretch' | 'fit' | 'dont-scale';
@@ -101,10 +103,12 @@ export const ResolutionSelector = ({
     { value: '320x200' as const, label: '320×200', desc: t('amstradCpc1') },
     { value: '320x224' as const, label: '320×224', desc: t('megaDriveNtscH40') },
     { value: '320x240' as const, label: '320×240', desc: t('megaDrivePalH40') },
+    { value: '320x256' as const, label: '320×256', desc: t('amigaLowResPal') },
     { value: '384x224' as const, label: '384×224', desc: t('cpsArcade') },
     { value: '480x272' as const, label: '480×272', desc: t('pspPlatform') },
     { value: '512x212' as const, label: '512×212', desc: t('msxHiRes') },
     { value: '640x200' as const, label: '640×200', desc: t('amstradCpc2') },
+    { value: '640x256' as const, label: '640×256', desc: t('amigaHiResPal') },
     { value: '640x480' as const, label: '640×480', desc: t('vgaAmiga') },
   ];
 
