@@ -675,6 +675,10 @@ const translations: Record<Language, Translation> = {
     png8Indexed: 'PNG-8 Indexat',
     zoomed: 'ampliat',
     changePalette: 'Canviar Paleta [P]',
+    colorsPalette: 'paleta de colors',
+    noImageLoaded: 'No hi ha imatge carregada',
+    originalLabel: 'Original:',
+    processedLabel: 'Processat:',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -711,6 +715,15 @@ const translations: Record<Language, Translation> = {
     exportWithGrids: '导出包含网格',
     exportFormat: '导出格式',
     exportTypes: '导出类型',
+    
+    // Additional translations needed
+    png8Indexed: 'PNG-8 索引',
+    zoomed: '缩放',
+    changePalette: '更改调色板 [P]',
+    colorsPalette: '颜色调色板',
+    noImageLoaded: '未加载图像',
+    originalLabel: '原始:',
+    processedLabel: '已处理:',
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -747,6 +760,15 @@ const translations: Record<Language, Translation> = {
     exportWithGrids: '匯出包含網格',
     exportFormat: '匯出格式',
     exportTypes: '匯出類型',
+    
+    // Additional translations needed
+    png8Indexed: 'PNG-8 索引',
+    zoomed: '縮放',
+    changePalette: '更改調色板 [P]',
+    colorsPalette: '顏色調色板',
+    noImageLoaded: '未載入圖像',
+    originalLabel: '原始:',
+    processedLabel: '已處理:',
   },
   'ja': { 
     ...baseTranslation,
@@ -817,6 +839,10 @@ const translations: Record<Language, Translation> = {
     png8Indexed: 'PNG-8 インデックス',
     zoomed: 'ズーム',
     changePalette: 'パレット変更 [P]',
+    colorsPalette: 'カラーパレット',
+    noImageLoaded: '画像が読み込まれていません',
+    originalLabel: 'オリジナル:',
+    processedLabel: '処理済み:',
   },
   'it': { 
     ...baseTranslation,
@@ -853,6 +879,15 @@ const translations: Record<Language, Translation> = {
     exportWithGrids: 'Esporta con griglie',
     exportFormat: 'Formato di Esportazione',
     exportTypes: 'Tipi di Esportazione',
+    
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indicizzato',
+    zoomed: 'ingrandito',
+    changePalette: 'Cambia Tavolozza [P]',
+    colorsPalette: 'tavolozza di colori',
+    noImageLoaded: 'Nessuna immagine caricata',
+    originalLabel: 'Originale:',
+    processedLabel: 'Elaborato:',
   },
   'de': { 
     ...baseTranslation,
@@ -996,6 +1031,14 @@ const translations: Record<Language, Translation> = {
   },
   'pt-PT': { 
     ...baseTranslation,
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indexado',
+    zoomed: 'ampliado',
+    changePalette: 'Alterar Paleta [P]',
+    colorsPalette: 'paleta de cores',
+    noImageLoaded: 'Nenhuma imagem carregada',
+    originalLabel: 'Original:',
+    processedLabel: 'Processado:',
     loadImage: 'Importar Imagem [I]',
     paletteViewer: 'Visualizador de Paleta',
     changeResolution: 'Alterar Resolução [R]',
@@ -1032,6 +1075,14 @@ const translations: Record<Language, Translation> = {
   },
   'ru': { 
     ...baseTranslation,
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Индексированный',
+    zoomed: 'увеличенный',
+    changePalette: 'Изменить палитру [P]',
+    colorsPalette: 'цветовая палитра',
+    noImageLoaded: 'Изображение не загружено',
+    originalLabel: 'Оригинал:',
+    processedLabel: 'Обработан:',
     loadImage: 'Импорт Изображения [I]',
     paletteViewer: 'Просмотр Палитры',
     changeResolution: 'Изменить Разрешение [R]',
@@ -1068,6 +1119,14 @@ const translations: Record<Language, Translation> = {
   },
   'pt-BR': { 
     ...baseTranslation,
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indexado',
+    zoomed: 'ampliado',
+    changePalette: 'Alterar Paleta [P]',
+    colorsPalette: 'paleta de cores',
+    noImageLoaded: 'Nenhuma imagem carregada',
+    originalLabel: 'Original:',
+    processedLabel: 'Processado:',
     loadImage: 'Importar Imagem [I]',
     paletteViewer: 'Visualizador de Paleta',
     changeResolution: 'Alterar Resolução [R]',
@@ -1104,6 +1163,14 @@ const translations: Record<Language, Translation> = {
   },
   'pl': { 
     ...baseTranslation,
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indeksowany',
+    zoomed: 'powiększony',
+    changePalette: 'Zmień paletę [P]',
+    colorsPalette: 'paleta kolorów',
+    noImageLoaded: 'Nie załadowano obrazu',
+    originalLabel: 'Oryginał:',
+    processedLabel: 'Przetworzony:',
     loadImage: 'Importuj Obraz [I]',
     paletteViewer: 'Podgląd Palety',
     changeResolution: 'Zmień Rozdzielczość [R]',
@@ -1140,6 +1207,14 @@ const translations: Record<Language, Translation> = {
   },
   'tr': { 
     ...baseTranslation,
+    // Additional translations needed
+    png8Indexed: 'PNG-8 İndeksli',
+    zoomed: 'yakınlaştırılmış',
+    changePalette: 'Paleti Değiştir [P]',
+    colorsPalette: 'renk paleti',
+    noImageLoaded: 'Resim yüklenmedi',
+    originalLabel: 'Orijinal:',
+    processedLabel: 'İşlenmiş:',
     loadImage: 'Resim İçe Aktar [I]',
     paletteViewer: 'Palet Görüntüleyici',
     changeResolution: 'Çözünürlüğü Değiştir [R]',
@@ -1176,6 +1251,14 @@ const translations: Record<Language, Translation> = {
   },
   'eu': { 
     ...baseTranslation,
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indexatua',
+    zoomed: 'handitua',
+    changePalette: 'Aldatu Paleta [P]',
+    colorsPalette: 'kolore paleta',
+    noImageLoaded: 'Ez da irudirik kargatu',
+    originalLabel: 'Jatorrizkoa:',
+    processedLabel: 'Prozesatua:',
     loadImage: 'Irudia Inportatu [I]',
     paletteViewer: 'Paleta Ikustailea',
     changeResolution: 'Bereizmena Aldatu [R]',
@@ -1212,6 +1295,14 @@ const translations: Record<Language, Translation> = {
   },
   'oc': { 
     ...baseTranslation,
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indexat',
+    zoomed: 'agrandit',
+    changePalette: 'Cambiar Paleta [P]',
+    colorsPalette: 'paleta de colors',
+    noImageLoaded: 'Cap d\'imatge cargat',
+    originalLabel: 'Original:',
+    processedLabel: 'Processat:',
     loadImage: 'Importar Imatge [I]',
     paletteViewer: 'Visualizador de Paleta',
     changeResolution: 'Cambiar Resolucion [R]',
@@ -1248,6 +1339,14 @@ const translations: Record<Language, Translation> = {
   },
   'th': { 
     ...baseTranslation,
+    // Additional translations needed
+    png8Indexed: 'PNG-8 ดัชนี',
+    zoomed: 'ซูม',
+    changePalette: 'เปลี่ยนพาเลท [P]',
+    colorsPalette: 'พาเลทสี',
+    noImageLoaded: 'ไม่ได้โหลดภาพ',
+    originalLabel: 'ต้นฉบับ:',
+    processedLabel: 'ประมวลผลแล้ว:',
     loadImage: 'นำเข้ารูป [I]',
     paletteViewer: 'ดูจานสี',
     changeResolution: 'เปลี่ยนความละเอียด [R]',
@@ -1284,6 +1383,14 @@ const translations: Record<Language, Translation> = {
   },
   'ko': { 
     ...baseTranslation,
+    // Additional translations needed
+    png8Indexed: 'PNG-8 인덱스',
+    zoomed: '확대됨',
+    changePalette: '팔레트 변경 [P]',
+    colorsPalette: '색상 팔레트',
+    noImageLoaded: '이미지가 로드되지 않음',
+    originalLabel: '원본:',
+    processedLabel: '처리됨:',
     loadImage: '이미지 가져오기 [I]',
     paletteViewer: '팔레트 뷰어',
     changeResolution: '해상도 변경 [R]',
@@ -1320,6 +1427,14 @@ const translations: Record<Language, Translation> = {
   },
   'cs': { 
     ...baseTranslation,
+    // Additional translations needed
+    png8Indexed: 'PNG-8 Indexovaný',
+    zoomed: 'přiblíženo',
+    changePalette: 'Změnit paletu [P]',
+    colorsPalette: 'barevná paleta',
+    noImageLoaded: 'Není načten žádný obrázek',
+    originalLabel: 'Originál:',
+    processedLabel: 'Zpracováno:',
     loadImage: 'Importovat Obrázek [I]',
     paletteViewer: 'Prohlížeč Palety',
     changeResolution: 'Změnit Rozlišení [R]',
