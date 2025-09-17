@@ -183,7 +183,10 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
           canvas.toBlob((blob) => {
             if (blob) {
               const file = new File([blob], 'camera-capture.png', { type: 'image/png' });
-              onImageLoad(file);
+              // Add delay for camera captures to ensure proper height calculation
+              setTimeout(() => {
+                onImageLoad(file);
+              }, 50);
             }
           }, 'image/png', 0.95); // High quality PNG
           
@@ -207,8 +210,11 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
     canvas.toBlob((blob) => {
       if (blob) {
         const file = new File([blob], 'camera-capture.png', { type: 'image/png' });
-        onImageLoad(file);
-        stopCameraPreview();
+        // Add delay for camera captures to ensure proper height calculation
+        setTimeout(() => {
+          onImageLoad(file);
+          stopCameraPreview();
+        }, 50);
       }
     }, 'image/png', 0.95); // High quality PNG
   }, [onImageLoad, stopCameraPreview]);

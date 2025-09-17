@@ -231,12 +231,21 @@ export const RetroImageEditor = () => {
       setProcessedImageData(null);
       setOriginalImageSource(source);
       
-      // Force height recalculation after image load with multiple retries
+      // Force height recalculation after image load with enhanced timing for camera captures
+      const isCameraCapture = typeof source !== 'string' && source.name === 'camera-capture.png';
+      const delay = isCameraCapture ? 300 : 150; // Longer delay for camera captures
+      
       setTimeout(() => {
         // This will trigger the ImagePreview auto-fit mechanism
-        // The timeout ensures container dimensions are available
         window.dispatchEvent(new CustomEvent('imageLoaded', { detail: { width: img.width, height: img.height } }));
-      }, 150);
+        
+        // Additional retry for camera captures due to async nature
+        if (isCameraCapture) {
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('imageLoaded', { detail: { width: img.width, height: img.height } }));
+          }, 200);
+        }
+      }, delay);
       
       // Async PNG analysis to determine if we should extract colors
       let shouldExtractColors = true;
