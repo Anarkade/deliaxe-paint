@@ -92,6 +92,7 @@ export const ResolutionSelector = ({
     { value: 'unscaled' as const, label: t('unscaledSize'), desc: t('removeScaling') },
     { value: '160x144' as const, label: '160×144', desc: t('gameBoyRes') },
     { value: '160x200' as const, label: '160×200', desc: t('amstradCpc0') },
+    { value: '240x160' as const, label: '240×160', desc: t('gameBoyAdvance') },
     { value: '256x192' as const, label: '256×192', desc: t('msxZxSpectrum') },
     { value: '256x212' as const, label: '256×212', desc: t('msxPlatform') },
     { value: '256x224' as const, label: '256×224', desc: t('megaDriveNtscH32') },
@@ -104,6 +105,7 @@ export const ResolutionSelector = ({
     { value: '480x272' as const, label: '480×272', desc: t('pspPlatform') },
     { value: '512x212' as const, label: '512×212', desc: t('msxHiRes') },
     { value: '640x200' as const, label: '640×200', desc: t('amstradCpc2') },
+    { value: '640x480' as const, label: '640×480', desc: t('vgaAmiga') },
   ];
 
   const scalingOptions = [

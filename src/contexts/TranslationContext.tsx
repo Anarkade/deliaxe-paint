@@ -127,6 +127,8 @@ interface Translation {
   cpsArcade: string;
   pspPlatform: string;
   msxHiRes: string;
+  gameBoyAdvance: string;
+  vgaAmiga: string;
   
   // Scaling modes
   stretchToFit: string;
@@ -359,8 +361,10 @@ const baseTranslation: Translation = {
   msxPlatform: 'MSX',
   cpsArcade: 'CPS1, CPS2, CPS3',
   pspPlatform: 'PSP',
-  msxHiRes: 'MSX 2',
-  stretchToFit: 'Stretch to fit',
+    msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
+    stretchToFit: 'Stretch to fit',
   centerWithBars: 'Center with black bars',
   scaleToFit: 'Scale to fit',
   imageLoaded: 'Image loaded successfully!',
@@ -503,6 +507,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Cambiar Idioma [L]',
   },
   'es-LA': { 
@@ -530,6 +536,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Cambiar Idioma [L]',
   },
   'ca': { 
@@ -557,6 +565,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Canviar Idioma [L]',
   },
   'zh-CN': { 
@@ -584,6 +594,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: '更改语言 [L]',
   },
   'zh-TW': { 
@@ -611,6 +623,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: '更改語言 [L]',
   },
   'ja': { 
@@ -638,6 +652,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: '言語を変更 [L]',
   },
   'it': { 
@@ -655,6 +671,18 @@ const translations: Record<Language, Translation> = {
     changeResolutionDesc: 'Scegli la risoluzione di destinazione e la modalità di scalatura',
     changeGridsDesc: 'Configura le griglie di tile e di frame',
     exportImageDesc: 'Scarica o condividi l’immagine elaborata',
+    gameBoyRes: 'Game Boy, Game Gear',
+    amstradCpc0: 'Amstrad CPC mode 0, Commodore 64 Multicolor',
+    megaDriveNtscH32: 'Master System, Mega Drive NTSC H32, NES PAL, SNES',
+    megaDrivePalH32: 'Master System PAL, Mega Drive PAL H32, NES NTSC',
+    amstradCpc1: 'Amstrad CPC mode 1, Commodore 64 High-Res, Commodore Amiga Low Res NTSC',
+    msxZxSpectrum: 'MSX, Master System, ZX Spectrum',
+    msxPlatform: 'MSX',
+    cpsArcade: 'CPS1, CPS2, CPS3',
+    pspPlatform: 'PSP',
+    msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Cambia Lingua [L]',
   },
   'de': { 
@@ -682,6 +710,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Sprache Ändern [L]',
   },
   'fr': { 
@@ -709,6 +739,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Changer Langue [L]',
   },
   'pt-PT': { 
@@ -736,6 +768,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Alterar Idioma [L]',
   },
   'ru': { 
@@ -763,6 +797,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Изменить Язык [L]',
   },
   'pt-BR': { 
@@ -790,6 +826,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Alterar Idioma [L]',
   },
   'pl': { 
@@ -817,6 +855,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Zmień Język [L]',
   },
   'tr': { 
@@ -844,6 +884,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Dili Değiştir [L]',
   },
   'eu': { 
@@ -871,6 +913,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Hizkuntza Aldatu [L]',
   },
   'oc': { 
@@ -898,6 +942,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Cambiar Lenga [L]',
   },
   'th': { 
@@ -925,6 +971,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'เปลี่ยนภาษา [L]',
   },
   'ko': { 
@@ -952,6 +1000,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: '언어 변경 [L]',
   },
   'cs': { 
@@ -979,6 +1029,8 @@ const translations: Record<Language, Translation> = {
     cpsArcade: 'CPS1, CPS2, CPS3',
     pspPlatform: 'PSP',
     msxHiRes: 'MSX 2',
+    gameBoyAdvance: 'Game Boy Advance',
+    vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Změnit Jazyk [L]',
   },
 };
