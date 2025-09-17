@@ -1387,6 +1387,7 @@ export const RetroImageEditor = () => {
                   frameGridColor={frameGridColor}
                   autoFitKey={`${selectedResolution}|${scalingMode}`}
                   onZoomChange={setCurrentZoom}
+                  isVerticalLayout={isVerticalLayout}
                 />
 
                 {/* Floating Content Sections */}

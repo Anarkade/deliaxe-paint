@@ -126,6 +126,7 @@ interface ImagePreviewProps {
   frameGridColor?: string;
   autoFitKey?: string;
   onZoomChange?: (zoom: number) => void;
+  isVerticalLayout?: boolean; // Layout state for responsive handling
 }
 
 export const ImagePreview = ({ 
@@ -150,7 +151,8 @@ export const ImagePreview = ({
   tileGridColor = '#808080', 
   frameGridColor = '#96629d', 
   autoFitKey, 
-  onZoomChange 
+  onZoomChange,
+  isVerticalLayout 
 }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -433,6 +435,36 @@ export const ImagePreview = ({
     }
   }, [integerScaling, onZoomChange]);
 
+  // Layout-aware height recalculation effect
+  useEffect(() => {
+    if (isVerticalLayout !== undefined && originalImage && containerWidth > 0) {
+      // Trigger height recalculation when layout changes with enhanced timing
+      const layoutDelay = 150; // Extra delay for layout transitions
+      setTimeout(() => {
+        fitToWidth();
+      }, layoutDelay);
+    }
+  }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
+
+  // Custom imageLoaded event listener for layout-aware recalculation
+  useEffect(() => {
+    const handleImageLoaded = () => {
+      // Add delay for layout transitions to ensure DOM updates are complete
+      const delay = isVerticalLayout !== undefined ? 200 : 100;
+      setTimeout(() => {
+        if (originalImage && containerWidth > 0) {
+          fitToWidth();
+        }
+      }, delay);
+    };
+
+    window.addEventListener('imageLoaded', handleImageLoaded);
+
+    return () => {
+      window.removeEventListener('imageLoaded', handleImageLoaded);
+    };
+  }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
+
   // Handle integer scaling toggle
   const handleIntegerScalingChange = useCallback((checked: boolean) => {
     setShouldAutoFit(false);
@@ -507,6 +539,17 @@ export const ImagePreview = ({
     return () => clearTimeout(timeoutId);
   }, [shouldAutoFit, containerWidth, originalImage, fitToWidth]);
 
+  // Layout-aware height recalculation effect
+  useEffect(() => {
+    if (isVerticalLayout !== undefined && originalImage && containerWidth > 0) {
+      // Trigger height recalculation when layout changes with enhanced timing
+      const layoutDelay = 150; // Extra delay for layout transitions
+      setTimeout(() => {
+        fitToWidth();
+      }, layoutDelay);
+    }
+  }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
+
   // Calculate adaptive height based on image and zoom - ensure proper synchronization
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -533,7 +576,7 @@ export const ImagePreview = ({
     }, 50); // Reduced timeout for faster response
 
     return () => clearTimeout(timeoutId);
-  }, [originalImage, processedImageData, zoom, containerWidth, showOriginal]);
+  }, [originalImage, processedImageData, zoom, containerWidth, showOriginal, isVerticalLayout]);
 
   // Reset scroll position when zoom or image changes
   useEffect(() => {
