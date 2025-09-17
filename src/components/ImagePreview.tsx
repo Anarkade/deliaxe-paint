@@ -355,8 +355,18 @@ export const ImagePreview = ({
   useEffect(() => {
     if (originalImage && originalImageSource) {
       analyzePNGFile(originalImageSource).then(info => {
-        setOriginalFormat(info.format);
-        setIsIndexedPNG(info.format.includes('Indexed'));
+        const isIndexed = info.isIndexed;
+        const isPNG8 = (info.bitDepth ?? 8) <= 8 && (info.paletteSize ?? 256) <= 256;
+        let localized = '';
+        if (isIndexed) {
+          const key = isPNG8 ? 'png8IndexedFormat' : 'png24IndexedFormat';
+          localized = t(key).replace('{count}', String(info.paletteSize ?? 0));
+        } else {
+          if (info.format.includes('PNG-24 RGB')) localized = t('png24RgbFormat');
+          else localized = info.format; // Fallback for other formats
+        }
+        setOriginalFormat(localized);
+        setIsIndexedPNG(isIndexed);
       });
     } else if (originalImage) {
       // Fallback to basic analysis for URLs or when source is not available

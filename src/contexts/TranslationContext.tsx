@@ -241,6 +241,7 @@ interface Translation {
   
   // Image format labels
   png8IndexedFormat: string;
+  png24IndexedFormat: string;
   png24RgbFormat: string;
   captureButton: string;
 
@@ -485,6 +486,7 @@ const baseTranslation: Translation = {
   
   // Image format labels
   png8IndexedFormat: 'PNG-8 Indexed ({count} colors palette)',
+  png24IndexedFormat: 'PNG-24 Indexed ({count} colors palette)',
   png24RgbFormat: 'PNG-24 RGB',
   captureButton: 'Capture',
   zoomedDimensions: '({width}×{height} zoomed)',
@@ -624,6 +626,7 @@ const translations: Record<Language, Translation> = {
     paletteWithCount: 'paleta de {count} colores',
     clickToChangeColor: 'Haz clic en un color para editarlo o arrástralo para cambiar su posición en la paleta',
     png8IndexedFormat: 'PNG-8 Indexado (paleta de {count} colores)',
+    png24IndexedFormat: 'PNG-24 Indexado (paleta de {count} colores)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Capturar',
     zoomedDimensions: '({width}×{height} ampliado)',
@@ -704,6 +707,7 @@ const translations: Record<Language, Translation> = {
     paletteWithCount: 'paleta de {count} colors',
     clickToChangeColor: 'Fes clic en un color per editar-lo o arrossega-ho per canviar la seva posició dins la paleta',
     png8IndexedFormat: 'PNG-8 Indexat (paleta de {count} colors)',
+    png24IndexedFormat: 'PNG-24 Indexat (paleta de {count} colors)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Capturar',
     zoomedDimensions: '({width}×{height} ampliat)',
@@ -755,6 +759,7 @@ const translations: Record<Language, Translation> = {
     paletteWithCount: '{count}色调色板',
     clickToChangeColor: '点击颜色进行编辑或拖动以更改其在调色板中的位置',
     png8IndexedFormat: 'PNG-8 索引 ({count}色调色板)',
+    png24IndexedFormat: 'PNG-24 索引 ({count}色调色板)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: '拍摄',
     zoomedDimensions: '({width}×{height} 缩放)',
@@ -806,6 +811,7 @@ const translations: Record<Language, Translation> = {
     paletteWithCount: '{count}色調色板',
     clickToChangeColor: '點擊顏色進行編輯或拖動以更改其在調色板中的位置',
     png8IndexedFormat: 'PNG-8 索引 ({count}色調色板)',
+    png24IndexedFormat: 'PNG-24 索引 ({count}色調色板)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: '拍攝',
     zoomedDimensions: '({width}×{height} 縮放)',
@@ -886,6 +892,7 @@ const translations: Record<Language, Translation> = {
     paletteWithCount: '{count}色パレット',
     clickToChangeColor: '色をクリックして編集するか、ドラッグしてパレット内の位置を変更します',
     png8IndexedFormat: 'PNG-8 インデックス ({count}色パレット)',
+    png24IndexedFormat: 'PNG-24 インデックス ({count}色パレット)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'キャプチャ',
     zoomedDimensions: '({width}×{height} ズーム)',
@@ -937,6 +944,7 @@ const translations: Record<Language, Translation> = {
     paletteWithCount: 'tavolozza di {count} colori',
     clickToChangeColor: 'Clicca su un colore per modificarlo o trascinalo per cambiare la sua posizione nella tavolozza',
     png8IndexedFormat: 'PNG-8 Indicizzato (tavolozza di {count} colori)',
+    png24IndexedFormat: 'PNG-24 Indicizzato (tavolozza di {count} colori)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Cattura',
     zoomedDimensions: '({width}×{height} ingrandito)',
@@ -1017,6 +1025,7 @@ const translations: Record<Language, Translation> = {
     paletteWithCount: '{count} Farben Palette',
     clickToChangeColor: 'Klicken Sie auf eine Farbe, um sie zu bearbeiten, oder ziehen Sie sie, um ihre Position in der Palette zu ändern',
     png8IndexedFormat: 'PNG-8 Indiziert ({count} Farben Palette)',
+    png24IndexedFormat: 'PNG-24 Indiziert ({count} Farben Palette)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Aufnehmen',
     zoomedDimensions: '({width}×{height} vergrößert)',
@@ -1097,6 +1106,7 @@ const translations: Record<Language, Translation> = {
     paletteWithCount: 'palette de {count} couleurs',
     clickToChangeColor: 'Cliquez sur une couleur pour la modifier ou faites-la glisser pour changer sa position dans la palette',
     png8IndexedFormat: 'PNG-8 Indexé (palette de {count} couleurs)',
+    png24IndexedFormat: 'PNG-24 Indexé (palette de {count} couleurs)',
     png24RgbFormat: 'PNG-24 RGB',
     captureButton: 'Capturer',
     zoomedDimensions: '({width}×{height} zoomé)',
