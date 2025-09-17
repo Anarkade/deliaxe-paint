@@ -288,9 +288,7 @@ export const RetroImageEditor = () => {
       setHistoryIndex(-1);
       
       // Auto-close load section on success
-      if (activeTab === 'load-image') {
-        setActiveTab(null);
-      }
+      setActiveTab(null);
       
     } catch (error) {
       toast.error(t('imageLoadError'));

@@ -713,8 +713,8 @@ export const ImagePreview = ({
 
       <div 
         ref={containerRef}
-        className={`relative bg-elegant-bg flex items-center justify-center p-0 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${
-          showCameraPreview ? 'w-full min-h-[200px]' : 'overflow-hidden'
+        className={`relative bg-elegant-bg flex items-center justify-center p-0 w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${
+          showCameraPreview ? 'min-h-[200px]' : ''
         }`}
         style={{ 
           height: showCameraPreview ? 'auto' : (originalImage ? `${previewHeight}px` : '120px'),
