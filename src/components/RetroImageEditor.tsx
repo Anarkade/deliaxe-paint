@@ -231,6 +231,13 @@ export const RetroImageEditor = () => {
       setProcessedImageData(null);
       setOriginalImageSource(source);
       
+      // Force height recalculation after image load with multiple retries
+      setTimeout(() => {
+        // This will trigger the ImagePreview auto-fit mechanism
+        // The timeout ensures container dimensions are available
+        window.dispatchEvent(new CustomEvent('imageLoaded', { detail: { width: img.width, height: img.height } }));
+      }, 150);
+      
       // Async PNG analysis to determine if we should extract colors
       let shouldExtractColors = true;
       try {

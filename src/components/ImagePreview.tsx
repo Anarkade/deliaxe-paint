@@ -448,11 +448,34 @@ export const ImagePreview = ({
     }
   }, [zoom, onZoomChange]);
 
-  // Enable auto-fit on new image load
+  // Enable auto-fit on new image load with enhanced reliability
   useEffect(() => {
-    autoFitAllowed.current = true;
-    setShouldAutoFit(true);
-  }, [originalImage]);
+    if (originalImage) {
+      autoFitAllowed.current = true;
+      setShouldAutoFit(true);
+      
+      // Force height recalculation after a brief delay to ensure container is ready
+      const timeoutId = setTimeout(() => {
+        if (containerWidth > 0) {
+          fitToWidth();
+        } else {
+          // If container width isn't ready, retry a few times
+          let retries = 0;
+          const retryInterval = setInterval(() => {
+            if (containerWidth > 0 || retries >= 5) {
+              clearInterval(retryInterval);
+              if (containerWidth > 0) {
+                fitToWidth();
+              }
+            }
+            retries++;
+          }, 100);
+        }
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [originalImage, containerWidth, fitToWidth]);
 
   // Prepare auto-fit when resolution/scaling changes; wait for processed image
   useEffect(() => {
@@ -473,9 +496,15 @@ export const ImagePreview = ({
   useEffect(() => {
     if (!originalImage || containerWidth <= 0) return;
     if (!shouldAutoFit) return;
-    fitToWidth();
-    setShouldAutoFit(false);
-    expectingProcessedChange.current = false;
+    
+    // Enhanced auto-fit with immediate height calculation
+    const timeoutId = setTimeout(() => {
+      fitToWidth();
+      setShouldAutoFit(false);
+      expectingProcessedChange.current = false;
+    }, 50);
+    
+    return () => clearTimeout(timeoutId);
   }, [shouldAutoFit, containerWidth, originalImage, fitToWidth]);
 
   // Calculate adaptive height based on image and zoom - ensure proper synchronization
