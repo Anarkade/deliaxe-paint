@@ -713,11 +713,12 @@ export const ImagePreview = ({
 
       <div 
         ref={containerRef}
-        className={`relative bg-elegant-bg flex items-center justify-center overflow-hidden p-0 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${
-          showCameraPreview ? 'w-full max-h-[70vh] min-h-[200px]' : ''
+        className={`relative bg-elegant-bg flex items-center justify-center p-0 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${
+          showCameraPreview ? 'w-full min-h-[200px]' : 'overflow-hidden'
         }`}
         style={{ 
           height: showCameraPreview ? 'auto' : (originalImage ? `${previewHeight}px` : '120px'),
+          maxHeight: showCameraPreview ? 'calc(100vh - 96px)' : 'auto',
           maxWidth: showCameraPreview ? '100%' : 'auto'
         }}
         onMouseDown={handleMouseDown}
@@ -795,15 +796,15 @@ export const ImagePreview = ({
             })()}
           </div>
         ) : showCameraPreview ? (
-          <div className="relative w-full">
+          <div className="relative w-full h-full bg-black rounded-md">
             <video
               ref={videoRef}
-              className="w-full h-full object-contain rounded-md"
+              className="absolute inset-0 w-full h-full object-contain rounded-md"
               autoPlay
               muted
               playsInline
             />
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3 z-10 pb-safe">
               <Button
                 onClick={capturePhoto}
                 variant="secondary"

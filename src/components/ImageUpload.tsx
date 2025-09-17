@@ -451,17 +451,20 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
             </label>
             
             {showCameraPreview && (
-              <div className="relative bg-black rounded-md overflow-hidden w-full max-h-[50vh] min-h-[200px] flex items-center justify-center">
+              <div 
+                className="relative bg-black rounded-md w-full min-h-[200px] flex items-center justify-center"
+                style={{ maxHeight: 'calc(100vh - 120px)' }}
+              >
                 {!cameraError ? (
                   <video
                     ref={videoRef}
-                    className="w-full h-full object-contain"
+                    className="absolute inset-0 w-full h-full object-contain"
                     autoPlay
                     muted
                     playsInline
                   />
                 ) : (
-                  <div className="w-full h-full bg-black flex items-center justify-center">
+                  <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
                     <div className="text-center text-white p-4">
                       <Camera className="h-8 w-8 mx-auto mb-2 text-gray-400" />
                       <p className="text-xs">{cameraError}</p>
@@ -470,7 +473,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                 )}
                 
                 {/* Camera controls positioned at bottom center */}
-                <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
+                <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-2 z-10 pb-safe">
                   {!cameraError && (
                     <Button
                       onClick={handleCameraCapture}
