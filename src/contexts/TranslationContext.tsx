@@ -468,7 +468,7 @@ const baseTranslation: Translation = {
   pleaseDropImageFile: 'Please drop an image file',
   clipboardError: 'Failed to copy image to clipboard',
   copyImageError: 'Failed to copy image to clipboard',
-  clickToChangeColor: 'Click to change color',
+  clickToChangeColor: 'Click in a color to edit it or drag it to change its position within the palette',
   dropboxComingSoon: 'Dropbox integration coming soon!',
   googleDriveComingSoon: 'Google Drive integration coming soon!',
   selectCamera: 'Select camera',
@@ -610,7 +610,7 @@ const translations: Record<Language, Translation> = {
     originalLabel: 'Original:',
     processedLabel: 'Procesado:',
     paletteWithCount: 'paleta de {count} colores',
-    extractColors: 'Extraer Colores',
+    clickToChangeColor: 'Haz clic en un color para editarlo o arrástralo para cambiar su posición en la paleta',
   },
   'ca': { 
     ...baseTranslation,
@@ -686,7 +686,7 @@ const translations: Record<Language, Translation> = {
     originalLabel: 'Original:',
     processedLabel: 'Processat:',
     paletteWithCount: 'paleta de {count} colors',
-    extractColors: 'Extreure Colors',
+    clickToChangeColor: 'Fes clic en un color per editar-lo o arrossega-ho per canviar la seva posició dins la paleta',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -733,7 +733,7 @@ const translations: Record<Language, Translation> = {
     originalLabel: '原始:',
     processedLabel: '已处理:',
     paletteWithCount: '{count}色调色板',
-    extractColors: '提取颜色',
+    clickToChangeColor: '点击颜色进行编辑或拖动以更改其在调色板中的位置',
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -780,7 +780,7 @@ const translations: Record<Language, Translation> = {
     originalLabel: '原始:',
     processedLabel: '已處理:',
     paletteWithCount: '{count}色調色板',
-    extractColors: '提取顏色',
+    clickToChangeColor: '點擊顏色進行編輯或拖動以更改其在調色板中的位置',
   },
   'ja': { 
     ...baseTranslation,
@@ -856,7 +856,7 @@ const translations: Record<Language, Translation> = {
     originalLabel: 'オリジナル:',
     processedLabel: '処理済み:',
     paletteWithCount: '{count}色パレット',
-    extractColors: '色を抽出',
+    clickToChangeColor: '色をクリックして編集するか、ドラッグしてパレット内の位置を変更します',
   },
   'it': { 
     ...baseTranslation,
@@ -903,7 +903,7 @@ const translations: Record<Language, Translation> = {
     originalLabel: 'Originale:',
     processedLabel: 'Elaborato:',
     paletteWithCount: 'tavolozza di {count} colori',
-    extractColors: 'Estrai Colori',
+    clickToChangeColor: 'Clicca su un colore per modificarlo o trascinalo per cambiare la sua posizione nella tavolozza',
   },
   'de': { 
     ...baseTranslation,
@@ -979,7 +979,7 @@ const translations: Record<Language, Translation> = {
     originalLabel: 'Original:',
     processedLabel: 'Verarbeitet:',
     paletteWithCount: '{count} Farben Palette',
-    extractColors: 'Farben extrahieren',
+    clickToChangeColor: 'Klicken Sie auf eine Farbe, um sie zu bearbeiten, oder ziehen Sie sie, um ihre Position in der Palette zu ändern',
   },
   'fr': { 
     ...baseTranslation,
@@ -1055,7 +1055,7 @@ const translations: Record<Language, Translation> = {
     originalLabel: 'Original:',
     processedLabel: 'Traité:',
     paletteWithCount: 'palette de {count} couleurs',
-    extractColors: 'Extraire les Couleurs',
+    clickToChangeColor: 'Cliquez sur une couleur pour la modifier ou faites-la glisser pour changer sa position dans la palette',
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -1068,7 +1068,7 @@ const translations: Record<Language, Translation> = {
     originalLabel: 'Original:',
     processedLabel: 'Processado:',
     paletteWithCount: 'paleta de {count} cores',
-    extractColors: 'Extrair Cores',
+    clickToChangeColor: 'Clique numa cor para editá-la ou arraste-a para alterar a sua posição na paleta',
     loadImage: 'Importar Imagem [I]',
     paletteViewer: 'Visualizador de Paleta',
     changeResolution: 'Alterar Resolução [R]',
@@ -1114,7 +1114,7 @@ const translations: Record<Language, Translation> = {
     originalLabel: 'Оригинал:',
     processedLabel: 'Обработан:',
     paletteWithCount: 'палитра из {count} цветов',
-    extractColors: 'Извлечь Цвета',
+    clickToChangeColor: 'Нажмите на цвет, чтобы изменить его, или перетащите, чтобы изменить его позицию в палитре',
     loadImage: 'Импорт Изображения [I]',
     paletteViewer: 'Просмотр Палитры',
     changeResolution: 'Изменить Разрешение [R]',
