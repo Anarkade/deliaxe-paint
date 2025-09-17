@@ -220,6 +220,8 @@ interface Translation {
   exportAtOriginalSize: string;
   exportWithGrids: string;
   exportWithoutGrids: string;
+  exportFormat: string;
+  exportTypes: string;
   
   // Description texts for blocks
   loadImageDescription: string;
@@ -424,6 +426,8 @@ const baseTranslation: Translation = {
   exportAtOriginalSize: 'Export at original size',
   exportWithGrids: 'Export with grids',
   exportWithoutGrids: 'Export without grids',
+  exportFormat: 'Export Format',
+  exportTypes: 'Export Types',
   loadImageDescription: 'Import, capture, or paste an image to start editing',
   changePaletteDescription: 'Select a retro console color palette to apply',
   changeResolutionDescription: 'Choose target resolution and scaling mode',
@@ -517,6 +521,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Cambiar Idioma [L]',
+    exportAtCurrentZoom: 'Exportar al zoom actual',
+    exportWithGrids: 'Exportar con cuadrículas',
+    exportFormat: 'Formato de Exportación',
+    exportTypes: 'Tipos de Exportación',
   },
   'es-LA': { 
     ...baseTranslation,
@@ -549,6 +557,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Cambiar Idioma [L]',
+    exportAtCurrentZoom: 'Exportar al zoom actual',
+    exportWithGrids: 'Exportar con rejillas',
+    exportFormat: 'Formato de Exportación',
+    exportTypes: 'Tipos de Exportación',
   },
   'ca': { 
     ...baseTranslation,
@@ -581,6 +593,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Canviar Idioma [L]',
+    exportAtCurrentZoom: 'Exportar al zoom actual',
+    exportWithGrids: 'Exportar amb quadrícules',
+    exportFormat: 'Format d\'Exportació',
+    exportTypes: 'Tipus d\'Exportació',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -613,6 +629,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: '更改语言 [L]',
+    exportAtCurrentZoom: '以当前缩放导出',
+    exportWithGrids: '导出包含网格',
+    exportFormat: '导出格式',
+    exportTypes: '导出类型',
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -645,6 +665,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: '更改語言 [L]',
+    exportAtCurrentZoom: '以目前縮放匯出',
+    exportWithGrids: '匯出包含網格',
+    exportFormat: '匯出格式',
+    exportTypes: '匯出類型',
   },
   'ja': { 
     ...baseTranslation,
@@ -677,6 +701,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: '言語を変更 [L]',
+    exportAtCurrentZoom: '現在のズームでエクスポート',
+    exportWithGrids: 'グリッド付きでエクスポート',
+    exportFormat: 'エクスポート形式',
+    exportTypes: 'エクスポートタイプ',
   },
   'it': { 
     ...baseTranslation,
@@ -709,6 +737,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Cambia Lingua [L]',
+    exportAtCurrentZoom: 'Esporta allo zoom corrente',
+    exportWithGrids: 'Esporta con griglie',
+    exportFormat: 'Formato di Esportazione',
+    exportTypes: 'Tipi di Esportazione',
   },
   'de': { 
     ...baseTranslation,
@@ -741,6 +773,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Sprache Ändern [L]',
+    exportAtCurrentZoom: 'Mit aktuellem Zoom exportieren',
+    exportWithGrids: 'Mit Rastern exportieren',
+    exportFormat: 'Exportformat',
+    exportTypes: 'Exporttypen',
   },
   'fr': { 
     ...baseTranslation,
@@ -773,6 +809,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Changer Langue [L]',
+    exportAtCurrentZoom: 'Exporter au zoom actuel',
+    exportWithGrids: 'Exporter avec grilles',
+    exportFormat: 'Format d\'Exportation',
+    exportTypes: 'Types d\'Exportation',
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -805,6 +845,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Alterar Idioma [L]',
+    exportAtCurrentZoom: 'Exportar no zoom atual',
+    exportWithGrids: 'Exportar com grelhas',
+    exportFormat: 'Formato de Exportação',
+    exportTypes: 'Tipos de Exportação',
   },
   'ru': { 
     ...baseTranslation,
@@ -837,6 +881,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Изменить Язык [L]',
+    exportAtCurrentZoom: 'Экспорт с текущим зумом',
+    exportWithGrids: 'Экспорт с сетками',
+    exportFormat: 'Формат Экспорта',
+    exportTypes: 'Типы Экспорта',
   },
   'pt-BR': { 
     ...baseTranslation,
@@ -869,6 +917,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Alterar Idioma [L]',
+    exportAtCurrentZoom: 'Exportar no zoom atual',
+    exportWithGrids: 'Exportar com grades',
+    exportFormat: 'Formato de Exportação',
+    exportTypes: 'Tipos de Exportação',
   },
   'pl': { 
     ...baseTranslation,
@@ -901,6 +953,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Zmień Język [L]',
+    exportAtCurrentZoom: 'Eksportuj w bieżącym powiększeniu',
+    exportWithGrids: 'Eksportuj z siatkami',
+    exportFormat: 'Format Eksportu',
+    exportTypes: 'Typy Eksportu',
   },
   'tr': { 
     ...baseTranslation,
@@ -933,6 +989,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Dili Değiştir [L]',
+    exportAtCurrentZoom: 'Mevcut yakınlaştırmada dışa aktar',
+    exportWithGrids: 'Izgaralarla dışa aktar',
+    exportFormat: 'Dışa Aktarma Formatı',
+    exportTypes: 'Dışa Aktarma Türleri',
   },
   'eu': { 
     ...baseTranslation,
@@ -965,6 +1025,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Hizkuntza Aldatu [L]',
+    exportAtCurrentZoom: 'Uneko zoom-ean esportatu',
+    exportWithGrids: 'Saretiekin esportatu',
+    exportFormat: 'Esportazio Formatua',
+    exportTypes: 'Esportazio Motak',
   },
   'oc': { 
     ...baseTranslation,
@@ -997,6 +1061,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Cambiar Lenga [L]',
+    exportAtCurrentZoom: 'Exportar al zoom actual',
+    exportWithGrids: 'Exportar amb grilhas',
+    exportFormat: 'Format d\'Exportacion',
+    exportTypes: 'Tipes d\'Exportacion',
   },
   'th': { 
     ...baseTranslation,
@@ -1029,6 +1097,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'เปลี่ยนภาษา [L]',
+    exportAtCurrentZoom: 'ส่งออกที่การซูมปัจจุบัน',
+    exportWithGrids: 'ส่งออกพร้อมเส้นตาราง',
+    exportFormat: 'รูปแบบการส่งออก',
+    exportTypes: 'ประเภทการส่งออก',
   },
   'ko': { 
     ...baseTranslation,
@@ -1061,6 +1133,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: '언어 변경 [L]',
+    exportAtCurrentZoom: '현재 줌으로 내보내기',
+    exportWithGrids: '격자와 함께 내보내기',
+    exportFormat: '내보내기 형식',
+    exportTypes: '내보내기 유형',
   },
   'cs': { 
     ...baseTranslation,
@@ -1093,6 +1169,10 @@ const translations: Record<Language, Translation> = {
     gameBoyAdvance: 'Game Boy Advance',
     vgaAmiga: 'VGA, Commodore Amiga ECS',
     changeLanguage: 'Změnit Jazyk [L]',
+    exportAtCurrentZoom: 'Exportovat v aktuálním přiblížení',
+    exportWithGrids: 'Exportovat s mřížkami',
+    exportFormat: 'Formát Exportu',
+    exportTypes: 'Typy Exportu',
   },
 };
 

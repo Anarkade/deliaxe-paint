@@ -395,53 +395,63 @@ export const ExportImage = ({
         </div>
         
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-2.5">
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="export-zoom" 
-                checked={exportAtCurrentZoom}
-                onCheckedChange={(checked) => setExportAtCurrentZoom(checked as boolean)}
-              />
-              <label htmlFor="export-zoom" className="text-sm font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70 break-words">
-                {t('exportAtCurrentZoom')} ({Math.round(currentZoom * 100)}%)
-              </label>
+          <div className="flex gap-6">
+            {/* Export Types (checkboxes) on the left */}
+            <div className="flex-1">
+              <label className="text-sm font-medium mb-3 block">{t('exportTypes')}</label>
+              <div className="grid grid-cols-1 gap-2.5">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="export-zoom" 
+                    checked={exportAtCurrentZoom}
+                    onCheckedChange={(checked) => setExportAtCurrentZoom(checked as boolean)}
+                  />
+                  <label htmlFor="export-zoom" className="text-sm font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70 break-words">
+                    {t('exportAtCurrentZoom')} ({Math.round(currentZoom * 100)}%)
+                  </label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="export-grids" 
+                    checked={exportWithGrids}
+                    onCheckedChange={(checked) => setExportWithGrids(checked as boolean)}
+                    disabled={!hasAnyGridEnabled}
+                  />
+                  <label 
+                    htmlFor="export-grids" 
+                    className={`text-sm font-medium leading-tight break-words ${
+                      !hasAnyGridEnabled 
+                        ? 'cursor-not-allowed opacity-50' 
+                        : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+                    }`}
+                  >
+                    {t('exportWithGrids')}
+                  </label>
+                </div>
+              </div>
             </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="export-grids" 
-                checked={exportWithGrids}
-                onCheckedChange={(checked) => setExportWithGrids(checked as boolean)}
-                disabled={!hasAnyGridEnabled}
-              />
-              <label 
-                htmlFor="export-grids" 
-                className={`text-sm font-medium leading-tight break-words ${
-                  !hasAnyGridEnabled 
-                    ? 'cursor-not-allowed opacity-50' 
-                    : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-                }`}
-              >
-                {t('exportWithGrids')}
-              </label>
-            </div>
+
+            {/* Vertical separator */}
+            <div className="w-px bg-border"></div>
+
+            {/* Export Format on the right */}
+            {paletteColors && paletteColors.length > 0 && paletteColors.length <= 256 && (
+              <div className="flex-1">
+                <label className="text-sm font-medium mb-3 block">{t('exportFormat')}</label>
+                <RadioGroup value={exportFormat} onValueChange={(value: 'png24' | 'png8') => setExportFormat(value)}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="png8" id="png8" />
+                    <Label htmlFor="png8" className="text-sm">PNG-8 Indexed ({paletteColors.length} colors)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="png24" id="png24" />
+                    <Label htmlFor="png24" className="text-sm">PNG-24 RGB (24-bit)</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
           </div>
-          
-          {paletteColors && paletteColors.length > 0 && paletteColors.length <= 256 && (
-            <div className="space-y-3">
-              <label className="text-sm font-medium">Export Format</label>
-              <RadioGroup value={exportFormat} onValueChange={(value: 'png24' | 'png8') => setExportFormat(value)}>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="png8" id="png8" />
-                  <Label htmlFor="png8" className="text-sm">PNG-8 Indexed ({paletteColors.length} colors)</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="png24" id="png24" />
-                  <Label htmlFor="png24" className="text-sm">PNG-24 RGB (24-bit)</Label>
-                </div>
-              </RadioGroup>
-            </div>
-          )}
 
           <div className="grid grid-cols-2 gap-3 pt-2">
             <Button
