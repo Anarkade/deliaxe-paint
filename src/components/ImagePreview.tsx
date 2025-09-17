@@ -401,6 +401,12 @@ export const ImagePreview = ({
       setZoom([newZoom]);
       setSliderValue([newZoom]);
       onZoomChange?.(newZoom);
+      
+      // Calculate and set height based on fit-to-width zoom
+      const displayHeight = currentImage.height * (newZoom / 100);
+      const minHeight = 150;
+      const calculatedHeight = Math.max(minHeight, displayHeight);
+      setPreviewHeight(calculatedHeight);
     }
   }, [originalImage, containerWidth, showOriginal, processedImageData, onZoomChange]);
 
@@ -479,6 +485,10 @@ export const ImagePreview = ({
         // Always use the correct current image dimensions
         const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
         const currentZoom = zoom[0] / 100;
+        
+        // Check if this is a fit-to-width zoom by comparing calculated zoom with current zoom
+        const fitZoom = Math.floor((containerWidth / currentImage.width) * 100);
+        const isFitToWidth = Math.abs(zoom[0] - fitZoom) < 5; // Allow small tolerance
         
         const displayHeight = currentImage.height * currentZoom;
         
