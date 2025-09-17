@@ -16,7 +16,7 @@ const RESIZE_DEBOUNCE_MS = 100; // Debounce resize calculations
 const ZOOM_BOUNDS = { min: 10, max: 1600 }; // Zoom limits for performance
 
 // Performance-optimized image format analysis with pixel sampling
-const analyzeImageFormat = (image: HTMLImageElement): Promise<string> => {
+const analyzeImageFormat = (image: HTMLImageElement, t: (key: string) => string): Promise<string> => {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -79,7 +79,7 @@ const analyzeImageFormat = (image: HTMLImageElement): Promise<string> => {
       
       // Early exit for large color counts (performance optimization)
       if (uniqueColors.size > 256) {
-        resolve(`PNG-24 RGB`);
+        resolve(t('png24RgbFormat'));
         return;
       }
     }
@@ -88,19 +88,19 @@ const analyzeImageFormat = (image: HTMLImageElement): Promise<string> => {
     const colorCount = uniqueColors.size;
     
     if (colorCount <= 256) {
-      if (colorCount <= 2) resolve(`PNG-8 Indexed (${colorCount} colors palette)`);
-      else if (colorCount <= 16) resolve(`PNG-8 Indexed (${colorCount} colors palette)`);
-      else if (colorCount <= 256) resolve(`PNG-8 Indexed (${colorCount} colors palette)`);
-      else resolve('PNG-24 RGB');
+      if (colorCount <= 2) resolve(t('png8IndexedFormat').replace('{count}', colorCount.toString()));
+      else if (colorCount <= 16) resolve(t('png8IndexedFormat').replace('{count}', colorCount.toString()));
+      else if (colorCount <= 256) resolve(t('png8IndexedFormat').replace('{count}', colorCount.toString()));
+      else resolve(t('png24RgbFormat'));
     } else {
-      resolve('PNG-24 RGB');
+      resolve(t('png24RgbFormat'));
     }
   });
 };
 
-const analyzeImageDataFormat = (imageData: ImageData): string => {
+const analyzeImageDataFormat = (imageData: ImageData, t: (key: string) => string): string => {
   // For processed ImageData, we'll assume it's PNG-24 RGB since that's typical for canvas output
-  return 'PNG-24 RGB';
+  return t('png24RgbFormat');
 };
 
 interface ImagePreviewProps {
@@ -360,7 +360,7 @@ export const ImagePreview = ({
       });
     } else if (originalImage) {
       // Fallback to basic analysis for URLs or when source is not available
-      analyzeImageFormat(originalImage).then(format => {
+      analyzeImageFormat(originalImage, t).then(format => {
         setOriginalFormat(format);
         setIsIndexedPNG(format.includes('Indexed'));
       });
@@ -373,7 +373,7 @@ export const ImagePreview = ({
   // Analyze processed image format
   useEffect(() => {
     if (processedImageData) {
-      const format = analyzeImageDataFormat(processedImageData);
+      const format = analyzeImageDataFormat(processedImageData, t);
       setProcessedFormat(format);
     } else {
       setProcessedFormat('');

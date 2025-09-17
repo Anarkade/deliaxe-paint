@@ -237,6 +237,11 @@ interface Translation {
 
   // Zoomed resolution text
   zoomedResolution: string;
+  
+  // Image format labels
+  png8IndexedFormat: string;
+  png24RgbFormat: string;
+  captureButton: string;
 
   // Language names
   languageNames: Record<Language, string>;
@@ -477,6 +482,11 @@ const baseTranslation: Translation = {
   camera2: 'Camera 2',
   camera3: 'Camera 3',
   
+  // Image format labels
+  png8IndexedFormat: 'PNG-8 Indexed ({count} colors palette)',
+  png24RgbFormat: 'PNG-24 RGB',
+  captureButton: 'Capture',
+  
   // Additional translations needed
   png8Indexed: 'PNG-8 Indexed',
   zoomed: 'zoomed',
@@ -611,6 +621,9 @@ const translations: Record<Language, Translation> = {
     processedLabel: 'Procesado:',
     paletteWithCount: 'paleta de {count} colores',
     clickToChangeColor: 'Haz clic en un color para editarlo o arrástralo para cambiar su posición en la paleta',
+    png8IndexedFormat: 'PNG-8 Indexado (paleta de {count} colores)',
+    png24RgbFormat: 'PNG-24 RGB',
+    captureButton: 'Capturar',
   },
   'ca': { 
     ...baseTranslation,
@@ -687,6 +700,9 @@ const translations: Record<Language, Translation> = {
     processedLabel: 'Processat:',
     paletteWithCount: 'paleta de {count} colors',
     clickToChangeColor: 'Fes clic en un color per editar-lo o arrossega-ho per canviar la seva posició dins la paleta',
+    png8IndexedFormat: 'PNG-8 Indexat (paleta de {count} colors)',
+    png24RgbFormat: 'PNG-24 RGB',
+    captureButton: 'Capturar',
   },
   'zh-CN': { 
     ...baseTranslation,
@@ -734,6 +750,9 @@ const translations: Record<Language, Translation> = {
     processedLabel: '已处理:',
     paletteWithCount: '{count}色调色板',
     clickToChangeColor: '点击颜色进行编辑或拖动以更改其在调色板中的位置',
+    png8IndexedFormat: 'PNG-8 索引 ({count}色调色板)',
+    png24RgbFormat: 'PNG-24 RGB',
+    captureButton: '拍摄',
   },
   'zh-TW': { 
     ...baseTranslation,
@@ -781,6 +800,9 @@ const translations: Record<Language, Translation> = {
     processedLabel: '已處理:',
     paletteWithCount: '{count}色調色板',
     clickToChangeColor: '點擊顏色進行編輯或拖動以更改其在調色板中的位置',
+    png8IndexedFormat: 'PNG-8 索引 ({count}色調色板)',
+    png24RgbFormat: 'PNG-24 RGB',
+    captureButton: '拍攝',
   },
   'ja': { 
     ...baseTranslation,
@@ -857,6 +879,9 @@ const translations: Record<Language, Translation> = {
     processedLabel: '処理済み:',
     paletteWithCount: '{count}色パレット',
     clickToChangeColor: '色をクリックして編集するか、ドラッグしてパレット内の位置を変更します',
+    png8IndexedFormat: 'PNG-8 インデックス ({count}色パレット)',
+    png24RgbFormat: 'PNG-24 RGB',
+    captureButton: 'キャプチャ',
   },
   'it': { 
     ...baseTranslation,
@@ -904,6 +929,9 @@ const translations: Record<Language, Translation> = {
     processedLabel: 'Elaborato:',
     paletteWithCount: 'tavolozza di {count} colori',
     clickToChangeColor: 'Clicca su un colore per modificarlo o trascinalo per cambiare la sua posizione nella tavolozza',
+    png8IndexedFormat: 'PNG-8 Indicizzato (tavolozza di {count} colori)',
+    png24RgbFormat: 'PNG-24 RGB',
+    captureButton: 'Cattura',
   },
   'de': { 
     ...baseTranslation,
@@ -980,6 +1008,9 @@ const translations: Record<Language, Translation> = {
     processedLabel: 'Verarbeitet:',
     paletteWithCount: '{count} Farben Palette',
     clickToChangeColor: 'Klicken Sie auf eine Farbe, um sie zu bearbeiten, oder ziehen Sie sie, um ihre Position in der Palette zu ändern',
+    png8IndexedFormat: 'PNG-8 Indiziert ({count} Farben Palette)',
+    png24RgbFormat: 'PNG-24 RGB',
+    captureButton: 'Aufnehmen',
   },
   'fr': { 
     ...baseTranslation,
@@ -1056,6 +1087,9 @@ const translations: Record<Language, Translation> = {
     processedLabel: 'Traité:',
     paletteWithCount: 'palette de {count} couleurs',
     clickToChangeColor: 'Cliquez sur une couleur pour la modifier ou faites-la glisser pour changer sa position dans la palette',
+    png8IndexedFormat: 'PNG-8 Indexé (palette de {count} couleurs)',
+    png24RgbFormat: 'PNG-24 RGB',
+    captureButton: 'Capturer',
   },
   'pt-PT': { 
     ...baseTranslation,
@@ -1069,6 +1103,9 @@ const translations: Record<Language, Translation> = {
     processedLabel: 'Processado:',
     paletteWithCount: 'paleta de {count} cores',
     clickToChangeColor: 'Clique numa cor para editá-la ou arraste-a para alterar a sua posição na paleta',
+    png8IndexedFormat: 'PNG-8 Indexado (paleta de {count} cores)',
+    png24RgbFormat: 'PNG-24 RGB',
+    captureButton: 'Capturar',
     loadImage: 'Importar Imagem [I]',
     paletteViewer: 'Visualizador de Paleta',
     changeResolution: 'Alterar Resolução [R]',
@@ -1115,6 +1152,9 @@ const translations: Record<Language, Translation> = {
     processedLabel: 'Обработан:',
     paletteWithCount: 'палитра из {count} цветов',
     clickToChangeColor: 'Нажмите на цвет, чтобы изменить его, или перетащите, чтобы изменить его позицию в палитре',
+    png8IndexedFormat: 'PNG-8 Индексированный (палитра из {count} цветов)',
+    png24RgbFormat: 'PNG-24 RGB',
+    captureButton: 'Снимок',
     loadImage: 'Импорт Изображения [I]',
     paletteViewer: 'Просмотр Палитры',
     changeResolution: 'Изменить Разрешение [R]',
