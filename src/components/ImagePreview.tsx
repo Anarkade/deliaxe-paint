@@ -408,7 +408,7 @@ export const ImagePreview = ({
       const displayHeight = currentImage.height * (newZoom / 100);
       const minHeight = 150;
       const calculatedHeight = Math.max(minHeight, displayHeight);
-      setPreviewHeight(calculatedHeight);
+      setPreviewHeight(Math.ceil(calculatedHeight));
     }
   }, [originalImage, containerWidth, showOriginal, processedImageData, onZoomChange]);
 
@@ -568,7 +568,7 @@ export const ImagePreview = ({
         const minHeight = 150;
         const calculatedHeight = Math.max(minHeight, displayHeight + padding);
         
-        setPreviewHeight(calculatedHeight);
+        setPreviewHeight(Math.ceil(calculatedHeight));
       } else {
         // When no image is loaded, use minimal height
         setPreviewHeight(120);
@@ -824,11 +824,11 @@ export const ImagePreview = ({
                 <div
                   className="absolute"
                   style={{
-                    width: `${baseWidth}px`,
-                    height: `${baseHeight}px`,
+                    width: `${baseWidth * (zoom[0] / 100)}px`,
+                    height: `${baseHeight * (zoom[0] / 100)}px`,
                     top: '50%',
                     left: '50%',
-                    transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px) scale(${zoom[0] / 100})`,
+                    transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
                     transformOrigin: 'center',
                     pointerEvents: 'none'
                   }}
