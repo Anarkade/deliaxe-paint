@@ -262,18 +262,6 @@ interface Translation {
   camera1: string;
   camera2: string;
   camera3: string;
-
-  // Alignment translations
-  alignment: string;
-  alignTopLeft: string;
-  alignTopCenter: string;
-  alignTopRight: string;
-  alignMiddleLeft: string;
-  alignMiddleCenter: string;
-  alignMiddleRight: string;
-  alignBottomLeft: string;
-  alignBottomCenter: string;
-  alignBottomRight: string;
 }
 
 const baseTranslation: Translation = {
