@@ -30,7 +30,7 @@ interface HistoryState {
 }
 
 // Performance constants - Optimized for large image handling
-const MAX_IMAGE_SIZE = 2048; // Maximum input image dimension to prevent memory issues
+const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory issues
 const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size
 const PROCESSING_DEBOUNCE_MS = 100; // Debounce time for image processing
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for color analysis (performance optimization)
