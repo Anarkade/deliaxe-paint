@@ -272,6 +272,38 @@ interface Translation {
 //
 // When editing translations, prefer neutral UI terminology (e.g. "Ajustes",
 // "Vista previa", "Descargar PNG") and keep platform/console names as-is.
+// Load CSV with English column for incremental migration. Vite supports `?raw` to import file contents.
+import translationsCsv from '../locales/translations.csv?raw';
+
+function parseTranslationsCsv(raw: string): Record<string, Record<string, string>> {
+  const lines = raw.split(/\r?\n/).filter(Boolean);
+  const header = lines.shift()!.split(',').map(h => h.trim());
+  const result: Record<string, Record<string, string>> = {};
+  for (const line of lines) {
+    // naive CSV parse: split on first comma for key, then remaining value(s)
+    const firstComma = line.indexOf(',');
+    if (firstComma === -1) continue;
+    const key = line.slice(0, firstComma).trim();
+    const rest = line.slice(firstComma + 1);
+    // For this incremental migration we only care about the 'en' column which is header[1]
+    // but structure the parser to support additional columns later.
+    const values: string[] = [];
+    let cursor = 0;
+    let colIndex = 1;
+    // simple split on commas — this CSV avoids embedded commas in the en column except in some entries;
+    // to be safe we reconstruct by joining remaining parts for en.
+    const parts = rest.split(',');
+    // join all parts back for 'en' column
+    values[colIndex] = parts.join(',').trim();
+    result[key] = {};
+    if (values[colIndex]) result[key][header[colIndex]] = values[colIndex];
+  }
+  return result;
+}
+
+const csvData = parseTranslationsCsv(translationsCsv);
+
+// Build baseTranslation from the in-file literal, then override keys from CSV 'en' column
 const baseTranslation: Translation = {
   loadImage: 'Import Image [I]',
   paletteViewer: 'Palette Viewer',
@@ -498,6 +530,18 @@ const baseTranslation: Translation = {
   zoomed: 'zoomed',
   changePalette: 'Change Palette [P]'
 };
+
+// Apply CSV overrides (incremental migration).
+// If translations.csv contains an 'en' value for a key, use it to override
+// the in-file literal. This allows editing `src/locales/translations.csv`
+// to change English strings and progressively add more languages.
+for (const k of Object.keys(csvData)) {
+  const entry = (csvData as any)[k];
+  if (entry && typeof entry.en === 'string' && entry.en !== '') {
+    // dynamic assignment: update the baseTranslation value
+    (baseTranslation as any)[k] = entry.en;
+  }
+}
 
 const translations: Record<Language, Partial<Translation>> = {
   'en': baseTranslation,
