@@ -175,6 +175,7 @@ export const ImagePreview = ({
   const [shouldAutoFit, setShouldAutoFit] = useState(true);
   const autoFitAllowed = useRef(true);
   const expectingProcessedChange = useRef(false);
+  const isUserDraggingSlider = useRef(false);
 
   // Get available cameras
   useEffect(() => {
@@ -388,6 +389,8 @@ export const ImagePreview = ({
   }, []);
   // Fit to width function
   const fitToWidth = useCallback(() => {
+    if (isUserDraggingSlider.current) return; // Prevent fit to width while user is dragging slider
+    
     if (originalImage && containerWidth > 0) {
       const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
       const fitZoom = Math.floor((containerWidth / currentImage.width) * 100);
@@ -407,6 +410,7 @@ export const ImagePreview = ({
 
   // Optimized zoom handling with bounds checking and integer scaling
   const handleZoomChange = useCallback((newZoom: number[]) => {
+    isUserDraggingSlider.current = true;
     setShouldAutoFit(false);
     autoFitAllowed.current = false;
     expectingProcessedChange.current = false;
@@ -435,6 +439,11 @@ export const ImagePreview = ({
       const calculatedHeight = Math.max(minHeight, displayHeight);
       setPreviewHeight(Math.ceil(calculatedHeight));
     }
+    
+    // Reset dragging flag after a short delay
+    setTimeout(() => {
+      isUserDraggingSlider.current = false;
+    }, 100);
   }, [integerScaling, onZoomChange, originalImage, containerWidth, showOriginal, processedImageData]);
 
   // Layout-aware height recalculation effect
@@ -451,10 +460,12 @@ export const ImagePreview = ({
   // Custom imageLoaded event listener for layout-aware recalculation
   useEffect(() => {
     const handleImageLoaded = () => {
+      if (isUserDraggingSlider.current) return; // Prevent auto-fit while dragging
+      
       // Add delay for layout transitions to ensure DOM updates are complete
       const delay = isVerticalLayout !== undefined ? 200 : 100;
       setTimeout(() => {
-        if (originalImage && containerWidth > 0) {
+        if (originalImage && containerWidth > 0 && !isUserDraggingSlider.current) {
           fitToWidth();
         }
       }, delay);
@@ -529,13 +540,15 @@ export const ImagePreview = ({
   // Apply fit to width once when auto-fit is pending and container size is known
   useEffect(() => {
     if (!originalImage || containerWidth <= 0) return;
-    if (!shouldAutoFit) return;
+    if (!shouldAutoFit || isUserDraggingSlider.current) return;
     
     // Enhanced auto-fit with immediate height calculation
     const timeoutId = setTimeout(() => {
-      fitToWidth();
-      setShouldAutoFit(false);
-      expectingProcessedChange.current = false;
+      if (!isUserDraggingSlider.current) {
+        fitToWidth();
+        setShouldAutoFit(false);
+        expectingProcessedChange.current = false;
+      }
     }, 50);
     
     return () => clearTimeout(timeoutId);
@@ -543,11 +556,15 @@ export const ImagePreview = ({
 
   // Layout-aware height recalculation effect
   useEffect(() => {
+    if (isUserDraggingSlider.current) return; // Prevent auto-fit while dragging
+    
     if (isVerticalLayout !== undefined && originalImage && containerWidth > 0) {
       // Trigger height recalculation when layout changes with enhanced timing
       const layoutDelay = 150; // Extra delay for layout transitions
       setTimeout(() => {
-        fitToWidth();
+        if (!isUserDraggingSlider.current) {
+          fitToWidth();
+        }
       }, layoutDelay);
     }
   }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
