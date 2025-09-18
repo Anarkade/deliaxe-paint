@@ -167,9 +167,6 @@ export const ImagePreview = ({
   const [originalFormat, setOriginalFormat] = useState<string>('');
   const [processedFormat, setProcessedFormat] = useState<string>('');
   const [isIndexedPNG, setIsIndexedPNG] = useState<boolean>(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [currentCameraId, setCurrentCameraId] = useState<string>('');
   const [integerScaling, setIntegerScaling] = useState(false);
@@ -178,10 +175,6 @@ export const ImagePreview = ({
   const [shouldAutoFit, setShouldAutoFit] = useState(true);
   const autoFitAllowed = useRef(true);
   const expectingProcessedChange = useRef(false);
-  
-  // Touch/pinch zoom state
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number; distance?: number } | null>(null);
-  const [initialZoom, setInitialZoom] = useState(100);
 
   // Get available cameras
   useEffect(() => {
@@ -433,7 +426,16 @@ export const ImagePreview = ({
       setSliderValue([clampedZoom]);
       onZoomChange?.(clampedZoom);
     }
-  }, [integerScaling, onZoomChange]);
+    
+    // Recalculate height when zoom changes
+    if (originalImage && containerWidth > 0) {
+      const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
+      const displayHeight = currentImage.height * (clampedZoom / 100);
+      const minHeight = 150;
+      const calculatedHeight = Math.max(minHeight, displayHeight);
+      setPreviewHeight(Math.ceil(calculatedHeight));
+    }
+  }, [integerScaling, onZoomChange, originalImage, containerWidth, showOriginal, processedImageData]);
 
   // Layout-aware height recalculation effect
   useEffect(() => {
@@ -578,163 +580,6 @@ export const ImagePreview = ({
     return () => clearTimeout(timeoutId);
   }, [originalImage, processedImageData, zoom, containerWidth, showOriginal, isVerticalLayout]);
 
-  // Reset scroll position when zoom or image changes
-  useEffect(() => {
-    setScrollPosition({ x: 0, y: 0 });
-  }, [zoom, showOriginal, originalImage, processedImageData]);
-
-  // Calculate scroll bounds to prevent scrolling beyond image limits
-  const getScrollBounds = () => {
-    if (!originalImage || !containerRef.current) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
-    
-    const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
-    const currentZoom = zoom[0] / 100;
-    const containerRect = containerRef.current.getBoundingClientRect();
-    
-    const displayWidth = currentImage.width * currentZoom;
-    const displayHeight = currentImage.height * currentZoom;
-    
-    const maxScrollX = Math.max(0, (displayWidth - containerRect.width) / 2);
-    const maxScrollY = Math.max(0, (displayHeight - containerRect.height) / 2);
-    
-    return {
-      minX: -maxScrollX,
-      maxX: maxScrollX,
-      minY: -maxScrollY,
-      maxY: maxScrollY
-    };
-  };
-
-  // Mouse event handlers for drag functionality
-  const handleMouseDown = (e: React.MouseEvent) => {
-    const bounds = getScrollBounds();
-    const isZoomedBeyondView = bounds.maxX > 0 || bounds.maxY > 0;
-    
-    if (isZoomedBeyondView && e.button === 0) { // Left mouse button only
-      setIsDragging(true);
-      setDragStart({ x: e.clientX - scrollPosition.x, y: e.clientY - scrollPosition.y });
-      e.preventDefault();
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    
-    const bounds = getScrollBounds();
-    const newX = Math.max(bounds.minX, Math.min(bounds.maxX, e.clientX - dragStart.x));
-    const newY = Math.max(bounds.minY, Math.min(bounds.maxY, e.clientY - dragStart.y));
-    
-    setScrollPosition({ x: newX, y: newY });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
-
-  // Touch event handlers for mobile pinch-to-zoom and pan
-  const getDistance = (touches: React.TouchList) => {
-    if (touches.length < 2) return 0;
-    const touch1 = touches[0];
-    const touch2 = touches[1];
-    return Math.sqrt(
-      Math.pow(touch2.clientX - touch1.clientX, 2) + 
-      Math.pow(touch2.clientY - touch1.clientY, 2)
-    );
-  };
-
-  const getTouchCenter = (touches: React.TouchList) => {
-    if (touches.length === 1) {
-      return { x: touches[0].clientX, y: touches[0].clientY };
-    }
-    const touch1 = touches[0];
-    const touch2 = touches[1];
-    return {
-      x: (touch1.clientX + touch2.clientX) / 2,
-      y: (touch1.clientY + touch2.clientY) / 2
-    };
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    e.preventDefault();
-    
-    if (e.touches.length === 1) {
-      // Single touch - prepare for potential pan
-      const bounds = getScrollBounds();
-      const isZoomedBeyondView = bounds.maxX > 0 || bounds.maxY > 0;
-      
-      if (isZoomedBeyondView) {
-        const touch = e.touches[0];
-        setTouchStart({ 
-          x: touch.clientX - scrollPosition.x, 
-          y: touch.clientY - scrollPosition.y 
-        });
-      }
-    } else if (e.touches.length === 2) {
-      // Pinch gesture
-      const distance = getDistance(e.touches);
-      const center = getTouchCenter(e.touches);
-      setTouchStart({ x: center.x, y: center.y, distance });
-      setInitialZoom(zoom[0]);
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    e.preventDefault();
-    
-    if (!touchStart) return;
-
-    if (e.touches.length === 1 && touchStart.distance === undefined) {
-      // Single touch pan
-      const bounds = getScrollBounds();
-      const isZoomedBeyondView = bounds.maxX > 0 || bounds.maxY > 0;
-      
-      if (isZoomedBeyondView) {
-        const touch = e.touches[0];
-        const newX = Math.max(bounds.minX, Math.min(bounds.maxX, touch.clientX - touchStart.x));
-        const newY = Math.max(bounds.minY, Math.min(bounds.maxY, touch.clientY - touchStart.y));
-        setScrollPosition({ x: newX, y: newY });
-      }
-    } else if (e.touches.length === 2 && touchStart.distance !== undefined) {
-      // Pinch zoom
-      const currentDistance = getDistance(e.touches);
-      const scale = currentDistance / touchStart.distance;
-      const newZoom = Math.max(10, Math.min(1600, initialZoom * scale));
-      
-      if (integerScaling) {
-        const roundedZoom = Math.round(newZoom / 100) * 100;
-        const applied = Math.max(100, roundedZoom);
-        setZoom([applied]);
-        setSliderValue([applied]);
-      } else {
-        setZoom([newZoom]);
-        setSliderValue([newZoom]);
-      }
-    }
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (e.touches.length === 0) {
-      setTouchStart(null);
-    } else if (e.touches.length === 1 && touchStart?.distance !== undefined) {
-      // Switched from pinch to single touch
-      const bounds = getScrollBounds();
-      const isZoomedBeyondView = bounds.maxX > 0 || bounds.maxY > 0;
-      
-      if (isZoomedBeyondView) {
-        const touch = e.touches[0];
-        setTouchStart({ 
-          x: touch.clientX - scrollPosition.x, 
-          y: touch.clientY - scrollPosition.y 
-        });
-      } else {
-        setTouchStart(null);
-      }
-    }
-  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -795,7 +640,7 @@ export const ImagePreview = ({
 
       <div 
         ref={containerRef}
-        className={`relative bg-elegant-bg flex items-center justify-center p-0 w-full ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${
+        className={`relative bg-elegant-bg flex items-center justify-center p-0 w-full ${
           showCameraPreview ? 'min-h-[200px]' : ''
         }`}
         style={{ 
@@ -804,13 +649,6 @@ export const ImagePreview = ({
           maxWidth: showCameraPreview ? '100%' : 'auto',
           overflow: showCameraPreview ? 'auto' : 'hidden'
         }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         {originalImage ? (
           <div className="relative w-full h-full">
@@ -828,7 +666,7 @@ export const ImagePreview = ({
                     height: `${baseHeight * (zoom[0] / 100)}px`,
                     top: '50%',
                     left: '50%',
-                    transform: `translate(-50%, -50%) translate(${scrollPosition.x}px, ${scrollPosition.y}px)`,
+                    transform: `translate(-50%, -50%)`,
                     transformOrigin: 'center',
                     pointerEvents: 'none'
                   }}
