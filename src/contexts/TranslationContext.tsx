@@ -388,7 +388,7 @@ const baseTranslation: Translation = {
   imageLoaded: 'Image loaded successfully!',
   imageLoadError: 'Failed to load image',
   imageDownloaded: 'Image downloaded!',
-  imageTooLarge: 'Image too large! Maximum size is 2048x2048px',
+  imageTooLarge: 'Image too large! Maximum size is 4096x4096px',
   exportSuccess: 'Export completed successfully!',
   loadImageToStart: 'Import an image to start editing',
   originalLabel: 'Original:',
