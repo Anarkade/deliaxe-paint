@@ -262,20 +262,19 @@ interface Translation {
   camera1: string;
   camera2: string;
   camera3: string;
-}
 
-const alignmentTranslations = {
-  alignment: 'Alignment',
-  alignTopLeft: 'Top Left',
-  alignTopCenter: 'Top Center',
-  alignTopRight: 'Top Right',
-  alignMiddleLeft: 'Middle Left',
-  alignMiddleCenter: 'Middle Center',
-  alignMiddleRight: 'Middle Right',
-  alignBottomLeft: 'Bottom Left',
-  alignBottomCenter: 'Bottom Center',
-  alignBottomRight: 'Bottom Right',
-};
+  // Alignment translations
+  alignment: string;
+  alignTopLeft: string;
+  alignTopCenter: string;
+  alignTopRight: string;
+  alignMiddleLeft: string;
+  alignMiddleCenter: string;
+  alignMiddleRight: string;
+  alignBottomLeft: string;
+  alignBottomCenter: string;
+  alignBottomRight: string;
+}
 
 const baseTranslation: Translation = {
   loadImage: 'Import Image [I]',
@@ -285,7 +284,7 @@ const baseTranslation: Translation = {
   settings: 'Settings',
   exportImage: 'Export Image [E]',
   preview: 'Preview',
-  appTitle: 'Viejunizer',
+  appTitle: 'Deliaxe Paint',
   appSubtitle: '',
   copyright: '',
   company: '',
@@ -411,8 +410,6 @@ const baseTranslation: Translation = {
   neoGeoMultiColors: '4096 colors (16×256)',
   neoGeoSingleColors: '16 colors (15-bit)',
   zxSpectrumColors: '16 colors (4-bit)',
-
-  // New palettes
   cgaPalette0: 'CGA Palette 0',
   cgaPalette1: 'CGA Palette 1',
   cgaPalette2: 'CGA Palette 2', 
@@ -425,7 +422,16 @@ const baseTranslation: Translation = {
   amstradCpcColors: '27 colors',
   nesColors: '64 colors',
   commodore64Colors: '16 colors',
-  ...alignmentTranslations,
+  alignment: 'Alignment',
+  alignTopLeft: 'Top Left',
+  alignTopCenter: 'Top Center',
+  alignTopRight: 'Top Right',
+  alignMiddleLeft: 'Middle Left',
+  alignMiddleCenter: 'Middle Center',
+  alignMiddleRight: 'Middle Right',
+  alignBottomLeft: 'Bottom Left',
+  alignBottomCenter: 'Bottom Center',
+  alignBottomRight: 'Bottom Right',
   showTileGrid: 'Show tile grid',
   showFrameGrid: 'Show frame grid',
   loadFromClipboard: 'Load from clipboard',
