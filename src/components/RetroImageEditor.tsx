@@ -16,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/t
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { processMegaDriveImage, extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette } from '@/lib/colorQuantization';
-import { analyzePNGFile } from '@/lib/pngAnalyzer';
+// pngAnalyzer is imported dynamically where needed to keep the main bundle small
 import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { useCanvasPool } from '@/utils/canvasPool';
@@ -250,7 +250,8 @@ export const RetroImageEditor = () => {
       // Async PNG analysis to determine if we should extract colors
       let shouldExtractColors = true;
       try {
-        const formatInfo = await analyzePNGFile(source);
+        const module = await import('@/lib/pngAnalyzer');
+        const formatInfo = await module.analyzePNGFile(source as File | string);
         setIsOriginalPNG8Indexed(formatInfo.isIndexed && formatInfo.format.includes('PNG-8'));
         
         // Only extract colors if it's an indexed PNG or if we need them for processing
@@ -304,7 +305,8 @@ export const RetroImageEditor = () => {
       
       // Async PNG analysis to avoid blocking UI
       try {
-        const formatInfo = await analyzePNGFile(source);
+        const module = await import('@/lib/pngAnalyzer');
+        const formatInfo = await module.analyzePNGFile(source as File | string);
         setIsOriginalPNG8Indexed(formatInfo.isIndexed && formatInfo.format.includes('PNG-8'));
       } catch (error) {
         setIsOriginalPNG8Indexed(false);

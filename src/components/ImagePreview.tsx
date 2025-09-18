@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Eye, ZoomIn, Camera, RotateCcw, X, Maximize2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { analyzePNGFile, ImageFormatInfo } from '@/lib/pngAnalyzer';
+import type { ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { PaletteViewer } from './PaletteViewer';
 import { PaletteType } from './ColorPaletteSelector';
 
@@ -321,31 +321,40 @@ export const ImagePreview = ({
     }
   }, [showCameraPreview, startCameraPreview, stopCameraPreview]);
   useEffect(() => {
-    if (originalImage && originalImageSource) {
-      analyzePNGFile(originalImageSource).then(info => {
-        const isIndexed = info.isIndexed;
-        const isPNG8 = (info.bitDepth ?? 8) <= 8 && (info.paletteSize ?? 256) <= 256;
-        let localized = '';
-        if (isIndexed) {
-          const key = isPNG8 ? 'png8IndexedFormat' : 'png24IndexedFormat';
-          localized = t(key).replace('{count}', String(info.paletteSize ?? 0));
-        } else {
-          if (info.format.includes('PNG-24 RGB')) localized = t('png24RgbFormat');
-          else localized = info.format; // Fallback for other formats
+    (async () => {
+      if (originalImage && originalImageSource) {
+        try {
+          const module = await import('@/lib/pngAnalyzer');
+          const info: ImageFormatInfo = await module.analyzePNGFile(originalImageSource as File | string);
+          const isIndexed = info.isIndexed;
+          const isPNG8 = (info.bitDepth ?? 8) <= 8 && (info.paletteSize ?? 256) <= 256;
+          let localized = '';
+          if (isIndexed) {
+            const key = isPNG8 ? 'png8IndexedFormat' : 'png24IndexedFormat';
+            localized = t(key).replace('{count}', String(info.paletteSize ?? 0));
+          } else {
+            if (info.format.includes('PNG-24 RGB')) localized = t('png24RgbFormat');
+            else localized = info.format; // Fallback for other formats
+          }
+          setOriginalFormat(localized);
+          setIsIndexedPNG(isIndexed);
+        } catch (error) {
+          // If analysis fails, fallback to basic analysis
+          const format = await analyzeImageFormat(originalImage, t);
+          setOriginalFormat(format);
+          setIsIndexedPNG(format.includes('Indexed'));
         }
-        setOriginalFormat(localized);
-        setIsIndexedPNG(isIndexed);
-      });
-    } else if (originalImage) {
-      // Fallback to basic analysis for URLs or when source is not available
-      analyzeImageFormat(originalImage, t).then(format => {
-        setOriginalFormat(format);
-        setIsIndexedPNG(format.includes('Indexed'));
-      });
-    } else {
-      setOriginalFormat('');
-      setIsIndexedPNG(false);
-    }
+      } else if (originalImage) {
+        // Fallback to basic analysis for URLs or when source is not available
+        analyzeImageFormat(originalImage, t).then(format => {
+          setOriginalFormat(format);
+          setIsIndexedPNG(format.includes('Indexed'));
+        });
+      } else {
+        setOriginalFormat('');
+        setIsIndexedPNG(false);
+      }
+    })();
   }, [originalImage, originalImageSource]);
 
   // Analyze processed image format

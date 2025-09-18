@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { PaletteType } from './ColorPaletteSelector';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Eye, Palette, GripVertical } from 'lucide-react';
-import { extractPNGPalette } from '@/lib/pngAnalyzer';
+// pngAnalyzer functions are imported dynamically where needed to keep bundle size small
 
 interface PaletteColor {
   r: number;
@@ -177,7 +177,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     // First try to extract from PNG PLTE chunk if it's an indexed PNG
     if (originalImageSource) {
       try {
-        const pngPalette = await extractPNGPalette(originalImageSource);
+        const module = await import('@/lib/pngAnalyzer');
+        const pngPalette = await module.extractPNGPalette(originalImageSource as File | string);
         if (pngPalette && pngPalette.length > 0) {
           const colors = pngPalette.slice(0, paletteColors.length || 256);
           setPaletteColors(colors);
@@ -235,7 +236,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       // First try to extract from PNG PLTE chunk if it's an indexed PNG
       if (originalImageSource && selectedPalette === 'original') {
         try {
-          const pngPalette = await extractPNGPalette(originalImageSource);
+          const module = await import('@/lib/pngAnalyzer');
+          const pngPalette = await module.extractPNGPalette(originalImageSource as File | string);
           if (pngPalette && pngPalette.length > 0) {
             setIsOriginalPNG(true);
             setPaletteColors(pngPalette); // Keep original order
@@ -261,10 +263,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       if (selectedPalette === 'original') {
         if (originalImageSource) {
           try {
-            const formatInfo = await import('@/lib/pngAnalyzer').then(m => m.analyzePNGFile(originalImageSource));
+            const module = await import('@/lib/pngAnalyzer');
+            const formatInfo = await module.analyzePNGFile(originalImageSource as File | string);
             if (formatInfo.isIndexed) {
               // Try to extract palette from PNG PLTE chunk
-              const extractedPalette = await import('@/lib/pngAnalyzer').then(m => m.extractPNGPalette(originalImageSource));
+              const extractedPalette = await module.extractPNGPalette(originalImageSource as File | string);
               if (extractedPalette && extractedPalette.length > 0) {
                 setPaletteColors(extractedPalette);
                 onPaletteUpdate?.(extractedPalette);
