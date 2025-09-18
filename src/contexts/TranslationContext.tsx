@@ -1373,6 +1373,35 @@ for (const lang of Object.keys(translations) as Language[]) {
   }
 }
 
+// Ensure every non-English language has all keys present.
+// For missing entries we fill a visible placeholder based on the English
+// source so the UI doesn't silently fall back to English and translators
+// can easily spot keys that need human translation.
+for (const lang of Object.keys(translations) as Language[]) {
+  if (lang === 'en') continue;
+  const langObj = translations[lang] as Partial<Translation>;
+
+  for (const key of Object.keys(baseTranslation) as Array<keyof Translation>) {
+    if (!Object.prototype.hasOwnProperty.call(langObj, key) || (langObj as any)[key] === undefined) {
+      const baseVal = baseTranslation[key];
+      if (typeof baseVal === 'string') {
+        // Use an English-prefixed placeholder so it's obvious this needs translation
+        (langObj as any)[key] = `[EN] ${baseVal}`;
+      } else {
+        (langObj as any)[key] = String(baseVal);
+      }
+    }
+  }
+
+  // Ensure languageNames map contains entries for all supported languages
+  if (!langObj.languageNames) langObj.languageNames = {} as Record<Language, string>;
+  for (const l of Object.keys(baseTranslation.languageNames) as Language[]) {
+    if (!(langObj.languageNames as any)[l]) {
+      (langObj.languageNames as any)[l] = baseTranslation.languageNames[l];
+    }
+  }
+}
+
 interface TranslationContextType {
   language: Language;
   currentLanguage: Language;
