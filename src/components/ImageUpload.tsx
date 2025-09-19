@@ -64,7 +64,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
       console.error('Failed to read clipboard:', error);
       alert(t('failedToReadClipboard'));
     }
-  }, [onImageLoad]);
+  }, [onImageLoad, t]);
 
   const getAvailableCameras = useCallback(async () => {
     try {
@@ -321,7 +321,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
         alert(t('pleaseDropImageFile'));
       }
     }
-  }, [onImageLoad]);
+  }, [onImageLoad, t]);
 
   if (hideSection) {
     return null;
