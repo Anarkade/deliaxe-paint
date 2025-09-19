@@ -428,7 +428,7 @@ export const RetroImageEditor = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [originalImage, t, loadFromClipboard]);
+  }, [originalImage, t, loadFromClipboard, handleTabClick]);
 
   const handleLoadImageClick = useCallback((source: File | string) => {
     // Reset everything first, then load the new image
@@ -861,7 +861,7 @@ export const RetroImageEditor = () => {
       setProcessingProgress(0);
       setProcessingOperation('');
     }
-  }, [originalImage, selectedPalette, selectedResolution, scalingMode, saveToHistory, performanceMonitor, getCanvas, returnCanvas, imageProcessingCache, hashImage, detectAndUnscaleImage, isOriginalPNG8Indexed, originalPaletteColors, currentPaletteColors, imageProcessor, t, toast]);
+  }, [originalImage, selectedPalette, selectedResolution, scalingMode, saveToHistory, performanceMonitor, getCanvas, returnCanvas, imageProcessingCache, hashImage, detectAndUnscaleImage, isOriginalPNG8Indexed, originalPaletteColors, currentPaletteColors, imageProcessor, applyPaletteConversion, t, toast]);
 
   // Helper function to apply a fixed palette to image data using color matching
   const applyFixedPalette = (data: Uint8ClampedArray, palette: number[][]) => {
@@ -1068,7 +1068,7 @@ export const RetroImageEditor = () => {
     link.click();
     
     toast.success(t('imageDownloaded'));
-  }, [processedImageData, selectedPalette, selectedResolution]);
+  }, [processedImageData, selectedPalette, selectedResolution, t]);
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
