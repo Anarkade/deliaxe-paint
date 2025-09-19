@@ -356,7 +356,7 @@ export const ImagePreview = ({
         setIsIndexedPNG(false);
       }
     })();
-  }, [originalImage, originalImageSource]);
+  }, [originalImage, originalImageSource, t]);
 
   // Analyze processed image format
   useEffect(() => {
@@ -366,7 +366,7 @@ export const ImagePreview = ({
     } else {
       setProcessedFormat('');
     }
-  }, [processedImageData]);
+  }, [processedImageData, t]);
 
   // Calculate container width and fit-to-width zoom (observe element size)
   useEffect(() => {
