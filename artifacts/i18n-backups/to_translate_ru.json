@@ -1,0 +1,754 @@
+{
+  "appTitle": {
+    "en": "Deliaxe Paint",
+    "translation": ""
+  },
+  "appSubtitle": {
+    "en": "Retro pixel art support suite",
+    "translation": ""
+  },
+  "copyright": {
+    "en": "© 2025",
+    "translation": ""
+  },
+  "company": {
+    "en": "Anarkade",
+    "translation": ""
+  },
+  "uploadImage": {
+    "en": "Upload Image",
+    "translation": ""
+  },
+  "orText": {
+    "en": "or",
+    "translation": ""
+  },
+  "loadFromUrl": {
+    "en": "Load from URL",
+    "translation": ""
+  },
+  "loadFromCamera": {
+    "en": "Load from Camera",
+    "translation": ""
+  },
+  "enterImageUrl": {
+    "en": "Enter image URL...",
+    "translation": ""
+  },
+  "loadUrl": {
+    "en": "Load URL",
+    "translation": ""
+  },
+  "uploadFile": {
+    "en": "Upload File",
+    "translation": ""
+  },
+  "fromUrl": {
+    "en": "From URL",
+    "translation": ""
+  },
+  "camera": {
+    "en": "Camera",
+    "translation": ""
+  },
+  "capture": {
+    "en": "Capture",
+    "translation": ""
+  },
+  "switchCamera": {
+    "en": "Switch Camera",
+    "translation": ""
+  },
+  "close": {
+    "en": "Close",
+    "translation": ""
+  },
+  "selectPalette": {
+    "en": "Change Palette [P]",
+    "translation": ""
+  },
+  "originalPalette": {
+    "en": "Original",
+    "translation": ""
+  },
+  "gameBoy": {
+    "en": "Game Boy (GB Studio sprites)",
+    "translation": ""
+  },
+  "gameBoyBg": {
+    "en": "Game Boy (GB Studio backgrounds)",
+    "translation": ""
+  },
+  "megaDriveSingle": {
+    "en": "Mega Drive Single (16 colors)",
+    "translation": ""
+  },
+  "megaDriveMulti": {
+    "en": "Mega Drive Multi (64 colors)",
+    "translation": ""
+  },
+  "neoGeoSingle": {
+    "en": "Neo Geo Single (16 colors)",
+    "translation": ""
+  },
+  "neoGeoMulti": {
+    "en": "Neo Geo Multi (256 colors)",
+    "translation": ""
+  },
+  "zxSpectrum": {
+    "en": "ZX Spectrum (16 colors)",
+    "translation": ""
+  },
+  "undo": {
+    "en": "Undo",
+    "translation": ""
+  },
+  "redo": {
+    "en": "Redo",
+    "translation": ""
+  },
+  "consolePlatform": {
+    "en": "Console/Platform",
+    "translation": ""
+  },
+  "paletteColors": {
+    "en": "Palette Colors",
+    "translation": ""
+  },
+  "colorPalette": {
+    "en": "Color palette",
+    "translation": ""
+  },
+  "extractColors": {
+    "en": "Extract Colors",
+    "translation": ""
+  },
+  "dragToReorder": {
+    "en": "Drag to reorder",
+    "translation": ""
+  },
+  "clickToChange": {
+    "en": "Click colors to change them",
+    "translation": ""
+  },
+  "paletteInstructions": {
+    "en": "Click a color to modify it or drag it to change its palette position",
+    "translation": ""
+  },
+  "paletteWithCount": {
+    "en": "{count} colors palette",
+    "translation": ""
+  },
+  "processImageFirst": {
+    "en": "Process an image first to enable export options",
+    "translation": ""
+  },
+  "scalingMode": {
+    "en": "Scaling Mode",
+    "translation": ""
+  },
+  "stretch": {
+    "en": "Stretch",
+    "translation": ""
+  },
+  "center": {
+    "en": "Center",
+    "translation": ""
+  },
+  "fit": {
+    "en": "Fit",
+    "translation": ""
+  },
+  "dontScale": {
+    "en": "Don't scale",
+    "translation": ""
+  },
+  "downloadPng": {
+    "en": "Download PNG",
+    "translation": ""
+  },
+  "copyToClipboard": {
+    "en": "Copy to clipboard",
+    "translation": ""
+  },
+  "imageCopiedToClipboard": {
+    "en": "Image copied to clipboard!",
+    "translation": ""
+  },
+  "shareOnTwitter": {
+    "en": "Share on Twitter",
+    "translation": ""
+  },
+  "language": {
+    "en": "Language",
+    "translation": ""
+  },
+  "original": {
+    "en": "Original",
+    "translation": ""
+  },
+  "processed": {
+    "en": "Processed",
+    "translation": ""
+  },
+  "fitToWidth": {
+    "en": "Fit to width",
+    "translation": ""
+  },
+  "zoom": {
+    "en": "Zoom",
+    "translation": ""
+  },
+  "tileGrid": {
+    "en": "Tile grid",
+    "translation": ""
+  },
+  "framesGrid": {
+    "en": "Frames grid",
+    "translation": ""
+  },
+  "tileSize": {
+    "en": "Tile size",
+    "translation": ""
+  },
+  "frameSize": {
+    "en": "Frame size",
+    "translation": ""
+  },
+  "tileWidth": {
+    "en": "Width",
+    "translation": ""
+  },
+  "tileHeight": {
+    "en": "Height",
+    "translation": ""
+  },
+  "tileGridColor": {
+    "en": "Tile grid color",
+    "translation": ""
+  },
+  "frameWidth": {
+    "en": "Width",
+    "translation": ""
+  },
+  "frameHeight": {
+    "en": "Height",
+    "translation": ""
+  },
+  "frameGridColor": {
+    "en": "Frame grid color",
+    "translation": ""
+  },
+  "originalIndexedPng": {
+    "en": "Original:",
+    "translation": ""
+  },
+  "integerScaling": {
+    "en": "Integer scaling",
+    "translation": ""
+  },
+  "width": {
+    "en": "Width",
+    "translation": ""
+  },
+  "height": {
+    "en": "Height",
+    "translation": ""
+  },
+  "resolution": {
+    "en": "Resolution",
+    "translation": ""
+  },
+  "targetResolution": {
+    "en": "Target Resolution",
+    "translation": ""
+  },
+  "originalSize": {
+    "en": "Original",
+    "translation": ""
+  },
+  "keepOriginalSize": {
+    "en": "Keep original size",
+    "translation": ""
+  },
+  "unscaledSize": {
+    "en": "Unscaled Resolution",
+    "translation": ""
+  },
+  "removeScaling": {
+    "en": "Remove scaling from pixel art",
+    "translation": ""
+  },
+  "gameBoyRes": {
+    "en": "Game Boy, Game Gear",
+    "translation": ""
+  },
+  "amstradCpc0": {
+    "en": "Amstrad CPC mode 0, Commodore 64 Multicolor",
+    "translation": ""
+  },
+  "megaDriveNtscH32": {
+    "en": "Master System, Mega Drive NTSC H32, NES PAL, SNES",
+    "translation": ""
+  },
+  "megaDrivePalH32": {
+    "en": "Master System PAL, Mega Drive PAL H32, NES NTSC, Master System PAL",
+    "translation": ""
+  },
+  "neoGeoCd": {
+    "en": "Neo Geo CD",
+    "translation": ""
+  },
+  "amstradCpc1": {
+    "en": "Amstrad CPC mode 1, Commodore 64 High-Res, Commodore Amiga Low Res NTSC",
+    "translation": ""
+  },
+  "megaDriveNtscH40": {
+    "en": "Mega Drive NTSC H40, Neo Geo",
+    "translation": ""
+  },
+  "megaDrivePalH40": {
+    "en": "Mega Drive PAL H40",
+    "translation": ""
+  },
+  "amstradCpc2": {
+    "en": "Amstrad CPC mode 2, Commodore Amiga Hi-Res NTSC",
+    "translation": ""
+  },
+  "amigaLowResPal": {
+    "en": "Commodore Amiga Low Res PAL",
+    "translation": ""
+  },
+  "amigaHiResPal": {
+    "en": "Commodore Amiga Hi-Res PAL",
+    "translation": ""
+  },
+  "msxZxSpectrum": {
+    "en": "MSX, Master System, ZX Spectrum",
+    "translation": ""
+  },
+  "msxPlatform": {
+    "en": "MSX",
+    "translation": ""
+  },
+  "cpsArcade": {
+    "en": "CPS1, CPS2, CPS3",
+    "translation": ""
+  },
+  "pspPlatform": {
+    "en": "PSP",
+    "translation": ""
+  },
+  "msxHiRes": {
+    "en": "MSX 2",
+    "translation": ""
+  },
+  "gameBoyAdvance": {
+    "en": "Game Boy Advance",
+    "translation": ""
+  },
+  "vgaAmiga": {
+    "en": "VGA, Commodore Amiga ECS",
+    "translation": ""
+  },
+  "stretchToFit": {
+    "en": "Stretch to fit",
+    "translation": ""
+  },
+  "centerWithBars": {
+    "en": "Center with black bars",
+    "translation": ""
+  },
+  "scaleToFit": {
+    "en": "Scale to fit",
+    "translation": ""
+  },
+  "imageLoaded": {
+    "en": "Image loaded successfully!",
+    "translation": ""
+  },
+  "imageLoadError": {
+    "en": "Failed to load image",
+    "translation": ""
+  },
+  "imageDownloaded": {
+    "en": "Image downloaded!",
+    "translation": ""
+  },
+  "imageTooLarge": {
+    "en": "Image too large! Maximum size is 4096x4096px",
+    "translation": ""
+  },
+  "exportSuccess": {
+    "en": "Export completed successfully!",
+    "translation": ""
+  },
+  "loadImageToStart": {
+    "en": "Import an image to start editing",
+    "translation": ""
+  },
+  "canvasNotSupported": {
+    "en": "Canvas not supported",
+    "translation": ""
+  },
+  "targetResolutionTooLarge": {
+    "en": "Target resolution too large! Maximum is 4096px",
+    "translation": ""
+  },
+  "imageTooLargeToProcess": {
+    "en": "Image too large to process. Try a smaller image or resolution.",
+    "translation": ""
+  },
+  "errorProcessingImage": {
+    "en": "Error processing image",
+    "translation": ""
+  },
+  "chooseFile": {
+    "en": "Choose File",
+    "translation": ""
+  },
+  "noFileChosen": {
+    "en": "No file chosen",
+    "translation": ""
+  },
+  "pageNotFound": {
+    "en": "404",
+    "translation": ""
+  },
+  "oopsPageNotFound": {
+    "en": "Oops! Page not found",
+    "translation": ""
+  },
+  "returnToHome": {
+    "en": "Return to Home",
+    "translation": ""
+  },
+  "unlimitedColors": {
+    "en": "Unlimited",
+    "translation": ""
+  },
+  "gameBoyColors": {
+    "en": "4 colors (green)",
+    "translation": ""
+  },
+  "megaDrive16": {
+    "en": "Mega Drive (sprite sheet)",
+    "translation": ""
+  },
+  "megaDrive16Colors": {
+    "en": "16 colors (RGB 3-3-3)",
+    "translation": ""
+  },
+  "megaDriveMultiColors": {
+    "en": "64 colors (4×16)",
+    "translation": ""
+  },
+  "megaDriveSingleColors": {
+    "en": "16 colors (9-bit)",
+    "translation": ""
+  },
+  "neoGeoMultiColors": {
+    "en": "4096 colors (16×256)",
+    "translation": ""
+  },
+  "neoGeoSingleColors": {
+    "en": "16 colors (15-bit)",
+    "translation": ""
+  },
+  "zxSpectrumColors": {
+    "en": "16 colors (4-bit)",
+    "translation": ""
+  },
+  "cgaPalette0": {
+    "en": "CGA Palette 0",
+    "translation": ""
+  },
+  "cgaPalette1": {
+    "en": "CGA Palette 1",
+    "translation": ""
+  },
+  "cgaPalette2": {
+    "en": "CGA Palette 2",
+    "translation": ""
+  },
+  "gameBoyRealistic": {
+    "en": "Game Boy (Realistic)",
+    "translation": ""
+  },
+  "amstradCpc": {
+    "en": "Amstrad CPC",
+    "translation": ""
+  },
+  "nesPalette": {
+    "en": "NES",
+    "translation": ""
+  },
+  "commodore64": {
+    "en": "Commodore 64",
+    "translation": ""
+  },
+  "zxSpectrumPalette": {
+    "en": "ZX Spectrum",
+    "translation": ""
+  },
+  "cgaColors": {
+    "en": "4 colors (CGA)",
+    "translation": ""
+  },
+  "amstradCpcColors": {
+    "en": "27 colors",
+    "translation": ""
+  },
+  "nesColors": {
+    "en": "64 colors",
+    "translation": ""
+  },
+  "commodore64Colors": {
+    "en": "16 colors",
+    "translation": ""
+  },
+  "alignment": {
+    "en": "Alignment",
+    "translation": ""
+  },
+  "alignTopLeft": {
+    "en": "Top Left",
+    "translation": ""
+  },
+  "alignTopCenter": {
+    "en": "Top Center",
+    "translation": ""
+  },
+  "alignTopRight": {
+    "en": "Top Right",
+    "translation": ""
+  },
+  "alignMiddleLeft": {
+    "en": "Middle Left",
+    "translation": ""
+  },
+  "alignMiddleCenter": {
+    "en": "Middle Center",
+    "translation": ""
+  },
+  "alignMiddleRight": {
+    "en": "Middle Right",
+    "translation": ""
+  },
+  "alignBottomLeft": {
+    "en": "Bottom Left",
+    "translation": ""
+  },
+  "alignBottomCenter": {
+    "en": "Bottom Center",
+    "translation": ""
+  },
+  "alignBottomRight": {
+    "en": "Bottom Right",
+    "translation": ""
+  },
+  "showTileGrid": {
+    "en": "Show tile grid",
+    "translation": ""
+  },
+  "showFrameGrid": {
+    "en": "Show frame grid",
+    "translation": ""
+  },
+  "loadFromClipboard": {
+    "en": "Load from clipboard",
+    "translation": ""
+  },
+  "changeCamera": {
+    "en": "Change camera",
+    "translation": ""
+  },
+  "cameraError": {
+    "en": "Camera Error",
+    "translation": ""
+  },
+  "cameraNotAvailable": {
+    "en": "Camera not available or access denied",
+    "translation": ""
+  },
+  "cameraTimeout": {
+    "en": "Camera timeout - please try again",
+    "translation": ""
+  },
+  "cameraNotReadable": {
+    "en": "Could not start camera - please check permissions",
+    "translation": ""
+  },
+  "exportAtOriginalSize": {
+    "en": "Export at original size",
+    "translation": ""
+  },
+  "exportWithoutGrids": {
+    "en": "Export without grids",
+    "translation": ""
+  },
+  "loadImageDescription": {
+    "en": "Import, capture, or paste an image to start editing",
+    "translation": ""
+  },
+  "changePaletteDescription": {
+    "en": "Select a retro console color palette to apply",
+    "translation": ""
+  },
+  "changeResolutionDescription": {
+    "en": "Choose target resolution and scaling mode",
+    "translation": ""
+  },
+  "changeGridsDescription": {
+    "en": "Configure tile and frame grid overlays",
+    "translation": ""
+  },
+  "exportImageDescription": {
+    "en": "Download or share your processed image",
+    "translation": ""
+  },
+  "zoomedResolution": {
+    "en": "zoomed",
+    "translation": ""
+  },
+  "zoomedDimensions": {
+    "en": "({width}×{height} zoomed)",
+    "translation": ""
+  },
+  "png8IndexedFormat": {
+    "en": "PNG-8 Indexed ({count} colors palette)",
+    "translation": ""
+  },
+  "png24IndexedFormat": {
+    "en": "PNG-24 Indexed ({count} colors palette)",
+    "translation": ""
+  },
+  "languageNames.en": {
+    "en": "English",
+    "translation": ""
+  },
+  "languageNames.es-ES": {
+    "en": "Español (España)",
+    "translation": ""
+  },
+  "languageNames.es-LA": {
+    "en": "Español (Latinoamérica)",
+    "translation": ""
+  },
+  "languageNames.ca": {
+    "en": "Català",
+    "translation": ""
+  },
+  "languageNames.zh-CN": {
+    "en": "简体中文",
+    "translation": ""
+  },
+  "languageNames.zh-TW": {
+    "en": "繁體中文",
+    "translation": ""
+  },
+  "languageNames.ja": {
+    "en": "日本語",
+    "translation": ""
+  },
+  "languageNames.it": {
+    "en": "Italiano",
+    "translation": ""
+  },
+  "languageNames.de": {
+    "en": "Deutsch",
+    "translation": ""
+  },
+  "languageNames.fr": {
+    "en": "Français",
+    "translation": ""
+  },
+  "languageNames.pt-PT": {
+    "en": "Português (Portugal)",
+    "translation": ""
+  },
+  "languageNames.ru": {
+    "en": "Русский",
+    "translation": ""
+  },
+  "languageNames.pt-BR": {
+    "en": "Português (Brasil)",
+    "translation": ""
+  },
+  "languageNames.pl": {
+    "en": "Polski",
+    "translation": ""
+  },
+  "languageNames.tr": {
+    "en": "Türkçe",
+    "translation": ""
+  },
+  "languageNames.eu": {
+    "en": "Euskera",
+    "translation": ""
+  },
+  "languageNames.oc": {
+    "en": "Aranés",
+    "translation": ""
+  },
+  "languageNames.th": {
+    "en": "ไทย",
+    "translation": ""
+  },
+  "languageNames.ko": {
+    "en": "한국어",
+    "translation": ""
+  },
+  "languageNames.cs": {
+    "en": "Čeština",
+    "translation": ""
+  },
+  "noImageFoundInClipboard": {
+    "en": "No image found in clipboard",
+    "translation": ""
+  },
+  "failedToReadClipboard": {
+    "en": "Failed to read clipboard. Please make sure you have an image copied.",
+    "translation": ""
+  },
+  "pleaseDropImageFile": {
+    "en": "Please drop an image file",
+    "translation": ""
+  },
+  "clipboardError": {
+    "en": "Failed to copy image to clipboard",
+    "translation": ""
+  },
+  "copyImageError": {
+    "en": "Failed to copy image to clipboard",
+    "translation": ""
+  },
+  "dropboxComingSoon": {
+    "en": "Dropbox integration coming soon!",
+    "translation": ""
+  },
+  "googleDriveComingSoon": {
+    "en": "Google Drive integration coming soon!",
+    "translation": ""
+  },
+  "selectCamera": {
+    "en": "Select camera",
+    "translation": ""
+  },
+  "noCamerasDetected": {
+    "en": "No cameras detected, please close and try again after connecting, activating and enabling a camera",
+    "translation": ""
+  },
+  "camera1": {
+    "en": "Camera 1",
+    "translation": ""
+  },
+  "camera2": {
+    "en": "Camera 2",
+    "translation": ""
+  },
+  "camera3": {
+    "en": "Camera 3",
+    "translation": ""
+  }
+}
