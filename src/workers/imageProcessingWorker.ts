@@ -1,49 +1,54 @@
 // Web Worker for CPU-intensive image processing operations
 // This offloads heavy computations from the main thread to prevent UI freezing
 
-import { extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette, toRGB333 } from '../lib/colorQuantization';
+import { extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette, toRGB333, Color } from '../lib/colorQuantization';
 
 export interface ProcessingMessage {
   type: 'PROCESS_IMAGE' | 'QUANTIZE_COLORS' | 'APPLY_PALETTE' | 'EXTRACT_COLORS' | 'MEGA_DRIVE_PROCESS';
-  data: any;
+  data: unknown;
   id: string;
 }
 
 export interface ProcessingResponse {
   type: 'PROCESSING_COMPLETE' | 'PROCESSING_ERROR' | 'PROCESSING_PROGRESS';
-  data: any;
+  data: unknown;
   id: string;
   progress?: number;
 }
 
 // Helper to transfer ImageData to worker
-const processImageData = (imageData: ImageData, operation: string, options: any = {}) => {
-  try {
+const processImageData = (imageData: ImageData, operation: string, options: Record<string, unknown> = {}) => {
     switch (operation) {
       case 'EXTRACT_COLORS':
         return extractColorsFromImageData(imageData);
         
       case 'QUANTIZE_COLORS':
-        const { colors, targetCount } = options;
-        return medianCutQuantization(colors, targetCount);
+        {
+          const { colors, targetCount } = options as { colors?: Color[]; targetCount?: number };
+          return medianCutQuantization(colors || [], targetCount || 16);
+        }
         
       case 'APPLY_PALETTE':
-        const { palette } = options;
-        return applyQuantizedPalette(imageData, palette);
+        {
+          const { palette } = options as { palette?: Color[] };
+          return applyQuantizedPalette(imageData, palette || []);
+        }
         
       case 'MEGA_DRIVE_PROCESS':
-        return processMegaDriveInWorker(imageData, options.originalPalette);
+        {
+          const { originalPalette } = options as { originalPalette?: Color[] };
+          return processMegaDriveInWorker(imageData, originalPalette);
+        }
         
       default:
         throw new Error(`Unknown operation: ${operation}`);
     }
-  } catch (error) {
-    throw error;
-  }
 };
 
 // Optimized Mega Drive processing in worker
-const processMegaDriveInWorker = (imageData: ImageData, originalPalette?: any[]) => {
+type RGBColor = { r: number; g: number; b: number; count?: number };
+
+const processMegaDriveInWorker = (imageData: ImageData, originalPalette?: RGBColor[]) => {
   // Step 1: Extract original colors
   const originalColors = extractColorsFromImageData(imageData);
   
@@ -87,7 +92,14 @@ const processMegaDriveInWorker = (imageData: ImageData, originalPalette?: any[])
   }
   
   // Ensure all palette colors are RGB 3-3-3
-  finalPalette = finalPalette.map(color => toRGB333(color.r, color.g, color.b));
+  // Ensure each palette entry conforms to RGBColor then convert to 3-3-3
+  finalPalette = finalPalette.map((c) => {
+    const color = c as Partial<RGBColor>;
+    const r = typeof color.r === 'number' ? color.r : 0;
+    const g = typeof color.g === 'number' ? color.g : 0;
+    const b = typeof color.b === 'number' ? color.b : 0;
+    return toRGB333(r, g, b);
+  });
   
   // Pad to exactly 16 colors
   while (finalPalette.length < 16) {
@@ -105,7 +117,7 @@ const processMegaDriveInWorker = (imageData: ImageData, originalPalette?: any[])
 };
 
 // Process chunked image data for large images
-const processInChunks = (imageData: ImageData, operation: string, options: any, chunkSize = 1024) => {
+const processInChunks = (imageData: ImageData, operation: string, options: Record<string, unknown>, chunkSize = 1024) => {
   const { width, height, data } = imageData;
   const chunks = [];
   
@@ -137,49 +149,56 @@ const processInChunks = (imageData: ImageData, operation: string, options: any, 
 // Handle messages from main thread
 self.addEventListener('message', (event: MessageEvent<ProcessingMessage>) => {
   const { type, data, id } = event.data;
-  
+
   try {
-    let result;
-    
+    let result: unknown;
+
+    // Narrow payload to a record so accessing fields is safe
+    const payload = (data as unknown) as Record<string, unknown>;
+
     switch (type) {
       case 'PROCESS_IMAGE':
-        result = processImageData(data.imageData, data.operation, data.options);
+        result = processImageData(payload.imageData as ImageData, String(payload.operation || ''), (payload.options as Record<string, unknown>) || {});
         break;
-        
+
       case 'QUANTIZE_COLORS':
-        result = medianCutQuantization(data.colors, data.targetCount);
+        result = medianCutQuantization((payload.colors as Color[]) || [], (Number(payload.targetCount) || 16));
         break;
-        
+
       case 'APPLY_PALETTE':
-        result = applyQuantizedPalette(data.imageData, data.palette);
+        result = applyQuantizedPalette((payload.imageData as ImageData), (payload.palette as Color[]) || []);
         break;
-        
+
       case 'EXTRACT_COLORS':
-        result = extractColorsFromImageData(data.imageData);
+        result = extractColorsFromImageData(payload.imageData as ImageData);
         break;
-        
+
       case 'MEGA_DRIVE_PROCESS':
-        result = processMegaDriveInWorker(data.imageData, data.originalPalette);
+        result = processMegaDriveInWorker(payload.imageData as ImageData, (payload.originalPalette as Color[]) || undefined);
         break;
-        
+
       default:
         throw new Error(`Unknown message type: ${type}`);
     }
-    
+
     // Send result back to main thread
-    self.postMessage({
+    const response: ProcessingResponse = {
       type: 'PROCESSING_COMPLETE',
       data: result,
       id
-    } as ProcessingResponse);
-    
+    };
+
+    self.postMessage(response);
+
   } catch (error) {
-    // Send error back to main thread
-    self.postMessage({
+    // Send error back to main thread (stringify non-Error values)
+    const errPayload = error instanceof Error ? { message: error.message, stack: error.stack } : { message: String(error) };
+    const response: ProcessingResponse = {
       type: 'PROCESSING_ERROR',
-      data: { message: error.message, stack: error.stack },
+      data: errPayload,
       id
-    } as ProcessingResponse);
+    };
+    self.postMessage(response);
   }
 });
 
