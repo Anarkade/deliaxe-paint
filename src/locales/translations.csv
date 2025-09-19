@@ -1,17 +1,17 @@
-key,en
-loadImage,Import Image [I]
-paletteViewer,Palette Viewer
-changeResolution,Change Resolution [R]
-changeGrids,Change Grids [G]
-settings,Settings
-exportImage,Export Image [E]
-preview,Preview
-appTitle,Vintage Palette Studio
+key,en,es-ES
+loadImage,"Import Image [I]","Importar imagen [I]"
+paletteViewer,"Palette Viewer","Visor de paleta"
+changeResolution,"Change Resolution [R]","Cambiar resolución [R]"
+changeGrids,"Change Grids [G]","Cambiar rejillas [G]"
+settings,"Settings","Ajustes"
+exportImage,"Export Image [E]","Exportar imagen [E]"
+preview,"Preview","Vista previa"
+appTitle,"Vintage Palette Studio","Vintage Palette Studio"
 appSubtitle,
 copyright,© 2025
 company,Anarkade
 uploadImage,Upload Image
-dragDropText,Load, drag and drop or paste an image
+dragDropText,"Load, drag and drop or paste an image","Carga, arrastra y suelta o pega una imagen"
 orText,or
 loadFromUrl,Load from URL
 loadFromCamera,Load from Camera
@@ -41,7 +41,7 @@ extractColors,Extract Colors
 dragToReorder,Drag to reorder
 clickToChange,Click colors to change them
 paletteInstructions,Click a color to modify it or drag it to change its palette position
-loadImageDesc,Load, drag and drop or paste an image
+loadImageDesc,"Load, drag and drop or paste an image","Carga, arrastra y suelta o pega una imagen"
 changePaletteDesc,Select a retro platform color palette to apply
 changeResolutionDesc,Choose target resolution and scaling mode
 changeGridsDesc,Configure tile and frame grid overlays
@@ -85,24 +85,24 @@ originalSize,Original
 keepOriginalSize,Keep original size
 unscaledSize,Unscaled Resolution
 removeScaling,Remove scaling from pixel art
-gameBoyRes,Game Boy, Game Gear
-amstradCpc0,Amstrad CPC mode 0, Commodore 64 Multicolor
-megaDriveNtscH32,Master System, Mega Drive NTSC H32, NES PAL, SNES
-megaDrivePalH32,Master System PAL, Mega Drive PAL H32, NES NTSC
+gameBoyRes,"Game Boy, Game Gear","Game Boy, Game Gear"
+amstradCpc0,"Amstrad CPC mode 0, Commodore 64 Multicolor","Amstrad CPC modo 0, Commodore 64 Multicolor"
+megaDriveNtscH32,"Master System, Mega Drive NTSC H32, NES PAL, SNES","Master System, Mega Drive NTSC H32, NES PAL, SNES"
+megaDrivePalH32,"Master System PAL, Mega Drive PAL H32, NES NTSC","Master System PAL, Mega Drive PAL H32, NES NTSC"
 neoGeoCd,Neo Geo CD
-amstradCpc1,Amstrad CPC mode 1, Commodore 64 High-Res, Commodore Amiga Low Res NTSC
+amstradCpc1,"Amstrad CPC mode 1, Commodore 64 High-Res, Commodore Amiga Low Res NTSC","Amstrad CPC modo 1, Commodore 64 High-Res, Commodore Amiga Low Res NTSC"
 megaDriveNtscH40,Mega Drive NTSC H40, Neo Geo
 megaDrivePalH40,Mega Drive PAL H40
 amstradCpc2,Amstrad CPC mode 2, Commodore Amiga Hi-Res NTSC
 amigaLowResPal,Commodore Amiga Low Res PAL
 amigaHiResPal,Commodore Amiga Hi-Res PAL
-msxZxSpectrum,MSX, Master System, ZX Spectrum
+msxZxSpectrum,"MSX, Master System, ZX Spectrum","MSX, Master System, ZX Spectrum"
 msxPlatform,MSX
-cpsArcade,CPS1, CPS2, CPS3
+cpsArcade,"CPS1, CPS2, CPS3","CPS1, CPS2, CPS3"
 pspPlatform,PSP
 msxHiRes,MSX 2
 gameBoyAdvance,Game Boy Advance
-vgaAmiga,VGA, Commodore Amiga ECS
+vgaAmiga,"VGA, Commodore Amiga ECS","VGA, Commodore Amiga ECS"
 stretchToFit,Stretch to fit
 centerWithBars,Center with black bars
 scaleToFit,Scale to fit
@@ -168,19 +168,19 @@ exportWithGrids,Export with grids
 exportWithoutGrids,Export without grids
 exportFormat,Export Format
 exportTypes,Export Types
-loadImageDescription,Import, capture, or paste an image to start editing
+loadImageDescription,"Import, capture, or paste an image to start editing","Importa, captura o pega una imagen para empezar a editar"
 changePaletteDescription,Select a retro console color palette to apply
 changeResolutionDescription,Choose target resolution and scaling mode
 changeGridsDescription,Configure tile and frame grid overlays
 exportImageDescription,Download or share your processed image
 zoomedResolution,zoomed
-zoomedDimensions,({width}×{height} zoomed)
-png8IndexedFormat,PNG-8 Indexed ({count} colors palette)
-png24IndexedFormat,PNG-24 Indexed ({count} colors palette)
+zoomedDimensions,"({width}×{height} zoomed)","({width}×{height} ampliado)"
+png8IndexedFormat,"PNG-8 Indexed ({count} colors palette)","PNG-8 indexado ({count} colores paleta)"
+png24IndexedFormat,"PNG-24 Indexed ({count} colors palette)","PNG-24 indexado ({count} colores paleta)"
 png24RgbFormat,PNG-24 RGB
-captureButton,Capture
-languageNames.en,English
-languageNames.es-ES,Español (España)
+captureButton,"Capture","Capturar"
+languageNames.en,"English","English"
+languageNames.es-ES,"Español (España)","Español (España)"
 languageNames.es-LA,Español (Latinoamérica)
 languageNames.ca,Català
 languageNames.zh-CN,简体中文
