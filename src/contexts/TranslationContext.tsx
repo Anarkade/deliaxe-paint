@@ -636,41 +636,10 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['fr'] || {})
   },
-  'pt-PT': { 
+  'pt-PT': {
+// pt-PT migrated into CSV
     ...baseTranslation,
-    // Additional translations needed
-    png8Indexed: 'PNG-8 Indexado',
-    zoomed: 'ampliado',
-    changePalette: 'Alterar Paleta [P]',
-    colorsPalette: 'paleta de cores',
-    noImageLoaded: 'Nenhuma imagem carregada',
-    originalLabel: 'Original:',
-    processedLabel: 'Processado:',
-    paletteWithCount: 'paleta de {count} cores',
-    clickToChangeColor: 'Clique numa cor para editá-la ou arraste-a para alterar a sua posição na paleta',
-    png8IndexedFormat: 'PNG-8 Indexado (paleta de {count} cores)',
-    png24RgbFormat: 'PNG-24 RGB',
-    captureButton: 'Capturar',
-    zoomedDimensions: '({width}×{height} ampliado)',
-    loadImage: 'Importar Imagem [I]',
-    paletteViewer: 'Visualizador de Paleta',
-    changeResolution: 'Alterar Resolução [R]',
-    changeGrids: 'Alterar Grelhas [G]',
-    settings: 'Definições',
-    exportImage: 'Exportar Imagem [E]',
-    preview: 'Pré-visualização',
-    dragDropText: 'Carregar, arrastar e largar ou colar uma imagem',
-    loadImageDesc: 'Carregar, arrastar e largar ou colar uma imagem',
-    changePaletteDesc: 'Selecionar uma paleta de cores de plataforma retro para aplicar',
-    changeResolutionDesc: 'Escolher a resolução‑alvo e o modo de escala',
-    changeGridsDesc: 'Configurar as grelhas de tiles e de frames',
-    exportImageDesc: 'Transferir ou partilhar a imagem processada',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: 'Alterar Idioma [L]',
-    exportAtCurrentZoom: 'Exportar no zoom atual',
-    exportWithGrids: 'Exportar com grelhas',
-    exportFormat: 'Formato de Exportação',
-    exportTypes: 'Tipos de Exportação',
+    ...(csvData['pt-PT'] || {})
   },
   'ru': { 
     ...baseTranslation,
