@@ -666,35 +666,10 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['eu'] || {})
   },
-  'oc': { 
+  'oc': {
+// oc migrated into CSV
     ...baseTranslation,
-    // Additional translations needed
-    png8Indexed: 'PNG-8 Indexat',
-    zoomed: 'agrandit',
-    changePalette: 'Cambiar Paleta [P]',
-    colorsPalette: 'paleta de colors',
-    noImageLoaded: 'Cap d\'imatge cargat',
-    originalLabel: 'Original:',
-    processedLabel: 'Processat:',
-    loadImage: 'Importar Imatge [I]',
-    paletteViewer: 'Visualizador de Paleta',
-    changeResolution: 'Cambiar Resolucion [R]',
-    changeGrids: 'Cambiar Grilhas [G]',
-    settings: 'Configuracion',
-    exportImage: 'Exportar Imatge [E]',
-    preview: 'Vista Prèvia',
-    dragDropText: 'Cargar, lisar‑depausar o pegar una imatge',
-    loadImageDesc: 'Cargar, lisar‑depausar o pegar una imatge',
-    changePaletteDesc: 'Seleccionar una paleta de colors de plataforma retro d’aplicar',
-    changeResolutionDesc: 'Causir la resolucion cibla e lo mòde d’escala',
-    changeGridsDesc: 'Configurar las grasilhas de tiles e de quadres',
-    exportImageDesc: 'Telecargar o partejar vòstra imatge tractada',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: 'Cambiar Lenga [L]',
-    exportAtCurrentZoom: 'Exportar al zoom actual',
-    exportWithGrids: 'Exportar amb grilhas',
-    exportFormat: 'Format d\'Exportacion',
-    exportTypes: 'Tipes d\'Exportacion',
+    ...(csvData['oc'] || {})
   },
   'th': { 
     ...baseTranslation,
