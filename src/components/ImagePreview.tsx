@@ -9,6 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import type { ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { PaletteViewer } from './PaletteViewer';
 import { PaletteType } from './ColorPaletteSelector';
+import { Color } from '@/lib/colorQuantization';
 
 // Performance constants for image analysis and rendering
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for performance
@@ -110,11 +111,11 @@ interface ImagePreviewProps {
   onLoadImageClick?: (source: File | string) => void;
   originalImageSource?: File | string; // Add source for PNG analysis
   selectedPalette?: PaletteType;
-  onPaletteUpdate?: (colors: any[]) => void;
+  onPaletteUpdate?: (colors: Color[]) => void;
   showCameraPreview?: boolean;
   onCameraPreviewChange?: (show: boolean) => void;
   selectedCameraId?: string;
-  currentPaletteColors?: any[];
+  currentPaletteColors?: Color[];
   onSectionOpen?: () => void; // New callback for section opening
   showTileGrid?: boolean;
   showFrameGrid?: boolean;

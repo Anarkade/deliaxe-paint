@@ -1,6 +1,7 @@
 // Custom hook for optimized image processing with Web Workers
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { ProcessingMessage, ProcessingResponse } from '../workers/imageProcessingWorker';
+import type { Color } from '../lib/colorQuantization';
 
 interface ProcessingState {
   isProcessing: boolean;
@@ -10,7 +11,7 @@ interface ProcessingState {
 
 interface ProcessingOptions {
   operation: string;
-  options?: any;
+  options?: Record<string, unknown>;
   onProgress?: (progress: number) => void;
 }
 
@@ -24,7 +25,7 @@ export const useImageProcessor = () => {
   const workerRef = useRef<Worker | null>(null);
   const requestIdRef = useRef(0);
   const pendingRequests = useRef(new Map<string, {
-    resolve: (value: any) => void;
+    resolve: (value: unknown) => void;
     reject: (error: Error) => void;
     onProgress?: (progress: number) => void;
   }>());
@@ -39,21 +40,22 @@ export const useImageProcessor = () => {
 
     workerRef.current.onmessage = (event: MessageEvent<ProcessingResponse>) => {
       const { type, data, id, progress } = event.data;
+      const payload = data as any;
       const request = pendingRequests.current.get(id);
 
       if (!request) return;
 
       switch (type) {
         case 'PROCESSING_COMPLETE':
-          request.resolve(data);
+          request.resolve(payload);
           pendingRequests.current.delete(id);
           setState(prev => ({ ...prev, isProcessing: false, progress: 100 }));
           break;
 
         case 'PROCESSING_ERROR':
-          request.reject(new Error(data.message));
+          request.reject(new Error(payload.message || String(payload)));
           pendingRequests.current.delete(id);
-          setState(prev => ({ ...prev, isProcessing: false, error: data.message }));
+          setState(prev => ({ ...prev, isProcessing: false, error: payload.message || String(payload) }));
           break;
 
         case 'PROCESSING_PROGRESS':
@@ -83,7 +85,7 @@ export const useImageProcessor = () => {
   const processImage = useCallback((
     imageData: ImageData,
     options: ProcessingOptions
-  ): Promise<any> => {
+  ): Promise<unknown> => {
     return new Promise((resolve, reject) => {
       if (!workerRef.current) {
         reject(new Error('Worker not initialized'));
@@ -111,7 +113,7 @@ export const useImageProcessor = () => {
           imageData,
           operation: options.operation,
           options: options.options
-        },
+        } as Record<string, unknown>,
         id
       };
 
@@ -122,9 +124,9 @@ export const useImageProcessor = () => {
   // Process Mega Drive image
   const processMegaDriveImage = useCallback((
     imageData: ImageData,
-    originalPalette?: any[],
+    originalPalette?: Color[],
     onProgress?: (progress: number) => void
-  ): Promise<{ imageData: ImageData; palette: any[] }> => {
+  ): Promise<{ imageData: ImageData; palette: Color[] }> => {
     return new Promise((resolve, reject) => {
       if (!workerRef.current) {
         reject(new Error('Worker not initialized'));
@@ -151,7 +153,7 @@ export const useImageProcessor = () => {
         data: {
           imageData,
           originalPalette
-        },
+        } as Record<string, unknown>,
         id
       };
 
@@ -163,19 +165,19 @@ export const useImageProcessor = () => {
   const extractColors = useCallback((
     imageData: ImageData,
     onProgress?: (progress: number) => void
-  ): Promise<any[]> => {
+  ): Promise<Color[]> => {
     return processImage(imageData, {
       operation: 'EXTRACT_COLORS',
       onProgress
-    });
+    }) as Promise<Color[]>;
   }, [processImage]);
 
   // Quantize colors
   const quantizeColors = useCallback((
-    colors: any[],
+    colors: Color[],
     targetCount: number,
     onProgress?: (progress: number) => void
-  ): Promise<any[]> => {
+  ): Promise<Color[]> => {
     return new Promise((resolve, reject) => {
       if (!workerRef.current) {
         reject(new Error('Worker not initialized'));
@@ -202,7 +204,7 @@ export const useImageProcessor = () => {
         data: {
           colors,
           targetCount
-        },
+        } as Record<string, unknown>,
         id
       };
 
@@ -220,7 +222,7 @@ export const useImageProcessor = () => {
       operation: 'APPLY_PALETTE',
       options: { palette },
       onProgress
-    });
+    }) as Promise<ImageData>;
   }, [processImage]);
 
   // Cancel current processing

@@ -31,8 +31,8 @@ class LRUCache<T> {
   }
 
   // Generate cache key from parameters
-  private generateKey(params: Record<string, any>): string {
-    const sorted = Object.keys(params).sort().reduce((result: Record<string, any>, key) => {
+  private generateKey(params: Record<string, unknown>): string {
+    const sorted = Object.keys(params).sort().reduce((result: Record<string, unknown>, key) => {
       result[key] = params[key];
       return result;
     }, {});
@@ -98,13 +98,13 @@ class LRUCache<T> {
   }
 
   // Set with parameter-based key
-  setByParams(params: Record<string, any>, data: T): void {
+  setByParams(params: Record<string, unknown>, data: T): void {
     const key = this.generateKey(params);
     this.set(key, data);
   }
 
   // Get with parameter-based key
-  getByParams(params: Record<string, any>): T | null {
+  getByParams(params: Record<string, unknown>): T | null {
     const key = this.generateKey(params);
     return this.get(key);
   }
@@ -115,7 +115,7 @@ class LRUCache<T> {
   }
 
   // Check if parameters exist
-  hasByParams(params: Record<string, any>): boolean {
+  hasByParams(params: Record<string, unknown>): boolean {
     const key = this.generateKey(params);
     return this.has(key);
   }
@@ -186,7 +186,7 @@ class LRUCache<T> {
 }
 
 // Specialized cache for image processing results
-class ImageProcessingCache extends LRUCache<any> {
+class ImageProcessingCache extends LRUCache<unknown> {
   constructor() {
     super(100 * 1024 * 1024, 50); // 100MB, 50 entries max
   }
@@ -198,7 +198,7 @@ class ImageProcessingCache extends LRUCache<any> {
     resolution: string,
     scaling: string,
     imageData: ImageData,
-    paletteColors: any[]
+    paletteColors: unknown[]
   ): void {
     const params = {
       image: originalImageHash,
@@ -220,7 +220,7 @@ class ImageProcessingCache extends LRUCache<any> {
     palette: string,
     resolution: string,
     scaling: string
-  ): { imageData: ImageData; paletteColors: any[] } | null {
+  ): { imageData: ImageData; paletteColors: unknown[] } | null {
     const params = {
       image: originalImageHash,
       palette,
@@ -228,11 +228,11 @@ class ImageProcessingCache extends LRUCache<any> {
       scaling
     };
 
-    return this.getByParams(params);
+    return this.getByParams(params) as { imageData: ImageData; paletteColors: unknown[] } | null;
   }
 
   // Cache color analysis results
-  cacheColorAnalysis(imageHash: string, colors: any[], format: string): void {
+  cacheColorAnalysis(imageHash: string, colors: unknown[], format: string): void {
     this.setByParams({ image: imageHash, type: 'colors' }, {
       colors,
       format,
@@ -241,15 +241,15 @@ class ImageProcessingCache extends LRUCache<any> {
   }
 
   // Get cached color analysis
-  getCachedColorAnalysis(imageHash: string): { colors: any[]; format: string } | null {
-    return this.getByParams({ image: imageHash, type: 'colors' });
+  getCachedColorAnalysis(imageHash: string): { colors: unknown[]; format: string } | null {
+    return this.getByParams({ image: imageHash, type: 'colors' }) as { colors: unknown[]; format: string } | null;
   }
 
   // Cache palette generation results
   cachePaletteGeneration(
     colorsHash: string,
     targetCount: number,
-    palette: any[]
+    palette: unknown[]
   ): void {
     this.setByParams({
       colors: colorsHash,
@@ -265,12 +265,12 @@ class ImageProcessingCache extends LRUCache<any> {
   getCachedPaletteGeneration(
     colorsHash: string,
     targetCount: number
-  ): { palette: any[] } | null {
+  ): { palette: unknown[] } | null {
     return this.getByParams({
       colors: colorsHash,
       targetCount,
       type: 'palette'
-    });
+    }) as { palette: unknown[] } | null;
   }
 }
 

@@ -15,7 +15,7 @@ import { Upload, Palette, Eye, Monitor, Download, Grid3X3, Globe, X, AlertTriang
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { processMegaDriveImage, extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette } from '@/lib/colorQuantization';
+import { processMegaDriveImage, extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette, Color } from '@/lib/colorQuantization';
 // pngAnalyzer is imported dynamically where needed to keep the main bundle small
 import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
@@ -42,8 +42,8 @@ export const RetroImageEditor = () => {
   const [selectedPalette, setSelectedPalette] = useState<PaletteType>('original');
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
-  const [currentPaletteColors, setCurrentPaletteColors] = useState<any[]>([]);
-  const [originalPaletteColors, setOriginalPaletteColors] = useState<any[]>([]);
+  const [currentPaletteColors, setCurrentPaletteColors] = useState<Color[]>([]);
+  const [originalPaletteColors, setOriginalPaletteColors] = useState<Color[]>([]);
   const [activeTab, setActiveTab] = useState<string>('load-image');
   const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
   const [showCameraPreview, setShowCameraPreview] = useState(false);
@@ -145,7 +145,7 @@ export const RetroImageEditor = () => {
     return 'blocked'
   };
 
-  const handleTabClick = (tabId: string) => {
+  const handleTabClick = useCallback((tabId: string) => {
     // Allow language and load-image clicks even when no image is loaded
     if (!originalImage && tabId !== 'language' && tabId !== 'load-image') {
       return; // Don't allow clicking other blocked tabs when no image is loaded
@@ -163,7 +163,7 @@ export const RetroImageEditor = () => {
     if (tabId) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  };
+  }, [originalImage, resetEditor]);
 
   const saveToHistory = useCallback((state: HistoryState) => {
     const newHistory = history.slice(0, historyIndex + 1);
@@ -334,7 +334,7 @@ export const RetroImageEditor = () => {
       setProcessingProgress(0);
       setProcessingOperation('');
     }
-  }, [t, activeTab, performanceMonitor, imageProcessor, getCanvas, returnCanvas]);
+  }, [t, performanceMonitor, imageProcessor, getCanvas, returnCanvas]);
 
   // Clipboard loading function
   const loadFromClipboard = useCallback(async () => {
@@ -677,27 +677,29 @@ export const RetroImageEditor = () => {
             case 'stretch':
               ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
               break;
-            case 'fit':
+            case 'fit': {
               const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
               const scaledWidth = originalImage.width * scale;
               const scaledHeight = originalImage.height * scale;
               const fitX = (targetWidth - scaledWidth) / 2;
               const fitY = (targetHeight - scaledHeight) / 2;
               ctx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
+            }
               break;
-            case 'dont-scale':
+            case 'dont-scale': {
               // Use middle-center alignment for don't scale by default
               const centerX = (targetWidth - originalImage.width) / 2;
               const centerY = (targetHeight - originalImage.height) / 2;
               ctx.drawImage(originalImage, centerX, centerY);
+            }
               break;
-            default:
+            default: {
               // Handle alignment modes (including dont-scale with specific alignment)
               const alignmentModes = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
               if (alignmentModes.includes(scalingMode)) {
                 const [vAlign, hAlign] = (scalingMode as string).split('-');
                 let x = 0, y = 0;
-                
+
                 // Calculate horizontal position
                 switch (hAlign) {
                   case 'left':
@@ -710,7 +712,7 @@ export const RetroImageEditor = () => {
                     x = targetWidth - originalImage.width;
                     break;
                 }
-                
+
                 // Calculate vertical position
                 switch (vAlign) {
                   case 'top':
@@ -723,9 +725,10 @@ export const RetroImageEditor = () => {
                     y = targetHeight - originalImage.height;
                     break;
                 }
-                
+
                 ctx.drawImage(originalImage, x, y);
               }
+            }
               break;
           }
         }
@@ -763,39 +766,42 @@ export const RetroImageEditor = () => {
             case 'stretch':
               tempCtx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
               break;
-            case 'fit':
+            case 'fit': {
               const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
               const scaledWidth = originalImage.width * scale;
               const scaledHeight = originalImage.height * scale;
               const fitX = (targetWidth - scaledWidth) / 2;
               const fitY = (targetHeight - scaledHeight) / 2;
               tempCtx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
+            }
               break;
-            case 'dont-scale':
+            case 'dont-scale': {
               const centerX = (targetWidth - originalImage.width) / 2;
               const centerY = (targetHeight - originalImage.height) / 2;
               tempCtx.drawImage(originalImage, centerX, centerY);
+            }
               break;
-            default:
+            default: {
               const alignmentModes = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
               if (alignmentModes.includes(scalingMode)) {
                 const [vAlign, hAlign] = (scalingMode as string).split('-');
                 let x = 0, y = 0;
-                
+
                 switch (hAlign) {
                   case 'left': x = 0; break;
                   case 'center': x = (targetWidth - originalImage.width) / 2; break;
                   case 'right': x = targetWidth - originalImage.width; break;
                 }
-                
+
                 switch (vAlign) {
                   case 'top': y = 0; break;
                   case 'middle': y = (targetHeight - originalImage.height) / 2; break;
                   case 'bottom': y = targetHeight - originalImage.height; break;
                 }
-                
+
                 tempCtx.drawImage(originalImage, x, y);
               }
+            }
               break;
           }
         } else {
@@ -855,7 +861,7 @@ export const RetroImageEditor = () => {
       setProcessingProgress(0);
       setProcessingOperation('');
     }
-  }, [originalImage, selectedPalette, selectedResolution, scalingMode, saveToHistory]);
+  }, [originalImage, selectedPalette, selectedResolution, scalingMode, saveToHistory, performanceMonitor, getCanvas, returnCanvas, imageProcessingCache, hashImage, detectAndUnscaleImage, isOriginalPNG8Indexed, originalPaletteColors, currentPaletteColors, imageProcessor, t, toast]);
 
   // Helper function to apply a fixed palette to image data using color matching
   const applyFixedPalette = (data: Uint8ClampedArray, palette: number[][]) => {
@@ -889,198 +895,152 @@ export const RetroImageEditor = () => {
   };
 
   // Async palette conversion with Web Worker support
-  const applyPaletteConversion = async (imageData: ImageData, palette: PaletteType, customColors?: any[]): Promise<ImageData> => {
+  const applyPaletteConversion = async (imageData: ImageData, palette: PaletteType, customColors?: Color[]): Promise<ImageData> => {
     const data = new Uint8ClampedArray(imageData.data);
     const resultImageData = new ImageData(data, imageData.width, imageData.height);
     
     switch (palette) {
-      case 'gameboy':
-        // Use custom colors if provided, otherwise use default Game Boy palette
-        const gbColors = customColors && customColors.length === 4 
+      case 'gameboy': {
+        const gbColors = customColors && customColors.length === 4
           ? customColors.map(c => [c.r, c.g, c.b])
           : [
-              [7, 24, 33],     // #071821
-              [134, 192, 108], // #86c06c
-              [224, 248, 207], // #e0f8cf
-              [101, 255, 0]    // #65ff00
+              [7, 24, 33],
+              [134, 192, 108],
+              [224, 248, 207],
+              [101, 255, 0]
             ];
-        
-        // Function to assign Game Boy colors based on brightness ranges
+
         const findClosestGBColor = (r: number, g: number, b: number) => {
           const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
           const brightnessPercent = (pixelBrightness / 255) * 100;
-          
-          if (brightnessPercent <= 24) {
-            return gbColors[0]; // #071821 (darkest) for 0%-24%
-          } else if (brightnessPercent <= 49) {
-            return gbColors[1]; // #86c06c (2nd darkest) for 25%-49%
-          } else if (brightnessPercent <= 74) {
-            return gbColors[2]; // #e0f8cf (2nd brightest) for 50%-74%
-          } else {
-            return gbColors[3]; // #65ff00 (brightest) for 75%-100%
-          }
+          if (brightnessPercent <= 24) return gbColors[0];
+          if (brightnessPercent <= 49) return gbColors[1];
+          if (brightnessPercent <= 74) return gbColors[2];
+          return gbColors[3];
         };
 
-        // Apply Game Boy indexed color conversion
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
-          
           const closestColor = findClosestGBColor(r, g, b);
-          
-          data[i] = closestColor[0];     // R
-          data[i + 1] = closestColor[1]; // G
-          data[i + 2] = closestColor[2]; // B
-          // Alpha channel (i + 3) remains unchanged
+          data[i] = closestColor[0];
+          data[i + 1] = closestColor[1];
+          data[i + 2] = closestColor[2];
         }
-        
-        // Update the current palette colors for the palette viewer if not using custom colors
+
         if (!customColors || customColors.length !== 4) {
-          setCurrentPaletteColors(gbColors.map(color => ({
-            r: color[0],
-            g: color[1],
-            b: color[2]
-          })));
+          setCurrentPaletteColors(gbColors.map(color => ({ r: color[0], g: color[1], b: color[2] })));
         }
+      }
         break;
-        
-      case 'gameboyBg':
-        // Game Boy Background palette with different colors
-        const gbBgColors = customColors && customColors.length === 4 
+
+      case 'gameboyBg': {
+        const gbBgColors = customColors && customColors.length === 4
           ? customColors.map(c => [c.r, c.g, c.b])
           : [
-              [7, 24, 33],     // #071821 (darkest)
-              [48, 104, 80],   // #306850 (2nd darkest)
-              [134, 192, 108], // #86c06c (2nd brightest)
-              [224, 248, 207]  // #e0f8cf (brightest)
+              [7, 24, 33],
+              [48, 104, 80],
+              [134, 192, 108],
+              [224, 248, 207]
             ];
-        
-        // Function to assign Game Boy background colors based on brightness ranges
+
         const findClosestGBBgColor = (r: number, g: number, b: number) => {
           const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
           const brightnessPercent = (pixelBrightness / 255) * 100;
-          
-          if (brightnessPercent <= 24) {
-            return gbBgColors[0]; // #071821 (darkest) for 0%-24%
-          } else if (brightnessPercent <= 49) {
-            return gbBgColors[1]; // #306850 (2nd darkest) for 25%-49%
-          } else if (brightnessPercent <= 74) {
-            return gbBgColors[2]; // #86c06c (2nd brightest) for 50%-74%
-          } else {
-            return gbBgColors[3]; // #e0f8cf (brightest) for 75%-100%
-          }
+          if (brightnessPercent <= 24) return gbBgColors[0];
+          if (brightnessPercent <= 49) return gbBgColors[1];
+          if (brightnessPercent <= 74) return gbBgColors[2];
+          return gbBgColors[3];
         };
 
-        // Apply Game Boy background indexed color conversion
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
-          
           const closestColor = findClosestGBBgColor(r, g, b);
-          
-          data[i] = closestColor[0];     // R
-          data[i + 1] = closestColor[1]; // G
-          data[i + 2] = closestColor[2]; // B
-          // Alpha channel (i + 3) remains unchanged
+          data[i] = closestColor[0];
+          data[i + 1] = closestColor[1];
+          data[i + 2] = closestColor[2];
         }
-        
-        // Update the current palette colors for the palette viewer if not using custom colors
+
         if (!customColors || customColors.length !== 4) {
-          setCurrentPaletteColors(gbBgColors.map(color => ({
-            r: color[0],
-            g: color[1],
-            b: color[2]
-          })));
+          setCurrentPaletteColors(gbBgColors.map(color => ({ r: color[0], g: color[1], b: color[2] })));
         }
+      }
         break;
       
-      case 'megadrive':
+      case 'megadrive': {
         try {
-          // Use Web Worker for Mega Drive processing to prevent UI blocking
           setProcessingOperation('Processing Mega Drive palette...');
-          
-          const megaDriveResult = await imageProcessor.processMegaDriveImage(
-            imageData,
-            customColors,
-            (progress) => setProcessingProgress(progress)
-          );
-          
-          // Replace the current image data with the processed data
+          const megaDriveResult = await imageProcessor.processMegaDriveImage(imageData, customColors, (progress) => setProcessingProgress(progress));
           const processedData = megaDriveResult.imageData.data;
-          for (let i = 0; i < data.length; i++) {
-            data[i] = processedData[i];
-          }
-          
-          // Update the current palette colors for the palette viewer - exactly 16 colors
-          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({
-            r: color.r,
-            g: color.g,
-            b: color.b
-          })));
+          for (let i = 0; i < data.length; i++) data[i] = processedData[i];
+          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({ r: color.r, g: color.g, b: color.b })));
         } catch (error) {
           console.error('Mega Drive processing error:', error);
-          // Fallback to synchronous processing
           const megaDriveResult = processMegaDriveImage(imageData);
           const processedData = megaDriveResult.imageData.data;
-          for (let i = 0; i < data.length; i++) {
-            data[i] = processedData[i];
-          }
-          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({
-            r: color.r,
-            g: color.g,
-            b: color.b
-          })));
+          for (let i = 0; i < data.length; i++) data[i] = processedData[i];
+          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({ r: color.r, g: color.g, b: color.b })));
         }
+      }
         break;
 
-      case 'cga0':
+      case 'cga0': {
         const cga0Palette = [[0, 0, 0], [255, 85, 255], [85, 255, 255], [255, 255, 255]];
         applyFixedPalette(data, cga0Palette);
         setCurrentPaletteColors(cga0Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+      }
         break;
 
-      case 'cga1':
+      case 'cga1': {
         const cga1Palette = [[0, 0, 0], [85, 255, 85], [255, 85, 85], [255, 255, 85]];
         applyFixedPalette(data, cga1Palette);
         setCurrentPaletteColors(cga1Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+      }
         break;
 
-      case 'cga2':
+      case 'cga2': {
         const cga2Palette = [[0, 0, 0], [255, 85, 85], [85, 255, 255], [255, 255, 255]];
         applyFixedPalette(data, cga2Palette);
         setCurrentPaletteColors(cga2Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+      }
         break;
 
-      case 'gameboyRealistic':
+      case 'gameboyRealistic': {
         const gbRealisticPalette = [[56, 72, 40], [96, 112, 40], [160, 168, 48], [208, 224, 64]];
         applyFixedPalette(data, gbRealisticPalette);
         setCurrentPaletteColors(gbRealisticPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+      }
         break;
 
-      case 'amstradCpc':
+      case 'amstradCpc': {
         const amstradCpcPalette = [[0, 0, 0], [128, 128, 128], [255, 255, 255], [128, 0, 0], [255, 0, 0], [255, 128, 128], [255, 127, 0], [255, 255, 128], [255, 255, 0], [128, 128, 0], [0, 128, 0], [0, 255, 0], [128, 255, 0], [128, 255, 128], [0, 255, 128], [0, 128, 128], [0, 255, 255], [128, 255, 255], [0, 128, 255], [0, 0, 255], [0, 0, 128], [128, 0, 255], [128, 128, 255], [255, 128, 255], [255, 0, 255], [255, 0, 128], [128, 0, 128]];
         applyFixedPalette(data, amstradCpcPalette);
         setCurrentPaletteColors(amstradCpcPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+      }
         break;
 
-      case 'nes':
+      case 'nes': {
         const nesPalette = [[88, 88, 88], [0, 35, 124], [13, 16, 153], [48, 0, 146], [79, 0, 108], [96, 0, 53], [92, 5, 0], [70, 24, 0], [39, 45, 0], [9, 62, 0], [0, 69, 0], [0, 65, 6], [0, 53, 69], [0, 0, 0], [0, 0, 0], [0, 0, 0], [161, 161, 161], [11, 83, 215], [51, 55, 254], [102, 33, 247], [149, 21, 190], [172, 22, 110], [166, 39, 33], [134, 67, 0], [89, 98, 0], [45, 122, 0], [12, 133, 0], [58, 217, 116], [57, 195, 223], [66, 66, 66], [0, 0, 0], [0, 0, 0], [255, 255, 255], [81, 165, 254], [128, 132, 254], [188, 106, 254], [249, 91, 254], [254, 94, 196], [254, 115, 105], [228, 147, 33], [174, 182, 0], [121, 211, 0], [81, 223, 33], [58, 215, 116], [57, 195, 223], [66, 66, 66], [0, 0, 0], [0, 0, 0], [255, 255, 255], [181, 217, 254], [202, 202, 254], [227, 190, 254], [249, 183, 254], [254, 186, 231], [254, 195, 188], [244, 209, 153], [222, 224, 134], [198, 236, 135], [178, 242, 157], [167, 240, 195], [168, 231, 240], [172, 172, 172], [0, 0, 0], [0, 0, 0]];
         applyFixedPalette(data, nesPalette);
         setCurrentPaletteColors(nesPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+      }
         break;
 
-      case 'commodore64':
+      case 'commodore64': {
         const c64Palette = [[0, 0, 0], [98, 98, 98], [137, 137, 137], [173, 173, 173], [255, 255, 255], [159, 78, 68], [203, 126, 117], [109, 84, 18], [161, 104, 60], [201, 212, 135], [154, 226, 155], [92, 171, 94], [106, 191, 198], [136, 126, 203], [80, 69, 155], [160, 87, 163]];
         applyFixedPalette(data, c64Palette);
         setCurrentPaletteColors(c64Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+      }
         break;
 
-      case 'zxSpectrum':
+      case 'zxSpectrum': {
         const zxPalette = [[0, 0, 0], [0, 0, 216], [0, 0, 255], [216, 0, 0], [255, 0, 0], [216, 0, 216], [255, 0, 255], [0, 216, 0], [0, 255, 0], [0, 216, 216], [0, 255, 255], [216, 216, 0], [255, 255, 0], [216, 216, 216], [255, 255, 255]];
         applyFixedPalette(data, zxPalette);
         setCurrentPaletteColors(zxPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+      }
         break;
         
       default:

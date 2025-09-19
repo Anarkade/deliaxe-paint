@@ -3,13 +3,13 @@
 
 export interface ColorAnalysisMessage {
   type: 'ANALYZE_FORMAT' | 'DETECT_PIXEL_ART' | 'EXTRACT_PALETTE' | 'CALCULATE_HISTOGRAM';
-  data: any;
+  data: unknown;
   id: string;
 }
 
 export interface ColorAnalysisResponse {
   type: 'ANALYSIS_COMPLETE' | 'ANALYSIS_ERROR' | 'ANALYSIS_PROGRESS';
-  data: any;
+  data: unknown;
   id: string;
   progress?: number;
 }
@@ -201,41 +201,43 @@ const extractPalette = (imageData: ImageData, maxColors = 256) => {
 // Handle messages from main thread
 self.addEventListener('message', (event: MessageEvent<ColorAnalysisMessage>) => {
   const { type, data, id } = event.data;
-  
+  const payload = data as Record<string, unknown>;
+
   try {
-    let result;
-    
+    let result: unknown;
+
     switch (type) {
       case 'ANALYZE_FORMAT':
-        result = analyzeFormat(data.imageData, data.originalFormat);
+        result = analyzeFormat(payload.imageData as ImageData, payload.originalFormat as string | undefined);
         break;
-        
+
       case 'DETECT_PIXEL_ART':
-        result = detectPixelArt(data.imageData);
+        result = detectPixelArt(payload.imageData as ImageData);
         break;
-        
+
       case 'EXTRACT_PALETTE':
-        result = extractPalette(data.imageData, data.maxColors);
+        result = extractPalette(payload.imageData as ImageData, (payload.maxColors as number) || 256);
         break;
-        
+
       case 'CALCULATE_HISTOGRAM':
-        result = calculateHistogram(data.imageData, data.sampleInterval);
+        result = calculateHistogram(payload.imageData as ImageData, (payload.sampleInterval as number) || 1);
         break;
-        
+
       default:
         throw new Error(`Unknown analysis type: ${type}`);
     }
-    
+
     self.postMessage({
       type: 'ANALYSIS_COMPLETE',
       data: result,
       id
     } as ColorAnalysisResponse);
-    
+
   } catch (error) {
+    const errPayload = error instanceof Error ? { message: error.message, stack: error.stack } : { message: String(error) };
     self.postMessage({
       type: 'ANALYSIS_ERROR',
-      data: { message: error.message, stack: error.stack },
+      data: errPayload,
       id
     } as ColorAnalysisResponse);
   }
