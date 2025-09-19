@@ -611,47 +611,10 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['zh-CN'] || {})
   },
-  'zh-TW': { 
+  'zh-TW': {
+// zh-TW migrated into CSV
     ...baseTranslation,
-    loadImage: '導入圖像 [I]',
-    paletteViewer: '調色板檢視器',
-    changeResolution: '更改解析度 [R]',
-    changeGrids: '更改網格 [G]',
-    settings: '設定',
-    exportImage: '匯出圖像 [E]',
-    preview: '預覽',
-    dragDropText: '載入、拖放或貼上圖片',
-    loadImageDesc: '載入、拖放或貼上圖片',
-    changePaletteDesc: '選擇要套用的復古平台調色盤',
-    changeResolutionDesc: '選擇目標解析度與縮放模式',
-    changeGridsDesc: '設定方塊格線與影格格線疊加',
-    exportImageDesc: '下載或分享處理後的圖片',
-  // platform/resolution keys identical to baseTranslation removed
-    
-    msxHiRes: 'MSX 2',
-    gameBoyAdvance: 'Game Boy Advance',
-    vgaAmiga: 'VGA, Commodore Amiga ECS',
-    changeLanguage: '更改語言 [L]',
-    exportAtCurrentZoom: '以目前縮放匯出',
-    exportWithGrids: '匯出包含網格',
-    exportFormat: '匯出格式',
-    exportTypes: '匯出類型',
-    
-    // Additional translations needed
-    png8Indexed: 'PNG-8 索引',
-    zoomed: '縮放',
-    changePalette: '更改調色板 [P]',
-    colorsPalette: '顏色調色板',
-    noImageLoaded: '未載入圖像',
-    originalLabel: '原始:',
-    processedLabel: '已處理:',
-    paletteWithCount: '{count}色調色板',
-    clickToChangeColor: '點擊顏色進行編輯或拖動以更改其在調色板中的位置',
-    png8IndexedFormat: 'PNG-8 索引 ({count}色調色板)',
-    png24IndexedFormat: 'PNG-24 索引 ({count}色調色板)',
-    png24RgbFormat: 'PNG-24 RGB',
-    captureButton: '拍攝',
-    zoomedDimensions: '({width}×{height} 縮放)',
+    ...(csvData['zh-TW'] || {})
   },
   'ja': { 
     ...baseTranslation,
