@@ -82,43 +82,16 @@ interface Translation {
   changeLanguage: string;
   
   // Preview
-  processed: string;
-  fitToWidth: string;
-  zoom: string;
-  tileGrid: string;
-  framesGrid: string;
-  tileSize: string;
-  frameSize: string;
-  tileWidth: string;
-  tileHeight: string;
-  tileGridColor: string;
-  frameWidth: string;
-  frameHeight: string;
-  frameGridColor: string;
-  originalIndexedPng: string;
-  integerScaling: string;
-  width: string;
-  height: string;
-  
-  // Resolution
-  resolution: string;
-  targetResolution: string;
-  originalSize: string;
-  keepOriginalSize: string;
-  
-  // Resolution descriptions
-  unscaledSize: string;
-  removeScaling: string;
-  gameBoyRes: string;
-  amstradCpc0: string;
   megaDriveNtscH32: string;
   megaDrivePalH32: string;
   neoGeoCd: string;
+  amstradCpc0: string;
   amstradCpc1: string;
+  amstradCpc2: string;
   megaDriveNtscH40: string;
   megaDrivePalH40: string;
-  amstradCpc2: string;
   msxZxSpectrum: string;
+  gameBoyRes: string;
   msxPlatform: string;
   cpsArcade: string;
   pspPlatform: string;
@@ -188,7 +161,30 @@ interface Translation {
   // Missing UI translations
   noImageLoaded: string;
   original: string;
+  processed: string;
+  fitToWidth: string;
+  zoom: string;
+  tileGrid: string;
+  framesGrid: string;
+  tileSize: string;
+  frameSize: string;
+  tileWidth: string;
+  tileHeight: string;
+  tileGridColor: string;
+  frameWidth: string;
+  frameHeight: string;
+  frameGridColor: string;
   png8Indexed: string;
+  originalIndexedPng: string;
+  integerScaling: string;
+  width: string;
+  height: string;
+  resolution: string;
+  targetResolution: string;
+  originalSize: string;
+  keepOriginalSize: string;
+  unscaledSize: string;
+  removeScaling: string;
   colorsPalette: string;
   zoomed: string;
   changePalette: string;
@@ -585,6 +581,8 @@ for (const k of Object.keys(csvData)) {
   }
 }
 
+// Korean strings are now stored in the CSV; no in-code fallback required.
+
 const translations: Record<Language, Partial<Translation>> = {
   'en': baseTranslation,
   // Spanish (Spain) and Spanish (Latin America) translations are provided
@@ -676,65 +674,15 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['th'] || {})
   },
-  'ko': { 
+  'ko': {
+    // ko migrated into CSV
     ...baseTranslation,
-    // Additional translations needed
-    png8Indexed: 'PNG-8 인덱스',
-    zoomed: '확대됨',
-    changePalette: '팔레트 변경 [P]',
-    colorsPalette: '색상 팔레트',
-    noImageLoaded: '이미지가 로드되지 않음',
-    originalLabel: '원본:',
-    processedLabel: '처리됨:',
-    loadImage: '이미지 가져오기 [I]',
-    paletteViewer: '팔레트 뷰어',
-    changeResolution: '해상도 변경 [R]',
-    changeGrids: '격자 변경 [G]',
-    settings: '설정',
-    exportImage: '이미지 내보내기 [E]',
-    preview: '미리보기',
-    dragDropText: '이미지를 로드하거나 드래그 앤 드롭, 붙여넣기 하세요',
-    loadImageDesc: '이미지를 로드하거나 드래그 앤 드롭, 붙여넣기 하세요',
-    changePaletteDesc: '적용할 레트로 플랫폼 색상 팔레트를 선택하세요',
-    changeResolutionDesc: '목표 해상도와 스케일링 모드를 선택하세요',
-    changeGridsDesc: '타일 그리드와 프레임 그리드 오버레이를 설정하세요',
-    exportImageDesc: '처리된 이미지를 다운로드하거나 공유하세요',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: '언어 변경 [L]',
-    exportAtCurrentZoom: '현재 줌으로 내보내기',
-    exportWithGrids: '격자와 함께 내보내기',
-    exportFormat: '내보내기 형식',
-    exportTypes: '내보내기 유형',
+    ...(csvData['ko'] || {})
   },
-  'cs': { 
+  'cs': {
+// cs migrated into CSV
     ...baseTranslation,
-    // Additional translations needed
-    png8Indexed: 'PNG-8 Indexovaný',
-    zoomed: 'přiblíženo',
-    changePalette: 'Změnit paletu [P]',
-    colorsPalette: 'barevná paleta',
-    noImageLoaded: 'Není načten žádný obrázek',
-    originalLabel: 'Originál:',
-    processedLabel: 'Zpracováno:',
-    loadImage: 'Importovat Obrázek [I]',
-    paletteViewer: 'Prohlížeč Palety',
-    changeResolution: 'Změnit Rozlišení [R]',
-    changeGrids: 'Změnit Mřížky [G]',
-    settings: 'Nastavení',
-    exportImage: 'Exportovat Obrázek [E]',
-    preview: 'Náhled',
-    dragDropText: 'Načtěte, přetáhněte a pusťte nebo vložte obrázek',
-    loadImageDesc: 'Načtěte, přetáhněte a pusťte nebo vložte obrázek',
-    changePaletteDesc: 'Vyberte paletu barev retro platforem k použití',
-    changeResolutionDesc: 'Zvolte cílové rozlišení a režim škálování',
-    changeGridsDesc: 'Nastavte překryvy mřížky dlaždic a snímků',
-    exportImageDesc: 'Stáhněte nebo sdílejte zpracovaný obrázek',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: 'Změnit Jazyk [L]',
-    exportAtCurrentZoom: 'Exportovat v aktuálním přiblížení',
-    exportWithGrids: 'Exportovat s mřížkami',
-    exportFormat: 'Formát Exportu',
-    exportTypes: 'Typy Exportu',
+    ...(csvData['cs'] || {})
   },
 };
 
