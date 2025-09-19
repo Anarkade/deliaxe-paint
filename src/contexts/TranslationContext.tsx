@@ -671,35 +671,10 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['oc'] || {})
   },
-  'th': { 
+  'th': {
+// th migrated into CSV
     ...baseTranslation,
-    // Additional translations needed
-    png8Indexed: 'PNG-8 ดัชนี',
-    zoomed: 'ซูม',
-    changePalette: 'เปลี่ยนพาเลท [P]',
-    colorsPalette: 'พาเลทสี',
-    noImageLoaded: 'ไม่ได้โหลดภาพ',
-    originalLabel: 'ต้นฉบับ:',
-    processedLabel: 'ประมวลผลแล้ว:',
-    loadImage: 'นำเข้ารูป [I]',
-    paletteViewer: 'ดูจานสี',
-    changeResolution: 'เปลี่ยนความละเอียด [R]',
-    changeGrids: 'เปลี่ยนเส้นตาราง [G]',
-    settings: 'การตั้งค่า',
-    exportImage: 'ส่งออกรูป [E]',
-    preview: 'ดูตัวอย่าง',
-    dragDropText: 'โหลด ลากแล้ววาง หรือวางภาพจากคลิปบอร์ด',
-    loadImageDesc: 'โหลด ลากแล้ววาง หรือวางภาพจากคลิปบอร์ด',
-    changePaletteDesc: 'เลือกจานสีของแพลตฟอร์มยุคเก่าเพื่อใช้งาน',
-    changeResolutionDesc: 'เลือกความละเอียดเป้าหมายและโหมดการปรับสเกล',
-    changeGridsDesc: 'ตั้งค่าโอเวอร์เลย์เส้นตารางไทล์และเฟรม',
-    exportImageDesc: 'ดาวน์โหลดหรือแชร์รูปภาพที่ประมวลผลแล้ว',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: 'เปลี่ยนภาษา [L]',
-    exportAtCurrentZoom: 'ส่งออกที่การซูมปัจจุบัน',
-    exportWithGrids: 'ส่งออกพร้อมเส้นตาราง',
-    exportFormat: 'รูปแบบการส่งออก',
-    exportTypes: 'ประเภทการส่งออก',
+    ...(csvData['th'] || {})
   },
   'ko': { 
     ...baseTranslation,
