@@ -651,35 +651,10 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['pt-BR'] || {})
   },
-  'pl': { 
+  'pl': {
+// pl migrated into CSV
     ...baseTranslation,
-    // Additional translations needed
-    png8Indexed: 'PNG-8 Indeksowany',
-    zoomed: 'powiększony',
-    changePalette: 'Zmień paletę [P]',
-    colorsPalette: 'paleta kolorów',
-    noImageLoaded: 'Nie załadowano obrazu',
-    originalLabel: 'Oryginał:',
-    processedLabel: 'Przetworzony:',
-    loadImage: 'Importuj Obraz [I]',
-    paletteViewer: 'Podgląd Palety',
-    changeResolution: 'Zmień Rozdzielczość [R]',
-    changeGrids: 'Zmień Siatki [G]',
-    settings: 'Ustawienia',
-    exportImage: 'Eksportuj Obraz [E]',
-    preview: 'Podgląd',
-    dragDropText: 'Wczytaj, przeciągnij i upuść lub wklej obraz',
-    loadImageDesc: 'Wczytaj, przeciągnij i upuść lub wklej obraz',
-    changePaletteDesc: 'Wybierz paletę kolorów retro‑platformy do zastosowania',
-    changeResolutionDesc: 'Wybierz docelową rozdzielczość i tryb skalowania',
-    changeGridsDesc: 'Skonfiguruj nakładki siatek kafelków i klatek',
-    exportImageDesc: 'Pobierz lub udostępnij przetworzony obraz',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: 'Zmień Język [L]',
-    exportAtCurrentZoom: 'Eksportuj w bieżącym powiększeniu',
-    exportWithGrids: 'Eksportuj z siatkami',
-    exportFormat: 'Format Eksportu',
-    exportTypes: 'Typy Eksportu',
+    ...(csvData['pl'] || {})
   },
   'tr': { 
     ...baseTranslation,
