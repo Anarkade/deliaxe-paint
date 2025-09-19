@@ -179,7 +179,7 @@ export const ExportImage = ({
     link.click();
     
     toast.success(t('imageDownloaded'));
-  }, [processedImageData, originalImage, selectedPalette, selectedResolution, t, exportAtCurrentZoom, exportWithGrids, currentZoom, hasAnyGridEnabled, paletteColors, createIndexedPNG]);
+  }, [processedImageData, originalImage, selectedPalette, selectedResolution, t, exportAtCurrentZoom, exportWithGrids, currentZoom, paletteColors, createIndexedPNG, exportFormat, tileWidth, tileHeight, frameWidth, frameHeight, tileGridColor, frameGridColor, showTileGrid, showFrameGrid]);
 
   const getImageDataURL = useCallback(() => {
     if (!processedImageData && !originalImage) return null;
@@ -207,7 +207,7 @@ export const ExportImage = ({
     
     // Dropbox integration would require Dropbox API
     toast.info(t('dropboxComingSoon'));
-  }, [getImageDataURL]);
+  }, [getImageDataURL, t]);
 
   const saveToGoogleDrive = useCallback(() => {
     const dataURL = getImageDataURL();
@@ -215,7 +215,7 @@ export const ExportImage = ({
     
     // Google Drive integration would require Google Drive API
     toast.info(t('googleDriveComingSoon'));
-  }, [getImageDataURL]);
+  }, [getImageDataURL, t]);
 
   const copyToClipboard = useCallback(async () => {
     if (!processedImageData && !originalImage) return;
@@ -344,7 +344,7 @@ export const ExportImage = ({
       console.error('Failed to copy image:', error);
       toast.error(t('copyImageError'));
     }
-  }, [processedImageData, originalImage, t, exportAtCurrentZoom, currentZoom, exportWithGrids, hasAnyGridEnabled, showTileGrid, showFrameGrid, tileWidth, tileHeight, frameWidth, frameHeight, tileGridColor, frameGridColor]);
+  }, [processedImageData, originalImage, t, exportAtCurrentZoom, currentZoom, exportWithGrids, showTileGrid, showFrameGrid, tileWidth, tileHeight, frameWidth, frameHeight, tileGridColor, frameGridColor]);
 
   const shareOnTwitter = useCallback(() => {
     const dataURL = getImageDataURL();
