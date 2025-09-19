@@ -621,43 +621,10 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['ja'] || {})
   },
-  'it': { 
+  'it': {
+// it migrated into CSV
     ...baseTranslation,
-    loadImage: 'Importa immagine [I]',
-    paletteViewer: 'Visualizzatore di palette',
-    changeResolution: 'Cambia risoluzione [R]',
-    changeGrids: 'Cambia griglie [G]',
-    settings: 'Impostazioni',
-    exportImage: 'Esporta immagine [E]',
-    preview: 'Anteprima',
-    dragDropText: 'Carica, trascina e rilascia o incolla un’immagine',
-    loadImageDesc: 'Carica, trascina e rilascia o incolla un’immagine',
-    changePaletteDesc: 'Seleziona una tavolozza di colori di piattaforme retrò da applicare',
-    changeResolutionDesc: 'Scegli la risoluzione di destinazione e la modalità di scalatura',
-    changeGridsDesc: 'Configura le griglie di tile e di frame',
-    exportImageDesc: 'Scarica o condividi l’immagine elaborata',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: 'Cambia Lingua [L]',
-    exportAtCurrentZoom: 'Esporta allo zoom corrente',
-    exportWithGrids: 'Esporta con griglie',
-    exportFormat: 'Formato di Esportazione',
-    exportTypes: 'Tipi di Esportazione',
-    
-    // Additional translations needed
-    png8Indexed: 'PNG-8 Indicizzato',
-    zoomed: 'ingrandito',
-    changePalette: 'Cambia Tavolozza [P]',
-    colorsPalette: 'tavolozza di colori',
-    noImageLoaded: 'Nessuna immagine caricata',
-    originalLabel: 'Originale:',
-    processedLabel: 'Elaborato:',
-    paletteWithCount: 'tavolozza di {count} colori',
-    clickToChangeColor: 'Clicca su un colore per modificarlo o trascinalo per cambiare la sua posizione nella tavolozza',
-    png8IndexedFormat: 'PNG-8 Indicizzato (tavolozza di {count} colori)',
-    png24IndexedFormat: 'PNG-24 Indicizzato (tavolozza di {count} colori)',
-    png24RgbFormat: 'PNG-24 RGB',
-    captureButton: 'Cattura',
-    zoomedDimensions: '({width}×{height} ingrandito)',
+    ...(csvData['it'] || {})
   },
   'de': { 
     ...baseTranslation,
