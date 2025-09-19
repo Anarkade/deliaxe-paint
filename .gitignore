@@ -28,3 +28,6 @@ scripts/to_translate_*.json
 scripts/translated_*.json
 src/locales/translations.csv.bak.*
 scripts/__pycache__/
+
+# Archive artifacts created during migration
+/artifacts/
