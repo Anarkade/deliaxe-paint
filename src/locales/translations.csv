@@ -1,13 +1,13 @@
 key,en,es-ES
-loadImage,"Import Image [I]","Importar imagen [I]"
-paletteViewer,"Palette Viewer","Visor de paleta"
-changeResolution,"Change Resolution [R]","Cambiar resolución [R]"
-changeGrids,"Change Grids [G]","Cambiar rejillas [G]"
-settings,"Settings","Ajustes"
-exportImage,"Export Image [E]","Exportar imagen [E]"
-preview,"Preview","Vista previa"
-appTitle,"Vintage Palette Studio","Vintage Palette Studio"
-appSubtitle,
+loadImage,Import Image [I],Importar imagen [I]
+paletteViewer,Palette Viewer,Visor de paleta
+changeResolution,Change Resolution [R],Cambiar resolución [R]
+changeGrids,Change Grids [G],Cambiar rejillas [G]
+settings,Settings,Ajustes
+exportImage,Export Image [E],Exportar imagen [E]
+preview,Preview,Vista previa
+appTitle,Vintage Palette Studio,Vintage Palette Studio
+appSubtitle,""
 copyright,© 2025
 company,Anarkade
 uploadImage,Upload Image
@@ -174,13 +174,13 @@ changeResolutionDescription,Choose target resolution and scaling mode
 changeGridsDescription,Configure tile and frame grid overlays
 exportImageDescription,Download or share your processed image
 zoomedResolution,zoomed
-zoomedDimensions,"({width}×{height} zoomed)","({width}×{height} ampliado)"
-png8IndexedFormat,"PNG-8 Indexed ({count} colors palette)","PNG-8 indexado ({count} colores paleta)"
-png24IndexedFormat,"PNG-24 Indexed ({count} colors palette)","PNG-24 indexado ({count} colores paleta)"
+zoomedDimensions,({width}×{height} zoomed),({width}×{height} ampliado)
+png8IndexedFormat,PNG-8 Indexed ({count} colors palette),PNG-8 indexado ({count} colores paleta)
+png24IndexedFormat,PNG-24 Indexed ({count} colors palette),PNG-24 indexado ({count} colores paleta)
 png24RgbFormat,PNG-24 RGB
-captureButton,"Capture","Capturar"
-languageNames.en,"English","English"
-languageNames.es-ES,"Español (España)","Español (España)"
+captureButton,Capture,Capturar
+languageNames.en,English,English
+languageNames.es-ES,Español (España),Español (España)
 languageNames.es-LA,Español (Latinoamérica)
 languageNames.ca,Català
 languageNames.zh-CN,简体中文
