@@ -1,0 +1,6 @@
+{
+  "paletteWithCount": "{count} barev paleta",
+  "zoomedDimensions": "({width}×{height} zvětšeno)",
+  "png8IndexedFormat": "PNG-8 indexovaný ({count} barev paleta)",
+  "png24IndexedFormat": "PNG-24 indexovaný ({count} barev paleta)"
+}
