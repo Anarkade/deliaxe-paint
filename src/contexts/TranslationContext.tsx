@@ -656,35 +656,10 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['pl'] || {})
   },
-  'tr': { 
+  'tr': {
+// tr migrated into CSV
     ...baseTranslation,
-    // Additional translations needed
-    png8Indexed: 'PNG-8 İndeksli',
-    zoomed: 'yakınlaştırılmış',
-    changePalette: 'Paleti Değiştir [P]',
-    colorsPalette: 'renk paleti',
-    noImageLoaded: 'Resim yüklenmedi',
-    originalLabel: 'Orijinal:',
-    processedLabel: 'İşlenmiş:',
-    loadImage: 'Resim İçe Aktar [I]',
-    paletteViewer: 'Palet Görüntüleyici',
-    changeResolution: 'Çözünürlüğü Değiştir [R]',
-    changeGrids: 'Izgara Değiştir [G]',
-    settings: 'Ayarlar',
-    exportImage: 'Resim Dışa Aktar [E]',
-    preview: 'Önizleme',
-    dragDropText: 'Bir görsel yükleyin, sürükleyip bırakın veya yapıştırın',
-    loadImageDesc: 'Bir görsel yükleyin, sürükleyip bırakın veya yapıştırın',
-    changePaletteDesc: 'Uygulamak için retro platform renk paletini seçin',
-    changeResolutionDesc: 'Hedef çözünürlüğü ve ölçekleme modunu seçin',
-    changeGridsDesc: 'Döşeme ve kare ızgara kaplamalarını yapılandırın',
-    exportImageDesc: 'İşlenmiş görseli indirin veya paylaşın',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: 'Dili Değiştir [L]',
-    exportAtCurrentZoom: 'Mevcut yakınlaştırmada dışa aktar',
-    exportWithGrids: 'Izgaralarla dışa aktar',
-    exportFormat: 'Dışa Aktarma Formatı',
-    exportTypes: 'Dışa Aktarma Türleri',
+    ...(csvData['tr'] || {})
   },
   'eu': { 
     ...baseTranslation,
