@@ -186,6 +186,8 @@ class LRUCache<T> {
 }
 
 // Specialized cache for image processing results
+import type { Color } from '@/lib/colorQuantization';
+
 class ImageProcessingCache extends LRUCache<unknown> {
   constructor() {
     super(100 * 1024 * 1024, 50); // 100MB, 50 entries max
@@ -198,7 +200,7 @@ class ImageProcessingCache extends LRUCache<unknown> {
     resolution: string,
     scaling: string,
     imageData: ImageData,
-    paletteColors: unknown[]
+    paletteColors: Color[]
   ): void {
     const params = {
       image: originalImageHash,
@@ -220,19 +222,18 @@ class ImageProcessingCache extends LRUCache<unknown> {
     palette: string,
     resolution: string,
     scaling: string
-  ): { imageData: ImageData; paletteColors: unknown[] } | null {
+  ): { imageData: ImageData; paletteColors: Color[] } | null {
     const params = {
       image: originalImageHash,
       palette,
       resolution,
       scaling
     };
-
-    return this.getByParams(params) as { imageData: ImageData; paletteColors: unknown[] } | null;
+    return this.getByParams(params) as unknown as { imageData: ImageData; paletteColors: Color[] } | null;
   }
 
   // Cache color analysis results
-  cacheColorAnalysis(imageHash: string, colors: unknown[], format: string): void {
+  cacheColorAnalysis(imageHash: string, colors: Color[], format: string): void {
     this.setByParams({ image: imageHash, type: 'colors' }, {
       colors,
       format,
@@ -241,15 +242,15 @@ class ImageProcessingCache extends LRUCache<unknown> {
   }
 
   // Get cached color analysis
-  getCachedColorAnalysis(imageHash: string): { colors: unknown[]; format: string } | null {
-    return this.getByParams({ image: imageHash, type: 'colors' }) as { colors: unknown[]; format: string } | null;
+  getCachedColorAnalysis(imageHash: string): { colors: Color[]; format: string } | null {
+    return this.getByParams({ image: imageHash, type: 'colors' }) as unknown as { colors: Color[]; format: string } | null;
   }
 
   // Cache palette generation results
   cachePaletteGeneration(
     colorsHash: string,
     targetCount: number,
-    palette: unknown[]
+    palette: Color[]
   ): void {
     this.setByParams({
       colors: colorsHash,
@@ -265,12 +266,12 @@ class ImageProcessingCache extends LRUCache<unknown> {
   getCachedPaletteGeneration(
     colorsHash: string,
     targetCount: number
-  ): { palette: unknown[] } | null {
+  ): { palette: Color[] } | null {
     return this.getByParams({
       colors: colorsHash,
       targetCount,
       type: 'palette'
-    }) as { palette: unknown[] } | null;
+    }) as unknown as { palette: Color[] } | null;
   }
 }
 
@@ -293,7 +294,7 @@ export const hashImageData = (imageData: ImageData): string => {
   return btoa(data).replace(/[+/=]/g, '');
 };
 
-export const hashArray = (array: any[]): string => {
+export const hashArray = (array: unknown[]): string => {
   const data = JSON.stringify(array);
   return btoa(data).replace(/[+/=]/g, '');
 };

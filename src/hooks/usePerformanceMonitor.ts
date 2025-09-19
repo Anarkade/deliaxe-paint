@@ -31,8 +31,10 @@ export const usePerformanceMonitor = () => {
 
   // Monitor memory usage
   const checkMemoryUsage = useCallback(() => {
+    type PerfMemory = { usedJSHeapSize: number; totalJSHeapSize: number };
     if ('memory' in performance) {
-      const memory = (performance as any).memory;
+      const memory = (performance as unknown as { memory?: PerfMemory }).memory;
+      if (!memory) return 0;
       const usedMemory = memory.usedJSHeapSize / (1024 * 1024); // MB
       const totalMemory = memory.totalJSHeapSize / (1024 * 1024); // MB
       

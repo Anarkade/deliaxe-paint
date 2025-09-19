@@ -8,6 +8,15 @@ import { useTranslation } from '@/hooks/useTranslation';
 // Performance constants for camera handling
 const CAMERA_SWITCH_DELAY = 100; // Delay between camera switches to prevent conflicts
 
+// Small helper to extract common error fields from unknown errors
+const getErrorInfo = (error: unknown) => {
+  if (typeof error === 'object' && error !== null) {
+    const e = error as { name?: string; message?: string };
+    return { name: e.name ?? '', message: e.message ?? '' };
+  }
+  return { name: '', message: String(error) };
+};
+
 interface ImageUploadProps {
   onImageLoad: (file: File | string) => void;
   onCameraPreviewRequest?: () => void;
@@ -87,15 +96,16 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
         videoRef.current.play();
         setShowCameraPreview(true);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Camera access denied:', error);
+      const { name, message } = getErrorInfo(error);
       let errorMessage = t('cameraError');
       
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
         errorMessage = t('cameraNotAvailable');
-      } else if (error.name === 'AbortError' || error.message.includes('Timeout')) {
+      } else if (name === 'AbortError' || message.includes('Timeout')) {
         errorMessage = t('cameraTimeout');
-      } else if (error.name === 'NotReadableError' || error.message.includes('Could not start')) {
+      } else if (name === 'NotReadableError' || message.includes('Could not start')) {
         errorMessage = t('cameraNotReadable');
       }
       
@@ -143,17 +153,18 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
           videoRef.current.srcObject = stream;
           videoRef.current.play();
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Camera switch error:', error);
         
         // Provide specific error messages for better UX
+        const { name, message } = getErrorInfo(error);
         let errorMessage = t('cameraError');
         
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
           errorMessage = t('cameraNotAvailable');
-        } else if (error.name === 'AbortError' || error.message.includes('Timeout')) {
+        } else if (name === 'AbortError' || message.includes('Timeout')) {
           errorMessage = t('cameraTimeout');
-        } else if (error.name === 'NotReadableError' || error.message.includes('Could not start')) {
+        } else if (name === 'NotReadableError' || message.includes('Could not start')) {
           errorMessage = t('cameraNotReadable');
         }
         
@@ -253,15 +264,16 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
         videoRef.current.play();
         setShowCameraPreview(true);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Camera access denied:', error);
+      const { name, message } = getErrorInfo(error);
       let errorMessage = t('cameraError');
       
-      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
         errorMessage = t('cameraNotAvailable');
-      } else if (error.name === 'AbortError' || error.message.includes('Timeout')) {
+      } else if (name === 'AbortError' || message.includes('Timeout')) {
         errorMessage = t('cameraTimeout');
-      } else if (error.name === 'NotReadableError' || error.message.includes('Could not start')) {
+      } else if (name === 'NotReadableError' || message.includes('Could not start')) {
         errorMessage = t('cameraNotReadable');
       }
       

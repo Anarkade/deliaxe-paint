@@ -40,7 +40,7 @@ export const useImageProcessor = () => {
 
     workerRef.current.onmessage = (event: MessageEvent<ProcessingResponse>) => {
       const { type, data, id, progress } = event.data;
-      const payload = data as any;
+      const payload: unknown = data;
       const request = pendingRequests.current.get(id);
 
       if (!request) return;
@@ -53,9 +53,13 @@ export const useImageProcessor = () => {
           break;
 
         case 'PROCESSING_ERROR':
-          request.reject(new Error(payload.message || String(payload)));
-          pendingRequests.current.delete(id);
-          setState(prev => ({ ...prev, isProcessing: false, error: payload.message || String(payload) }));
+          {
+            const maybeMsg = (payload as Record<string, unknown>)['message'];
+            const msg = typeof maybeMsg === 'string' ? maybeMsg : String(payload);
+            request.reject(new Error(msg));
+            pendingRequests.current.delete(id);
+            setState(prev => ({ ...prev, isProcessing: false, error: msg }));
+          }
           break;
 
         case 'PROCESSING_PROGRESS':
@@ -215,7 +219,7 @@ export const useImageProcessor = () => {
   // Apply palette to image
   const applyPalette = useCallback((
     imageData: ImageData,
-    palette: any[],
+    palette: Color[],
     onProgress?: (progress: number) => void
   ): Promise<ImageData> => {
     return processImage(imageData, {

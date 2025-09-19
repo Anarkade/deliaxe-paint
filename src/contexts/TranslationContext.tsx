@@ -563,21 +563,25 @@ const baseTranslation: Translation = {
 };
 
 // Apply CSV overrides for English column (incremental migration).
-for (const k of Object.keys(csvData)) {
-  const entry = (csvData as any)[k];
+for (const k of Object.keys(csvData) as Array<keyof Translation>) {
+  const entry = csvData[k];
   if (entry && typeof entry.en === 'string' && entry.en !== '') {
-    (baseTranslation as any)[k] = entry.en;
+    const baseVal = baseTranslation[k];
+    if (typeof baseVal === 'string') {
+      // assign only string keys to avoid clobbering complex properties
+      (baseTranslation as unknown as Record<string, string>)[k as string] = entry.en;
+    }
   }
 }
 
 // Build a partial `es-ES` translations object from CSV. We avoid overriding
 // `appTitle` in any language per project policy.
 const esFromCsv: Partial<Translation> = {};
-for (const k of Object.keys(csvData)) {
+for (const k of Object.keys(csvData) as Array<keyof Translation>) {
   if (k === 'appTitle') continue; // keep appTitle English-only
-  const entry = (csvData as any)[k];
+  const entry = csvData[k];
   if (entry && typeof entry['es-ES'] === 'string' && entry['es-ES'] !== '') {
-    (esFromCsv as any)[k] = entry['es-ES'];
+    (esFromCsv as unknown as Record<string, string>)[k as string] = entry['es-ES'];
   }
 }
 
@@ -696,9 +700,11 @@ for (const lang of Object.keys(translations) as Language[]) {
   for (const key of Object.keys(baseTranslation) as Array<keyof Translation>) {
     if (Object.prototype.hasOwnProperty.call(langObj, key)) {
       try {
-        if ((langObj as any)[key] === (baseTranslation as any)[key]) {
+        const langVal = (langObj as unknown as Record<string, unknown>)[key as string];
+        const baseVal = (baseTranslation as unknown as Record<string, unknown>)[key as string];
+        if (langVal === baseVal) {
           // delete the redundant override so consumers see the base value
-          delete (langObj as any)[key];
+          delete (langObj as unknown as Record<string, unknown>)[key as string];
         }
       } catch (e) {
         // ignore any weird keys that can't be compared
@@ -716,13 +722,15 @@ for (const lang of Object.keys(translations) as Language[]) {
   const langObj = translations[lang] as Partial<Translation>;
 
   for (const key of Object.keys(baseTranslation) as Array<keyof Translation>) {
-    if (!Object.prototype.hasOwnProperty.call(langObj, key) || (langObj as any)[key] === undefined) {
+    const has = Object.prototype.hasOwnProperty.call(langObj, key);
+    const current = (langObj as unknown as Record<string, unknown>)[key as string];
+    if (!has || current === undefined) {
       const baseVal = baseTranslation[key];
       if (typeof baseVal === 'string') {
         // Use an English-prefixed placeholder so it's obvious this needs translation
-        (langObj as any)[key] = `[EN] ${baseVal}`;
+        (langObj as unknown as Record<string, string>)[key as string] = `[EN] ${baseVal}`;
       } else {
-        (langObj as any)[key] = String(baseVal);
+        (langObj as unknown as Record<string, string>)[key as string] = String(baseVal);
       }
     }
   }
@@ -730,8 +738,9 @@ for (const lang of Object.keys(translations) as Language[]) {
   // Ensure languageNames map contains entries for all supported languages
   if (!langObj.languageNames) langObj.languageNames = {} as Record<Language, string>;
   for (const l of Object.keys(baseTranslation.languageNames) as Language[]) {
-    if (!(langObj.languageNames as any)[l]) {
-      (langObj.languageNames as any)[l] = baseTranslation.languageNames[l];
+    const names = langObj.languageNames as Record<Language, string>;
+    if (!names[l]) {
+      names[l] = baseTranslation.languageNames[l];
     }
   }
 }
