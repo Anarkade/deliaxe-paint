@@ -606,43 +606,10 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['ca'] || {})
   },
-  'zh-CN': { 
+  'zh-CN': {
+// zh-CN migrated into CSV
     ...baseTranslation,
-    loadImage: '导入图像 [I]',
-    paletteViewer: '调色板查看器',
-    changeResolution: '更改分辨率 [R]',
-    changeGrids: '更改网格 [G]',
-    settings: '设置',
-    exportImage: '导出图像 [E]',
-    preview: '预览',
-    dragDropText: '加载、拖放或粘贴一张图片',
-    loadImageDesc: '加载、拖放或粘贴一张图片',
-    changePaletteDesc: '选择要应用的复古平台调色板',
-    changeResolutionDesc: '选择目标分辨率和缩放模式',
-    changeGridsDesc: '配置方块和帧网格叠加',
-    exportImageDesc: '下载或分享您处理过的图像',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: '更改语言 [L]',
-    exportAtCurrentZoom: '以当前缩放导出',
-    exportWithGrids: '导出包含网格',
-    exportFormat: '导出格式',
-    exportTypes: '导出类型',
-    
-    // Additional translations needed
-    png8Indexed: 'PNG-8 索引',
-    zoomed: '缩放',
-    changePalette: '更改调色板 [P]',
-    colorsPalette: '颜色调色板',
-    noImageLoaded: '未加载图像',
-    originalLabel: '原始:',
-    processedLabel: '已处理:',
-    paletteWithCount: '{count}色调色板',
-    clickToChangeColor: '点击颜色进行编辑或拖动以更改其在调色板中的位置',
-    png8IndexedFormat: 'PNG-8 索引 ({count}色调色板)',
-    png24IndexedFormat: 'PNG-24 索引 ({count}色调色板)',
-    png24RgbFormat: 'PNG-24 RGB',
-    captureButton: '拍摄',
-    zoomedDimensions: '({width}×{height} 缩放)',
+    ...(csvData['zh-CN'] || {})
   },
   'zh-TW': { 
     ...baseTranslation,
