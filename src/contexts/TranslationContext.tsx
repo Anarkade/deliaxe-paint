@@ -661,35 +661,10 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['tr'] || {})
   },
-  'eu': { 
+  'eu': {
+// eu migrated into CSV
     ...baseTranslation,
-    // Additional translations needed
-    png8Indexed: 'PNG-8 Indexatua',
-    zoomed: 'handitua',
-    changePalette: 'Aldatu Paleta [P]',
-    colorsPalette: 'kolore paleta',
-    noImageLoaded: 'Ez da irudirik kargatu',
-    originalLabel: 'Jatorrizkoa:',
-    processedLabel: 'Prozesatua:',
-    loadImage: 'Irudia Inportatu [I]',
-    paletteViewer: 'Paleta Ikustailea',
-    changeResolution: 'Bereizmena Aldatu [R]',
-    changeGrids: 'Saretiak Aldatu [G]',
-    settings: 'Ezarpenak',
-    exportImage: 'Irudia Esportatu [E]',
-    preview: 'Aurrebista',
-    dragDropText: 'Kargatu, arrastatu eta jaregin edo itsatsi irudia',
-    loadImageDesc: 'Kargatu, arrastatu eta jaregin edo itsatsi irudia',
-    changePaletteDesc: 'Aplikatzeko plataforma retroetako kolore‑paleta bat aukeratu',
-    changeResolutionDesc: 'Hautatu helburuko bereizmena eta eskalatze modua',
-    changeGridsDesc: 'Konfiguratu tile eta frame sareta gainjarriak',
-    exportImageDesc: 'Deskargatu edo partekatu prozesatutako irudia',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: 'Hizkuntza Aldatu [L]',
-    exportAtCurrentZoom: 'Uneko zoom-ean esportatu',
-    exportWithGrids: 'Saretiekin esportatu',
-    exportFormat: 'Esportazio Formatua',
-    exportTypes: 'Esportazio Motak',
+    ...(csvData['eu'] || {})
   },
   'oc': { 
     ...baseTranslation,
