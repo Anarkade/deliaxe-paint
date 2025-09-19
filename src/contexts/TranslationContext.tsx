@@ -641,41 +641,10 @@ const translations: Record<Language, Partial<Translation>> = {
     ...baseTranslation,
     ...(csvData['pt-PT'] || {})
   },
-  'ru': { 
+  'ru': {
+// ru migrated into CSV
     ...baseTranslation,
-    // Additional translations needed
-    png8Indexed: 'PNG-8 Индексированный',
-    zoomed: 'увеличенный',
-    changePalette: 'Изменить палитру [P]',
-    colorsPalette: 'цветовая палитра',
-    noImageLoaded: 'Изображение не загружено',
-    originalLabel: 'Оригинал:',
-    processedLabel: 'Обработан:',
-    paletteWithCount: 'палитра из {count} цветов',
-    clickToChangeColor: 'Нажмите на цвет, чтобы изменить его, или перетащите, чтобы изменить его позицию в палитре',
-    png8IndexedFormat: 'PNG-8 Индексированный (палитра из {count} цветов)',
-    png24RgbFormat: 'PNG-24 RGB',
-    captureButton: 'Снимок',
-    zoomedDimensions: '({width}×{height} увеличенный)',
-    loadImage: 'Импорт Изображения [I]',
-    paletteViewer: 'Просмотр Палитры',
-    changeResolution: 'Изменить Разрешение [R]',
-    changeGrids: 'Изменить Сетки [G]',
-    settings: 'Настройки',
-    exportImage: 'Экспорт Изображения [E]',
-    preview: 'Предпросмотр',
-    dragDropText: 'Загрузите, перетащите или вставьте изображение',
-    loadImageDesc: 'Загрузите, перетащите или вставьте изображение',
-    changePaletteDesc: 'Выберите палитру цветов ретро‑платформы для применения',
-    changeResolutionDesc: 'Выберите целевое разрешение и режим масштабирования',
-    changeGridsDesc: 'Настройте оверлеи сеток тайлов и кадров',
-    exportImageDesc: 'Скачайте или поделитесь обработанным изображением',
-  // platform/resolution keys identical to baseTranslation removed
-    changeLanguage: 'Изменить Язык [L]',
-    exportAtCurrentZoom: 'Экспорт с текущим зумом',
-    exportWithGrids: 'Экспорт с сетками',
-    exportFormat: 'Формат Экспорта',
-    exportTypes: 'Типы Экспорта',
+    ...(csvData['ru'] || {})
   },
   'pt-BR': { 
     ...baseTranslation,
