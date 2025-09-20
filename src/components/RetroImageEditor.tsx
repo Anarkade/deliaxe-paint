@@ -861,7 +861,22 @@ export const RetroImageEditor = () => {
       setProcessingProgress(0);
       setProcessingOperation('');
     }
-  }, [originalImage, selectedPalette, selectedResolution, scalingMode, saveToHistory, performanceMonitor, getCanvas, returnCanvas, imageProcessingCache, hashImage, detectAndUnscaleImage, isOriginalPNG8Indexed, originalPaletteColors, currentPaletteColors, imageProcessor, applyPaletteConversion, t, toast]);
+  }, [
+    originalImage,
+    selectedPalette,
+    selectedResolution,
+    scalingMode,
+    saveToHistory,
+    performanceMonitor,
+    getCanvas,
+    returnCanvas,
+    detectAndUnscaleImage,
+    isOriginalPNG8Indexed,
+    originalPaletteColors,
+    currentPaletteColors,
+    applyPaletteConversion,
+    t
+  ]);
 
   // Helper function to apply a fixed palette to image data using color matching
   const applyFixedPalette = (data: Uint8ClampedArray, palette: number[][]) => {
@@ -895,7 +910,7 @@ export const RetroImageEditor = () => {
   };
 
   // Async palette conversion with Web Worker support
-  const applyPaletteConversion = async (imageData: ImageData, palette: PaletteType, customColors?: Color[]): Promise<ImageData> => {
+  const applyPaletteConversion = useCallback(async (imageData: ImageData, palette: PaletteType, customColors?: Color[]): Promise<ImageData> => {
     const data = new Uint8ClampedArray(imageData.data);
     const resultImageData = new ImageData(data, imageData.width, imageData.height);
     
@@ -1048,7 +1063,7 @@ export const RetroImageEditor = () => {
     }
     
     return resultImageData;
-  };
+  }, [imageProcessor]);
 
   const downloadImage = useCallback(() => {
     if (!processedImageData) return;

@@ -76,12 +76,15 @@ export const useImageProcessor = () => {
       setState(prev => ({ ...prev, error: 'Worker error occurred', isProcessing: false }));
     };
 
+    // Snapshot refs used in cleanup to avoid stale-ref warnings from ESLint
+    const workerSnapshot = workerRef.current;
+    const pendingSnapshot = pendingRequests.current;
+
     return () => {
-      if (workerRef.current) {
-        workerRef.current.terminate();
-        workerRef.current = null;
+      if (workerSnapshot) {
+        workerSnapshot.terminate();
       }
-      pendingRequests.current.clear();
+      pendingSnapshot.clear();
     };
   }, []);
 

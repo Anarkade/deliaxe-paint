@@ -3,14 +3,23 @@
 
 import { extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette, toRGB333, Color } from '../lib/colorQuantization';
 
+export type ProcessingMessageType =
+  | 'PROCESS_IMAGE'
+  | 'QUANTIZE_COLORS'
+  | 'APPLY_PALETTE'
+  | 'EXTRACT_COLORS'
+  | 'MEGA_DRIVE_PROCESS';
+
 export interface ProcessingMessage {
-  type: 'PROCESS_IMAGE' | 'QUANTIZE_COLORS' | 'APPLY_PALETTE' | 'EXTRACT_COLORS' | 'MEGA_DRIVE_PROCESS';
-  data: unknown;
+  type: ProcessingMessageType;
+  data: Record<string, unknown> | null;
   id: string;
 }
 
+export type ProcessingResponseType = 'PROCESSING_COMPLETE' | 'PROCESSING_ERROR' | 'PROCESSING_PROGRESS';
+
 export interface ProcessingResponse {
-  type: 'PROCESSING_COMPLETE' | 'PROCESSING_ERROR' | 'PROCESSING_PROGRESS';
+  type: ProcessingResponseType;
   data: unknown;
   id: string;
   progress?: number;
@@ -34,14 +43,10 @@ const processImageData = (imageData: ImageData, operation: string, options: Reco
           return applyQuantizedPalette(imageData, palette || []);
         }
         
-      case 'MEGA_DRIVE_PROCESS':
-        {
-          const { originalPalette } = options as { originalPalette?: Color[] };
-          return processMegaDriveInWorker(imageData, originalPalette);
-        }
-        
-      default:
-        throw new Error(`Unknown operation: ${operation}`);
+      case 'MEGA_DRIVE_PROCESS': {
+        const { originalPalette } = options as { originalPalette?: Color[] };
+        return processMegaDriveInWorker(imageData, originalPalette as unknown as RGBColor[]);
+      }
     }
 };
 
@@ -71,12 +76,15 @@ const processMegaDriveInWorker = (imageData: ImageData, originalPalette?: RGBCol
     }
     
     // Send progress updates for large images
-    if (i > 0 && i % (totalPixels * 0.1) === 0) {
+    // Send progress updates every 10% of pixels processed (use integer math)
+    const progressStep = Math.max(1, Math.floor(totalPixels / 10));
+    if (i > 0 && ((i / 4) % progressStep) === 0) {
+      const percent = Math.floor(((i / 4) / totalPixels) * 50); // First 50% is RGB conversion
       self.postMessage({
         type: 'PROCESSING_PROGRESS',
-        progress: (i / data.length) * 50, // First 50% is RGB conversion
+        progress: percent,
         id: 'current'
-      });
+      } as ProcessingResponse);
     }
   }
   
@@ -153,29 +161,49 @@ self.addEventListener('message', (event: MessageEvent<ProcessingMessage>) => {
   try {
     let result: unknown;
 
-    // Narrow payload to a record so accessing fields is safe
-    const payload = (data as unknown) as Record<string, unknown>;
+    // payload may be null if sender didn't include data
+    const payload = data || {};
 
     switch (type) {
-      case 'PROCESS_IMAGE':
-        result = processImageData(payload.imageData as ImageData, String(payload.operation || ''), (payload.options as Record<string, unknown>) || {});
+      case 'PROCESS_IMAGE': {
+        const imageData = payload.imageData as ImageData | undefined;
+        const operation = typeof payload.operation === 'string' ? payload.operation : '';
+        const options = (payload.options as Record<string, unknown>) || {};
+        if (!imageData) throw new Error('Missing imageData for PROCESS_IMAGE');
+        result = processImageData(imageData, operation, options);
         break;
+      }
 
-      case 'QUANTIZE_COLORS':
-        result = medianCutQuantization((payload.colors as Color[]) || [], (Number(payload.targetCount) || 16));
+      case 'QUANTIZE_COLORS': {
+        const colors = Array.isArray(payload.colors) ? (payload.colors as Color[]) : [];
+        const targetCount = typeof payload.targetCount === 'number' ? payload.targetCount : Number(payload.targetCount) || 16;
+        result = medianCutQuantization(colors, targetCount);
         break;
+      }
 
-      case 'APPLY_PALETTE':
-        result = applyQuantizedPalette((payload.imageData as ImageData), (payload.palette as Color[]) || []);
+      case 'APPLY_PALETTE': {
+        const imageData = payload.imageData as ImageData | undefined;
+        const palette = Array.isArray(payload.palette) ? (payload.palette as Color[]) : [];
+        if (!imageData) throw new Error('Missing imageData for APPLY_PALETTE');
+        result = applyQuantizedPalette(imageData, palette);
         break;
+      }
 
-      case 'EXTRACT_COLORS':
-        result = extractColorsFromImageData(payload.imageData as ImageData);
+      case 'EXTRACT_COLORS': {
+        const imageData = payload.imageData as ImageData | undefined;
+        if (!imageData) throw new Error('Missing imageData for EXTRACT_COLORS');
+        result = extractColorsFromImageData(imageData);
         break;
+      }
 
-      case 'MEGA_DRIVE_PROCESS':
-        result = processMegaDriveInWorker(payload.imageData as ImageData, (payload.originalPalette as Color[]) || undefined);
+      case 'MEGA_DRIVE_PROCESS': {
+        const imageData = payload.imageData as ImageData | undefined;
+        const rawPalette = Array.isArray(payload.originalPalette) ? (payload.originalPalette as Color[]) : undefined;
+        const originalPalette = rawPalette ? rawPalette.map(c => ({ r: c.r, g: c.g, b: c.b })) : undefined;
+        if (!imageData) throw new Error('Missing imageData for MEGA_DRIVE_PROCESS');
+        result = processMegaDriveInWorker(imageData, originalPalette);
         break;
+      }
 
       default:
         throw new Error(`Unknown message type: ${type}`);
