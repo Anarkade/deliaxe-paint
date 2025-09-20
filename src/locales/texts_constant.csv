@@ -22,3 +22,23 @@ languageNames.oc,Aranés
 languageNames.th,ไทย
 languageNames.ko,한국어
 languageNames.cs,Čeština
+megaDrivePalH40,Mega Drive PAL H40
+msxPlatform,MSX
+pspPlatform,PSP
+msxHiRes,MSX 2
+gameBoyAdvance,Game Boy Advance
+pageNotFound,404
+amstradCpc,Amstrad CPC
+nesPalette,NES
+commodore64,Commodore 64
+zxSpectrumPalette,ZX Spectrum
+gameBoyRes,"Game Boy, Game Gear"
+megaDriveNtscH32,"Master System, Mega Drive NTSC H32, NES PAL, SNES"
+megaDrivePalH32,"Master System PAL, Mega Drive PAL H32, NES NTSC, Master System PAL"
+neoGeoCd,Neo·Geo CD
+megaDriveNtscH40,"Mega Drive NTSC H40, Neo·Geo"
+amigaLowResPal,Commodore Amiga Low Res PAL
+amigaHiResPal,Commodore Amiga Hi-Res PAL
+msxZxSpectrum,"MSX, Master System, ZX Spectrum"
+cpsArcade,"CPS1, CPS2, CPS3"
+vgaAmiga,"VGA, Commodore Amiga ECS"
