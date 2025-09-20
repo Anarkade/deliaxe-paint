@@ -1,0 +1,8 @@
+{
+  "key": "zoom",
+  "language": "es-ES",
+  "language_name": "Spanish (Spain)",
+  "context": "aplicación de edición de imágenes retro para consolas y computadoras vintage",
+  "english": "Zoom",
+  "prompt": "=== TRANSLATION REQUEST ===\nTarget language: Spanish (Spain) (es-ES)\nKey: zoom\nEnglish source: Zoom\nContext: aplicación de edición de imágenes retro para consolas y computadoras vintage\n\nGuidelines:\n- Preserve brand and console/computer names (e.g., Anarkade, Game Boy, Mega Drive, ZX Spectrum, MSX, Commodore).\n- Keep hotkey tags like [I], [E], [P] exactly as-is and in the same position.\n- Preserve placeholder tokens like {width}, {height}, {count}.\n- Keep punctuation and capitalization style unless language conventions dictate otherwise.\n- Keep PNG format strings (e.g., \"PNG-24 RGB\") as technical terms where appropriate.\n\nPlease provide the best localized UI string for this key.\n=== END REQUEST ==="
+}
