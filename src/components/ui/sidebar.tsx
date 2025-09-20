@@ -26,6 +26,7 @@ import {
   SIDEBAR_KEYBOARD_SHORTCUT,
   sidebarMenuButtonVariants,
   SidebarContext,
+  SidebarContextType,
   useSidebar,
 } from "./sidebarHelpers"
 
@@ -98,7 +99,8 @@ const SidebarProvider = React.forwardRef<
     // This makes it easier to style the sidebar with Tailwind classes.
     const state = open ? "expanded" : "collapsed"
 
-    const contextValue = React.useMemo<SidebarContext>(
+    // Use the SidebarContextType type for the memoized context value
+    const contextValue = React.useMemo<SidebarContextType>(
       () => ({
         state,
         open,

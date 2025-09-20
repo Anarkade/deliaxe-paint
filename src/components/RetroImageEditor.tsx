@@ -21,19 +21,19 @@ import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { useCanvasPool } from '@/utils/canvasPool';
 import { imageProcessingCache, hashImage, hashImageData } from '@/utils/imageCache';
-
-interface HistoryState {
-  imageData: ImageData | null;
-  palette: PaletteType;
-  resolution: ResolutionType;
-  scaling: CombinedScalingMode;
-}
-
 // Performance constants - Optimized for large image handling
 const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory issues
 const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size
 const PROCESSING_DEBOUNCE_MS = 100; // Debounce time for image processing
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for color analysis (performance optimization)
+
+// Local history state type used by the editor
+type HistoryState = {
+  imageData: ImageData;
+  palette: PaletteType;
+  resolution: ResolutionType;
+  scaling: CombinedScalingMode;
+};
 
 export const RetroImageEditor = () => {
   const { t, currentLanguage, changeLanguage, languages, getLanguageName } = useTranslation();
@@ -77,6 +77,130 @@ export const RetroImageEditor = () => {
   const imageProcessor = useImageProcessor();
   const performanceMonitor = usePerformanceMonitor();
   const { getCanvas, returnCanvas } = useCanvasPool();
+
+  // Clean reset of all editor state - prevents memory leaks
+  const resetEditor = useCallback(() => {
+    // Clean up image references
+    setOriginalImage(null);
+    setProcessedImageData(null);
+    setOriginalImageSource(null);
+
+    // Reset UI state
+    setSelectedPalette('original');
+    setSelectedResolution('original');
+    setScalingMode('fit');
+    setCurrentPaletteColors([]);
+    setOriginalPaletteColors([]);
+    setShowCameraPreview(false);
+
+    // Clear history to free memory
+    setHistory([]);
+    setHistoryIndex(-1);
+
+    // Reset interface
+    setActiveTab('load-image');
+    setIsOriginalPNG8Indexed(false);
+  }, []);
+
+  // Async palette conversion with Web Worker support
+  const applyPaletteConversion = useCallback(async (imageData: ImageData, palette: PaletteType, customColors?: Color[]): Promise<ImageData> => {
+    const data = new Uint8ClampedArray(imageData.data);
+    const resultImageData = new ImageData(data, imageData.width, imageData.height);
+
+    switch (palette) {
+      case 'gameboy': {
+        const gbColors = customColors && customColors.length === 4
+          ? customColors.map(c => [c.r, c.g, c.b])
+          : [
+              [7, 24, 33],
+              [134, 192, 108],
+              [224, 248, 207],
+              [101, 255, 0]
+            ];
+
+        const findClosestGBColor = (r: number, g: number, b: number) => {
+          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
+          const brightnessPercent = (pixelBrightness / 255) * 100;
+          if (brightnessPercent <= 24) return gbColors[0];
+          if (brightnessPercent <= 49) return gbColors[1];
+          if (brightnessPercent <= 74) return gbColors[2];
+          return gbColors[3];
+        };
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const closestColor = findClosestGBColor(r, g, b);
+          data[i] = closestColor[0];
+          data[i + 1] = closestColor[1];
+          data[i + 2] = closestColor[2];
+        }
+
+        if (!customColors || customColors.length !== 4) {
+          setCurrentPaletteColors(gbColors.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+        }
+      }
+        break;
+
+      case 'gameboyBg': {
+        const gbBgColors = customColors && customColors.length === 4
+          ? customColors.map(c => [c.r, c.g, c.b])
+          : [
+              [7, 24, 33],
+              [48, 104, 80],
+              [134, 192, 108],
+              [224, 248, 207]
+            ];
+
+        const findClosestGBBgColor = (r: number, g: number, b: number) => {
+          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
+          const brightnessPercent = (pixelBrightness / 255) * 100;
+          if (brightnessPercent <= 24) return gbBgColors[0];
+          if (brightnessPercent <= 49) return gbBgColors[1];
+          if (brightnessPercent <= 74) return gbBgColors[2];
+          return gbBgColors[3];
+        };
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          const closestColor = findClosestGBBgColor(r, g, b);
+          data[i] = closestColor[0];
+          data[i + 1] = closestColor[1];
+          data[i + 2] = closestColor[2];
+        }
+
+        if (!customColors || customColors.length !== 4) {
+          setCurrentPaletteColors(gbBgColors.map(color => ({ r: color[0], g: color[1], b: color[2] })));
+        }
+      }
+        break;
+      
+      case 'megadrive': {
+        try {
+          setProcessingOperation('Processing Mega Drive palette...');
+          const megaDriveResult = await imageProcessor.processMegaDriveImage(imageData, customColors, (progress) => setProcessingProgress(progress));
+          const processedData = megaDriveResult.imageData.data;
+          for (let i = 0; i < data.length; i++) data[i] = processedData[i];
+          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({ r: color.r, g: color.g, b: color.b })));
+        } catch (error) {
+          console.error('Mega Drive processing error:', error);
+          const megaDriveResult = processMegaDriveImage(imageData);
+          const processedData = megaDriveResult.imageData.data;
+          for (let i = 0; i < data.length; i++) data[i] = processedData[i];
+          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({ r: color.r, g: color.g, b: color.b })));
+        }
+      }
+        break;
+
+      default:
+        break;
+    }
+    
+    return resultImageData;
+  }, [imageProcessor]);
 
   const checkOrientation = useCallback(() => {
     const isLandscape = window.innerWidth >= window.innerHeight;
@@ -145,6 +269,10 @@ export const RetroImageEditor = () => {
     return 'blocked'
   };
 
+
+
+
+
   const handleTabClick = useCallback((tabId: string) => {
     // Allow language and load-image clicks even when no image is loaded
     if (!originalImage && tabId !== 'language' && tabId !== 'load-image') {
@@ -172,29 +300,6 @@ export const RetroImageEditor = () => {
     setHistoryIndex(newHistory.length - 1);
   }, [history, historyIndex]);
 
-  // Clean reset of all editor state - prevents memory leaks
-  const resetEditor = useCallback(() => {
-    // Clean up image references
-    setOriginalImage(null);
-    setProcessedImageData(null);
-    setOriginalImageSource(null);
-    
-    // Reset UI state
-    setSelectedPalette('original');
-    setSelectedResolution('original');
-    setScalingMode('fit');
-    setCurrentPaletteColors([]);
-    setOriginalPaletteColors([]);
-    setShowCameraPreview(false);
-    
-    // Clear history to free memory
-    setHistory([]);
-    setHistoryIndex(-1);
-    
-    // Reset interface
-    setActiveTab('load-image');
-    setIsOriginalPNG8Indexed(false);
-  }, []);
 
   // Optimized image loading with memory management and performance monitoring
   const loadImage = useCallback(async (source: File | string) => {
@@ -909,161 +1014,6 @@ export const RetroImageEditor = () => {
     }
   };
 
-  // Async palette conversion with Web Worker support
-  const applyPaletteConversion = useCallback(async (imageData: ImageData, palette: PaletteType, customColors?: Color[]): Promise<ImageData> => {
-    const data = new Uint8ClampedArray(imageData.data);
-    const resultImageData = new ImageData(data, imageData.width, imageData.height);
-    
-    switch (palette) {
-      case 'gameboy': {
-        const gbColors = customColors && customColors.length === 4
-          ? customColors.map(c => [c.r, c.g, c.b])
-          : [
-              [7, 24, 33],
-              [134, 192, 108],
-              [224, 248, 207],
-              [101, 255, 0]
-            ];
-
-        const findClosestGBColor = (r: number, g: number, b: number) => {
-          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
-          const brightnessPercent = (pixelBrightness / 255) * 100;
-          if (brightnessPercent <= 24) return gbColors[0];
-          if (brightnessPercent <= 49) return gbColors[1];
-          if (brightnessPercent <= 74) return gbColors[2];
-          return gbColors[3];
-        };
-
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const closestColor = findClosestGBColor(r, g, b);
-          data[i] = closestColor[0];
-          data[i + 1] = closestColor[1];
-          data[i + 2] = closestColor[2];
-        }
-
-        if (!customColors || customColors.length !== 4) {
-          setCurrentPaletteColors(gbColors.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-        }
-      }
-        break;
-
-      case 'gameboyBg': {
-        const gbBgColors = customColors && customColors.length === 4
-          ? customColors.map(c => [c.r, c.g, c.b])
-          : [
-              [7, 24, 33],
-              [48, 104, 80],
-              [134, 192, 108],
-              [224, 248, 207]
-            ];
-
-        const findClosestGBBgColor = (r: number, g: number, b: number) => {
-          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
-          const brightnessPercent = (pixelBrightness / 255) * 100;
-          if (brightnessPercent <= 24) return gbBgColors[0];
-          if (brightnessPercent <= 49) return gbBgColors[1];
-          if (brightnessPercent <= 74) return gbBgColors[2];
-          return gbBgColors[3];
-        };
-
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const closestColor = findClosestGBBgColor(r, g, b);
-          data[i] = closestColor[0];
-          data[i + 1] = closestColor[1];
-          data[i + 2] = closestColor[2];
-        }
-
-        if (!customColors || customColors.length !== 4) {
-          setCurrentPaletteColors(gbBgColors.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-        }
-      }
-        break;
-      
-      case 'megadrive': {
-        try {
-          setProcessingOperation('Processing Mega Drive palette...');
-          const megaDriveResult = await imageProcessor.processMegaDriveImage(imageData, customColors, (progress) => setProcessingProgress(progress));
-          const processedData = megaDriveResult.imageData.data;
-          for (let i = 0; i < data.length; i++) data[i] = processedData[i];
-          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({ r: color.r, g: color.g, b: color.b })));
-        } catch (error) {
-          console.error('Mega Drive processing error:', error);
-          const megaDriveResult = processMegaDriveImage(imageData);
-          const processedData = megaDriveResult.imageData.data;
-          for (let i = 0; i < data.length; i++) data[i] = processedData[i];
-          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({ r: color.r, g: color.g, b: color.b })));
-        }
-      }
-        break;
-
-      case 'cga0': {
-        const cga0Palette = [[0, 0, 0], [255, 85, 255], [85, 255, 255], [255, 255, 255]];
-        applyFixedPalette(data, cga0Palette);
-        setCurrentPaletteColors(cga0Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-      }
-        break;
-
-      case 'cga1': {
-        const cga1Palette = [[0, 0, 0], [85, 255, 85], [255, 85, 85], [255, 255, 85]];
-        applyFixedPalette(data, cga1Palette);
-        setCurrentPaletteColors(cga1Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-      }
-        break;
-
-      case 'cga2': {
-        const cga2Palette = [[0, 0, 0], [255, 85, 85], [85, 255, 255], [255, 255, 255]];
-        applyFixedPalette(data, cga2Palette);
-        setCurrentPaletteColors(cga2Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-      }
-        break;
-
-      case 'gameboyRealistic': {
-        const gbRealisticPalette = [[56, 72, 40], [96, 112, 40], [160, 168, 48], [208, 224, 64]];
-        applyFixedPalette(data, gbRealisticPalette);
-        setCurrentPaletteColors(gbRealisticPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-      }
-        break;
-
-      case 'amstradCpc': {
-        const amstradCpcPalette = [[0, 0, 0], [128, 128, 128], [255, 255, 255], [128, 0, 0], [255, 0, 0], [255, 128, 128], [255, 127, 0], [255, 255, 128], [255, 255, 0], [128, 128, 0], [0, 128, 0], [0, 255, 0], [128, 255, 0], [128, 255, 128], [0, 255, 128], [0, 128, 128], [0, 255, 255], [128, 255, 255], [0, 128, 255], [0, 0, 255], [0, 0, 128], [128, 0, 255], [128, 128, 255], [255, 128, 255], [255, 0, 255], [255, 0, 128], [128, 0, 128]];
-        applyFixedPalette(data, amstradCpcPalette);
-        setCurrentPaletteColors(amstradCpcPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-      }
-        break;
-
-      case 'nes': {
-        const nesPalette = [[88, 88, 88], [0, 35, 124], [13, 16, 153], [48, 0, 146], [79, 0, 108], [96, 0, 53], [92, 5, 0], [70, 24, 0], [39, 45, 0], [9, 62, 0], [0, 69, 0], [0, 65, 6], [0, 53, 69], [0, 0, 0], [0, 0, 0], [0, 0, 0], [161, 161, 161], [11, 83, 215], [51, 55, 254], [102, 33, 247], [149, 21, 190], [172, 22, 110], [166, 39, 33], [134, 67, 0], [89, 98, 0], [45, 122, 0], [12, 133, 0], [58, 217, 116], [57, 195, 223], [66, 66, 66], [0, 0, 0], [0, 0, 0], [255, 255, 255], [81, 165, 254], [128, 132, 254], [188, 106, 254], [249, 91, 254], [254, 94, 196], [254, 115, 105], [228, 147, 33], [174, 182, 0], [121, 211, 0], [81, 223, 33], [58, 215, 116], [57, 195, 223], [66, 66, 66], [0, 0, 0], [0, 0, 0], [255, 255, 255], [181, 217, 254], [202, 202, 254], [227, 190, 254], [249, 183, 254], [254, 186, 231], [254, 195, 188], [244, 209, 153], [222, 224, 134], [198, 236, 135], [178, 242, 157], [167, 240, 195], [168, 231, 240], [172, 172, 172], [0, 0, 0], [0, 0, 0]];
-        applyFixedPalette(data, nesPalette);
-        setCurrentPaletteColors(nesPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-      }
-        break;
-
-      case 'commodore64': {
-        const c64Palette = [[0, 0, 0], [98, 98, 98], [137, 137, 137], [173, 173, 173], [255, 255, 255], [159, 78, 68], [203, 126, 117], [109, 84, 18], [161, 104, 60], [201, 212, 135], [154, 226, 155], [92, 171, 94], [106, 191, 198], [136, 126, 203], [80, 69, 155], [160, 87, 163]];
-        applyFixedPalette(data, c64Palette);
-        setCurrentPaletteColors(c64Palette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-      }
-        break;
-
-      case 'zxSpectrum': {
-        const zxPalette = [[0, 0, 0], [0, 0, 216], [0, 0, 255], [216, 0, 0], [255, 0, 0], [216, 0, 216], [255, 0, 255], [0, 216, 0], [0, 255, 0], [0, 216, 216], [0, 255, 255], [216, 216, 0], [255, 255, 0], [216, 216, 216], [255, 255, 255]];
-        applyFixedPalette(data, zxPalette);
-        setCurrentPaletteColors(zxPalette.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-      }
-        break;
-        
-      default:
-        break;
-    }
-    
-    return resultImageData;
-  }, [imageProcessor]);
 
   const downloadImage = useCallback(() => {
     if (!processedImageData) return;
