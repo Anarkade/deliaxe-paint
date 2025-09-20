@@ -70,34 +70,48 @@ function parseTranslationsCsv(raw: string): Record<string, Record<string, string
 
 const csvData = parseTranslationsCsv(translationsCsv)
 
-// Minimal shape — actual keys are defined in the project's Translation type.
-export const baseTranslation: Record<string, unknown> = {
-  // keep a small default; real content comes from the CSV or the app's file
-  loadImage: 'Import Image [I]',
-  appTitle: 'Vintage Palette Studio',
-  languageNames: {
-    en: 'English',
-    'es-ES': 'Español (España)',
-    'es-LA': 'Español (Latinoamérica)',
-    ca: 'Català',
-    'zh-CN': '简体中文',
-    'zh-TW': '繁體中文',
-    ja: '日本語',
-    it: 'Italiano',
-    de: 'Deutsch',
-    fr: 'Français',
-    'pt-PT': 'Português (Portugal)',
-    ru: 'Русский',
-    'pt-BR': 'Português (Brasil)',
-    pl: 'Polski',
-    tr: 'Türkçe',
-    eu: 'Euskera',
-    oc: 'Aranés',
-    th: 'ไทย',
-    ko: '한국어',
-    cs: 'Čeština',
-  },
+// Build languageNames object from CSV individual keys
+const buildLanguageNames = (): Record<string, string> => {
+  const languageNames: Record<string, string> = {}
+  
+  // Look for languageNames.* keys in CSV and build the object
+  Object.keys(csvData).forEach(key => {
+    if (key.startsWith('languageNames.')) {
+      const langCode = key.substring('languageNames.'.length)
+      if (csvData[key] && csvData[key]['en']) {
+        languageNames[langCode] = csvData[key]['en']
+      }
+    }
+  })
+  
+  return languageNames
 }
+
+// Build baseTranslation from all CSV keys in 'en' column
+const buildBaseTranslation = (): Record<string, unknown> => {
+  const base: Record<string, unknown> = {}
+  
+  // Load all keys from CSV 'en' column
+  Object.keys(csvData).forEach(key => {
+    if (!key.startsWith('languageNames.')) {
+      if (csvData[key] && csvData[key]['en']) {
+        base[key] = csvData[key]['en']
+      }
+    }
+  })
+  
+  // Add languageNames object
+  base.languageNames = buildLanguageNames()
+  
+  // Fallbacks for essential keys if not found in CSV
+  if (!base.loadImage) base.loadImage = 'Import Image [I]'
+  if (!base.appTitle) base.appTitle = 'Vintage Palette Studio'
+  
+  return base
+}
+
+// All keys loaded from CSV 'en' column
+export const baseTranslation: Record<string, unknown> = buildBaseTranslation()
 
 // Build translations map with CSV overrides (incremental migration pattern)
 export const translations: Record<Language, Partial<Record<string, unknown>>> = {
