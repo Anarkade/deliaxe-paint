@@ -420,6 +420,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
                 accept="image/*"
                 onChange={handleFileUpload}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                title={t('noFileChosen')}
               />
               <Button variant="highlighted" size="sm" className="w-full text-xs whitespace-pre-wrap leading-tight">
                 {t('chooseFile')}
