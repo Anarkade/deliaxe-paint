@@ -14,13 +14,28 @@ interface TranslationProviderProps {
 
 export const TranslationProvider: React.FC<TranslationProviderProps> = ({ children }) => {
   const [language, setLanguage] = useState<Language>(() => {
-    const stored = localStorage.getItem('language') as Language
-    if (stored && Object.keys(translations).includes(stored)) {
-      return stored
+    // Safely read persisted language; some environments block localStorage
+    try {
+      const stored = window?.localStorage?.getItem?.('language') as Language
+      if (stored && Object.prototype.hasOwnProperty.call(translations, stored)) {
+        return stored
+      }
+    } catch (e) {
+      console.warn('localStorage getItem unavailable; defaulting language', e)
     }
 
-    const browserLang = navigator.language.toLowerCase()
-    if (Object.keys(translations).includes(browserLang as Language)) return browserLang as Language
+    // Detect browser language safely
+    let browserLang = 'en'
+    try {
+      // navigator.language may not exist in some embedded contexts
+      browserLang = (navigator?.language || 'en').toLowerCase()
+    } catch {
+      // ignore
+    }
+
+    if (Object.prototype.hasOwnProperty.call(translations, browserLang)) {
+      return browserLang as Language
+    }
 
     const langMap: Record<string, Language> = {
       es: 'es-ES',
@@ -49,7 +64,11 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
 
   const changeLanguage = useCallback((lang: Language) => {
     setLanguage(lang)
-    localStorage.setItem('language', lang)
+    try {
+      window?.localStorage?.setItem?.('language', lang)
+    } catch (e) {
+      console.warn('localStorage setItem failed; continuing without persistence', e)
+    }
   }, [])
 
   const value: TranslationContextType = {
