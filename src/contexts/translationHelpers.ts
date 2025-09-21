@@ -20,7 +20,7 @@
  * - Backward compatibility: Existing translation system preserved
  */
 
-import { createContext, useContext } from 'react'
+import React from 'react'
 import translationsCsv from '../locales/translations.csv?raw'
 import constantsCsv from '../locales/texts_constant.csv?raw'
 
@@ -207,10 +207,10 @@ export type TranslationContextType = {
   getLanguageName: (lang: Language) => string
 }
 
-export const TranslationContext = createContext<TranslationContextType | undefined>(undefined)
+export const TranslationContext = React.createContext<TranslationContextType | undefined>(undefined)
 
 export const useTranslation = (): TranslationContextType => {
-  const context = useContext(TranslationContext)
+  const context = React.useContext(TranslationContext)
   if (!context) throw new Error('useTranslation must be used within a TranslationProvider')
   return context
 }
