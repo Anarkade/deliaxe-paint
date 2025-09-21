@@ -240,7 +240,7 @@ class PNGIndexedEncoder {
 export function createPNG8IndexedBlob(imageData: ImageData, palette: Color[]): Blob {
   const encoder = new PNGIndexedEncoder();
   const pngData = encoder.encodePNG8(imageData, palette);
-  return new Blob([pngData], { type: 'image/png' });
+  return new Blob([pngData as BlobPart], { type: 'image/png' });
 }
 
 export function createPNG8IndexedDataURL(imageData: ImageData, palette: Color[]): string {
