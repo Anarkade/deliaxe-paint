@@ -21,7 +21,16 @@
  */
 
 import React from 'react'
-import translationsCsv from '../locales/translations.csv?raw'
+import translationsAppCsv from '../locales/translationsApp.csv?raw'
+import translationsChangeGridsCsv from '../locales/translationsChangeGrids.csv?raw'
+import translationsChangeLanguageCsv from '../locales/translationsChangeLanguage.csv?raw'
+import translationsChangePaletteCsv from '../locales/translationsChangePalette.csv?raw'
+import translationsChangeResolutionCsv from '../locales/translationsChangeResolution.csv?raw'
+import translationsExportImageCsv from '../locales/translationsExportImage.csv?raw'
+import translationsImagePreviewCsv from '../locales/translationsImagePreview.csv?raw'
+import translationsImportImageCsv from '../locales/translationsImportImage.csv?raw'
+import translationsPaletteViewerCsv from '../locales/translationsPaletteViewer.csv?raw'
+import translationsToolbarCsv from '../locales/translationsToolbar.csv?raw'
 import constantsCsv from '../locales/texts_constant.csv?raw'
 
 export type Language =
@@ -115,7 +124,34 @@ function parseConstantsCsv(raw: string): Record<string, string> {
   return result
 }
 
-const csvData = parseTranslationsCsv(translationsCsv)
+// Parse and merge multiple per-area translations CSV files.
+function mergeParsedCsvObjects(list: Array<Record<string, Record<string, string>>>): Record<string, Record<string, string>> {
+  const result: Record<string, Record<string, string>> = {}
+  for (const obj of list) {
+    for (const key of Object.keys(obj)) {
+      if (!result[key]) result[key] = {}
+      const cols = obj[key]
+      for (const colName of Object.keys(cols)) {
+        // later files override earlier ones for the same key/column
+        result[key][colName] = cols[colName]
+      }
+    }
+  }
+  return result
+}
+
+const csvData = mergeParsedCsvObjects([
+  parseTranslationsCsv(translationsAppCsv),
+  parseTranslationsCsv(translationsChangeGridsCsv),
+  parseTranslationsCsv(translationsChangeLanguageCsv),
+  parseTranslationsCsv(translationsChangePaletteCsv),
+  parseTranslationsCsv(translationsChangeResolutionCsv),
+  parseTranslationsCsv(translationsExportImageCsv),
+  parseTranslationsCsv(translationsImagePreviewCsv),
+  parseTranslationsCsv(translationsImportImageCsv),
+  parseTranslationsCsv(translationsPaletteViewerCsv),
+  parseTranslationsCsv(translationsToolbarCsv),
+])
 const constantsData = parseConstantsCsv(constantsCsv)
 
 // Build translation object for a specific language from CSV data
