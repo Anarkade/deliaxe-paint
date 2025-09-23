@@ -150,21 +150,39 @@ function findDuplicatedKeys(allKeys) {
     }
   }
   
-  if (withinFileKeys.length > 0) {
-    log('red', `Found ${withinFileKeys.length} keys duplicated within the same file:`);
-    withinFileKeys.forEach(({ key, file, count }) => {
-      log('yellow', `  Key "${key}" appears ${count} times in: ${file}`);
-    });
-    console.log();
-  }
-  
-  if (duplicatedKeys.length === 0) {
-    log('green', 'No keys duplicated across different files!');
+  // Report within-file duplicates
+  log('magenta', '--- DUPLICATES WITHIN THE SAME FILE ---');
+  if (withinFileKeys.length === 0) {
+    log('green', '✓ No keys duplicated within the same file!');
   } else {
-    log('red', `Found ${duplicatedKeys.length} keys duplicated across different files:`);
+    log('red', `✗ Found ${withinFileKeys.length} keys duplicated within the same file:`);
+    
+    // Group by file for better organization
+    const byFile = {};
+    withinFileKeys.forEach(({ key, file, count }) => {
+      if (!byFile[file]) byFile[file] = [];
+      byFile[file].push({ key, count });
+    });
+    
+    Object.entries(byFile).forEach(([file, duplicates]) => {
+      log('yellow', `\n  📄 File: ${file}`);
+      duplicates.forEach(({ key, count }) => {
+        log('red', `    ❌ "${key}" appears ${count} times`);
+      });
+    });
+  }
+  console.log();
+  
+  // Report cross-file duplicates
+  log('magenta', '--- DUPLICATES ACROSS DIFFERENT FILES ---');
+  if (duplicatedKeys.length === 0) {
+    log('green', '✓ No keys duplicated across different files!');
+  } else {
+    log('red', `✗ Found ${duplicatedKeys.length} keys duplicated across different files:`);
     duplicatedKeys.forEach(({ key, files }) => {
-      log('yellow', `  Key "${key}" appears in:`);
-      files.forEach(file => log('cyan', `    - ${file}`));
+      log('yellow', `\n  🔑 Key: "${key}"`);
+      log('cyan', `    Found in ${files.length} files:`);
+      files.forEach(file => log('cyan', `      - ${file}`));
     });
   }
   
