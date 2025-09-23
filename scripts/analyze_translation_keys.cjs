@@ -246,58 +246,48 @@ function findUnusedKeys(allKeys) {
   
   const sourceFiles = getSourceCodeFiles();
   const usedKeys = new Set();
-  
+  let getLanguageNameUsed = false;
   log('blue', `Scanning ${sourceFiles.length} source code files...`);
   console.log();
-  
   sourceFiles.forEach(filePath => {
     const relativePath = path.relative(ROOT_DIR, filePath);
-    
     try {
       const content = fs.readFileSync(filePath, 'utf8');
-      
+      // Detect usage of getLanguageName (indirect usage of languageNames.* keys)
+      if (/getLanguageName\s*\(/.test(content)) {
+        getLanguageNameUsed = true;
+      }
       // Check each key to see if it appears in this file
       for (const key of allKeys.keys()) {
-        // Look for the key in various contexts with more comprehensive patterns:
-        // - Direct string: "keyName" or 'keyName'
-        // - Template literals: `keyName`
-        // - Object property: .keyName or ['keyName'] or {"keyName"}
-        // - Function calls: t("keyName") or translate("keyName") or useTranslation("keyName")
-        // - React/JSX context: {t("keyName")} or {translate("keyName")}
-        // - Import statements and other contexts
         const patterns = [
-          // Direct string literals
           new RegExp(`["'\`]${escapeRegex(key)}["'\`]`, 'g'),
-          // Object property access
           new RegExp(`\\.${escapeRegex(key)}\\b`, 'g'),
-          // Array/object notation
           new RegExp(`\\[["']${escapeRegex(key)}["']\\]`, 'g'),
-          // Object literal keys
           new RegExp(`{["']${escapeRegex(key)}["']}`, 'g'),
-          // Function calls with the key
           new RegExp(`\\b(t|translate|useTranslation|getTranslation|getText)\\s*\\(\\s*["'\`]${escapeRegex(key)}["'\`]`, 'g'),
-          // React/JSX context
           new RegExp(`{\\s*(t|translate)\\s*\\(\\s*["'\`]${escapeRegex(key)}["'\`]`, 'g'),
-          // Variable assignments or references
           new RegExp(`\\b${escapeRegex(key)}\\b`, 'g'),
-          // Translation context object
           new RegExp(`["']${escapeRegex(key)}["']\\s*:`, 'g'),
-          // CSV parsing or similar
           new RegExp(`${escapeRegex(key)}\\s*,`, 'g')
         ];
-        
         const found = patterns.some(pattern => pattern.test(content));
         if (found) {
           usedKeys.add(key);
         }
       }
-      
       log('green', `✓ Scanned: ${relativePath}`);
-      
     } catch (error) {
       log('red', `✗ Error scanning ${relativePath}: ${error.message}`);
     }
   });
+  // If getLanguageName is used anywhere, mark all languageNames.* keys as used
+  if (getLanguageNameUsed) {
+    for (const key of allKeys.keys()) {
+      if (key.startsWith('languageNames.')) {
+        usedKeys.add(key);
+      }
+    }
+  }
   
   console.log();
   log('blue', `Found ${usedKeys.size} keys used in source code`);
