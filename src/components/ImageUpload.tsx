@@ -412,7 +412,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
           <div className="space-y-2">
             <label className="block text-xs font-medium text-foreground">
               <Upload className="inline mr-1 h-3 w-3" />
-              {t('uploadFile')}
+              {t('uploadImage')}
             </label>
             <div className="relative">
               <input
