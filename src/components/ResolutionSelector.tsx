@@ -209,7 +209,7 @@ export const ResolutionSelector = ({
             <label className="block text-xs font-medium text-foreground">
               {t('targetResolution')}
             </label>
-            <RadioGroup value={selectedResolution} onValueChange={onResolutionChange} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
+            <RadioGroup value={selectedResolution} onValueChange={onResolutionChange} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
               {resolutionOptions.map((option) => (
                 <div key={option.value} className="flex space-x-1 min-h-[2.5rem]">
                   <RadioGroupItem value={option.value} id={`resolution-${option.value}`} className="h-3 w-3 mt-1 flex-shrink-0" />
