@@ -33,18 +33,18 @@ export const ColorPaletteSelector = ({
   const { t } = useTranslation();
 
   const paletteOptions = [
-    { value: 'original' as const, label: t('originalPalette'), colors: t('unlimitedColors') },
-    { value: 'amstradCpc' as const, label: t('amstradCpc'), colors: t('amstradCpcColors') },
-    { value: 'cga0' as const, label: t('cgaPalette0'), colors: t('cgaColors') },
-    { value: 'cga1' as const, label: t('cgaPalette1'), colors: t('cgaColors') },
-    { value: 'cga2' as const, label: t('cgaPalette2'), colors: t('cgaColors') },
-    { value: 'commodore64' as const, label: t('commodore64'), colors: t('commodore64Colors') },
-    { value: 'gameboy' as const, label: t('gameBoy'), colors: t('gameBoyColors') },
-    { value: 'gameboyBg' as const, label: t('gameBoyBg'), colors: t('gameBoyColors') },
-    { value: 'gameboyRealistic' as const, label: t('gameBoyRealistic'), colors: t('gameBoyColors') },
-    { value: 'megadrive' as const, label: t('megaDrive16'), colors: t('megaDrive16Colors') },
-    { value: 'nes' as const, label: t('nesPalette'), colors: t('nesColors') },
-    { value: 'zxSpectrum' as const, label: t('zxSpectrumPalette'), colors: t('zxSpectrumColors') },
+    { value: 'original', labelKey: 'originalPalette', colorsKey: 'unlimitedColors' },
+    { value: 'amstradCpc', labelKey: 'amstradCpc', colorsKey: 'amstradCpcColors' },
+    { value: 'cga0', labelKey: 'cgaPalette0', colorsKey: 'cgaColors' },
+    { value: 'cga1', labelKey: 'cgaPalette1', colorsKey: 'cgaColors' },
+    { value: 'cga2', labelKey: 'cgaPalette2', colorsKey: 'cgaColors' },
+    { value: 'commodore64', labelKey: 'commodore64', colorsKey: 'commodore64Colors' },
+    { value: 'gameboy', labelKey: 'gameBoy', colorsKey: 'gameBoyColors' },
+    { value: 'gameboyBg', labelKey: 'gameBoyBg', colorsKey: 'gameBoyColors' },
+    { value: 'gameboyRealistic', labelKey: 'gameBoyRealistic', colorsKey: 'gameBoyColors' },
+    { value: 'megadrive', labelKey: 'megaDrive16', colorsKey: 'megaDrive16Colors' },
+    { value: 'nes', labelKey: 'nesPalette', colorsKey: 'nesColors' },
+    { value: 'zxSpectrum', labelKey: 'zxSpectrumPalette', colorsKey: 'zxSpectrumColors' },
   ];
 
   return (
@@ -73,8 +73,8 @@ export const ColorPaletteSelector = ({
             <div key={option.value} className="flex items-start space-x-2 min-h-[2.5rem]">
               <RadioGroupItem value={option.value} id={`palette-${option.value}`} className="h-3 w-3 mt-1 flex-shrink-0" />
               <Label htmlFor={`palette-${option.value}`} className="flex flex-col cursor-pointer">
-                <span className="font-medium text-xs leading-tight break-words">{option.label}</span>
-                <span className="text-xs text-muted-foreground leading-tight break-words">{option.colors}</span>
+                <span className="font-medium text-xs leading-tight break-words">{t(option.labelKey)}</span>
+                <span className="text-xs text-muted-foreground leading-tight break-words">{t(option.colorsKey)}</span>
               </Label>
             </div>
           ))}

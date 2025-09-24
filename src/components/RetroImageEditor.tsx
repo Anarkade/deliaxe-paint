@@ -1421,7 +1421,6 @@ export const RetroImageEditor = () => {
                     setFrameHeight={setFrameHeight}
                     frameGridColor={frameGridColor}
                     setFrameGridColor={setFrameGridColor}
-                    t={t}
                     onClose={() => setActiveTab(null)}
                   />
                 )}

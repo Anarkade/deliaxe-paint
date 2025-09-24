@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -22,7 +23,7 @@ interface ChangeGridSelectorProps {
   setFrameHeight: (v: number) => void;
   frameGridColor: string;
   setFrameGridColor: (v: string) => void;
-  t: (key: string) => string;
+  // Removed t prop, use hook instead
   onClose: () => void;
 }
 
@@ -43,22 +44,23 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
   setFrameHeight,
   frameGridColor,
   setFrameGridColor,
-  t,
   onClose,
-}) => (
-  <div className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0" onClick={e => e.stopPropagation()} data-section="change-grids">
-    <Card className="bg-elegant-bg border-elegant-border p-6 relative">
-      <Button variant="ghost" size="sm" onClick={onClose} className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground">
-        <X className="h-4 w-4" />
-      </Button>
-      <div className="space-y-6">
-        <div>
-          <div className="flex items-center gap-3">
-            <Grid3X3 className="h-6 w-6" style={{ color: '#7d1b2d' }} />
-            <h3 className="text-xl font-bold" style={{ color: '#7d1b2d' }}>{t('changeGrids')}</h3>
+}) => {
+  const { t } = useTranslation();
+  return (
+    <div className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0" onClick={e => e.stopPropagation()} data-section="change-grids">
+      <Card className="bg-elegant-bg border-elegant-border p-6 relative">
+        <Button variant="ghost" size="sm" onClick={onClose} className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground">
+          <X className="h-4 w-4" />
+        </Button>
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center gap-3">
+              <Grid3X3 className="h-6 w-6" style={{ color: '#7d1b2d' }} />
+              <h3 className="text-xl font-bold" style={{ color: '#7d1b2d' }}>{t('changeGrids')}</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">{t('changeGridsDesc')}</p>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">{t('changeGridsDesc')}</p>
-        </div>
         <div className="space-y-6">
           {/* Tile Grid Section */}
           <div className="space-y-3">
@@ -116,3 +118,4 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
     </Card>
   </div>
 );
+}

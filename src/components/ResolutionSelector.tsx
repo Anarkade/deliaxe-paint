@@ -89,45 +89,46 @@ export const ResolutionSelector = ({
 }: ResolutionSelectorProps) => {
   const { t } = useTranslation();
 
+  // Build options inside render to ensure translations update
   const resolutionOptions = [
-    { value: 'original' as const, label: t('originalSize'), desc: t('keepOriginalSize') },
-    { value: 'unscaled' as const, label: t('unscaledSize'), desc: t('removeScaling') },
-    { value: '160x144' as const, label: '160×144', desc: t('gameBoyRes') },
-    { value: '160x200' as const, label: '160×200', desc: t('amstradCpc0') },
-    { value: '240x160' as const, label: '240×160', desc: t('gameBoyAdvance') },
-    { value: '256x192' as const, label: '256×192', desc: t('msxZxSpectrum') },
-    { value: '256x212' as const, label: '256×212', desc: t('msxPlatform') },
-    { value: '256x224' as const, label: '256×224', desc: t('megaDriveNtscH32') },
-    { value: '256x240' as const, label: '256×240', desc: t('megaDrivePalH32') },
-    { value: '304x224' as const, label: '304×224', desc: t('neoGeoCd') },
-    { value: '320x200' as const, label: '320×200', desc: t('amstradCpc1') },
-    { value: '320x224' as const, label: '320×224', desc: t('megaDriveNtscH40') },
-    { value: '320x240' as const, label: '320×240', desc: t('megaDrivePalH40') },
-    { value: '320x256' as const, label: '320×256', desc: t('amigaLowResPal') },
-    { value: '384x224' as const, label: '384×224', desc: t('cpsArcade') },
-    { value: '480x272' as const, label: '480×272', desc: t('pspPlatform') },
-    { value: '512x212' as const, label: '512×212', desc: t('msxHiRes') },
-    { value: '640x200' as const, label: '640×200', desc: t('amstradCpc2') },
-    { value: '640x256' as const, label: '640×256', desc: t('amigaHiResPal') },
-    { value: '640x480' as const, label: '640×480', desc: t('vgaAmiga') },
+    { value: 'original', label: t('originalSize'), desc: t('keepOriginalSize') },
+    { value: 'unscaled', label: t('unscaledSize'), desc: t('removeScaling') },
+    { value: '160x144', label: '160×144', desc: t('gameBoyRes') },
+    { value: '160x200', label: '160×200', desc: t('amstradCpc0') },
+    { value: '240x160', label: '240×160', desc: t('gameBoyAdvance') },
+    { value: '256x192', label: '256×192', desc: t('msxZxSpectrum') },
+    { value: '256x212', label: '256×212', desc: t('msxPlatform') },
+    { value: '256x224', label: '256×224', desc: t('megaDriveNtscH32') },
+    { value: '256x240', label: '256×240', desc: t('megaDrivePalH32') },
+    { value: '304x224', label: '304×224', desc: t('neoGeoCd') },
+    { value: '320x200', label: '320×200', desc: t('amstradCpc1') },
+    { value: '320x224', label: '320×224', desc: t('megaDriveNtscH40') },
+    { value: '320x240', label: '320×240', desc: t('megaDrivePalH40') },
+    { value: '320x256', label: '320×256', desc: t('amigaLowResPal') },
+    { value: '384x224', label: '384×224', desc: t('cpsArcade') },
+    { value: '480x272', label: '480×272', desc: t('pspPlatform') },
+    { value: '512x212', label: '512×212', desc: t('msxHiRes') },
+    { value: '640x200', label: '640×200', desc: t('amstradCpc2') },
+    { value: '640x256', label: '640×256', desc: t('amigaHiResPal') },
+    { value: '640x480', label: '640×480', desc: t('vgaAmiga') },
   ];
 
   const scalingOptions = [
-    { value: 'stretch' as const, label: t('stretch'), icon: Maximize, desc: t('stretchToFit') },
-    { value: 'fit' as const, label: t('fit'), icon: Monitor, desc: t('scaleToFit') },
-    { value: 'dont-scale' as const, label: t('dontScale'), icon: AlignCenter, desc: t('dontScale') },
+    { value: 'stretch', label: t('stretch'), icon: Maximize, desc: t('stretchToFit') },
+    { value: 'fit', label: t('fit'), icon: Monitor, desc: t('scaleToFit') },
+    { value: 'dont-scale', label: t('dontScale'), icon: AlignCenter, desc: t('dontScale') },
   ];
 
   const alignmentOptions = [
-    { value: 'top-left' as const, label: t('alignTopLeft'), position: 'top-left' },
-    { value: 'top-center' as const, label: t('alignTopCenter'), position: 'top-center' },
-    { value: 'top-right' as const, label: t('alignTopRight'), position: 'top-right' },
-    { value: 'middle-left' as const, label: t('alignMiddleLeft'), position: 'middle-left' },
-    { value: 'middle-center' as const, label: t('alignMiddleCenter'), position: 'middle-center' },
-    { value: 'middle-right' as const, label: t('alignMiddleRight'), position: 'middle-right' },
-    { value: 'bottom-left' as const, label: t('alignBottomLeft'), position: 'bottom-left' },
-    { value: 'bottom-center' as const, label: t('alignBottomCenter'), position: 'bottom-center' },
-    { value: 'bottom-right' as const, label: t('alignBottomRight'), position: 'bottom-right' },
+    { value: 'top-left', label: t('alignTopLeft'), position: 'top-left' },
+    { value: 'top-center', label: t('alignTopCenter'), position: 'top-center' },
+    { value: 'top-right', label: t('alignTopRight'), position: 'top-right' },
+    { value: 'middle-left', label: t('alignMiddleLeft'), position: 'middle-left' },
+    { value: 'middle-center', label: t('alignMiddleCenter'), position: 'middle-center' },
+    { value: 'middle-right', label: t('alignMiddleRight'), position: 'middle-right' },
+    { value: 'bottom-left', label: t('alignBottomLeft'), position: 'bottom-left' },
+    { value: 'bottom-center', label: t('alignBottomCenter'), position: 'bottom-center' },
+    { value: 'bottom-right', label: t('alignBottomRight'), position: 'bottom-right' },
   ];
 
   const isAlignmentMode = (mode: CombinedScalingMode): mode is AlignmentMode => {
