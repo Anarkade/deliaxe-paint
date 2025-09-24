@@ -70,11 +70,11 @@ export const ColorPaletteSelector = ({
         
         <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
           {paletteOptions.map((option) => (
-            <div key={option.value} className="flex items-start space-x-2 min-h-[2.5rem]">
+            <div key={option.value} className="flex space-x-1 min-h-[2.5rem]">
               <RadioGroupItem value={option.value} id={`palette-${option.value}`} className="h-3 w-3 mt-1 flex-shrink-0" />
-              <Label htmlFor={`palette-${option.value}`} className="flex flex-col cursor-pointer">
-                <span className="font-medium text-xs leading-tight break-words">{t(option.labelKey)}</span>
-                <span className="text-xs text-muted-foreground leading-tight break-words">{t(option.colorsKey)}</span>
+              <Label htmlFor={`palette-${option.value}`} className="flex flex-col cursor-pointer text-left">
+                <span className="font-medium text-xs leading-tight break-words text-left">{t(option.labelKey)}</span>
+                <span className="text-xs text-muted-foreground leading-tight break-words text-left">{t(option.colorsKey)}</span>
               </Label>
             </div>
           ))}
