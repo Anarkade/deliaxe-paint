@@ -13,7 +13,7 @@ interface ExportImageProps {
   processedImageData: ImageData | null;
   originalImage?: HTMLImageElement | null;
   selectedPalette: string;
-  selectedResolution: string;
+  // selectedResolution removed, now managed internally
   currentZoom?: number;
   showTileGrid?: boolean;
   showFrameGrid?: boolean;
@@ -31,7 +31,6 @@ export const ExportImage = ({
   processedImageData, 
   originalImage, 
   selectedPalette, 
-  selectedResolution, 
   currentZoom = 1, 
   showTileGrid = false, 
   showFrameGrid = false, 
@@ -43,7 +42,7 @@ export const ExportImage = ({
   frameGridColor = '#96629d',
   paletteColors, 
   onClose 
-}: ExportImageProps) => {
+}: Omit<ExportImageProps, 'selectedResolution'>) => {
   const { t } = useTranslation();
   const [exportAtCurrentZoom, setExportAtCurrentZoom] = useState(false);
   const [exportWithGrids, setExportWithGrids] = useState(false);
@@ -174,12 +173,12 @@ export const ExportImage = ({
     const link = document.createElement('a');
     const zoomSuffix = exportAtCurrentZoom ? `-${Math.round(currentZoom * 100)}pct` : '';
     const gridSuffix = exportWithGrids ? '-with-grids' : '';
-    link.download = `retro-image-${selectedPalette}-${selectedResolution}${zoomSuffix}${gridSuffix}${formatSuffix}.png`;
+  link.download = `retro-image-${selectedPalette}${zoomSuffix}${gridSuffix}${formatSuffix}.png`;
     link.href = dataURL;
     link.click();
     
     toast.success(t('imageDownloaded'));
-  }, [processedImageData, originalImage, selectedPalette, selectedResolution, t, exportAtCurrentZoom, exportWithGrids, currentZoom, paletteColors, createIndexedPNG, exportFormat, tileWidth, tileHeight, frameWidth, frameHeight, tileGridColor, frameGridColor, showTileGrid, showFrameGrid]);
+  }, [processedImageData, originalImage, selectedPalette, t, exportAtCurrentZoom, exportWithGrids, currentZoom, paletteColors, createIndexedPNG, exportFormat, tileWidth, tileHeight, frameWidth, frameHeight, tileGridColor, frameGridColor, showTileGrid, showFrameGrid]);
 
   const getImageDataURL = useCallback(() => {
     if (!processedImageData && !originalImage) return null;
@@ -352,7 +351,7 @@ export const ExportImage = ({
     
     // Create a temporary download for the image to attach
     const link = document.createElement('a');
-    link.download = `viejunizer-${selectedPalette}-${selectedResolution}.png`;
+  link.download = `viejunizer-${selectedPalette}.png`;
     link.href = dataURL;
     link.click();
     
@@ -360,7 +359,7 @@ export const ExportImage = ({
     const text = encodeURIComponent(`Check out my retro-style image created with Viejunizer! #RetroGaming #PixelArt #Viejunizer`);
     const url = `https://twitter.com/intent/tweet?text=${text}`;
     window.open(url, '_blank', 'width=600,height=400');
-  }, [getImageDataURL, selectedPalette, selectedResolution]);
+  }, [getImageDataURL, selectedPalette]);
 
 
   if (!processedImageData && !originalImage) {

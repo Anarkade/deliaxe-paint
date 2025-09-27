@@ -4,24 +4,14 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Palette, RotateCcw, RotateCw, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useState, useEffect } from 'react';
+import { extractColorsFromImageData } from '@/lib/colorQuantization';
 
-export type PaletteType = 
-  | 'original'
-  | 'gameboy'
-  | 'gameboyBg'
-  | 'megadrive'
-  | 'cga0'
-  | 'cga1'
-  | 'cga2'
-  | 'gameboyRealistic'
-  | 'amstradCpc'
-  | 'nes'
-  | 'commodore64'
-  | 'zxSpectrum';
+export type PaletteType = string;
 
 interface ColorPaletteSelectorProps {
-  selectedPalette: PaletteType;
-  onPaletteChange: (palette: PaletteType) => void;
+  selectedPalette: string;
+  onPaletteChange: (palette: string) => void;
   onClose?: () => void;
 }
 
@@ -31,6 +21,7 @@ export const ColorPaletteSelector = ({
   onClose
 }: ColorPaletteSelectorProps) => {
   const { t } = useTranslation();
+  const [originalPaletteColors, setOriginalPaletteColors] = useState<string[]>([]);
 
   const paletteOptions = [
     { value: 'original', labelKey: 'originalPalette', colorsKey: 'unlimitedColors' },
@@ -46,6 +37,17 @@ export const ColorPaletteSelector = ({
     { value: 'nes', labelKey: 'nesPalette', colorsKey: 'nesColors' },
     { value: 'zxSpectrum', labelKey: 'zxSpectrumPalette', colorsKey: 'zxSpectrumColors' },
   ];
+
+  // Example: extract colors from image data (replace with actual image data source)
+  useEffect(() => {
+    // Dummy imageData for demonstration
+    // Replace with actual imageData from props/context
+    // const imageData = ...;
+    // if (imageData) {
+    //   const colors = extractColorsFromImageData(imageData);
+    //   setOriginalPaletteColors(colors);
+    // }
+  }, []);
 
   return (
     <Card className="p-5 border-pixel-grid bg-card relative">
@@ -68,7 +70,7 @@ export const ColorPaletteSelector = ({
           <p className="text-sm text-muted-foreground mt-1">{t('changePaletteDesc')}</p>
         </div>
         
-  <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
+        <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
           {paletteOptions.map((option) => (
             <div key={option.value} className="flex space-x-1 min-h-[2.5rem]">
               <RadioGroupItem value={option.value} id={`palette-${option.value}`} className="h-3 w-3 mt-1 flex-shrink-0" />

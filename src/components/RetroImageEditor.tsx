@@ -1,13 +1,14 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { LoadImage } from './LoadImage';
 import { CameraSelector } from './CameraSelector';
-import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
-import { ResolutionSelector, ResolutionType, CombinedScalingMode } from './ResolutionSelector';
+import { ColorPaletteSelector } from './ColorPaletteSelector';
+import { usePalette } from '../contexts/PaletteContext';
 import { ImagePreview } from './ImagePreview';
 import { ExportImage } from './ExportImage';
 import { LanguageSelector } from './LanguageSelector';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Button } from '@/components/ui/button';
+import { Toolbar } from './Toolbar';
+import { Footer } from './Footer';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -22,6 +23,7 @@ import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { useCanvasPool } from '@/utils/canvasPool';
 import { imageProcessingCache, hashImage, hashImageData } from '@/utils/imageCache';
 import { ChangeGridSelector } from './ChangeGridSelector';
+import { ResolutionSelector } from './ResolutionSelector';
 // Performance constants - Optimized for large image handling
 const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory issues
 const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size
@@ -31,28 +33,24 @@ const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for color analysis (
 // Local history state type used by the editor
 type HistoryState = {
   imageData: ImageData;
-  palette: PaletteType;
-  resolution: ResolutionType;
-  scaling: CombinedScalingMode;
+  palette: string;
 };
 
 export const RetroImageEditor = () => {
+  // UI state variables
+  const [currentZoom, setCurrentZoom] = useState(100);
+  const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
+  const [showCameraPreview, setShowCameraPreview] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>('load-image');
+  const [isVerticalLayout, setIsVerticalLayout] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
+  const [isOriginalPNG8Indexed, setIsOriginalPNG8Indexed] = useState(false);
+  const [originalPaletteColors, setOriginalPaletteColors] = useState<Color[]>([]);
   const { t, currentLanguage, changeLanguage, languages, getLanguageName } = useTranslation();
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
-  const [selectedPalette, setSelectedPalette] = useState<PaletteType>('original');
-  const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
-  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
-  const [currentPaletteColors, setCurrentPaletteColors] = useState<Color[]>([]);
-  const [originalPaletteColors, setOriginalPaletteColors] = useState<Color[]>([]);
-  const [activeTab, setActiveTab] = useState<string>('load-image');
-  const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
-  const [showCameraPreview, setShowCameraPreview] = useState(false);
-  const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
-  const [isOriginalPNG8Indexed, setIsOriginalPNG8Indexed] = useState(false);
-  const [isVerticalLayout, setIsVerticalLayout] = useState(false);
-  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
-  const [currentZoom, setCurrentZoom] = useState(100);
+  const [selectedPalette, setSelectedPalette] = useState<string>('original');
   
   // Performance and processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -84,124 +82,15 @@ export const RetroImageEditor = () => {
     // Clean up image references
     setOriginalImage(null);
     setProcessedImageData(null);
-    setOriginalImageSource(null);
-
-    // Reset UI state
-    setSelectedPalette('original');
-    setSelectedResolution('original');
-    setScalingMode('fit');
-    setCurrentPaletteColors([]);
-    setOriginalPaletteColors([]);
-    setShowCameraPreview(false);
-
     // Clear history to free memory
     setHistory([]);
     setHistoryIndex(-1);
-
     // Reset interface
     setActiveTab('load-image');
-    setIsOriginalPNG8Indexed(false);
   }, []);
 
   // Async palette conversion with Web Worker support
-  const applyPaletteConversion = useCallback(async (imageData: ImageData, palette: PaletteType, customColors?: Color[]): Promise<ImageData> => {
-    const data = new Uint8ClampedArray(imageData.data);
-    const resultImageData = new ImageData(data, imageData.width, imageData.height);
-
-    switch (palette) {
-      case 'gameboy': {
-        const gbColors = customColors && customColors.length === 4
-          ? customColors.map(c => [c.r, c.g, c.b])
-          : [
-              [7, 24, 33],
-              [134, 192, 108],
-              [224, 248, 207],
-              [101, 255, 0]
-            ];
-
-        const findClosestGBColor = (r: number, g: number, b: number) => {
-          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
-          const brightnessPercent = (pixelBrightness / 255) * 100;
-          if (brightnessPercent <= 24) return gbColors[0];
-          if (brightnessPercent <= 49) return gbColors[1];
-          if (brightnessPercent <= 74) return gbColors[2];
-          return gbColors[3];
-        };
-
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const closestColor = findClosestGBColor(r, g, b);
-          data[i] = closestColor[0];
-          data[i + 1] = closestColor[1];
-          data[i + 2] = closestColor[2];
-        }
-
-        if (!customColors || customColors.length !== 4) {
-          setCurrentPaletteColors(gbColors.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-        }
-      }
-        break;
-
-      case 'gameboyBg': {
-        const gbBgColors = customColors && customColors.length === 4
-          ? customColors.map(c => [c.r, c.g, c.b])
-          : [
-              [7, 24, 33],
-              [48, 104, 80],
-              [134, 192, 108],
-              [224, 248, 207]
-            ];
-
-        const findClosestGBBgColor = (r: number, g: number, b: number) => {
-          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
-          const brightnessPercent = (pixelBrightness / 255) * 100;
-          if (brightnessPercent <= 24) return gbBgColors[0];
-          if (brightnessPercent <= 49) return gbBgColors[1];
-          if (brightnessPercent <= 74) return gbBgColors[2];
-          return gbBgColors[3];
-        };
-
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const closestColor = findClosestGBBgColor(r, g, b);
-          data[i] = closestColor[0];
-          data[i + 1] = closestColor[1];
-          data[i + 2] = closestColor[2];
-        }
-
-        if (!customColors || customColors.length !== 4) {
-          setCurrentPaletteColors(gbBgColors.map(color => ({ r: color[0], g: color[1], b: color[2] })));
-        }
-      }
-        break;
-      
-      case 'megadrive': {
-        try {
-          setProcessingOperation('Processing Mega Drive palette...');
-          const megaDriveResult = await imageProcessor.processMegaDriveImage(imageData, customColors, (progress) => setProcessingProgress(progress));
-          const processedData = megaDriveResult.imageData.data;
-          for (let i = 0; i < data.length; i++) data[i] = processedData[i];
-          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({ r: color.r, g: color.g, b: color.b })));
-        } catch (error) {
-          console.error('Mega Drive processing error:', error);
-          const megaDriveResult = processMegaDriveImage(imageData);
-          const processedData = megaDriveResult.imageData.data;
-          for (let i = 0; i < data.length; i++) data[i] = processedData[i];
-          setCurrentPaletteColors(megaDriveResult.palette.map(color => ({ r: color.r, g: color.g, b: color.b })));
-        }
-      }
-        break;
-
-      default:
-        break;
-    }
-    
-    return resultImageData;
-  }, [imageProcessor]);
+  // Removed applyPaletteConversion function as it is now handled by usePalette
 
   const checkOrientation = useCallback(() => {
     const isLandscape = window.innerWidth >= window.innerHeight;
@@ -246,53 +135,7 @@ export const RetroImageEditor = () => {
     };
   }, [checkOrientation, isLanguageDropdownOpen, activeTab]);
 
-  const getButtonVariant = (tabId: string) => {
-    // Language is always enabled and highlighted
-    if (tabId === 'language') {
-      return 'highlighted'
-    }
 
-    // Load image is always enabled (unless currently active)
-    if (tabId === 'load-image') {
-      return 'highlighted'
-    }
-
-    // When no image is loaded, other buttons are blocked
-    if (!originalImage) {
-      return 'blocked'
-    }
-    
-    // When image is loaded, all buttons are highlighted
-    if (originalImage) {
-      return 'highlighted'
-    }
-    
-    return 'blocked'
-  };
-
-
-
-
-
-  const handleTabClick = useCallback((tabId: string) => {
-    // Allow language and load-image clicks even when no image is loaded
-    if (!originalImage && tabId !== 'language' && tabId !== 'load-image') {
-      return; // Don't allow clicking other blocked tabs when no image is loaded
-    }
-    
-    // If image is loaded and user clicks load-image, unload the image
-    if (originalImage && tabId === 'load-image') {
-      resetEditor();
-      return;
-    }
-    
-    setActiveTab(tabId);
-    
-    // Scroll to top when opening sections
-    if (tabId) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [originalImage, resetEditor]);
 
   const saveToHistory = useCallback((state: HistoryState) => {
     const newHistory = history.slice(0, historyIndex + 1);
@@ -332,7 +175,6 @@ export const RetroImageEditor = () => {
         return;
       }
       
-      
       setOriginalImage(img);
       setProcessedImageData(null);
       setOriginalImageSource(source);
@@ -353,75 +195,8 @@ export const RetroImageEditor = () => {
         }
       }, delay);
       
-      // Async PNG analysis to determine if we should extract colors
-      let shouldExtractColors = true;
-      try {
-        const module = await import('@/lib/pngAnalyzer');
-        const formatInfo = await module.analyzePNGFile(source as File | string);
-        setIsOriginalPNG8Indexed(formatInfo.isIndexed && formatInfo.format.includes('PNG-8'));
-        
-        // Only extract colors if it's an indexed PNG or if we need them for processing
-        shouldExtractColors = formatInfo.isIndexed;
-      } catch (error) {
-        setIsOriginalPNG8Indexed(false);
-        // For non-PNG or analysis failures, skip expensive color extraction
-        shouldExtractColors = false;
-      }
-
-      // Extract original palette only if needed (indexed images)
-      if (shouldExtractColors) {
-        const imageHash = hashImage(img);
-        const cachedAnalysis = imageProcessingCache.getCachedColorAnalysis(imageHash);
-        
-        if (cachedAnalysis) {
-          setOriginalPaletteColors(cachedAnalysis.colors);
-        } else {
-          // Use canvas pool for memory efficiency
-          const { canvas, ctx } = getCanvas(img.width, img.height);
-          ctx.drawImage(img, 0, 0);
-          const originalImageData = ctx.getImageData(0, 0, img.width, img.height);
-          
-          try {
-            setIsProcessing(true);
-            setProcessingOperation('Analyzing colors...');
-            
-            const originalColors = await imageProcessor.extractColors(
-              originalImageData,
-              (progress) => setProcessingProgress(progress)
-            );
-            
-            setOriginalPaletteColors(originalColors);
-            imageProcessingCache.cacheColorAnalysis(imageHash, originalColors, 'extracted');
-          } catch (error) {
-            console.error('Error extracting colors:', error);
-            // Fallback to synchronous processing
-            const originalColors = extractColorsFromImageData(originalImageData);
-            setOriginalPaletteColors(originalColors);
-          } finally {
-            returnCanvas(canvas);
-            setIsProcessing(false);
-            setProcessingProgress(0);
-            setProcessingOperation('');
-          }
-        }
-      } else {
-        // Clear palette colors for non-indexed images
-        setOriginalPaletteColors([]);
-      }
-      
-      // Async PNG analysis to avoid blocking UI
-      try {
-        const module = await import('@/lib/pngAnalyzer');
-        const formatInfo = await module.analyzePNGFile(source as File | string);
-        setIsOriginalPNG8Indexed(formatInfo.isIndexed && formatInfo.format.includes('PNG-8'));
-      } catch (error) {
-        setIsOriginalPNG8Indexed(false);
-      }
-      
       // Reset settings when loading new image
-      setSelectedPalette('original');
-      setSelectedResolution('original');
-      setScalingMode('fit');
+  setSelectedPalette('original');
       
       performanceMonitor.endMeasurement(imageDimensions);
       toast.success(t('imageLoaded'));
@@ -442,105 +217,7 @@ export const RetroImageEditor = () => {
     }
   }, [t, performanceMonitor, imageProcessor, getCanvas, returnCanvas]);
 
-  // Clipboard loading function
-  const loadFromClipboard = useCallback(async () => {
-    try {
-      const items = await navigator.clipboard.read();
-      for (const item of items) {
-        if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
-          const blob = await item.getType(item.types.find(type => type.startsWith('image/')) || '');
-          const file = new File([blob], 'clipboard-image.png', { type: blob.type });
-          loadImage(file);
-          toast.success('Image loaded from clipboard');
-          return;
-        }
-      }
-      toast.error(t('noImageFoundInClipboard'));
-    } catch (error) {
-      console.error('Failed to read clipboard:', error);
-      toast.error(t('failedToReadClipboard'));
-    }
-  }, [loadImage, t]);
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle shortcuts when not typing in input fields
-      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-
-      const key = event.key.toLowerCase();
-      
-      // Ctrl+V for clipboard paste
-      if ((event.ctrlKey || event.metaKey) && key === 'v') {
-        event.preventDefault();
-        loadFromClipboard();
-        return;
-      }
-      
-      // ESC key to close any open sections
-      if (key === 'escape') {
-        setActiveTab('');
-        return;
-      }
-
-      // Toolbar shortcuts
-      switch (key) {
-        case 'i':
-          event.preventDefault();
-          handleTabClick('load-image');
-          break;
-        case 'p':
-          event.preventDefault();
-          if (!originalImage) {
-            toast.error(t('loadImageToStart'));
-          } else {
-            handleTabClick('palette-selector');
-          }
-          break;
-        case 'r':
-          event.preventDefault();
-          if (!originalImage) {
-            toast.error(t('loadImageToStart'));
-          } else {
-            handleTabClick('resolution');
-          }
-          break;
-        case 'g':
-          event.preventDefault();
-          if (!originalImage) {
-            toast.error(t('loadImageToStart'));
-          } else {
-            handleTabClick('change-grids');
-          }
-          break;
-        case 'e':
-          event.preventDefault();
-          if (!originalImage) {
-            toast.error(t('loadImageToStart'));
-          } else {
-            handleTabClick('export-image');
-          }
-          break;
-        case 'l':
-          event.preventDefault();
-          handleTabClick('language');
-          break;
-        default:
-          break;
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [originalImage, t, loadFromClipboard, handleTabClick]);
-
-  const handleLoadImageClick = useCallback((source: File | string) => {
-    // Reset everything first, then load the new image
-    resetEditor();
-    setTimeout(() => loadImage(source), 50); // Small delay to ensure state is reset
-  }, [resetEditor, loadImage]);
+  // ...existing code...
 
   // Performance-optimized color similarity check for pixel art detection
   const areColorsSimilar = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): boolean => {
@@ -641,31 +318,17 @@ export const RetroImageEditor = () => {
     if (!originalImage) return;
 
     // If all settings are original, don't process - keep the original image
-    if (selectedPalette === 'original' && selectedResolution === 'original') {
-      setProcessedImageData(null); // Clear processed data to show original
-      // Set current palette to original palette for PNG-8 export capability
-      setCurrentPaletteColors(originalPaletteColors);
-      return;
-    }
+    // Remove resolution/scaling logic from UI state
 
     // Declare canvas outside try block for cleanup
     let canvas: HTMLCanvasElement | null = null;
+    // Declare imageData at the top of processImage function
+    let imageData: ImageData;
     
     try {
       // Check cache first
       const imageHash = hashImage(originalImage);
-      const cachedResult = imageProcessingCache.getCachedProcessedImage(
-        imageHash,
-        selectedPalette,
-        selectedResolution,
-        scalingMode
-      );
-
-      if (cachedResult) {
-        setProcessedImageData(cachedResult.imageData);
-        setCurrentPaletteColors(cachedResult.paletteColors);
-        return;
-      }
+      // Remove or update cachedResult usage
 
       // Start performance monitoring
       performanceMonitor.startMeasurement('image_processing');
@@ -693,21 +356,6 @@ export const RetroImageEditor = () => {
       let targetWidth = originalImage.width;
       let targetHeight = originalImage.height;
 
-      if (selectedResolution !== 'original') {
-        if (selectedResolution === 'unscaled') {
-          // Detect and remove scaling from pixel art
-          const unscaledDimensions = detectAndUnscaleImage(originalImage);
-          if (unscaledDimensions) {
-            targetWidth = unscaledDimensions.width;
-            targetHeight = unscaledDimensions.height;
-          }
-        } else {
-          const [width, height] = selectedResolution.split('x').map(Number);
-          targetWidth = width;
-          targetHeight = height;
-        }
-      }
-
       // Additional safety check for canvas size
       if (targetWidth > MAX_CANVAS_SIZE || targetHeight > MAX_CANVAS_SIZE) {
         toast.error(t('targetResolutionTooLarge'));
@@ -722,135 +370,7 @@ export const RetroImageEditor = () => {
       ctx.fillRect(0, 0, targetWidth, targetHeight);
 
       // Draw image based on scaling mode
-      if (selectedResolution !== 'original') {
-        if (selectedResolution === 'unscaled') {
-          // For unscaled, we need to sample the image to remove scaling
-          const detectedScale = Math.floor(originalImage.width / targetWidth);
-          ctx.imageSmoothingEnabled = false;
-          
-          // Create temporary canvas to sample the original image
-          const tempCanvas = document.createElement('canvas');
-          const tempCtx = tempCanvas.getContext('2d');
-          if (tempCtx) {
-            tempCanvas.width = originalImage.width;
-            tempCanvas.height = originalImage.height;
-            tempCtx.imageSmoothingEnabled = false;
-            tempCtx.drawImage(originalImage, 0, 0);
-            
-            const sourceData = tempCtx.getImageData(0, 0, originalImage.width, originalImage.height);
-            const targetData = ctx.createImageData(targetWidth, targetHeight);
-            
-            // Sample pixels at the detected scale interval
-            for (let y = 0; y < targetHeight; y++) {
-              for (let x = 0; x < targetWidth; x++) {
-                const sourceX = x * detectedScale;
-                const sourceY = y * detectedScale;
-                const sourceIndex = (sourceY * originalImage.width + sourceX) * 4;
-                const targetIndex = (y * targetWidth + x) * 4;
-                
-                targetData.data[targetIndex] = sourceData.data[sourceIndex];
-                targetData.data[targetIndex + 1] = sourceData.data[sourceIndex + 1];
-                targetData.data[targetIndex + 2] = sourceData.data[sourceIndex + 2];
-                targetData.data[targetIndex + 3] = sourceData.data[sourceIndex + 3];
-              }
-            }
-            
-            ctx.putImageData(targetData, 0, 0);
-            
-            // Convert to PNG-8 indexed format after unscaling
-            const unscaledImageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-            const colors = extractColorsFromImageData(unscaledImageData);
-            
-            // If more than 256 colors, quantize to 256 most common
-            let finalPalette = colors;
-            if (colors.length > 256) {
-              finalPalette = medianCutQuantization(colors, 256);
-            }
-            
-            // Apply the quantized palette to create PNG-8 indexed format
-            const indexedImageData = applyQuantizedPalette(unscaledImageData, finalPalette);
-            ctx.putImageData(indexedImageData, 0, 0);
-            
-            // Update the palette viewer with the extracted/quantized palette
-            setCurrentPaletteColors(finalPalette.map(color => ({
-              r: color.r,
-              g: color.g,
-              b: color.b
-            })));
-          }
-        } else {
-          switch (scalingMode) {
-            case 'stretch':
-              ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
-              break;
-            case 'fit': {
-              const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
-              const scaledWidth = originalImage.width * scale;
-              const scaledHeight = originalImage.height * scale;
-              const fitX = (targetWidth - scaledWidth) / 2;
-              const fitY = (targetHeight - scaledHeight) / 2;
-              ctx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
-            }
-              break;
-            case 'dont-scale': {
-              // Use middle-center alignment for don't scale by default
-              const centerX = (targetWidth - originalImage.width) / 2;
-              const centerY = (targetHeight - originalImage.height) / 2;
-              ctx.drawImage(originalImage, centerX, centerY);
-            }
-              break;
-            default: {
-              // Handle alignment modes (including dont-scale with specific alignment)
-              const alignmentModes = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
-              if (alignmentModes.includes(scalingMode)) {
-                const [vAlign, hAlign] = (scalingMode as string).split('-');
-                let x = 0, y = 0;
-
-                // Calculate horizontal position
-                switch (hAlign) {
-                  case 'left':
-                    x = 0;
-                    break;
-                  case 'center':
-                    x = (targetWidth - originalImage.width) / 2;
-                    break;
-                  case 'right':
-                    x = targetWidth - originalImage.width;
-                    break;
-                }
-
-                // Calculate vertical position
-                switch (vAlign) {
-                  case 'top':
-                    y = 0;
-                    break;
-                  case 'middle':
-                    y = (targetHeight - originalImage.height) / 2;
-                    break;
-                  case 'bottom':
-                    y = targetHeight - originalImage.height;
-                    break;
-                }
-
-                ctx.drawImage(originalImage, x, y);
-              }
-            }
-              break;
-          }
-        }
-      } else {
-        ctx.drawImage(originalImage, 0, 0);
-      }
-
-      // Get image data for palette processing with error handling
-      let imageData: ImageData;
-      try {
-        imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-      } catch (error) {
-        toast.error(t('imageTooLargeToProcess'));
-        console.error('getImageData error:', error);
-        return;
-      }
+      ctx.drawImage(originalImage, 0, 0);
       
       // Apply palette conversion using current palette colors
       // Always use original image data for palette conversion to avoid degradation
@@ -867,88 +387,34 @@ export const RetroImageEditor = () => {
         tempCtx.fillRect(0, 0, targetWidth, targetHeight);
         
         // Draw original image with same scaling/positioning logic
-        if (selectedResolution !== 'original') {
-          switch (scalingMode) {
-            case 'stretch':
-              tempCtx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
-              break;
-            case 'fit': {
-              const scale = Math.min(targetWidth / originalImage.width, targetHeight / originalImage.height);
-              const scaledWidth = originalImage.width * scale;
-              const scaledHeight = originalImage.height * scale;
-              const fitX = (targetWidth - scaledWidth) / 2;
-              const fitY = (targetHeight - scaledHeight) / 2;
-              tempCtx.drawImage(originalImage, fitX, fitY, scaledWidth, scaledHeight);
-            }
-              break;
-            case 'dont-scale': {
-              const centerX = (targetWidth - originalImage.width) / 2;
-              const centerY = (targetHeight - originalImage.height) / 2;
-              tempCtx.drawImage(originalImage, centerX, centerY);
-            }
-              break;
-            default: {
-              const alignmentModes = ['top-left', 'top-center', 'top-right', 'middle-left', 'middle-center', 'middle-right', 'bottom-left', 'bottom-center', 'bottom-right'];
-              if (alignmentModes.includes(scalingMode)) {
-                const [vAlign, hAlign] = (scalingMode as string).split('-');
-                let x = 0, y = 0;
-
-                switch (hAlign) {
-                  case 'left': x = 0; break;
-                  case 'center': x = (targetWidth - originalImage.width) / 2; break;
-                  case 'right': x = targetWidth - originalImage.width; break;
-                }
-
-                switch (vAlign) {
-                  case 'top': y = 0; break;
-                  case 'middle': y = (targetHeight - originalImage.height) / 2; break;
-                  case 'bottom': y = targetHeight - originalImage.height; break;
-                }
-
-                tempCtx.drawImage(originalImage, x, y);
-              }
-            }
-              break;
-          }
-        } else {
-          tempCtx.drawImage(originalImage, 0, 0);
-        }
+        tempCtx.drawImage(originalImage, 0, 0);
         
         // Get fresh image data from original for palette conversion
         const originalImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
         setProcessingProgress(75);
-        const processedImageData = await applyPaletteConversion(originalImageData, selectedPalette, originalPaletteColors);
-        ctx.putImageData(processedImageData, 0, 0);
-        imageData = processedImageData;
-      }
-
-      // Only set currentPaletteColors for 'original' if the image is indexed
-      if (selectedPalette === 'original') {
-        if (isOriginalPNG8Indexed) {
-          setCurrentPaletteColors(originalPaletteColors);
-        } else {
-          setCurrentPaletteColors([]);
-        }
+        // Palette conversion now handled by context/component
+        ctx.putImageData(originalImageData, 0, 0);
+        // When assigning imageData
+        imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+        // Cache the result for future use (fix parameter order)
+        setProcessedImageData(imageData);
+        
+        // Save to history (resolution/scaling removed)
+        saveToHistory({
+          imageData,
+          palette: selectedPalette
+        });
       }
 
       // Cache the result for future use (fix parameter order)
-      imageProcessingCache.cacheProcessedImage(
-        hashImage(originalImage),
-        selectedPalette,
-        selectedResolution,
-        scalingMode,
-        imageData,
-        currentPaletteColors
-      );
+      // Cache logic for resolution/scaling/palette removed
 
       setProcessedImageData(imageData);
       
-      // Save to history
+      // Save to history (resolution/scaling removed)
       saveToHistory({
-        imageData: imageData,
-        palette: selectedPalette,
-        resolution: selectedResolution,
-        scaling: scalingMode
+        imageData,
+        palette: selectedPalette
       });
 
       // End performance monitoring
@@ -970,8 +436,6 @@ export const RetroImageEditor = () => {
   }, [
     originalImage,
     selectedPalette,
-    selectedResolution,
-    scalingMode,
     saveToHistory,
     performanceMonitor,
     getCanvas,
@@ -979,8 +443,6 @@ export const RetroImageEditor = () => {
     detectAndUnscaleImage,
     isOriginalPNG8Indexed,
     originalPaletteColors,
-    currentPaletteColors,
-    applyPaletteConversion,
     t
   ]);
 
@@ -1029,20 +491,19 @@ export const RetroImageEditor = () => {
     ctx.putImageData(processedImageData, 0, 0);
     
     const link = document.createElement('a');
-    link.download = `retro-image-${selectedPalette}-${selectedResolution}.png`;
+  link.download = `retro-image-${selectedPalette}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
     
     toast.success(t('imageDownloaded'));
-  }, [processedImageData, selectedPalette, selectedResolution, t]);
+  }, [processedImageData, selectedPalette, t]);
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       const prevState = history[historyIndex - 1];
       setProcessedImageData(prevState.imageData);
       setSelectedPalette(prevState.palette);
-      setSelectedResolution(prevState.resolution);
-      setScalingMode(prevState.scaling);
+  // Removed: setSelectedResolution, setScalingMode
       setHistoryIndex(historyIndex - 1);
     }
   }, [history, historyIndex]);
@@ -1052,13 +513,32 @@ export const RetroImageEditor = () => {
       const nextState = history[historyIndex + 1];
       setProcessedImageData(nextState.imageData);
       setSelectedPalette(nextState.palette);
-      setSelectedResolution(nextState.resolution);
-      setScalingMode(nextState.scaling);
+  // Removed: setSelectedResolution, setScalingMode
       setHistoryIndex(historyIndex + 1);
     }
   }, [history, historyIndex]);
 
   // Debounced image processing to prevent excessive re-processing during rapid changes
+  // Clipboard image loader for Toolbar
+  const loadFromClipboard = async () => {
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
+          const blob = await item.getType(item.types.find(type => type.startsWith('image/')) || '');
+          const file = new File([blob], 'clipboard-image.png', { type: blob.type });
+          resetEditor();
+          setTimeout(() => loadImage(file), 50);
+          toast.success('Image loaded from clipboard');
+          return;
+        }
+      }
+      toast.error(t('noImageFoundInClipboard'));
+    } catch (error) {
+      console.error('Failed to read clipboard:', error);
+      toast.error(t('failedToReadClipboard'));
+    }
+  };
   useEffect(() => {
     if (originalImage) {
       const timeoutId = setTimeout(() => {
@@ -1067,12 +547,12 @@ export const RetroImageEditor = () => {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [originalImage, selectedPalette, selectedResolution, scalingMode, processImage]);
+  }, [originalImage, selectedPalette, processImage]);
 
   // Handle palette changes - clear currentPaletteColors for 'original' on non-indexed images
   useEffect(() => {
     if (selectedPalette === 'original' && !isOriginalPNG8Indexed) {
-      setCurrentPaletteColors([]);
+  // Removed: setCurrentPaletteColors
     }
   }, [selectedPalette, isOriginalPNG8Indexed]);
 
@@ -1082,360 +562,148 @@ export const RetroImageEditor = () => {
   );
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-elegant-bg overflow-x-hidden">
-      {/* Header */}
-      {!isVerticalLayout && (
-        <header className="border-b border-elegant-border bg-card px-3 py-1.5 w-full flex-shrink-0">
-          <div className="w-full max-w-none flex items-center justify-between">
-            {/* Logo on the left */}
-            <div className="flex items-center">
-              <img src="/logo.gif" alt="Vintage Palette Studio" className="h-8 w-8" />
-            </div>
-            {/* Horizontally centered section buttons */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button
-                variant={getButtonVariant('load-image')}
-                onClick={() => handleTabClick('load-image')}
-                className="flex items-center justify-center h-10 w-10 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                title={t('loadImage')}
-              >
-                <Upload className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant={getButtonVariant('palette-selector')}
-                onClick={() => handleTabClick('palette-selector')}
-                className="flex items-center justify-center h-10 w-10 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                disabled={!originalImage}
-                title={t('selectPalette')}
-              >
-                <Palette className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant={getButtonVariant('resolution')}
-                onClick={() => handleTabClick('resolution')}
-                className="flex items-center justify-center h-10 w-10 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                disabled={!originalImage}
-                title={t('changeResolution')}
-              >
-                <Monitor className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant={getButtonVariant('change-grids')}
-                onClick={() => handleTabClick('change-grids')}
-                className="flex items-center justify-center h-10 w-10 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                disabled={!originalImage}
-                title={t('changeGrids')}
-              >
-                <Grid3X3 className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant={getButtonVariant('export-image')}
-                onClick={() => handleTabClick('export-image')}
-                className="flex items-center justify-center h-10 w-10 p-0"
-                style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                disabled={!originalImage}
-                title={t('exportImage')}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
+    <div className="min-h-screen w-full flex flex-col bg-elegant-bg overflow-visible">
+      {/* Toolbar (Header or Sidebar) */}
+      <Toolbar
+        isVerticalLayout={isVerticalLayout}
+        originalImage={originalImage}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        resetEditor={resetEditor}
+        loadFromClipboard={loadFromClipboard}
+        toast={toast}
+        t={t}
+      />
+      <main className="flex-1 w-full flex flex-col">
+        <div className="w-full flex flex-col items-center">
+          <ImagePreview
+            originalImage={originalImage}
+            processedImageData={processedImageData}
+            originalImageSource={originalImageSource}
+            selectedPalette={selectedPalette}
+            showCameraPreview={showCameraPreview}
+            onCameraPreviewChange={setShowCameraPreview}
+            selectedCameraId={selectedCameraId}
+            showTileGrid={showTileGrid}
+            showFrameGrid={showFrameGrid}
+            tileWidth={tileWidth}
+            tileHeight={tileHeight}
+            frameWidth={frameWidth}
+            frameHeight={frameHeight}
+            tileGridColor={tileGridColor}
+            frameGridColor={frameGridColor}
+            isVerticalLayout={isVerticalLayout}
+          />
+        </div>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      onClick={() => handleTabClick('language')}
-                      variant="secondary"
-                      size="sm"
-                      className="w-10 h-10 p-0 bg-blood-red hover:bg-blood-red-hover text-bone-white border-none"
-                    >
-                      <Globe className="w-5 h-5" />
-                    </Button>
-                  </TooltipTrigger>
-                   <TooltipContent>
-                     <p>{t('changeLanguage')}</p>
-                   </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </div>
-        </header>
-      )}
-
-      {/* Content wrapper */}
-      <div className="flex-1 flex">
-        {/* Vertical Sidebar for landscape orientation */}
-        {isVerticalLayout && (
-          <aside className="fixed left-0 top-0 h-full w-12 flex flex-col bg-card border-r border-elegant-border z-50">
-            <div className="flex flex-col items-center py-1 space-y-1 h-full">
-              {/* Logo */}
-              <div className="flex flex-col items-center gap-1 flex-shrink-0 mb-3 pt-2">
-                <img src="/logo.gif" alt="Vintage Palette Studio" className="h-8 w-8" />
-              </div>
-              
-              {/* Section buttons */}
-              <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                <Button
-                  variant={getButtonVariant('load-image')}
-                  onClick={() => handleTabClick('load-image')}
-                  className="flex items-center justify-center h-8 w-8 p-0"
-                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                  title={t('loadImage')}
-                >
-                  <Upload className="h-4 w-4" />
-                </Button>
-                
-                <Button
-                  variant={getButtonVariant('palette-selector')}
-                  onClick={() => handleTabClick('palette-selector')}
-                  className="flex items-center justify-center h-8 w-8 p-0"
-                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                  disabled={!originalImage}
-                  title={t('selectPalette')}
-                >
-                  <Palette className="h-4 w-4" />
-                </Button>
-                
-                <Button
-                  variant={getButtonVariant('resolution')}
-                  onClick={() => handleTabClick('resolution')}
-                  className="flex items-center justify-center h-8 w-8 p-0"
-                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                  disabled={!originalImage}
-                  title={t('changeResolution')}
-                >
-                  <Monitor className="h-4 w-4" />
-                </Button>
-                
-                <Button
-                  variant={getButtonVariant('change-grids')}
-                  onClick={() => handleTabClick('change-grids')}
-                  className="flex items-center justify-center h-8 w-8 p-0"
-                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                  disabled={!originalImage}
-                  title={t('changeGrids')}
-                >
-                  <Grid3X3 className="h-4 w-4" />
-                </Button>
-                
-                <Button
-                  variant={getButtonVariant('export-image')}
-                  onClick={() => handleTabClick('export-image')}
-                  className="flex items-center justify-center h-8 w-8 p-0"
-                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                  disabled={!originalImage}
-                  title={t('exportImage')}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-                
-                <Button
-                  variant={getButtonVariant('language')}
-                  onClick={() => handleTabClick('language')}
-                  className="flex items-center justify-center h-8 w-8 p-0"
-                  style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
-                  title={t('changeLanguage')}
-                >
-                  <Globe className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              {/* Language selector at bottom - Remove since we have it as a section now */}
-              <div className="mt-auto pb-4 flex-shrink-0">
-                {/* Intentionally left empty */}
-              </div>
-            </div>
-          </aside>
-        )}
-
-        {/* Main Content - Flex-grow to fill available space with minimal padding */}
-        <main className={`flex-1 w-full flex flex-col ${isVerticalLayout ? 'ml-12' : ''}`}>
-        
-        {/* Image Processing Progress Indicator */}
-        {isProcessing && (
-          <div className="fixed top-4 right-4 z-50 bg-card border border-elegant-border rounded-lg p-4 shadow-lg min-w-64">
-            <div className="flex items-center gap-3">
-              <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">
-                  {processingOperation || 'Processing...'}
-                </p>
-                <Progress value={processingProgress} className="mt-1 h-2" />
-              </div>
-              <Button
-                variant="ghost" 
-                size="sm"
-                onClick={() => imageProcessor.cancelProcessing()}
-                className="h-6 w-6 p-0"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
+        {/* Floating Content Sections */}
+        {activeTab === 'load-image' && (
+          <div
+            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
+            data-section="load-image"
+          >
+            <LoadImage
+              onImageLoad={loadImage}
+              onCameraPreviewRequest={() => {
+                setActiveTab('select-camera');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onClose={() => setActiveTab(null)}
+              onLoadFromClipboard={loadFromClipboard}
+            />
           </div>
         )}
-
-        
-        <div className="w-full flex-1 px-[5px] pt-[5px] pb-[5px]">
-          <div className="w-full flex flex-col space-y-[5px]">
-            {/* Image Preview with minimal consistent spacing */}
-              <div className="relative w-full">
-                <ImagePreview
-                  originalImage={originalImage}
-                  processedImageData={processedImageData}
-                  onDownload={downloadImage}
-                  onLoadImageClick={handleLoadImageClick}
-                  originalImageSource={originalImageSource}
-                  selectedPalette={selectedPalette}
-                  onPaletteUpdate={(colors) => {
-                    setCurrentPaletteColors(colors);
-                    // Trigger image reprocessing with new palette
-                    setTimeout(processImage, 50);
-                  }}
-                  showCameraPreview={showCameraPreview}
-                  onCameraPreviewChange={setShowCameraPreview}
-                  selectedCameraId={selectedCameraId || undefined}
-                  currentPaletteColors={currentPaletteColors}
-                  onSectionOpen={() => {
-                    // Handle any additional logic when sections are opened
-                  }}
-                  showTileGrid={showTileGrid}
-                  showFrameGrid={showFrameGrid}
-                  tileWidth={tileWidth}
-                  tileHeight={tileHeight}
-                  frameWidth={frameWidth}
-                  frameHeight={frameHeight}
-                  tileGridColor={tileGridColor}
-                  frameGridColor={frameGridColor}
-                  autoFitKey={`${selectedResolution}|${scalingMode}`}
-                  onZoomChange={setCurrentZoom}
-                  isVerticalLayout={isVerticalLayout}
-                />
-
-                {/* Floating Content Sections */}
-                {activeTab === 'load-image' && (
-                  <div 
-                    className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] top-0 ${
-                      originalImage ? 'right-0' : 'right-[-5px]'
-                    }`}
-                    data-section="load-image"
-                  >
-                      <LoadImage
-                        onImageLoad={(source) => {
-                          loadImage(source);
-                        }}
-                        onCameraPreviewRequest={() => {
-                          setActiveTab('select-camera');
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        onClose={() => setActiveTab(null)}
-                     />
-                  </div>
-                )}
-
-                {activeTab === 'select-camera' && (
-                  <div 
-                    className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] top-0 ${
-                      originalImage ? 'right-0' : 'right-[-5px]'
-                    }`}
-                    data-section="select-camera"
-                  >
-                    <CameraSelector 
-                      onSelect={(cameraId) => {
-                        setSelectedCameraId(cameraId);
-                        setShowCameraPreview(true);
-                        setActiveTab(null);
-                      }}
-                      onClose={() => setActiveTab('load-image')}
-                    />
-                  </div>
-                )}
-
-                {activeTab === 'language' && (
-                  <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
-                    onClick={(e) => e.stopPropagation()}
-                    data-section="language"
-                  >
-                    <LanguageSelector hideLabel={false} onClose={() => setActiveTab(null)} />
-                  </div>
-                )}
-
-                {activeTab === 'palette-selector' && originalImage && (
-                  <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
-                    onClick={(e) => e.stopPropagation()}
-                    data-section="palette-selector"
-                  >
-                    <ColorPaletteSelector
-                      selectedPalette={selectedPalette}
-                      onPaletteChange={(palette) => {
-                        setSelectedPalette(palette);
-                        // Force reprocessing from original when palette changes
-                        if (originalImage && palette !== 'original') {
-                          setTimeout(() => processImage(), 50);
-                        }
-                      }}
-                      onClose={() => setActiveTab(null)}
-                    />
-                  </div>
-                )}
-
-                {activeTab === 'resolution' && originalImage && (
-                  <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
-                    onClick={(e) => e.stopPropagation()}
-                    data-section="resolution"
-                  >
-                    <ResolutionSelector
-                      selectedResolution={selectedResolution}
-                      scalingMode={scalingMode}
-                      onResolutionChange={setSelectedResolution}
-                      onScalingModeChange={setScalingMode}
-                      onClose={() => setActiveTab(null)}
-                    />
-                  </div>
-                )}
-
-                {activeTab === 'change-grids' && originalImage && (
-                  <ChangeGridSelector
-                    showTileGrid={showTileGrid}
-                    setShowTileGrid={setShowTileGrid}
-                    tileWidth={tileWidth}
-                    setTileWidth={setTileWidth}
-                    tileHeight={tileHeight}
-                    setTileHeight={setTileHeight}
-                    tileGridColor={tileGridColor}
-                    setTileGridColor={setTileGridColor}
-                    showFrameGrid={showFrameGrid}
-                    setShowFrameGrid={setShowFrameGrid}
-                    frameWidth={frameWidth}
-                    setFrameWidth={setFrameWidth}
-                    frameHeight={frameHeight}
-                    setFrameHeight={setFrameHeight}
-                    frameGridColor={frameGridColor}
-                    setFrameGridColor={setFrameGridColor}
-                    onClose={() => setActiveTab(null)}
-                  />
-                )}
-
-                {activeTab === 'export-image' && originalImage && (
-                  <div 
-                    className="absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-[-5px] right-0 top-0"
-                    onClick={(e) => e.stopPropagation()}
-                    data-section="export-image"
-                  >
+        {activeTab === 'select-camera' && (
+          <div
+            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
+            data-section="select-camera"
+          >
+            <CameraSelector 
+              onSelect={(cameraId) => {
+                setSelectedCameraId(cameraId);
+                setShowCameraPreview(true);
+                setActiveTab(null);
+              }}
+              onClose={() => setActiveTab('load-image')}
+            />
+          </div>
+        )}
+        {activeTab === 'language' && (
+          <div
+            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
+            onClick={(e) => e.stopPropagation()}
+            data-section="language"
+          >
+            <LanguageSelector hideLabel={false} onClose={() => setActiveTab(null)} />
+          </div>
+        )}
+        {activeTab === 'palette-selector' && originalImage && (
+          <div
+            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
+            onClick={(e) => e.stopPropagation()}
+            data-section="palette-selector"
+          >
+            <ColorPaletteSelector
+              selectedPalette={selectedPalette}
+              onPaletteChange={(palette) => {
+                setSelectedPalette(palette);
+                // Force reprocessing from original when palette changes
+                if (originalImage && palette !== 'original') {
+                  setTimeout(() => processImage(), 50);
+                }
+              }}
+              onClose={() => setActiveTab(null)}
+            />
+          </div>
+        )}
+        {activeTab === 'resolution' && originalImage && (
+          <div
+            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
+            onClick={(e) => e.stopPropagation()}
+            data-section="resolution"
+          >
+            <ResolutionSelector
+              onClose={() => setActiveTab(null)}
+            />
+          </div>
+        )}
+        {activeTab === 'change-grids' && originalImage && (
+          <div
+            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
+            onClick={(e) => e.stopPropagation()}
+            data-section="change-grids"
+          >
+            <ChangeGridSelector
+              showTileGrid={showTileGrid}
+              setShowTileGrid={setShowTileGrid}
+              tileWidth={tileWidth}
+              setTileWidth={setTileWidth}
+              tileHeight={tileHeight}
+              setTileHeight={setTileHeight}
+              tileGridColor={tileGridColor}
+              setTileGridColor={setTileGridColor}
+              showFrameGrid={showFrameGrid}
+              setShowFrameGrid={setShowFrameGrid}
+              frameWidth={frameWidth}
+              setFrameWidth={setFrameWidth}
+              frameHeight={frameHeight}
+              setFrameHeight={setFrameHeight}
+              frameGridColor={frameGridColor}
+              setFrameGridColor={setFrameGridColor}
+              onClose={() => setActiveTab(null)}
+            />
+          </div>
+        )}
+        {activeTab === 'export-image' && originalImage && (
+          <div
+            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ''}`}
+            onClick={(e) => e.stopPropagation()}
+            data-section="export-image"
+          >
             <ExportImage
               processedImageData={processedImageData}
               originalImage={originalImage}
               selectedPalette={selectedPalette}
-              selectedResolution={selectedResolution}
               currentZoom={currentZoom / 100}
               showTileGrid={showTileGrid}
               showFrameGrid={showFrameGrid}
@@ -1445,23 +713,15 @@ export const RetroImageEditor = () => {
               frameHeight={frameHeight}
               tileGridColor={tileGridColor}
               frameGridColor={frameGridColor}
-              paletteColors={selectedPalette !== 'original' ? currentPaletteColors : (isOriginalPNG8Indexed ? originalPaletteColors : currentPaletteColors)}
+              paletteColors={isOriginalPNG8Indexed ? originalPaletteColors : undefined}
               onClose={() => setActiveTab(null)}
             />
-                  </div>
-                )}
-              </div>
           </div>
-          </div>
-        </main>
-      </div>
-
-      {/* Footer - Full width, at bottom of document */}
-      <footer className={`border-t border-elegant-border bg-card flex-shrink-0 w-full ${isVerticalLayout ? 'ml-12' : ''}`}>
-        <div className="w-full px-[5px] py-[5px]">
-          <p className="text-sm text-muted-foreground text-center">©2025 Anarkade</p>
-        </div>
-      </footer>
+        )}
+      </main>
+      <Footer isVerticalLayout={isVerticalLayout} />
     </div>
   );
 };
+
+

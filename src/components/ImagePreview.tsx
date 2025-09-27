@@ -165,6 +165,8 @@ export const ImagePreview = ({
   const [sliderValue, setSliderValue] = useState<number[]>([100]);
   const [containerWidth, setContainerWidth] = useState(0);
   const [previewHeight, setPreviewHeight] = useState(400);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const footerRef = useRef<HTMLDivElement>(null);
   const [originalFormat, setOriginalFormat] = useState<string>('');
   const [processedFormat, setProcessedFormat] = useState<string>('');
   const [isIndexedPNG, setIsIndexedPNG] = useState<boolean>(false);
@@ -579,33 +581,24 @@ export const ImagePreview = ({
     }
   }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
 
-  // Calculate adaptive height based on image and zoom - ensure proper synchronization
+  // Calculate preview block height as header + image + footer
+  // TEMP: Only set previewHeight to header + image + footer, do not call fitToWidth
   useEffect(() => {
+    // Wait for header/footer to render
     const timeoutId = setTimeout(() => {
-      if (originalImage && containerWidth > 0) {
-        // Always use the correct current image dimensions
+      if (originalImage) {
         const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
         const currentZoom = zoom[0] / 100;
-        
-        // Check if this is a fit-to-width zoom by comparing calculated zoom with current zoom
-        const fitZoom = Math.floor((containerWidth / currentImage.width) * 100);
-        const isFitToWidth = Math.abs(zoom[0] - fitZoom) < 5; // Allow small tolerance
-        
-        const displayHeight = currentImage.height * currentZoom;
-        
-        const padding = 0;
-        const minHeight = 150;
-        const calculatedHeight = Math.max(minHeight, displayHeight + padding);
-        
-        setPreviewHeight(Math.ceil(calculatedHeight));
+        const headerHeight = headerRef.current?.offsetHeight || 0;
+        const footerHeight = footerRef.current?.offsetHeight || 0;
+        const imageHeight = currentImage.height * currentZoom;
+        setPreviewHeight(headerHeight + imageHeight + footerHeight);
       } else {
-        // When no image is loaded, use minimal height
         setPreviewHeight(120);
       }
-    }, 50); // Reduced timeout for faster response
-
+    }, 50);
     return () => clearTimeout(timeoutId);
-  }, [originalImage, processedImageData, zoom, containerWidth, showOriginal, isVerticalLayout]);
+  }, [originalImage, processedImageData, zoom, showOriginal]);
 
 
   useEffect(() => {
@@ -615,133 +608,109 @@ export const ImagePreview = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Helper to draw image only if fully loaded
+    const drawImageIfReady = (img: HTMLImageElement) => {
+      if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+      } else {
+        // Wait for image to load, then draw
+        img.onload = () => {
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+        };
+      }
+    };
+
     if (showOriginal && originalImage) {
-      canvas.width = originalImage.width;
-      canvas.height = originalImage.height;
-      ctx.drawImage(originalImage, 0, 0);
+      drawImageIfReady(originalImage);
     } else if (processedImageData) {
       canvas.width = processedImageData.width;
       canvas.height = processedImageData.height;
       ctx.putImageData(processedImageData, 0, 0);
     } else if (originalImage) {
-      canvas.width = originalImage.width;
-      canvas.height = originalImage.height;
-      ctx.drawImage(originalImage, 0, 0);
+      drawImageIfReady(originalImage);
     }
   }, [originalImage, processedImageData, showOriginal]);
 
   const hasProcessedImage = processedImageData !== null;
 
   return (
-    <div className="bg-card rounded-xl border border-elegant-border space-y-[5px] px-0 py-[5px]">
-      {/* Zoom Controls - only show when image is loaded */}
-      {(originalImage || processedImageData) && (
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4 text-sm">
-            <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
-            <Slider
-              value={sliderValue}
-              onValueChange={handleZoomChange}
-              max={ZOOM_BOUNDS.max}
-              min={ZOOM_BOUNDS.min}
-              step={integerScaling ? 100 : 1}
-              className="flex-1"
+    <div className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col">
+      {/* Header (always rendered) */}
+      <div className="flex flex-col gap-4" ref={headerRef}>
+        <div className="flex items-center gap-4 text-sm">
+          <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
+          <Slider
+            value={sliderValue}
+            onValueChange={handleZoomChange}
+            max={ZOOM_BOUNDS.max}
+            min={ZOOM_BOUNDS.min}
+            step={integerScaling ? 100 : 1}
+            className="flex-1"
+          />
+        </div>
+        <div className="flex items-center gap-4">
+          <Button onClick={fitToWidth} variant="highlighted" size="sm">
+            {t('fitToWidth')}
+          </Button>
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="integer-scaling" 
+              checked={integerScaling}
+              onCheckedChange={handleIntegerScalingChange}
             />
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Button onClick={fitToWidth} variant="highlighted" size="sm">
-              {t('fitToWidth')}
-            </Button>
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="integer-scaling" 
-                checked={integerScaling}
-                onCheckedChange={handleIntegerScalingChange}
-              />
-              <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
-            </div>
+            <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
           </div>
         </div>
-      )}
+      </div>
 
-      <div 
-        ref={containerRef}
-        className={`relative bg-elegant-bg flex items-center justify-center p-0 w-full ${
-          showCameraPreview ? 'min-h-[200px]' : ''
-        }`}
-        style={{ 
-          height: showCameraPreview ? 'auto' : (originalImage ? `${previewHeight}px` : '120px'),
-          maxHeight: showCameraPreview ? 'calc(100vh - 96px)' : 'auto',
-          maxWidth: showCameraPreview ? '100%' : 'auto',
-          overflow: showCameraPreview ? 'auto' : 'hidden'
-        }}
-      >
+
+      {/* Image Preview (between header and footer, no overlap) */}
+      <div ref={containerRef} style={{ height: previewHeight ? `${previewHeight}px` : undefined, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
         {originalImage ? (
-          <div className="relative w-full h-full">
-            {(() => {
-              const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
-              if (!currentImage) return null;
-              const baseWidth = currentImage.width;
-              const baseHeight = currentImage.height;
-              
-              return (
-                <div
-                  className="absolute"
-                  style={{
-                    width: `${baseWidth * (zoom[0] / 100)}px`,
-                    height: `${baseHeight * (zoom[0] / 100)}px`,
-                    top: '50%',
-                    left: '50%',
-                    transform: `translate(-50%, -50%)`,
-                    transformOrigin: 'center',
-                    pointerEvents: 'none'
-                  }}
-                >
-                  <canvas
-                    ref={canvasRef}
-                    style={{ 
-                      imageRendering: 'pixelated',
-                      width: '100%',
-                      height: '100%',
-                      display: 'block'
-                    }}
-                  />
-                  {/* Tile Grid */}
-                  {showTileGrid && (
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        backgroundImage: `
-                          linear-gradient(to right, ${tileGridColor} 1px, transparent 1px),
-                          linear-gradient(to bottom, ${tileGridColor} 1px, transparent 1px)
-                        `,
-                        backgroundSize: `${tileWidth}px ${tileHeight}px`,
-                        // Ensure edge lines are visible
-                        borderRight: `1px solid ${tileGridColor}`,
-                        borderBottom: `1px solid ${tileGridColor}`
-                      }}
-                    />
-                  )}
-                  {/* Frame Grid */}
-                  {showFrameGrid && (
-                    <div
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        backgroundImage: `
-                          linear-gradient(to right, ${frameGridColor} 3px, transparent 3px),
-                          linear-gradient(to bottom, ${frameGridColor} 3px, transparent 3px)
-                        `,
-                        backgroundSize: `${frameWidth}px ${frameHeight}px`,
-                        // Ensure edge lines are visible  
-                        borderRight: `3px solid ${frameGridColor}`,
-                        borderBottom: `3px solid ${frameGridColor}`
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })()}
+          <div style={{ width: `${originalImage.width * (zoom[0] / 100)}px`, height: `${originalImage.height * (zoom[0] / 100)}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <canvas
+              ref={canvasRef}
+              style={{ 
+                imageRendering: 'pixelated',
+                width: '100%',
+                height: '100%',
+                display: 'block'
+              }}
+            />
+            {/* Tile Grid */}
+            {showTileGrid && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(to right, ${tileGridColor} 1px, transparent 1px),
+                    linear-gradient(to bottom, ${tileGridColor} 1px, transparent 1px)
+                  `,
+                  backgroundSize: `${tileWidth}px ${tileHeight}px`,
+                  borderRight: `1px solid ${tileGridColor}`,
+                  borderBottom: `1px solid ${tileGridColor}`
+                }}
+              />
+            )}
+            {/* Frame Grid */}
+            {showFrameGrid && (
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(to right, ${frameGridColor} 3px, transparent 3px),
+                    linear-gradient(to bottom, ${frameGridColor} 3px, transparent 3px)
+                  `,
+                  backgroundSize: `${frameWidth}px ${frameHeight}px`,
+                  borderRight: `3px solid ${frameGridColor}`,
+                  borderBottom: `3px solid ${frameGridColor}`
+                }}
+              />
+            )}
           </div>
         ) : showCameraPreview ? (
           <div className="relative w-full h-full bg-black rounded-md">
@@ -790,10 +759,11 @@ export const ImagePreview = ({
           </div>
         )}
       </div>
-      
-      {originalImage && (
-        <div className="space-y-6">
-          {/* Image Information */}
+
+      {/* Footer (always rendered) */}
+      <div className="space-y-6" ref={footerRef}>
+        {/* Image Information */}
+        {originalImage && (
           <div className="bg-elegant-bg/50 rounded-lg p-4 border border-elegant-border/50">
             <div className="flex flex-wrap items-center gap-4 text-sm font-mono">
               <div className="flex items-center gap-2">
@@ -822,34 +792,30 @@ export const ImagePreview = ({
               )}
             </div>
           </div>
-
-        </div>
-      )}
-      
-      {/* Palette Viewer - only show when needed */}
-      {(() => {
-        // Only show palette viewer when:
-        // 1. selectedPalette is not 'original' (showing a retro palette), OR
-        // 2. selectedPalette is 'original' AND the image is PNG-8 indexed
-        const showPaletteViewer = selectedPalette !== 'original' || isIndexedPNG;
-        
-        return showPaletteViewer && originalImage && (
-          <div className="mt-4">
-            <PaletteViewer
-              selectedPalette={selectedPalette}
-              imageData={processedImageData}
-              onPaletteUpdate={onPaletteUpdate}
-              originalImageSource={originalImageSource}
-              externalPalette={selectedPalette !== 'original' ? currentPaletteColors : undefined}
-              onImageUpdate={() => {
-                // Trigger image reprocessing when palette is updated
-                onSectionOpen?.();
-              }}
-            />
-          </div>
-        );
-      })()}
-      
+        )}
+        {/* Palette Viewer - only show when needed */}
+        {(() => {
+          // Only show palette viewer when:
+          // 1. selectedPalette is not 'original' (showing a retro palette), OR
+          // 2. selectedPalette is 'original' AND the image is PNG-8 indexed
+          const showPaletteViewer = selectedPalette !== 'original' || isIndexedPNG;
+          return showPaletteViewer && originalImage && (
+            <div className="mt-4">
+              <PaletteViewer
+                selectedPalette={selectedPalette}
+                imageData={processedImageData}
+                onPaletteUpdate={onPaletteUpdate}
+                originalImageSource={originalImageSource}
+                externalPalette={selectedPalette !== 'original' ? currentPaletteColors : undefined}
+                onImageUpdate={() => {
+                  // Trigger image reprocessing when palette is updated
+                  onSectionOpen?.();
+                }}
+              />
+            </div>
+          );
+        })()}
+      </div>
     </div>
   );
-};
+}

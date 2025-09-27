@@ -21,9 +21,10 @@ interface ImageUploadProps {
   onImageLoad: (file: File | string) => void;
   onCameraPreviewRequest?: () => void;
   hideSection?: boolean;
+  onLoadFromClipboard?: () => void;
 }
 
-export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }: ImageUploadProps) => {
+export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, onLoadFromClipboard }: ImageUploadProps) => {
   const { t } = useTranslation();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -48,23 +49,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
     }
   }, [onImageLoad]);
 
-  const loadFromClipboard = useCallback(async () => {
-    try {
-      const items = await navigator.clipboard.read();
-      for (const item of items) {
-        if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
-          const blob = await item.getType(item.types.find(type => type.startsWith('image/')) || '');
-          const file = new File([blob], 'clipboard-image.png', { type: blob.type });
-          onImageLoad(file);
-          return;
-        }
-      }
-      alert(t('noImageFoundInClipboard'));
-    } catch (error) {
-      console.error('Failed to read clipboard:', error);
-      alert(t('failedToReadClipboard'));
-    }
-  }, [onImageLoad, t]);
+  // Clipboard loading is now delegated via prop
 
   const getAvailableCameras = useCallback(async () => {
     try {
@@ -434,7 +419,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection }
               {t('loadFromClipboard')}
             </label>
             <Button 
-              onClick={loadFromClipboard}
+              onClick={onLoadFromClipboard}
               variant="highlighted"
               size="sm"
               className="w-full text-xs whitespace-pre-wrap leading-tight"

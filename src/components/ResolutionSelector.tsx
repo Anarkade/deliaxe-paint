@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui/card';
+import { useState } from 'react';
 
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -73,20 +74,15 @@ export type ScalingMode = 'stretch' | 'fit' | 'dont-scale';
 export type CombinedScalingMode = ScalingMode | AlignmentMode;
 
 interface ResolutionSelectorProps {
-  selectedResolution: ResolutionType;
-  scalingMode: CombinedScalingMode;
-  onResolutionChange: (resolution: ResolutionType) => void;
-  onScalingModeChange: (mode: CombinedScalingMode) => void;
+  // No longer needed, component is autonomous
   onClose?: () => void;
 }
 
 export const ResolutionSelector = ({
-  selectedResolution,
-  scalingMode,
-  onResolutionChange,
-  onScalingModeChange,
   onClose
-}: ResolutionSelectorProps) => {
+}: { onClose?: () => void }) => {
+  const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
+  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
   const { t } = useTranslation();
 
   // Build options inside render to ensure translations update
@@ -164,7 +160,7 @@ export const ResolutionSelector = ({
             </label>
             <RadioGroup
               value={['stretch', 'fit', 'dont-scale'].includes(scalingMode as string) ? scalingMode as ScalingMode : 'fit'}
-              onValueChange={(value: ScalingMode) => onScalingModeChange(value)}
+              onValueChange={(value: ScalingMode) => setScalingMode(value)}
               className="space-y-0 gap-2 flex flex-col"
             >
               {scalingOptions.map((option) => {
@@ -188,7 +184,7 @@ export const ResolutionSelector = ({
             </label>
             <RadioGroup
               value={isAlignmentMode(scalingMode) ? (scalingMode as AlignmentMode) : 'middle-center'}
-              onValueChange={(value: AlignmentMode) => onScalingModeChange(value)}
+              onValueChange={(value: AlignmentMode) => setScalingMode(value)}
               className="grid grid-cols-3 gap-2 text-xs"
             >
               {alignmentOptions.map((option) => (
@@ -209,7 +205,7 @@ export const ResolutionSelector = ({
             <label className="block text-xs font-medium text-foreground">
               {t('targetResolution')}
             </label>
-            <RadioGroup value={selectedResolution} onValueChange={onResolutionChange} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
+            <RadioGroup value={selectedResolution} onValueChange={(value) => setSelectedResolution(value as ResolutionType)} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
               {resolutionOptions.map((option) => (
                 <div key={option.value} className="flex space-x-1 min-h-[2.5rem]">
                   <RadioGroupItem value={option.value} id={`resolution-${option.value}`} className="h-3 w-3 mt-1 flex-shrink-0" />

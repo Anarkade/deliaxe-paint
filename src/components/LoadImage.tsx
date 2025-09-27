@@ -10,18 +10,17 @@ interface LoadImageProps {
   onImageLoad: (source: File | string) => void;
   onCameraPreviewRequest?: () => void;
   onClose?: () => void;
+  onLoadFromClipboard?: () => void;
 }
 
-export const LoadImage = ({ onImageLoad, onCameraPreviewRequest, onClose }: LoadImageProps) => {
+export const LoadImage = ({ onImageLoad, onCameraPreviewRequest, onClose, onLoadFromClipboard }: LoadImageProps) => {
   const { t } = useTranslation();
 
   const loadFromDropbox = useCallback(() => {
-    // Dropbox integration would require Dropbox API
     toast.info('Dropbox integration coming soon!');
   }, []);
 
   const loadFromGoogleDrive = useCallback(() => {
-    // Google Drive integration would require Google Drive API
     toast.info('Google Drive integration coming soon!');
   }, []);
 
@@ -40,6 +39,7 @@ export const LoadImage = ({ onImageLoad, onCameraPreviewRequest, onClose }: Load
       <ImageUpload 
         onImageLoad={onImageLoad}
         onCameraPreviewRequest={onCameraPreviewRequest}
+        onLoadFromClipboard={onLoadFromClipboard}
       />
     </div>
   );
