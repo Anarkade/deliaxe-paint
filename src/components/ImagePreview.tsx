@@ -417,13 +417,9 @@ export const ImagePreview = ({
       
       // Calculate and set height based on fit-to-width zoom
       const displayHeight = currentImage.height * (newZoom / 100);
-      const minImageHeight = 150;
-      const imageHeight = Math.max(minImageHeight, displayHeight);
-
-      // Only set the preview container to the image height (plus minimum).
-      // Header and footer are separate elements outside this container, so
-      // including them here caused duplicated spacing below the image.
-      setPreviewHeight(Math.ceil(imageHeight));
+      const minHeight = 150;
+      const calculatedHeight = Math.max(minHeight, displayHeight);
+      setPreviewHeight(Math.ceil(calculatedHeight));
     }
   }, [originalImage, containerWidth, showOriginal, processedImageData, onZoomChange]);
 
@@ -450,14 +446,13 @@ export const ImagePreview = ({
       onZoomChange?.(clampedZoom);
     }
     
-    // Recalculate height when zoom changes (header + image + footer)
+    // Recalculate height when zoom changes
     if (originalImage && containerWidth > 0) {
       const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
       const displayHeight = currentImage.height * (clampedZoom / 100);
-      const minImageHeight = 150;
-      const imageHeight = Math.max(minImageHeight, displayHeight);
-      // Only reserve the space needed for the image itself (plus minimum).
-      setPreviewHeight(Math.ceil(imageHeight));
+      const minHeight = 150;
+      const calculatedHeight = Math.max(minHeight, displayHeight);
+      setPreviewHeight(Math.ceil(calculatedHeight));
     }
     
     // Reset dragging flag after a short delay
@@ -590,17 +585,17 @@ export const ImagePreview = ({
   }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
 
   // Calculate preview block height as header + image + footer
-  // Keep the preview container sized to the image height (plus a minimum).
-  // This ensures header and footer remain outside the image container and
-  // prevents duplicated vertical spacing.
+  // TEMP: Only set previewHeight to header + image + footer, do not call fitToWidth
   useEffect(() => {
+    // Wait for header/footer to render
     const timeoutId = setTimeout(() => {
       if (originalImage) {
         const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
         const currentZoom = zoom[0] / 100;
+        const headerHeight = headerRef.current?.offsetHeight || 0;
+        const footerHeight = footerRef.current?.offsetHeight || 0;
         const imageHeight = currentImage.height * currentZoom;
-        const minImageHeight = 150;
-        setPreviewHeight(Math.ceil(Math.max(minImageHeight, imageHeight)));
+        setPreviewHeight(headerHeight + imageHeight + footerHeight);
       } else {
         setPreviewHeight(120);
       }
