@@ -578,13 +578,30 @@ export const RetroImageEditor = () => {
   const [headerHeight, setHeaderHeight] = useState<number>(0);
 
   return (
-    <div className="bg-elegant-bg" style={{ margin: 0, padding: 0 }}>
+    <div
+      className="bg-elegant-bg"
+      style={{
+        margin: 0,
+        padding: 0,
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%',
+        overflow: 'auto'
+      }}
+    >
       {/* Two-column grid fixed to the viewport: left column reserved for vertical toolbar (or 0 when not used), right column holds header, preview and footer */}
       <div
-        className="min-h-screen w-full grid"
+        className="grid"
         style={{
           margin: 0,
           padding: 0,
+          boxSizing: 'border-box',
+          width: '100%',
+          height: '100%',
           gridTemplateColumns: isVerticalLayout ? `${toolbarWidth} 1fr` : `0 1fr`,
           gridTemplateRows: isVerticalLayout ? '0 1fr auto' : 'auto 1fr auto', // header row 0 when toolbar is vertical
           gap: 0
