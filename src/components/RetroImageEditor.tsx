@@ -135,6 +135,17 @@ export const RetroImageEditor = () => {
     };
   }, [checkOrientation, isLanguageDropdownOpen, activeTab]);
 
+  // Measure header height so floating dialogs can be positioned below it when toolbar is horizontal
+  useEffect(() => {
+    const measure = () => {
+      const h = headerRef.current?.getBoundingClientRect().height || 0;
+      setHeaderHeight(isVerticalLayout ? 0 : h);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [isVerticalLayout]);
+
 
 
   const saveToHistory = useCallback((state: HistoryState) => {
@@ -561,150 +572,67 @@ export const RetroImageEditor = () => {
     getLanguageName(a).localeCompare(getLanguageName(b))
   );
 
+  // Toolbar width used for layout/calculations (matches Toolbar w-12)
+  const toolbarWidth = '3rem';
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const [headerHeight, setHeaderHeight] = useState<number>(0);
+
   return (
-    <div className="min-h-screen w-full flex flex-col bg-elegant-bg overflow-visible">
-      {/* Toolbar (Header or Sidebar) */}
-      <Toolbar
-        isVerticalLayout={isVerticalLayout}
-        originalImage={originalImage}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        resetEditor={resetEditor}
-        loadFromClipboard={loadFromClipboard}
-        toast={toast}
-        t={t}
-      />
-      <main className="flex-1 w-full flex flex-col">
-        <div className="w-full flex flex-col items-center">
-          <ImagePreview
-            originalImage={originalImage}
-            processedImageData={processedImageData}
-            originalImageSource={originalImageSource}
-            selectedPalette={selectedPalette}
-            showCameraPreview={showCameraPreview}
-            onCameraPreviewChange={setShowCameraPreview}
-            selectedCameraId={selectedCameraId}
-            showTileGrid={showTileGrid}
-            showFrameGrid={showFrameGrid}
-            tileWidth={tileWidth}
-            tileHeight={tileHeight}
-            frameWidth={frameWidth}
-            frameHeight={frameHeight}
-            tileGridColor={tileGridColor}
-            frameGridColor={frameGridColor}
-            isVerticalLayout={isVerticalLayout}
-          />
+    <div className="bg-elegant-bg" style={{ margin: 0, padding: 0 }}>
+      {/* Two-column grid fixed to the viewport: left column reserved for vertical toolbar (or 0 when not used), right column holds header, preview and footer */}
+      <div
+        className="min-h-screen w-full grid"
+        style={{
+          margin: 0,
+          padding: 0,
+          gridTemplateColumns: isVerticalLayout ? `${toolbarWidth} 1fr` : `0 1fr`,
+          gridTemplateRows: isVerticalLayout ? '0 1fr auto' : 'auto 1fr auto', // header row 0 when toolbar is vertical
+          gap: 0
+        }}
+      >
+        {/* Left column: toolbar when vertical */}
+        <div className="m-0 p-0 row-start-1 row-end-4 col-start-1 col-end-2">
+          {isVerticalLayout && (
+            <Toolbar
+              isVerticalLayout={isVerticalLayout}
+              originalImage={originalImage}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              resetEditor={resetEditor}
+              loadFromClipboard={loadFromClipboard}
+              toast={toast}
+              t={t}
+            />
+          )}
         </div>
 
-        {/* Floating Content Sections */}
-        {activeTab === 'load-image' && (
-          <div
-            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
-            data-section="load-image"
-          >
-            <LoadImage
-              onImageLoad={loadImage}
-              onCameraPreviewRequest={() => {
-                setActiveTab('select-camera');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              onClose={() => setActiveTab(null)}
-              onLoadFromClipboard={loadFromClipboard}
-            />
-          </div>
-        )}
-        {activeTab === 'select-camera' && (
-          <div
-            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
-            data-section="select-camera"
-          >
-            <CameraSelector 
-              onSelect={(cameraId) => {
-                setSelectedCameraId(cameraId);
-                setShowCameraPreview(true);
-                setActiveTab(null);
-              }}
-              onClose={() => setActiveTab('load-image')}
-            />
-          </div>
-        )}
-        {activeTab === 'language' && (
-          <div
-            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
-            onClick={(e) => e.stopPropagation()}
-            data-section="language"
-          >
-            <LanguageSelector hideLabel={false} onClose={() => setActiveTab(null)} />
-          </div>
-        )}
-        {activeTab === 'palette-selector' && originalImage && (
-          <div
-            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
-            onClick={(e) => e.stopPropagation()}
-            data-section="palette-selector"
-          >
-            <ColorPaletteSelector
-              selectedPalette={selectedPalette}
-              onPaletteChange={(palette) => {
-                setSelectedPalette(palette);
-                // Force reprocessing from original when palette changes
-                if (originalImage && palette !== 'original') {
-                  setTimeout(() => processImage(), 50);
-                }
-              }}
-              onClose={() => setActiveTab(null)}
-            />
-          </div>
-        )}
-        {activeTab === 'resolution' && originalImage && (
-          <div
-            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
-            onClick={(e) => e.stopPropagation()}
-            data-section="resolution"
-          >
-            <ResolutionSelector
-              onClose={() => setActiveTab(null)}
-            />
-          </div>
-        )}
-        {activeTab === 'change-grids' && originalImage && (
-          <div
-            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ' mt-14'}`}
-            onClick={(e) => e.stopPropagation()}
-            data-section="change-grids"
-          >
-            <ChangeGridSelector
-              showTileGrid={showTileGrid}
-              setShowTileGrid={setShowTileGrid}
-              tileWidth={tileWidth}
-              setTileWidth={setTileWidth}
-              tileHeight={tileHeight}
-              setTileHeight={setTileHeight}
-              tileGridColor={tileGridColor}
-              setTileGridColor={setTileGridColor}
-              showFrameGrid={showFrameGrid}
-              setShowFrameGrid={setShowFrameGrid}
-              frameWidth={frameWidth}
-              setFrameWidth={setFrameWidth}
-              frameHeight={frameHeight}
-              setFrameHeight={setFrameHeight}
-              frameGridColor={frameGridColor}
-              setFrameGridColor={setFrameGridColor}
-              onClose={() => setActiveTab(null)}
-            />
-          </div>
-        )}
-        {activeTab === 'export-image' && originalImage && (
-          <div
-            className={`absolute z-50 bg-card border border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0 m-0 p-0${isVerticalLayout ? ' ml-12' : ''}`}
-            onClick={(e) => e.stopPropagation()}
-            data-section="export-image"
-          >
-            <ExportImage
-              processedImageData={processedImageData}
+        {/* Right column header: toolbar when horizontal */}
+        <div className="m-0 p-0 row-start-1 col-start-2 col-end-3" ref={(el) => (headerRef.current = el)}>
+          {!isVerticalLayout && (
+            <Toolbar
+              isVerticalLayout={isVerticalLayout}
               originalImage={originalImage}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              resetEditor={resetEditor}
+              loadFromClipboard={loadFromClipboard}
+              toast={toast}
+              t={t}
+            />
+          )}
+        </div>
+
+        {/* Main preview area - occupies middle row, right column */}
+        <div className="row-start-2 col-start-2 col-end-3 m-0 p-0 relative">
+          <div className="w-full m-0 p-0" style={{ width: '100%' }}>
+            <ImagePreview
+              originalImage={originalImage}
+              processedImageData={processedImageData}
+              originalImageSource={originalImageSource}
               selectedPalette={selectedPalette}
-              currentZoom={currentZoom / 100}
+              showCameraPreview={showCameraPreview}
+              onCameraPreviewChange={setShowCameraPreview}
+              selectedCameraId={selectedCameraId}
               showTileGrid={showTileGrid}
               showFrameGrid={showFrameGrid}
               tileWidth={tileWidth}
@@ -713,13 +641,147 @@ export const RetroImageEditor = () => {
               frameHeight={frameHeight}
               tileGridColor={tileGridColor}
               frameGridColor={frameGridColor}
-              paletteColors={isOriginalPNG8Indexed ? originalPaletteColors : undefined}
-              onClose={() => setActiveTab(null)}
+              isVerticalLayout={isVerticalLayout}
             />
+
+            {/* Floating Content Sections - now constrained inside preview cell (absolute inset) */}
+            {activeTab === 'load-image' && (
+              <div
+                data-section="load-image"
+                className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
+              >
+                <LoadImage
+                  onImageLoad={loadImage}
+                  onCameraPreviewRequest={() => {
+                    setActiveTab('select-camera');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  onClose={() => setActiveTab(null)}
+                  onLoadFromClipboard={loadFromClipboard}
+                />
+              </div>
+            )}
+
+            {activeTab === 'select-camera' && (
+              <div
+                data-section="select-camera"
+                className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
+              >
+                <CameraSelector
+                  onSelect={(cameraId) => {
+                    setSelectedCameraId(cameraId);
+                    setShowCameraPreview(true);
+                    setActiveTab(null);
+                  }}
+                  onClose={() => setActiveTab('load-image')}
+                />
+              </div>
+            )}
+
+            {activeTab === 'language' && (
+              <div
+                data-section="language"
+                className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <LanguageSelector hideLabel={false} onClose={() => setActiveTab(null)} />
+              </div>
+            )}
+
+            {activeTab === 'palette-selector' && originalImage && (
+              <div
+                data-section="palette-selector"
+                className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ColorPaletteSelector
+                  selectedPalette={selectedPalette}
+                  onPaletteChange={(palette) => {
+                    setSelectedPalette(palette);
+                    if (originalImage && palette !== 'original') {
+                      setTimeout(() => processImage(), 50);
+                    }
+                  }}
+                  onClose={() => setActiveTab(null)}
+                />
+              </div>
+            )}
+
+            {activeTab === 'resolution' && originalImage && (
+              <div
+                data-section="resolution"
+                className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ResolutionSelector
+                  onClose={() => setActiveTab(null)}
+                />
+              </div>
+            )}
+
+            {activeTab === 'change-grids' && originalImage && (
+              <div
+                data-section="change-grids"
+                className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ChangeGridSelector
+                  showTileGrid={showTileGrid}
+                  setShowTileGrid={setShowTileGrid}
+                  tileWidth={tileWidth}
+                  setTileWidth={setTileWidth}
+                  tileHeight={tileHeight}
+                  setTileHeight={setTileHeight}
+                  tileGridColor={tileGridColor}
+                  setTileGridColor={setTileGridColor}
+                  showFrameGrid={showFrameGrid}
+                  setShowFrameGrid={setShowFrameGrid}
+                  frameWidth={frameWidth}
+                  setFrameWidth={setFrameWidth}
+                  frameHeight={frameHeight}
+                  setFrameHeight={setFrameHeight}
+                  frameGridColor={frameGridColor}
+                  setFrameGridColor={setFrameGridColor}
+                  onClose={() => setActiveTab(null)}
+                />
+              </div>
+            )}
+
+            {activeTab === 'export-image' && originalImage && (
+              <div
+                data-section="export-image"
+                className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExportImage
+                  processedImageData={processedImageData}
+                  originalImage={originalImage}
+                  selectedPalette={selectedPalette}
+                  currentZoom={currentZoom / 100}
+                  showTileGrid={showTileGrid}
+                  showFrameGrid={showFrameGrid}
+                  tileWidth={tileWidth}
+                  tileHeight={tileHeight}
+                  frameWidth={frameWidth}
+                  frameHeight={frameHeight}
+                  tileGridColor={tileGridColor}
+                  frameGridColor={frameGridColor}
+                  paletteColors={isOriginalPNG8Indexed ? originalPaletteColors : undefined}
+                  onClose={() => setActiveTab(null)}
+                />
+              </div>
+            )}
+
           </div>
-        )}
-      </main>
-      <Footer isVerticalLayout={isVerticalLayout} />
+        </div>
+
+        {/* Footer in right column */}
+        <div className="row-start-3 col-start-2 col-end-3 m-0 p-0">
+          <Footer isVerticalLayout={isVerticalLayout} />
+        </div>
+
+        
+      </div>
     </div>
   );
 };

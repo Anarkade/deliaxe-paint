@@ -168,7 +168,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     );
   }
   return (
-    <aside className="fixed left-0 top-0 h-full w-12 flex flex-col bg-card border-r border-elegant-border z-50">
+    <aside className="h-full w-12 flex flex-col bg-card border-r border-elegant-border z-50">
       <div className="flex flex-col items-center py-1 space-y-1 h-full">
         <div className="flex flex-col items-center gap-1 flex-shrink-0 mb-3 pt-2">
           <img src="/logo.gif" alt="Vintage Palette Studio" className="h-8 w-8" />
