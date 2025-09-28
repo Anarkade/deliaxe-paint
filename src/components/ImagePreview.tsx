@@ -584,22 +584,24 @@ export const ImagePreview = ({
     }
   }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
 
-  // Calculate preview block height as header + image + footer
-  // TEMP: Only set previewHeight to header + image + footer, do not call fitToWidth
+  // Calculate preview block height to match the image height only.
+  // IMPORTANT: Do NOT include header/footer heights here — the preview cell
+  // should contain only the image area. Including header/footer produced a
+  // visible gap between header, image and footer. Keep a sensible minimum.
   useEffect(() => {
-    // Wait for header/footer to render
     const timeoutId = setTimeout(() => {
       if (originalImage) {
         const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
         const currentZoom = zoom[0] / 100;
-        const headerHeight = headerRef.current?.offsetHeight || 0;
-        const footerHeight = footerRef.current?.offsetHeight || 0;
         const imageHeight = currentImage.height * currentZoom;
-        setPreviewHeight(headerHeight + imageHeight + footerHeight);
+        const minHeight = 150;
+        const calculatedHeight = Math.max(minHeight, imageHeight);
+        setPreviewHeight(Math.ceil(calculatedHeight));
       } else {
         setPreviewHeight(120);
       }
     }, 50);
+
     return () => clearTimeout(timeoutId);
   }, [originalImage, processedImageData, zoom, showOriginal]);
 
