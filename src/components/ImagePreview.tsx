@@ -128,6 +128,8 @@ interface ImagePreviewProps {
   autoFitKey?: string;
   onZoomChange?: (zoom: number) => void;
   isVerticalLayout?: boolean; // Layout state for responsive handling
+  // Optional: allow parent to force container styles (height/width constraints)
+  containerStyle?: React.CSSProperties;
 }
 
 export const ImagePreview = ({ 
@@ -153,7 +155,8 @@ export const ImagePreview = ({
   frameGridColor = '#96629d', 
   autoFitKey, 
   onZoomChange,
-  isVerticalLayout 
+  isVerticalLayout,
+  containerStyle
 }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -669,7 +672,7 @@ export const ImagePreview = ({
 
 
       {/* Image Preview (between header and footer, no overlap) */}
-      <div ref={containerRef} style={{ height: previewHeight ? `${previewHeight}px` : undefined, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+  <div ref={containerRef} style={{ height: previewHeight ? `${previewHeight}px` : undefined, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minWidth: 0, ...containerStyle }}>
         {originalImage ? (
           <div style={{ width: `${originalImage.width * (zoom[0] / 100)}px`, height: `${originalImage.height * (zoom[0] / 100)}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <canvas

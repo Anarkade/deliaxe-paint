@@ -576,6 +576,24 @@ export const RetroImageEditor = () => {
   const toolbarWidth = '3rem';
   const headerRef = useRef<HTMLDivElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState<number>(0);
+  const rightColumnRef = useRef<HTMLDivElement | null>(null);
+  const [rightColumnWidth, setRightColumnWidth] = useState<number | null>(null);
+
+  // Measure right column width to avoid overflow and account for scrollbars
+  useEffect(() => {
+    const measure = () => {
+      const w = rightColumnRef.current?.clientWidth ?? null;
+      setRightColumnWidth(w);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    const ro = new ResizeObserver(measure);
+    if (rightColumnRef.current) ro.observe(rightColumnRef.current);
+    return () => {
+      window.removeEventListener('resize', measure);
+      ro.disconnect();
+    };
+  }, []);
 
   return (
     <div
@@ -590,7 +608,10 @@ export const RetroImageEditor = () => {
         bottom: 0,
         width: '100%',
         height: '100%',
-        overflow: 'auto'
+        overflow: 'auto',
+        // Reserve stable gutter for scrollbars so content on the right isn't covered
+        // by the vertical scrollbar when it appears
+        scrollbarGutter: 'stable'
       }}
     >
       {/* Two-column grid fixed to the viewport: left column reserved for vertical toolbar (or 0 when not used), right column holds header, preview and footer */}
@@ -602,13 +623,14 @@ export const RetroImageEditor = () => {
           boxSizing: 'border-box',
           width: '100%',
           height: '100%',
-          gridTemplateColumns: isVerticalLayout ? `${toolbarWidth} 1fr` : `0 1fr`,
+          // Use minmax(0, 1fr) so the right column can shrink properly and not overflow
+          gridTemplateColumns: isVerticalLayout ? `${toolbarWidth} minmax(0, 1fr)` : `0 minmax(0, 1fr)`,
           gridTemplateRows: isVerticalLayout ? '0 1fr auto' : 'auto 1fr auto', // header row 0 when toolbar is vertical
           gap: 0
         }}
       >
         {/* Left column: toolbar when vertical */}
-        <div className="m-0 p-0 row-start-1 row-end-4 col-start-1 col-end-2">
+  <div className="m-0 p-0 row-start-1 row-end-4 col-start-1 col-end-2" style={{ minWidth: 0 }}>
           {isVerticalLayout && (
             <Toolbar
               isVerticalLayout={isVerticalLayout}
@@ -624,7 +646,7 @@ export const RetroImageEditor = () => {
         </div>
 
         {/* Right column header: toolbar when horizontal */}
-        <div className="m-0 p-0 row-start-1 col-start-2 col-end-3" ref={(el) => (headerRef.current = el)}>
+        <div className="m-0 p-0 row-start-1 col-start-2 col-end-3" ref={(el) => (headerRef.current = el)} style={{ minWidth: 0 }}>
           {!isVerticalLayout && (
             <Toolbar
               isVerticalLayout={isVerticalLayout}
@@ -640,8 +662,8 @@ export const RetroImageEditor = () => {
         </div>
 
         {/* Main preview area - occupies middle row, right column */}
-        <div className="row-start-2 col-start-2 col-end-3 m-0 p-0 relative">
-          <div className="w-full m-0 p-0" style={{ width: '100%' }}>
+        <div className="row-start-2 col-start-2 col-end-3 m-0 p-0 relative" style={{ minWidth: 0 }} ref={rightColumnRef}>
+          <div className="w-full m-0 p-0" style={{ width: '100%', minWidth: 0 }}>
             <ImagePreview
               originalImage={originalImage}
               processedImageData={processedImageData}
@@ -659,6 +681,7 @@ export const RetroImageEditor = () => {
               tileGridColor={tileGridColor}
               frameGridColor={frameGridColor}
               isVerticalLayout={isVerticalLayout}
+              containerStyle={rightColumnWidth ? { maxWidth: `${rightColumnWidth}px` } : undefined}
             />
 
             {/* Floating Content Sections - now constrained inside preview cell (absolute inset) */}
@@ -793,7 +816,7 @@ export const RetroImageEditor = () => {
         </div>
 
         {/* Footer in right column */}
-        <div className="row-start-3 col-start-2 col-end-3 m-0 p-0">
+        <div className="row-start-3 col-start-2 col-end-3 m-0 p-0" style={{ minWidth: 0 }}>
           <Footer isVerticalLayout={isVerticalLayout} />
         </div>
 
