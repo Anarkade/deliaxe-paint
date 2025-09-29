@@ -668,6 +668,7 @@ export const RetroImageEditor = () => {
               originalImage={originalImage}
               processedImageData={processedImageData}
               originalImageSource={originalImageSource}
+              onLoadImageClick={loadImage}
               selectedPalette={selectedPalette}
               showCameraPreview={showCameraPreview}
               onCameraPreviewChange={setShowCameraPreview}

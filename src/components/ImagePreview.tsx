@@ -293,15 +293,42 @@ export const ImagePreview = ({
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext('2d');
-    ctx?.drawImage(videoRef.current, 0, 0);
-    
+    if (!ctx) return;
+    ctx.drawImage(videoRef.current, 0, 0);
+
+    // Prefer a data URL (string) because the import/load handlers may expect a URL/clipboard-style input.
+    // Also create a File so components that expect a File will still work.
+    const dataUrl = canvas.toDataURL('image/png');
+
     canvas.toBlob((blob) => {
-      if (blob) {
-        const file = new File([blob], 'camera-capture.png', { type: 'image/png' });
-        onLoadImageClick?.(file);
+      if (!blob) {
+        // If we couldn't produce a blob, still attempt the data URL
+        onLoadImageClick?.(dataUrl);
         stopCameraPreview();
+        return;
       }
-    });
+
+      const file = new File([blob], 'camera-capture.png', { type: 'image/png' });
+
+      // Call parent handler with data URL first (covers handlers expecting string sources),
+      // then call again with File as fallback (covers handlers expecting File).
+      // Small delay between calls helps avoid race conditions in some parent handlers.
+      try {
+        onLoadImageClick?.(dataUrl);
+      } catch (e) {
+        // ignore
+      }
+
+      setTimeout(() => {
+        try {
+          onLoadImageClick?.(file);
+        } catch (e) {
+          // ignore
+        }
+      }, 50);
+
+      stopCameraPreview();
+    }, 'image/png');
   }, [onLoadImageClick, stopCameraPreview]);
 
   // Switch camera
