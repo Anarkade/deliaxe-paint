@@ -117,6 +117,7 @@ interface ImagePreviewProps {
   selectedCameraId?: string;
   currentPaletteColors?: Color[];
   onSectionOpen?: () => void; // New callback for section opening
+  onRequestOpenCameraSelector?: () => void;
   showTileGrid?: boolean;
   showFrameGrid?: boolean;
   tileWidth?: number;
@@ -145,6 +146,7 @@ export const ImagePreview = ({
   selectedCameraId,
   currentPaletteColors, 
   onSectionOpen, 
+  onRequestOpenCameraSelector,
   showTileGrid = false, 
   showFrameGrid = false, 
   tileWidth = 8, 
@@ -674,33 +676,32 @@ export const ImagePreview = ({
       {/* Header (hidden when camera preview is shown so video can use full cell) */}
       {!showCameraPreview && (
         <div className="flex flex-col gap-4" ref={headerRef}>
-        <div className="flex items-center gap-4 text-sm">
-          <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
-          <Slider
-            value={sliderValue}
-            onValueChange={handleZoomChange}
-            max={ZOOM_BOUNDS.max}
-            min={ZOOM_BOUNDS.min}
-            step={integerScaling ? 100 : 1}
-            className="flex-1"
-          />
-        </div>
-        <div className="flex items-center gap-4">
-          <Button onClick={fitToWidth} variant="highlighted" size="sm">
-            {t('fitToWidth')}
-          </Button>
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="integer-scaling" 
-              checked={integerScaling}
-              onCheckedChange={handleIntegerScalingChange}
+          <div className="flex items-center gap-4 text-sm">
+            <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
+            <Slider
+              value={sliderValue}
+              onValueChange={handleZoomChange}
+              max={ZOOM_BOUNDS.max}
+              min={ZOOM_BOUNDS.min}
+              step={integerScaling ? 100 : 1}
+              className="flex-1"
             />
-            <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button onClick={fitToWidth} variant="highlighted" size="sm">
+              {t('fitToWidth')}
+            </Button>
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="integer-scaling" 
+                checked={integerScaling}
+                onCheckedChange={handleIntegerScalingChange}
+              />
+              <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
+            </div>
           </div>
         </div>
-        </div>
       )}
-
 
       {/* Image Preview (between header and footer, no overlap) */}
   {/* If we're showing the camera preview, allow the container to size from aspect-ratio
@@ -785,7 +786,11 @@ export const ImagePreview = ({
                 </Button>
               )}
               <Button
-                onClick={stopCameraPreview}
+                onClick={() => {
+                  stopCameraPreview();
+                  try { onRequestOpenCameraSelector?.(); } catch (e) { /* ignore */ }
+                  try { window.dispatchEvent(new CustomEvent('openCameraSelectorRequest')); } catch (e) { /* ignore */ }
+                }}
                 variant="secondary"
                 size="sm"
                 className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
@@ -843,7 +848,7 @@ export const ImagePreview = ({
           // 1. selectedPalette is not 'original' (showing a retro palette), OR
           // 2. selectedPalette is 'original' AND the image is PNG-8 indexed
           const showPaletteViewer = selectedPalette !== 'original' || isIndexedPNG;
-          return showPaletteViewer && originalImage && (
+          return showPaletteViewer && originalImage ? (
             <div className="mt-4">
               <PaletteViewer
                 selectedPalette={selectedPalette}
@@ -857,9 +862,9 @@ export const ImagePreview = ({
                 }}
               />
             </div>
-          );
+          ) : null;
         })()}
       </div>
     </div>
   );
-}
+};

@@ -51,6 +51,7 @@ export const RetroImageEditor = () => {
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
   const [selectedPalette, setSelectedPalette] = useState<string>('original');
+  const ignoreNextCloseRef = useRef(false);
   
   // Performance and processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -104,10 +105,23 @@ export const RetroImageEditor = () => {
     checkOrientation();
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
+    const onOpenCameraSelectorRequest = () => {
+      ignoreNextCloseRef.current = true;
+      setTimeout(() => setActiveTab('select-camera'), 0);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('openCameraSelectorRequest', onOpenCameraSelectorRequest as EventListener);
     
     // Close dropdown when clicking outside and close floating sections (except load-image)
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
+
+      // If a caller recently requested that we open a floating section,
+      // ignore the next global click so the new section isn't immediately closed.
+      if (ignoreNextCloseRef.current) {
+        ignoreNextCloseRef.current = false;
+        return;
+      }
       
       // Handle language dropdown
       if (isLanguageDropdownOpen && !target.closest('.language-dropdown-container')) {
@@ -131,6 +145,7 @@ export const RetroImageEditor = () => {
     return () => {
       window.removeEventListener('resize', checkOrientation);
       window.removeEventListener('orientationchange', checkOrientation);
+      window.removeEventListener('openCameraSelectorRequest', onOpenCameraSelectorRequest as EventListener);
       document.removeEventListener('click', handleClickOutside);
     };
   }, [checkOrientation, isLanguageDropdownOpen, activeTab]);
@@ -673,6 +688,11 @@ export const RetroImageEditor = () => {
               showCameraPreview={showCameraPreview}
               onCameraPreviewChange={setShowCameraPreview}
               selectedCameraId={selectedCameraId}
+              onRequestOpenCameraSelector={() => {
+                // Set flag so the global click handler ignores the next click that would close sections
+                ignoreNextCloseRef.current = true;
+                setTimeout(() => setActiveTab('select-camera'), 0);
+              }}
               showTileGrid={showTileGrid}
               showFrameGrid={showFrameGrid}
               tileWidth={tileWidth}
@@ -694,8 +714,10 @@ export const RetroImageEditor = () => {
                 <LoadImage
                   onImageLoad={loadImage}
                   onCameraPreviewRequest={() => {
-                    setActiveTab('select-camera');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                      // Prevent the global click handler from immediately closing the section
+                      ignoreNextCloseRef.current = true;
+                      setActiveTab('select-camera');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                   onClose={() => setActiveTab(null)}
                   onLoadFromClipboard={loadFromClipboard}
