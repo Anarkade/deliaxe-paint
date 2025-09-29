@@ -406,7 +406,7 @@ export const ExportImage = ({
                     onCheckedChange={(checked) => setExportAtCurrentZoom(checked as boolean)}
                   />
                   <label htmlFor="export-zoom" className="text-sm font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70 break-words">
-                    {t('exportAtCurrentZoom')} ({Math.round(currentZoom * 100)}%)
+                    {t('exportAtCurrentZoom')} ({Math.round((currentZoom ?? 1) * 100)}%)
                   </label>
                 </div>
                 

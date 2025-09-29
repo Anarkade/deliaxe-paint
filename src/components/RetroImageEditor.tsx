@@ -78,6 +78,14 @@ export const RetroImageEditor = () => {
   const performanceMonitor = usePerformanceMonitor();
   const { getCanvas, returnCanvas } = useCanvasPool();
 
+  // Stable callback to receive zoom updates from ImagePreview. Using useCallback
+  // prevents a new function reference being passed on every render which can
+  // cause the preview to behave oddly (recreating handlers and triggering
+  // unintended effects). ImagePreview expects a zoom in percent (e.g. 100).
+  const handlePreviewZoomChange = useCallback((zoom: number) => {
+    setCurrentZoom(zoom);
+  }, []);
+
   // Clean reset of all editor state - prevents memory leaks
   const resetEditor = useCallback(() => {
     // Clean up image references
@@ -687,6 +695,7 @@ export const RetroImageEditor = () => {
               selectedPalette={selectedPalette}
               showCameraPreview={showCameraPreview}
               onCameraPreviewChange={setShowCameraPreview}
+              onZoomChange={handlePreviewZoomChange}
               selectedCameraId={selectedCameraId}
               onRequestOpenCameraSelector={() => {
                 // Set flag so the global click handler ignores the next click that would close sections
