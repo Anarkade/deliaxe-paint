@@ -107,7 +107,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Button
               variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('load-image')}
-              className="flex items-center justify-center h-10 w-10 p-0"
+              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
               style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
               title={t('loadImage')}
             >
@@ -116,7 +116,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Button
               variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('palette-selector')}
-              className="flex items-center justify-center h-10 w-10 p-0"
+              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
               style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
               disabled={!originalImage}
               title={t('selectPalette')}
@@ -126,7 +126,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Button
               variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('resolution')}
-              className="flex items-center justify-center h-10 w-10 p-0"
+              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
               style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
               disabled={!originalImage}
               title={t('changeResolution')}
@@ -136,7 +136,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Button
               variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('change-grids')}
-              className="flex items-center justify-center h-10 w-10 p-0"
+              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
               style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
               disabled={!originalImage}
               title={t('changeGrids')}
@@ -146,7 +146,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Button
               variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('export-image')}
-              className="flex items-center justify-center h-10 w-10 p-0"
+              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
               style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
               disabled={!originalImage}
               title={t('exportImage')}
@@ -156,7 +156,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Button
               variant={getButtonVariant('language') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('language')}
-              className="flex items-center justify-center h-10 w-10 p-0"
+              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
               style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
               title={t('changeLanguage')}
             >
@@ -177,7 +177,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('load-image')}
-            className="flex items-center justify-center h-8 w-8 p-0"
+            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
             style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
             title={t('loadImage')}
           >
@@ -186,7 +186,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('palette-selector')}
-            className="flex items-center justify-center h-8 w-8 p-0"
+            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
             style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
             disabled={!originalImage}
             title={t('selectPalette')}
@@ -196,7 +196,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('resolution')}
-            className="flex items-center justify-center h-8 w-8 p-0"
+            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
             style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
             disabled={!originalImage}
             title={t('changeResolution')}
@@ -206,7 +206,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('change-grids')}
-            className="flex items-center justify-center h-8 w-8 p-0"
+            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
             style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
             disabled={!originalImage}
             title={t('changeGrids')}
@@ -216,7 +216,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('export-image')}
-            className="flex items-center justify-center h-8 w-8 p-0"
+            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
             style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
             disabled={!originalImage}
             title={t('exportImage')}
@@ -226,7 +226,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('language') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('language')}
-            className="flex items-center justify-center h-8 w-8 p-0"
+            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
             style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
             title={t('changeLanguage')}
           >
