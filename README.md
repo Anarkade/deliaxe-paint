@@ -71,3 +71,47 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Testing / Dev notes
+
+If you want to test the camera preview or run the dev server locally, follow these quick steps:
+
+- Start the dev server:
+
+```powershell
+npm install
+npm run dev
+```
+
+- Open the local URL printed by Vite (for example `http://localhost:5173/` or `http://localhost:8082/`).
+
+- To verify the camera preview sizing in the app, open DevTools → Console and run the following snippet. It prints the video metadata and container geometry used by the preview UI:
+
+```javascript
+(() => {
+	const res = { location: location.href, protocol: location.protocol, isSecureContext: window.isSecureContext };
+	const video = document.querySelector('video');
+	res.videoFound = !!video;
+	if (video) {
+		const rect = video.getBoundingClientRect();
+		res.videoRect = { w: Math.round(rect.width), h: Math.round(rect.height) };
+		res.videoMeta = { videoWidth: video.videoWidth, videoHeight: video.videoHeight };
+		try {
+			const tracks = video.srcObject ? (video.srcObject).getVideoTracks() : [];
+			if (tracks && tracks.length) res.trackSettings = tracks[0].getSettings ? tracks[0].getSettings() : null;
+		} catch (e) { res.trackSettingsError = String(e); }
+	}
+
+	const previewDiv = Array.from(document.querySelectorAll('div[style]')).find(d => /px/.test(d.style.height || ''));
+	if (previewDiv) {
+		const b = previewDiv.getBoundingClientRect();
+		res.previewDiv = { clientWidth: previewDiv.clientWidth, offsetWidth: previewDiv.offsetWidth, rect: { w: Math.round(b.width), h: Math.round(b.height) }, computed: getComputedStyle(previewDiv).cssText };
+	}
+	return res;
+})();
+```
+
+- Notes:
+	- Temporary dev/test scripts and screenshots created during troubleshooting have been removed from the repository.
+	- If you want me to add back a small, documented checker script (that does not commit artifacts), tell me and I'll add it under `scripts/` with a descriptive README entry.
+
