@@ -736,7 +736,7 @@ export const ImagePreview = ({
               muted
               playsInline
             />
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3 z-10 pb-safe">
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-3 z-10 pt-safe">
               <Button
                 onClick={capturePhoto}
                 variant="secondary"

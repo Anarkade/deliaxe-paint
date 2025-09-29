@@ -476,8 +476,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                   </div>
                 )}
                 
-                {/* Camera controls positioned at bottom center */}
-                <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-2 z-10 pb-safe">
+                {/* Camera controls positioned at top center */}
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10 pt-safe">
                   {!cameraError && (
                     <Button
                       onClick={handleCameraCapture}
