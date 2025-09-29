@@ -674,7 +674,17 @@ export const ImagePreview = ({
 
 
       {/* Image Preview (between header and footer, no overlap) */}
-  <div ref={containerRef} style={{ height: previewHeight ? `${previewHeight}px` : undefined, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minWidth: 0, ...containerStyle }}>
+  {/* If we're showing the camera preview, allow the container to size from aspect-ratio
+      (setCameraAspectRatio writes containerEl.style.aspectRatio). For images use the
+      calculated previewHeight so fit-to-width keeps working. */}
+  <div
+    ref={containerRef}
+    style={
+      showCameraPreview
+        ? { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minWidth: 0, ...containerStyle }
+        : { height: previewHeight ? `${previewHeight}px` : undefined, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minWidth: 0, ...containerStyle }
+    }
+  >
         {originalImage ? (
           <div style={{ width: `${originalImage.width * (zoom[0] / 100)}px`, height: `${originalImage.height * (zoom[0] / 100)}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <canvas

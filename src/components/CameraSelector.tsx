@@ -14,6 +14,7 @@ interface CameraSelectorProps {
 export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
   const { t } = useTranslation();
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
+  const [resolutions, setResolutions] = useState<Record<string, string>>({});
 
   // Efficiently enumerate available cameras with error handling
   const getAvailableCameras = useCallback(async () => {
@@ -30,6 +31,72 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
   useEffect(() => {
     getAvailableCameras();
   }, [getAvailableCameras]);
+
+  // Probe each camera to obtain a resolution string like "640x480".
+  // We probe only once per device and store the result in `resolutions`.
+  useEffect(() => {
+    let mounted = true;
+
+    const probe = async (deviceId: string) => {
+      if (resolutions[deviceId]) return; // already probed
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } });
+        try {
+          // Prefer track settings if available
+          const track = stream.getVideoTracks()[0];
+          const settings = track.getSettings?.();
+          let width = settings?.width;
+          let height = settings?.height;
+
+          // Fallback to video element metadata if settings not available
+          if (!width || !height) {
+            const video = document.createElement('video');
+            video.style.position = 'fixed';
+            video.style.left = '-9999px';
+            video.style.width = '1px';
+            video.style.height = '1px';
+            video.autoplay = true;
+            video.playsInline = true;
+            video.muted = true;
+            video.srcObject = stream;
+            document.body.appendChild(video);
+            await new Promise<void>((resolve) => {
+              const onLoaded = () => {
+                width = video.videoWidth || width;
+                height = video.videoHeight || height;
+                video.removeEventListener('loadedmetadata', onLoaded);
+                resolve();
+              };
+              video.addEventListener('loadedmetadata', onLoaded);
+              // safety timeout
+              setTimeout(() => resolve(), 500);
+            });
+            try { document.body.removeChild(video); } catch {}
+          }
+
+          if (mounted) {
+            if (width && height) {
+              setResolutions(prev => ({ ...prev, [deviceId]: `${Math.round(width)}x${Math.round(height)}` }));
+            } else {
+              setResolutions(prev => ({ ...prev, [deviceId]: '' }));
+            }
+          }
+        } finally {
+          // stop tracks
+          stream.getTracks().forEach(t => t.stop());
+        }
+      } catch (err) {
+        // Permission denied or other error; store empty to avoid retry storms
+        if (mounted) setResolutions(prev => ({ ...prev, [deviceId]: '' }));
+      }
+    };
+
+    for (const cam of availableCameras) {
+      if (!resolutions[cam.deviceId]) probe(cam.deviceId);
+    }
+
+    return () => { mounted = false; };
+  }, [availableCameras, resolutions]);
 
   // Generate user-friendly camera names with fallback for unnamed devices
   const getCameraDisplayName = (camera: MediaDeviceInfo, index: number) => {
@@ -73,7 +140,7 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
                 className="w-full justify-start text-left"
               >
                 <Camera className="mr-2 h-4 w-4" />
-                {getCameraDisplayName(camera, index)}
+                {getCameraDisplayName(camera, index)}{resolutions[camera.deviceId] ? ` (${resolutions[camera.deviceId]})` : ''}
               </Button>
             ))}
           </div>
