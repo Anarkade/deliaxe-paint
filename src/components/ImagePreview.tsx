@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Eye, ZoomIn, Camera, RotateCcw, X, Maximize2 } from 'lucide-react';
+import { Download, Eye, ZoomIn, Camera, X, Maximize2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { PaletteViewer } from './PaletteViewer';
@@ -333,19 +333,7 @@ export const ImagePreview = ({
     }, 'image/png');
   }, [onLoadImageClick, stopCameraPreview]);
 
-  // Switch camera
-  const switchCamera = useCallback(() => {
-    const currentIndex = availableCameras.findIndex(camera => camera.deviceId === currentCameraId);
-    const nextIndex = (currentIndex + 1) % availableCameras.length;
-    const nextCameraId = availableCameras[nextIndex]?.deviceId;
-    
-    if (nextCameraId && showCameraPreview) {
-      setCurrentCameraId(nextCameraId);
-      // Restart preview with new camera
-      stopCameraPreview();
-      setTimeout(() => startCameraPreview(), 100);
-    }
-  }, [availableCameras, currentCameraId, showCameraPreview, stopCameraPreview, startCameraPreview]);
+  // ...existing code... (switch camera button removed)
 
   // Start camera preview when prop changes
   useEffect(() => {
@@ -775,16 +763,7 @@ export const ImagePreview = ({
               >
                 <Camera className="h-5 w-5" />
               </Button>
-              {availableCameras.length > 1 && (
-                <Button
-                  onClick={switchCamera}
-                  variant="secondary"
-                  size="sm"
-                  className="bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 text-white shadow-lg"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              )}
+              {/* Camera-switch button removed — single-camera workflow only */}
               <Button
                 onClick={() => {
                   stopCameraPreview();
