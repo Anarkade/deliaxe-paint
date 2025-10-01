@@ -834,7 +834,12 @@ export const ImagePreview = ({
                 imageData={processedImageData}
                 onPaletteUpdate={onPaletteUpdate}
                 originalImageSource={originalImageSource}
-                externalPalette={selectedPalette !== 'original' ? currentPaletteColors : undefined}
+                // Always forward the parent's current palette (if present). PaletteViewer
+                // expects items with { r,g,b }, so map to that shape. This ensures exports
+                // can use the exact palette shown in the preview even when selectedPalette === 'original'.
+                externalPalette={currentPaletteColors && currentPaletteColors.length > 0
+                  ? currentPaletteColors.map(c => ({ r: c.r, g: c.g, b: c.b }))
+                  : undefined}
                 onImageUpdate={() => {
                   // Trigger image reprocessing when palette is updated
                   onSectionOpen?.();

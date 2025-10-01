@@ -693,6 +693,17 @@ export const RetroImageEditor = () => {
               originalImageSource={originalImageSource}
               onLoadImageClick={loadImage}
               selectedPalette={selectedPalette}
+              onPaletteUpdate={(colors) => {
+                try {
+                  // colors come from PaletteViewer and have shape { r,g,b, transparent? }
+                  const mapped = colors.map((c: any) => ({ r: c.r, g: c.g, b: c.b }));
+                  setOriginalPaletteColors(mapped);
+                  // Mark as indexed if we received a non-empty palette
+                  setIsOriginalPNG8Indexed(Array.isArray(mapped) && mapped.length > 0);
+                } catch (e) {
+                  // ignore mapping errors
+                }
+              }}
               showCameraPreview={showCameraPreview}
               onCameraPreviewChange={setShowCameraPreview}
               onZoomChange={handlePreviewZoomChange}
