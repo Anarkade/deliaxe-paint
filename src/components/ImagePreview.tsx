@@ -660,6 +660,17 @@ export const ImagePreview = ({
   const hasProcessedImage = processedImageData !== null;
   // Compute zoom factor from preview slider (1.0 == 100%) to scale grid spacing
   const zoomFactor = zoom[0] / 100;
+  // Determine final rendered size of one image pixel in CSS pixels.
+  // Use the actual rendered canvas/client width so this accounts for browser zoom
+  // and any CSS scaling. Fallback to zoomFactor when canvas isn't available yet.
+  const pixelSize = (() => {
+    const c = canvasRef.current as HTMLCanvasElement | null;
+    if (c && c.width) {
+      // clientWidth is CSS pixels used to render the canvas on screen
+      return c.clientWidth / c.width;
+    }
+    return zoomFactor; // fallback
+  })();
 
   return (
     <div className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col">
@@ -724,13 +735,13 @@ export const ImagePreview = ({
                   // Line thickness (image pixels) scaled by zoomFactor
                   // Use fractional px if necessary — browsers render subpixel lines.
                   backgroundImage: `
-                    linear-gradient(to right, ${tileGridColor} ${1 * zoomFactor}px, transparent ${1 * zoomFactor}px),
-                    linear-gradient(to bottom, ${tileGridColor} ${1 * zoomFactor}px, transparent ${1 * zoomFactor}px)
+                      linear-gradient(to right, ${tileGridColor} ${1 * pixelSize}px, transparent ${1 * pixelSize}px),
+                      linear-gradient(to bottom, ${tileGridColor} ${1 * pixelSize}px, transparent ${1 * pixelSize}px)
                   `,
                   // Background size should be original image pixels × zoom
-                  backgroundSize: `${tileWidth * zoomFactor}px ${tileHeight * zoomFactor}px`,
-                  borderRight: `${1 * zoomFactor}px solid ${tileGridColor}`,
-                  borderBottom: `${1 * zoomFactor}px solid ${tileGridColor}`
+                  backgroundSize: `${tileWidth * pixelSize}px ${tileHeight * pixelSize}px`,
+                  borderRight: `${1 * pixelSize}px solid ${tileGridColor}`,
+                  borderBottom: `${1 * pixelSize}px solid ${tileGridColor}`
                 }}
               />
             )}
@@ -740,12 +751,12 @@ export const ImagePreview = ({
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   backgroundImage: `
-                    linear-gradient(to right, ${frameGridColor} ${3 * zoomFactor}px, transparent ${3 * zoomFactor}px),
-                    linear-gradient(to bottom, ${frameGridColor} ${3 * zoomFactor}px, transparent ${3 * zoomFactor}px)
+                    linear-gradient(to right, ${frameGridColor} ${3 * pixelSize}px, transparent ${3 * pixelSize}px),
+                    linear-gradient(to bottom, ${frameGridColor} ${3 * pixelSize}px, transparent ${3 * pixelSize}px)
                   `,
-                  backgroundSize: `${frameWidth * zoomFactor}px ${frameHeight * zoomFactor}px`,
-                  borderRight: `${3 * zoomFactor}px solid ${frameGridColor}`,
-                  borderBottom: `${3 * zoomFactor}px solid ${frameGridColor}`
+                  backgroundSize: `${frameWidth * pixelSize}px ${frameHeight * pixelSize}px`,
+                  borderRight: `${3 * pixelSize}px solid ${frameGridColor}`,
+                  borderBottom: `${3 * pixelSize}px solid ${frameGridColor}`
                 }}
               />
             )}
