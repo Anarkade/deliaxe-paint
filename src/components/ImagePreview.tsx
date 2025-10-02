@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Eye, ZoomIn, Camera, X, Maximize2 } from 'lucide-react';
+import { Download, Eye, ZoomIn, Camera, X, Maximize2, ChevronsLeftRight } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { PaletteViewer } from './PaletteViewer';
@@ -693,8 +693,8 @@ export const ImagePreview = ({
             />
           </div>
           <div className="flex items-center gap-4">
-            <Button onClick={fitToWidth} variant="highlighted" size="sm">
-              {t('fitToWidth')}
+            <Button onClick={fitToWidth} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
+              <ChevronsLeftRight className="h-4 w-4" />
             </Button>
             <div className="flex items-center space-x-2">
               <Checkbox 
