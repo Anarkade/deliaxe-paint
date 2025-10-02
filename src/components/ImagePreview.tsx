@@ -735,13 +735,13 @@ export const ImagePreview = ({
                   // Line thickness (image pixels) scaled by zoomFactor
                   // Use fractional px if necessary — browsers render subpixel lines.
                   backgroundImage: `
-                      linear-gradient(to right, ${tileGridColor} ${1 * pixelSize}px, transparent ${1 * pixelSize}px),
-                      linear-gradient(to bottom, ${tileGridColor} ${1 * pixelSize}px, transparent ${1 * pixelSize}px)
+                      linear-gradient(to right, ${tileGridColor} 1px, transparent 1px),
+                      linear-gradient(to bottom, ${tileGridColor} 1px, transparent 1px)
                   `,
                   // Background size should be original image pixels × zoom
                   backgroundSize: `${tileWidth * pixelSize}px ${tileHeight * pixelSize}px`,
-                  borderRight: `${1 * pixelSize}px solid ${tileGridColor}`,
-                  borderBottom: `${1 * pixelSize}px solid ${tileGridColor}`
+                  borderRight: `1px solid ${tileGridColor}`,
+                  borderBottom: `1px solid ${tileGridColor}`
                 }}
               />
             )}
@@ -751,12 +751,12 @@ export const ImagePreview = ({
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   backgroundImage: `
-                    linear-gradient(to right, ${frameGridColor} ${3 * pixelSize}px, transparent ${3 * pixelSize}px),
-                    linear-gradient(to bottom, ${frameGridColor} ${3 * pixelSize}px, transparent ${3 * pixelSize}px)
+                    linear-gradient(to right, ${frameGridColor} 3px, transparent 3px),
+                    linear-gradient(to bottom, ${frameGridColor} 3px, transparent 3px)
                   `,
                   backgroundSize: `${frameWidth * pixelSize}px ${frameHeight * pixelSize}px`,
-                  borderRight: `${3 * pixelSize}px solid ${frameGridColor}`,
-                  borderBottom: `${3 * pixelSize}px solid ${frameGridColor}`
+                  borderRight: `3px solid ${frameGridColor}`,
+                  borderBottom: `3px solid ${frameGridColor}`
                 }}
               />
             )}
