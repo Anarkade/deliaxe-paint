@@ -126,6 +126,8 @@ interface ImagePreviewProps {
   frameHeight?: number;
   tileGridColor?: string;
   frameGridColor?: string;
+  tileLineThickness?: number;
+  frameLineThickness?: number;
   autoFitKey?: string;
   onZoomChange?: (zoom: number) => void;
   isVerticalLayout?: boolean; // Layout state for responsive handling
@@ -155,6 +157,8 @@ export const ImagePreview = ({
   frameHeight = 16, 
   tileGridColor = '#808080', 
   frameGridColor = '#96629d', 
+  tileLineThickness = 1,
+  frameLineThickness = 3,
   autoFitKey, 
   onZoomChange,
   isVerticalLayout,
@@ -735,13 +739,13 @@ export const ImagePreview = ({
                   // Line thickness (image pixels) scaled by zoomFactor
                   // Use fractional px if necessary — browsers render subpixel lines.
                   backgroundImage: `
-                      linear-gradient(to right, ${tileGridColor} 1px, transparent 1px),
-                      linear-gradient(to bottom, ${tileGridColor} 1px, transparent 1px)
+                      linear-gradient(to right, ${tileGridColor} ${tileLineThickness}px, transparent ${tileLineThickness}px),
+                      linear-gradient(to bottom, ${tileGridColor} ${tileLineThickness}px, transparent ${tileLineThickness}px)
                   `,
                   // Background size should be original image pixels × zoom
                   backgroundSize: `${tileWidth * pixelSize}px ${tileHeight * pixelSize}px`,
-                  borderRight: `1px solid ${tileGridColor}`,
-                  borderBottom: `1px solid ${tileGridColor}`
+                  borderRight: `${tileLineThickness}px solid ${tileGridColor}`,
+                  borderBottom: `${tileLineThickness}px solid ${tileGridColor}`
                 }}
               />
             )}
@@ -751,12 +755,12 @@ export const ImagePreview = ({
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   backgroundImage: `
-                    linear-gradient(to right, ${frameGridColor} 3px, transparent 3px),
-                    linear-gradient(to bottom, ${frameGridColor} 3px, transparent 3px)
+                    linear-gradient(to right, ${frameGridColor} ${frameLineThickness}px, transparent ${frameLineThickness}px),
+                    linear-gradient(to bottom, ${frameGridColor} ${frameLineThickness}px, transparent ${frameLineThickness}px)
                   `,
                   backgroundSize: `${frameWidth * pixelSize}px ${frameHeight * pixelSize}px`,
-                  borderRight: `3px solid ${frameGridColor}`,
-                  borderBottom: `3px solid ${frameGridColor}`
+                  borderRight: `${frameLineThickness}px solid ${frameGridColor}`,
+                  borderBottom: `${frameLineThickness}px solid ${frameGridColor}`
                 }}
               />
             )}

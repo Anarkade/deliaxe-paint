@@ -67,6 +67,8 @@ export const RetroImageEditor = () => {
   const [frameHeight, setFrameHeight] = useState(16);
   const [tileGridColor, setTileGridColor] = useState('#808080');
   const [frameGridColor, setFrameGridColor] = useState('#96629d');
+  const [tileLineThickness, setTileLineThickness] = useState(1);
+  const [frameLineThickness, setFrameLineThickness] = useState(3);
   
   const [history, setHistory] = useState<HistoryState[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
@@ -721,6 +723,8 @@ export const RetroImageEditor = () => {
               frameHeight={frameHeight}
               tileGridColor={tileGridColor}
               frameGridColor={frameGridColor}
+              tileLineThickness={tileLineThickness}
+              frameLineThickness={frameLineThickness}
               isVerticalLayout={isVerticalLayout}
               containerStyle={rightColumnWidth ? { maxWidth: `${rightColumnWidth}px` } : undefined}
             />
@@ -817,6 +821,8 @@ export const RetroImageEditor = () => {
                   setTileHeight={setTileHeight}
                   tileGridColor={tileGridColor}
                   setTileGridColor={setTileGridColor}
+                  tileLineThickness={tileLineThickness}
+                  setTileLineThickness={setTileLineThickness}
                   showFrameGrid={showFrameGrid}
                   setShowFrameGrid={setShowFrameGrid}
                   frameWidth={frameWidth}
@@ -825,6 +831,8 @@ export const RetroImageEditor = () => {
                   setFrameHeight={setFrameHeight}
                   frameGridColor={frameGridColor}
                   setFrameGridColor={setFrameGridColor}
+                  frameLineThickness={frameLineThickness}
+                  setFrameLineThickness={setFrameLineThickness}
                   onClose={() => setActiveTab(null)}
                 />
               </div>
