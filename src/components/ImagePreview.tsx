@@ -716,7 +716,7 @@ export const ImagePreview = ({
             <Button onClick={fitToWidth} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
               <ChevronsLeftRight className="h-4 w-4" />
             </Button>
-            <Button onClick={setZoomTo100} variant="secondary" size="sm" title="100%" aria-label="Set zoom to 100%">
+            <Button onClick={setZoomTo100} variant="highlighted" size="sm" title="100%" aria-label="Set zoom to 100%">
               100%
             </Button>
             <div className="flex items-center space-x-2">
