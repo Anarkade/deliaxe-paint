@@ -98,12 +98,13 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
 
   if (!isVerticalLayout) {
     return (
-      <header className="border-b border-elegant-border bg-card w-full flex-shrink-0 m-0 p-0">
-        <div className="w-full max-w-none flex items-start justify-between m-0 p-0">
-          <div className="flex items-start m-0 p-0">
+      // height set to 1.5x the button height (h-10 -> 2.5rem * 1.5 = 3.75rem)
+      <header className="border-b border-elegant-border bg-card w-full flex-shrink-0 m-0 p-0 h-[3.75rem] flex items-center">
+        <div className="w-full max-w-none flex items-center justify-between m-0 p-0 h-full">
+          <div className="flex items-center h-full m-0 p-0">
             <img src="/logo.gif" alt="Vintage Palette Studio" className="h-8 w-8 m-0 p-0 block" />
           </div>
-          <div className="flex items-start gap-2 flex-shrink-0 m-0 p-0">
+          <div className="flex items-center gap-2 flex-shrink-0 m-0 p-0 h-full">
             <Button
               variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('load-image')}
