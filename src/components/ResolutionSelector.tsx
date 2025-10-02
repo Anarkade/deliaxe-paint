@@ -149,7 +149,7 @@ export const ResolutionSelector = ({
             <Monitor className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
             {t('changeResolution')}
           </h3>
-          <p className="text-sm text-muted-foreground mt-1">{t('changeResolutionDesc')}</p>
+          <p className="text-sm text-muted-foreground mt-1 text-left">{t('changeResolutionDesc')}</p>
         </div>
 
         {/* Scaling and Alignment - side by side */}

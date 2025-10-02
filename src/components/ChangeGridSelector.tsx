@@ -59,7 +59,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
               <Grid3X3 className="h-6 w-6" style={{ color: '#7d1b2d' }} />
               <h3 className="text-xl font-bold" style={{ color: '#7d1b2d' }}>{t('changeGrids')}</h3>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">{t('changeGridsDesc')}</p>
+            <p className="text-sm text-muted-foreground mt-1 text-left">{t('changeGridsDesc')}</p>
           </div>
         <div className="space-y-6">
           {/* Tile Grid Section */}

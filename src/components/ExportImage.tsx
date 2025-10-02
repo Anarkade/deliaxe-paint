@@ -361,17 +361,6 @@ export const ExportImage = ({
     window.open(url, '_blank', 'width=600,height=400');
   }, [getImageDataURL, selectedPalette]);
 
-
-  if (!processedImageData && !originalImage) {
-    return (
-      <Card className="p-6 border-elegant-border bg-card">
-        <div className="text-center text-muted-foreground">
-          {t('processImageFirst')}
-        </div>
-      </Card>
-    );
-  }
-
   return (
     <Card className="p-5 border-elegant-border bg-card rounded-xl relative">
       {onClose && (
@@ -390,7 +379,7 @@ export const ExportImage = ({
             <Download className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
             {t('exportImage')}
           </h3>
-          <p className="text-sm text-muted-foreground mt-1">{t('exportImageDesc')}</p>
+          <p className="text-sm text-muted-foreground mt-1 text-left">{t('exportImageDesc')}</p>
         </div>
         
         <div className="space-y-4">
