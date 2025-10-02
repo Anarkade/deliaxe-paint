@@ -61,57 +61,64 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
             </div>
             <p className="text-sm text-muted-foreground mt-1 text-left">{t('changeGridsDesc')}</p>
           </div>
-        <div className="space-y-6">
-          {/* Tile Grid Section */}
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <Checkbox id="show-tile-grid" checked={showTileGrid} onCheckedChange={checked => setShowTileGrid(!!checked)} />
-              <label htmlFor="show-tile-grid" className="text-sm font-medium text-foreground cursor-pointer">{t('showTileGrid')}</label>
-            </div>
-            {showTileGrid && (
-              <div className="ml-6 space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="text-xs text-muted-foreground">{t('width')}</label>
-                    <input type="number" min="1" max="64" value={tileWidth} onChange={e => setTileWidth(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-2 py-1 text-sm border border-input rounded bg-background" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">{t('height')}</label>
-                    <input type="number" min="1" max="64" value={tileHeight} onChange={e => setTileHeight(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-2 py-1 text-sm border border-input rounded bg-background" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">{t('tileGridColor')}</label>
-                    <input type="color" value={tileGridColor} onChange={e => setTileGridColor(e.target.value)} className="w-full h-8 border border-input rounded bg-background cursor-pointer" />
+        <div className="flex gap-6">
+          {/* Tile Grid Column */}
+          <div className="flex-1">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox id="show-tile-grid" checked={showTileGrid} onCheckedChange={checked => setShowTileGrid(!!checked)} />
+                <label htmlFor="show-tile-grid" className="text-sm font-medium text-foreground cursor-pointer">{t('showTileGrid')}</label>
+              </div>
+              {showTileGrid && (
+                <div className="ml-6 space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs text-muted-foreground">{t('width')}</label>
+                      <input type="number" min="1" max="64" value={tileWidth} onChange={e => setTileWidth(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-2 py-1 text-sm border border-input rounded bg-background" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">{t('height')}</label>
+                      <input type="number" min="1" max="64" value={tileHeight} onChange={e => setTileHeight(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-2 py-1 text-sm border border-input rounded bg-background" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">{t('tileGridColor')}</label>
+                      <input type="color" value={tileGridColor} onChange={e => setTileGridColor(e.target.value)} className="w-full h-8 border border-input rounded bg-background cursor-pointer" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-          <Separator />
-          {/* Frame Grid Section */}
-          <div className="space-y-3">
-            <div className="flex items-center space-x-2">
-              <Checkbox id="show-frame-grid" checked={showFrameGrid} onCheckedChange={checked => setShowFrameGrid(!!checked)} />
-              <label htmlFor="show-frame-grid" className="text-sm font-medium text-foreground cursor-pointer">{t('showFrameGrid')}</label>
-            </div>
-            {showFrameGrid && (
-              <div className="ml-6 space-y-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="text-xs text-muted-foreground">{t('width')}</label>
-                    <input type="number" min="1" max="128" value={frameWidth} onChange={e => setFrameWidth(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-2 py-1 text-sm border border-input rounded bg-background" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">{t('height')}</label>
-                    <input type="number" min="1" max="128" value={frameHeight} onChange={e => setFrameHeight(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-2 py-1 text-sm border border-input rounded bg-background" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">{t('frameGridColor')}</label>
-                    <input type="color" value={frameGridColor} onChange={e => setFrameGridColor(e.target.value)} className="w-full h-8 border border-input rounded bg-background cursor-pointer" />
+
+          {/* Vertical separator */}
+          <div className="w-px bg-border" />
+
+          {/* Frame Grid Column */}
+          <div className="flex-1">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox id="show-frame-grid" checked={showFrameGrid} onCheckedChange={checked => setShowFrameGrid(!!checked)} />
+                <label htmlFor="show-frame-grid" className="text-sm font-medium text-foreground cursor-pointer">{t('showFrameGrid')}</label>
+              </div>
+              {showFrameGrid && (
+                <div className="ml-6 space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-xs text-muted-foreground">{t('width')}</label>
+                      <input type="number" min="1" max="128" value={frameWidth} onChange={e => setFrameWidth(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-2 py-1 text-sm border border-input rounded bg-background" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">{t('height')}</label>
+                      <input type="number" min="1" max="128" value={frameHeight} onChange={e => setFrameHeight(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-2 py-1 text-sm border border-input rounded bg-background" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">{t('frameGridColor')}</label>
+                      <input type="color" value={frameGridColor} onChange={e => setFrameGridColor(e.target.value)} className="w-full h-8 border border-input rounded bg-background cursor-pointer" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>
