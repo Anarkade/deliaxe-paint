@@ -700,18 +700,17 @@ export const ImagePreview = ({
     <div className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col">
       {/* Header (hidden when camera preview is shown so video can use full cell) */}
       {!showCameraPreview && (
-        <div className="flex flex-col gap-4" ref={headerRef}>
-          <div className="flex items-center gap-4 text-sm">
-            <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
-            <Slider
-              value={sliderValue}
-              onValueChange={handleZoomChange}
-              max={ZOOM_BOUNDS.max}
-              min={ZOOM_BOUNDS.min}
-              step={integerScaling ? 100 : 1}
-              className="flex-1"
-            />
-          </div>
+        <div className="flex items-center gap-4 text-sm" ref={headerRef}>
+          <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
+          <Slider
+            value={sliderValue}
+            onValueChange={handleZoomChange}
+            max={ZOOM_BOUNDS.max}
+            min={ZOOM_BOUNDS.min}
+            step={integerScaling ? 100 : 1}
+            className="flex-1"
+          />
+
           <div className="flex items-center gap-4">
             <Button onClick={fitToWidth} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
               <ChevronsLeftRight className="h-4 w-4" />
