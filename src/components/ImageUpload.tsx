@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, useEffect } from 'react';
-import { Upload, Camera, Link, Eye, X, Clipboard, RotateCcw } from 'lucide-react';
+import { Upload, Camera, Link, Eye, X, Clipboard, RotateCcw, HardDriveUpload, ClipboardPaste } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -408,6 +408,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 title={t('noFileChosen')}
               />
               <Button variant="highlighted" size="sm" className="w-full text-xs whitespace-pre-wrap leading-tight">
+                <HardDriveUpload className="mr-1 h-3 w-3" />
                 {t('chooseFile')}
               </Button>
             </div>
@@ -424,14 +425,14 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
               size="sm"
               className="w-full text-xs whitespace-pre-wrap leading-tight"
             >
-              <Clipboard className="mr-1 h-3 w-3" />
-              {t('loadFromClipboard')}
+              <ClipboardPaste className="mr-1 h-3 w-3" />
+              {t('pasteFromClipboard')}
             </Button>
           </div>
         </div>
 
-        {/* URL input - full width */}
-        <div className="border-t border-elegant-border pt-4">
+        {/* Bottom row: URL input (left) and Camera (right) placed side-by-side */}
+        <div className="grid grid-cols-2 gap-3 border-t border-elegant-border pt-4">
           <div className="space-y-2">
             <label className="block text-xs font-medium text-foreground">
               <Link className="inline mr-1 h-3 w-3" />
@@ -444,16 +445,13 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
               className="bg-console-bg border-pixel-grid h-9 text-sm"
             />
           </div>
-        </div>
-          
-        {/* Camera section - separated with more space */}
-        <div className="border-t border-elegant-border pt-4">
-          <div className="space-y-3">
+
+          <div className="space-y-2 border-l border-elegant-border pl-3">
             <label className="block text-xs font-medium text-foreground">
               <Camera className="inline mr-1 h-3 w-3" />
               {t('camera')}
             </label>
-            
+
             {showCameraPreview && (
               <div 
                 className="relative bg-black rounded-md w-full min-h-[200px] flex items-center justify-center"
@@ -475,7 +473,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                     </div>
                   </div>
                 )}
-                
+
                 {/* Camera controls positioned at top center */}
                 <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10 pt-safe">
                   {!cameraError && (
@@ -488,7 +486,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                       <Camera className="h-4 w-4" />
                     </Button>
                   )}
-                  
+
                   {availableCameras.length > 1 && (
                     <Button
                       onClick={switchCamera}
@@ -500,7 +498,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                       <RotateCcw className="h-3 w-3" />
                     </Button>
                   )}
-                  
+
                   <Button
                     onClick={stopCameraPreview}
                     variant="highlighted"
@@ -512,7 +510,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 </div>
               </div>
             )}
-            
+
             {!showCameraPreview && (
               <Button 
                 onClick={onCameraPreviewRequest || handleCameraPreviewRequest}
