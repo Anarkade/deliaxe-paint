@@ -704,7 +704,7 @@ export const ImagePreview = ({
     }
   >
         {originalImage ? (
-          <div style={{ width: `${originalImage.width * (zoom[0] / 100)}px`, height: `${originalImage.height * (zoom[0] / 100)}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="relative" style={{ width: `${originalImage.width * (zoom[0] / 100)}px`, height: `${originalImage.height * (zoom[0] / 100)}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <canvas
               ref={canvasRef}
               style={{ 
