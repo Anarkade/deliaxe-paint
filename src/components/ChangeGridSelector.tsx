@@ -75,14 +75,14 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Checkbox id="show-tile-grid" checked={showTileGrid} onCheckedChange={checked => setShowTileGrid(!!checked)} />
-                <label htmlFor="show-tile-grid" className="text-sm font-medium text-foreground cursor-pointer text-left">{t('showTileGrid')}</label>
+                <label htmlFor="show-tile-grid" className="block text-sm font-medium text-foreground cursor-pointer text-left">{t('showTileGrid')}</label>
               </div>
               {showTileGrid && (
                 <div className="ml-6 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     {/* Top row: Width | Height */}
                     <div>
-                      <label className="text-xs text-muted-foreground text-left">{t('width')}</label>
+                      <label className="block text-xs text-muted-foreground text-left">{t('width')}</label>
                       <input
                         type="number"
                         min="1"
@@ -93,7 +93,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground text-left">{t('height')}</label>
+                      <label className="block text-xs text-muted-foreground text-left">{t('height')}</label>
                       <input
                         type="number"
                         min="1"
@@ -106,7 +106,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
 
                     {/* Bottom row: Line thickness | Color */}
                     <div>
-                      <label className="text-xs text-muted-foreground text-left">{t('tileLineThickness')}</label>
+                      <label className="block text-xs text-muted-foreground text-left">{t('tileLineThickness')}</label>
                       <input
                         type="number"
                         min="1"
@@ -116,7 +116,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground text-left">{t('tileGridColor')}</label>
+                      <label className="block text-xs text-muted-foreground text-left">{t('tileGridColor')}</label>
                       <input
                         type="color"
                         value={tileGridColor}
@@ -138,14 +138,14 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
             <div className="space-y-3">
               <div className="flex items-center space-x-2">
                 <Checkbox id="show-frame-grid" checked={showFrameGrid} onCheckedChange={checked => setShowFrameGrid(!!checked)} />
-                <label htmlFor="show-frame-grid" className="text-sm font-medium text-foreground cursor-pointer text-left">{t('showFrameGrid')}</label>
+                <label htmlFor="show-frame-grid" className="block text-sm font-medium text-foreground cursor-pointer text-left">{t('showFrameGrid')}</label>
               </div>
               {showFrameGrid && (
                 <div className="ml-6 space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     {/* Top row: Width | Height */}
                     <div>
-                      <label className="text-xs text-muted-foreground text-left">{t('width')}</label>
+                      <label className="block text-xs text-muted-foreground text-left">{t('width')}</label>
                       <input
                         type="number"
                         min="1"
@@ -156,7 +156,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground text-left">{t('height')}</label>
+                      <label className="block text-xs text-muted-foreground text-left">{t('height')}</label>
                       <input
                         type="number"
                         min="1"
@@ -169,7 +169,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
 
                     {/* Bottom row: Line thickness | Color */}
                     <div>
-                      <label className="text-xs text-muted-foreground text-left">{t('frameLineThickness')}</label>
+                      <label className="block text-xs text-muted-foreground text-left">{t('frameLineThickness')}</label>
                       <input
                         type="number"
                         min="1"
@@ -179,7 +179,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
                       />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground text-left">{t('frameGridColor')}</label>
+                      <label className="block text-xs text-muted-foreground text-left">{t('frameGridColor')}</label>
                       <input
                         type="color"
                         value={frameGridColor}
