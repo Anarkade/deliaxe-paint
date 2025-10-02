@@ -110,7 +110,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('load-image')}
               className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
-              style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+              style={{ backgroundColor: '#721b35', borderColor: '#721b35' }}
               title={t('loadImage')}
             >
               <Upload className="h-4 w-4" />
@@ -119,7 +119,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('palette-selector')}
               className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
-              style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+              style={{ backgroundColor: '#721b35', borderColor: '#721b35' }}
               disabled={!originalImage}
               title={t('selectPalette')}
             >
@@ -129,7 +129,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('resolution')}
               className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
-              style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+              style={{ backgroundColor: '#721b35', borderColor: '#721b35' }}
               disabled={!originalImage}
               title={t('changeResolution')}
             >
@@ -139,7 +139,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('change-grids')}
               className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
-              style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+              style={{ backgroundColor: '#721b35', borderColor: '#721b35' }}
               disabled={!originalImage}
               title={t('changeGrids')}
             >
@@ -149,7 +149,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('export-image')}
               className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0"
-              style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+              style={{ backgroundColor: '#721b35', borderColor: '#721b35' }}
               disabled={!originalImage}
               title={t('exportImage')}
             >
@@ -180,7 +180,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('load-image')}
             className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
-            style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+            style={{ backgroundColor: '#721b35', borderColor: '#721b35' }}
             title={t('loadImage')}
           >
             <Upload className="h-4 w-4" />
@@ -189,7 +189,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('palette-selector')}
             className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
-            style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+            style={{ backgroundColor: '#721b35', borderColor: '#721b35' }}
             disabled={!originalImage}
             title={t('selectPalette')}
           >
@@ -199,7 +199,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('resolution')}
             className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
-            style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+            style={{ backgroundColor: '#721b35', borderColor: '#721b35' }}
             disabled={!originalImage}
             title={t('changeResolution')}
           >
@@ -209,7 +209,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('change-grids')}
             className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
-            style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+            style={{ backgroundColor: '#721b35', borderColor: '#721b35' }}
             disabled={!originalImage}
             title={t('changeGrids')}
           >
@@ -219,7 +219,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('export-image')}
             className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0"
-            style={{ backgroundColor: '#7d1b2d', borderColor: '#7d1b2d' }}
+            style={{ backgroundColor: '#721b35', borderColor: '#721b35' }}
             disabled={!originalImage}
             title={t('exportImage')}
           >
