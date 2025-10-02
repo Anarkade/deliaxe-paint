@@ -444,6 +444,26 @@ export const ImagePreview = ({
     }
   }, [originalImage, containerWidth, showOriginal, processedImageData, onZoomChange]);
 
+  // Set zoom to exactly 100%
+  const setZoomTo100 = useCallback(() => {
+    if (isUserDraggingSlider.current) return;
+
+    programmaticZoomChange.current = true;
+    const newZoom = 100;
+    setZoom([newZoom]);
+    setSliderValue([newZoom]);
+    onZoomChange?.(newZoom);
+
+    // Recalculate and set height based on 100% zoom
+    if (originalImage) {
+      const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
+      const displayHeight = currentImage.height * (newZoom / 100);
+      const minHeight = 150;
+      const calculatedHeight = Math.max(minHeight, displayHeight);
+      setPreviewHeight(Math.ceil(calculatedHeight));
+    }
+  }, [originalImage, showOriginal, processedImageData, onZoomChange]);
+
   // Optimized zoom handling with bounds checking and integer scaling
   const handleZoomChange = useCallback((newZoom: number[]) => {
     isUserDraggingSlider.current = true;
@@ -695,6 +715,9 @@ export const ImagePreview = ({
           <div className="flex items-center gap-4">
             <Button onClick={fitToWidth} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
               <ChevronsLeftRight className="h-4 w-4" />
+            </Button>
+            <Button onClick={setZoomTo100} variant="secondary" size="sm" title="100%" aria-label="Set zoom to 100%">
+              100%
             </Button>
             <div className="flex items-center space-x-2">
               <Checkbox 
