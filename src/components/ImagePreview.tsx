@@ -658,6 +658,8 @@ export const ImagePreview = ({
   }, [originalImage, processedImageData, showOriginal]);
 
   const hasProcessedImage = processedImageData !== null;
+  // Compute zoom factor from preview slider (1.0 == 100%) to scale grid spacing
+  const zoomFactor = zoom[0] / 100;
 
   return (
     <div className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col">
@@ -719,13 +721,16 @@ export const ImagePreview = ({
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
+                  // Line thickness (image pixels) scaled by zoomFactor
+                  // Use fractional px if necessary — browsers render subpixel lines.
                   backgroundImage: `
-                    linear-gradient(to right, ${tileGridColor} 1px, transparent 1px),
-                    linear-gradient(to bottom, ${tileGridColor} 1px, transparent 1px)
+                    linear-gradient(to right, ${tileGridColor} ${1 * zoomFactor}px, transparent ${1 * zoomFactor}px),
+                    linear-gradient(to bottom, ${tileGridColor} ${1 * zoomFactor}px, transparent ${1 * zoomFactor}px)
                   `,
-                  backgroundSize: `${tileWidth}px ${tileHeight}px`,
-                  borderRight: `1px solid ${tileGridColor}`,
-                  borderBottom: `1px solid ${tileGridColor}`
+                  // Background size should be original image pixels × zoom
+                  backgroundSize: `${tileWidth * zoomFactor}px ${tileHeight * zoomFactor}px`,
+                  borderRight: `${1 * zoomFactor}px solid ${tileGridColor}`,
+                  borderBottom: `${1 * zoomFactor}px solid ${tileGridColor}`
                 }}
               />
             )}
@@ -735,12 +740,12 @@ export const ImagePreview = ({
                 className="absolute inset-0 pointer-events-none"
                 style={{
                   backgroundImage: `
-                    linear-gradient(to right, ${frameGridColor} 3px, transparent 3px),
-                    linear-gradient(to bottom, ${frameGridColor} 3px, transparent 3px)
+                    linear-gradient(to right, ${frameGridColor} ${3 * zoomFactor}px, transparent ${3 * zoomFactor}px),
+                    linear-gradient(to bottom, ${frameGridColor} ${3 * zoomFactor}px, transparent ${3 * zoomFactor}px)
                   `,
-                  backgroundSize: `${frameWidth}px ${frameHeight}px`,
-                  borderRight: `3px solid ${frameGridColor}`,
-                  borderBottom: `3px solid ${frameGridColor}`
+                  backgroundSize: `${frameWidth * zoomFactor}px ${frameHeight * zoomFactor}px`,
+                  borderRight: `${3 * zoomFactor}px solid ${frameGridColor}`,
+                  borderBottom: `${3 * zoomFactor}px solid ${frameGridColor}`
                 }}
               />
             )}
