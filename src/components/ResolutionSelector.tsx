@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Monitor, AlignCenter, Maximize, X } from 'lucide-react';
+import { Monitor, AlignCenter, Maximize, X, Scaling } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 // Custom alignment icon component
@@ -156,7 +156,10 @@ export const ResolutionSelector = ({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <label className="block text-xs font-medium text-foreground">
-              {t('scalingMode')}
+              <span className="flex items-center">
+                <Scaling className="mr-2 h-4 w-4" />
+                {t('scalingMode')}
+              </span>
             </label>
             <RadioGroup
               value={['stretch', 'fit', 'dont-scale'].includes(scalingMode as string) ? scalingMode as ScalingMode : 'fit'}
