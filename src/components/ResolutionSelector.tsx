@@ -191,7 +191,7 @@ export const ResolutionSelector = ({
             <RadioGroup
               value={isAlignmentMode(scalingMode) ? (scalingMode as AlignmentMode) : 'middle-center'}
               onValueChange={(value: AlignmentMode) => setScalingMode(value)}
-              className="grid grid-cols-3 gap-2 text-xs"
+              className="grid grid-cols-3 gap-x-1 gap-y-2 text-xs"
             >
               {alignmentOptions.map((option) => (
                 <div key={option.value} className="flex space-x-1 min-h-[1.75rem]">
