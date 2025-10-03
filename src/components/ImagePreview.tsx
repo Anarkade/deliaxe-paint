@@ -729,7 +729,7 @@ export const ImagePreview = ({
     <div className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col">
       {/* Header (hidden when camera preview is shown so video can use full cell) */}
       {!showCameraPreview && (
-        <div className="flex flex-wrap items-center gap-2 text-sm" ref={headerRef}>
+  <div className="flex flex-wrap items-center gap-2 text-sm py-2 pr-2" ref={headerRef}>
             <span className="w-16 font-bold uppercase">{t('zoom')} {zoom[0]}%</span>
           <div className="flex items-center gap-2" ref={controlsRef}>
             <div className="flex items-center space-x-2">
