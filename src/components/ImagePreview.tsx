@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Eye, ZoomIn, Camera, X, Maximize2, ChevronsLeftRight } from 'lucide-react';
+import { Download, Eye, RefreshCcw, ZoomIn, Camera, X, Maximize2, ChevronsLeftRight } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { PaletteViewer } from './PaletteViewer';
@@ -819,8 +819,8 @@ export const ImagePreview = ({
   return (
     <div className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col">
       {/* Header (hidden when camera preview is shown so video can use full cell) */}
-      {!showCameraPreview && (
-  <div className="flex flex-wrap items-center gap-2 text-sm py-2 pr-2" ref={headerRef}>
+    {!showCameraPreview && (
+  <div className="flex flex-wrap items-center gap-2 text-sm p-4" ref={headerRef}>
             <span className="w-16 font-bold uppercase">{t('zoom')} {zoom[0]}%</span>
           <div className="flex items-center gap-2" ref={controlsRef}>
             <div className="flex items-center space-x-2">
@@ -957,39 +957,10 @@ export const ImagePreview = ({
         {(originalImage || hasProcessedImage) ? (
           <>
             {/* Two-column layout: left = text (unchanged content), right = toggle button */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', width: '100%' }} className="text-sm font-mono">
-              <div style={{ display: 'block' }}>
-                {/* left column: keep the same info layout (stacked/inline as before) */}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-foreground font-semibold">{t('originalLabel')}</span>
-                    <span className="text-muted-foreground text-xs">{originalImage?.width}×{originalImage?.height}</span>
-                    <span className="text-muted-foreground text-xs">{originalFormat}</span>
-                    {!processedImageData && originalImage && (
-                      <span className="text-muted-foreground text-xs">
-                        {t('zoomedDimensions')
-                          .replace('{width}', Math.round(originalImage.width * (zoom[0] / 100)).toString())
-                          .replace('{height}', Math.round(originalImage.height * (zoom[0] / 100)).toString())}
-                      </span>
-                    )}
-                  </div>
-                  {processedImageData && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-foreground font-semibold">{t('processedLabel')}</span>
-                      <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
-                      <span className="text-muted-foreground text-xs">{processedFormat}</span>
-                      <span className="text-muted-foreground text-xs">
-                        {t('zoomedDimensions')
-                          .replace('{width}', Math.round(processedImageData.width * (zoom[0] / 100)).toString())
-                          .replace('{height}', Math.round(processedImageData.height * (zoom[0] / 100)).toString())}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'center', width: '100%' }} className="text-sm font-mono p-4">
               {hasProcessedImage && (
-                <div style={{ textAlign: 'right' }}>
-                  {/* right column: red toggle button (restore original/processed UI control) */}
+                <div style={{ textAlign: 'left' }} className="pr-4">
+                  {/* first column (was right): red toggle button, now aligned left */}
                   <Button
                     onClick={() => {
                       const next = !showOriginal;
@@ -1010,13 +981,42 @@ export const ImagePreview = ({
                     variant="highlighted"
                     size="sm"
                     className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
-                    title={showOriginal ? t('showProcessed') : t('showOriginal')}
-                    aria-label={showOriginal ? t('showProcessed') : t('showOriginal')}
+                    title={t('switchPreview')}
+                    aria-label={t('switchPreview')}
                   >
-                    <Eye className="h-4 w-4 text-white" />
+                    <RefreshCcw className="h-4 w-4 text-white" />
                   </Button>
                 </div>
               )}
+              <div style={{ display: 'block' }}>
+                {/* second column (was left): text/info block */}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-foreground font-semibold">{t('original')}</span>
+                    <span className="text-muted-foreground text-xs">{originalImage?.width}×{originalImage?.height}</span>
+                    <span className="text-muted-foreground text-xs">{originalFormat}</span>
+                    {!processedImageData && originalImage && (
+                      <span className="text-muted-foreground text-xs">
+                        {t('zoomedDimensions')
+                          .replace('{width}', Math.round(originalImage.width * (zoom[0] / 100)).toString())
+                          .replace('{height}', Math.round(originalImage.height * (zoom[0] / 100)).toString())}
+                      </span>
+                    )}
+                  </div>
+                  {processedImageData && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-foreground font-semibold">{t('processed')}</span>
+                      <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
+                      <span className="text-muted-foreground text-xs">{processedFormat}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {t('zoomedDimensions')
+                          .replace('{width}', Math.round(processedImageData.width * (zoom[0] / 100)).toString())
+                          .replace('{height}', Math.round(processedImageData.height * (zoom[0] / 100)).toString())}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Palette Viewer - only show when needed */}
