@@ -730,8 +730,7 @@ export const ImagePreview = ({
       {/* Header (hidden when camera preview is shown so video can use full cell) */}
       {!showCameraPreview && (
         <div className="flex flex-wrap items-center gap-2 text-sm" ref={headerRef}>
-          <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
-
+            <span className="w-16 font-bold uppercase">{t('zoom')} {zoom[0]}%</span>
           <div className="flex items-center gap-2" ref={controlsRef}>
             <div className="flex items-center space-x-2">
               <Checkbox 
