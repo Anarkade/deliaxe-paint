@@ -175,6 +175,8 @@ export const ImagePreview = ({
   const [containerWidth, setContainerWidth] = useState(0);
   const [previewHeight, setPreviewHeight] = useState(400);
   const headerRef = useRef<HTMLDivElement>(null);
+  const controlsRef = useRef<HTMLDivElement>(null);
+  const [sliderFullWidth, setSliderFullWidth] = useState(false);
   const footerRef = useRef<HTMLDivElement>(null);
   const [originalFormat, setOriginalFormat] = useState<string>('');
   const [processedFormat, setProcessedFormat] = useState<string>('');
@@ -513,6 +515,33 @@ export const ImagePreview = ({
     }
   }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
 
+  // Observe header width and controls width to decide if slider should wrap to its own line
+  useEffect(() => {
+    const update = () => {
+      const header = headerRef.current;
+      const controls = controlsRef.current;
+      if (!header || !controls) {
+        setSliderFullWidth(false);
+        return;
+      }
+      const containerW = header.clientWidth;
+      const controlsW = controls.offsetWidth;
+      const availableForSlider = Math.max(0, containerW - controlsW);
+      const needsWrap = availableForSlider < containerW * 0.5;
+      setSliderFullWidth(needsWrap);
+    };
+
+    update();
+    const ro = new ResizeObserver(() => update());
+    if (headerRef.current) ro.observe(headerRef.current);
+    if (controlsRef.current) ro.observe(controlsRef.current);
+    window.addEventListener('resize', update);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, []);
+
   // Custom imageLoaded event listener for layout-aware recalculation
   useEffect(() => {
     const handleImageLoaded = () => {
@@ -700,24 +729,10 @@ export const ImagePreview = ({
     <div className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col">
       {/* Header (hidden when camera preview is shown so video can use full cell) */}
       {!showCameraPreview && (
-        <div className="flex items-center gap-4 text-sm" ref={headerRef}>
+        <div className="flex flex-wrap items-center gap-2 text-sm" ref={headerRef}>
           <span className="w-16">{t('zoom')}: {zoom[0]}%</span>
-          <Slider
-            value={sliderValue}
-            onValueChange={handleZoomChange}
-            max={ZOOM_BOUNDS.max}
-            min={ZOOM_BOUNDS.min}
-            step={integerScaling ? 100 : 1}
-            className="flex-1"
-          />
 
-          <div className="flex items-center gap-4">
-            <Button onClick={fitToWidth} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
-              <ChevronsLeftRight className="h-4 w-4" />
-            </Button>
-            <Button onClick={setZoomTo100} variant="highlighted" size="sm" title="100%" aria-label="Set zoom to 100%">
-              100%
-            </Button>
+          <div className="flex items-center gap-2" ref={controlsRef}>
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="integer-scaling" 
@@ -726,6 +741,23 @@ export const ImagePreview = ({
               />
               <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
             </div>
+            <Button onClick={fitToWidth} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
+              <ChevronsLeftRight className="h-4 w-4" />
+            </Button>
+            <Button onClick={setZoomTo100} variant="highlighted" size="sm" title="100%" aria-label="Set zoom to 100%">
+              100%
+            </Button>
+          </div>
+
+          <div className={sliderFullWidth ? 'w-full mt-2' : 'flex-1'}>
+            <Slider
+              value={sliderValue}
+              onValueChange={handleZoomChange}
+              max={ZOOM_BOUNDS.max}
+              min={ZOOM_BOUNDS.min}
+              step={integerScaling ? 100 : 1}
+              className="w-full"
+            />
           </div>
         </div>
       )}
