@@ -74,13 +74,16 @@ export type ScalingMode = 'stretch' | 'fit' | 'dont-scale';
 export type CombinedScalingMode = ScalingMode | AlignmentMode;
 
 interface ResolutionSelectorProps {
-  // No longer needed, component is autonomous
   onClose?: () => void;
+  onApplyResolution?: (resolution: ResolutionType) => void;
+  onChangeScalingMode?: (mode: CombinedScalingMode) => void;
 }
 
 export const ResolutionSelector = ({
-  onClose
-}: { onClose?: () => void }) => {
+  onClose,
+  onApplyResolution,
+  onChangeScalingMode
+}: ResolutionSelectorProps) => {
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
   const { t } = useTranslation();
@@ -163,7 +166,10 @@ export const ResolutionSelector = ({
             </label>
             <RadioGroup
               value={['stretch', 'fit', 'dont-scale'].includes(scalingMode as string) ? scalingMode as ScalingMode : 'fit'}
-              onValueChange={(value: ScalingMode) => setScalingMode(value)}
+              onValueChange={(value: ScalingMode) => {
+                setScalingMode(value);
+                onChangeScalingMode?.(value);
+              }}
               className="space-y-0 gap-2 flex flex-col"
             >
               {scalingOptions.map((option) => {
@@ -190,7 +196,10 @@ export const ResolutionSelector = ({
             </label>
             <RadioGroup
               value={isAlignmentMode(scalingMode) ? (scalingMode as AlignmentMode) : 'middle-center'}
-              onValueChange={(value: AlignmentMode) => setScalingMode(value)}
+              onValueChange={(value: AlignmentMode) => {
+                setScalingMode(value);
+                onChangeScalingMode?.(value);
+              }}
               className="grid grid-cols-3 gap-y-2 text-xs"
               style={{ columnGap: '0.25rem' }}
             >
@@ -215,7 +224,15 @@ export const ResolutionSelector = ({
                 {t('targetResolution')}
               </span>
             </label>
-            <RadioGroup value={selectedResolution} onValueChange={(value) => setSelectedResolution(value as ResolutionType)} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
+            <RadioGroup
+              value={selectedResolution}
+              onValueChange={(value) => {
+                const r = value as ResolutionType;
+                setSelectedResolution(r);
+                onApplyResolution?.(r);
+              }}
+              className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3"
+            >
               {resolutionOptions.map((option) => (
                 <div key={option.value} className="flex space-x-1 min-h-[2.5rem]">
                   <RadioGroupItem value={option.value} id={`resolution-${option.value}`} className="h-3 w-3 mt-1 flex-shrink-0" />

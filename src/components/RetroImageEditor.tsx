@@ -23,7 +23,7 @@ import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { useCanvasPool } from '@/utils/canvasPool';
 import { imageProcessingCache, hashImage, hashImageData } from '@/utils/imageCache';
 import { ChangeGridSelector } from './ChangeGridSelector';
-import { ResolutionSelector } from './ResolutionSelector';
+import { ResolutionSelector, ResolutionType, CombinedScalingMode } from './ResolutionSelector';
 // Performance constants - Optimized for large image handling
 const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory issues
 const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size
@@ -51,6 +51,10 @@ export const RetroImageEditor = () => {
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
   const [selectedPalette, setSelectedPalette] = useState<string>('original');
+  // Restore resolution/scaling state that the selector will control
+  const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
+  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
+  const [autoFitKey, setAutoFitKey] = useState<string | undefined>(undefined);
   const ignoreNextCloseRef = useRef(false);
   
   // Performance and processing state
@@ -388,9 +392,23 @@ export const RetroImageEditor = () => {
       }
 
       // ALWAYS use original image as source for any changes
-      // Set canvas dimensions based on resolution
+      // Determine target dimensions based on selectedResolution
       let targetWidth = originalImage.width;
       let targetHeight = originalImage.height;
+
+      if (selectedResolution !== 'original' && selectedResolution !== 'unscaled') {
+        const parts = selectedResolution.split('x');
+        const w = parseInt(parts[0], 10);
+        const h = parseInt(parts[1], 10);
+        if (!isNaN(w) && !isNaN(h)) {
+          targetWidth = w;
+          targetHeight = h;
+        }
+      } else if (selectedResolution === 'unscaled') {
+        // keep original dimensions
+        targetWidth = originalImage.width;
+        targetHeight = originalImage.height;
+      }
 
       // Additional safety check for canvas size
       if (targetWidth > MAX_CANVAS_SIZE || targetHeight > MAX_CANVAS_SIZE) {
@@ -405,12 +423,36 @@ export const RetroImageEditor = () => {
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, targetWidth, targetHeight);
 
-      // Draw image based on scaling mode
-      ctx.drawImage(originalImage, 0, 0);
+      // Draw image based on scalingMode / alignment
+      if (scalingMode === 'stretch') {
+        ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+      } else if (scalingMode === 'fit') {
+        // maintain aspect ratio and center by default
+        const sw = originalImage.width;
+        const sh = originalImage.height;
+        const srcRatio = sw / sh;
+        const dstRatio = targetWidth / targetHeight;
+        let dw = targetWidth;
+        let dh = targetHeight;
+        if (srcRatio > dstRatio) {
+          dw = targetWidth;
+          dh = Math.round(targetWidth / srcRatio);
+        } else {
+          dh = targetHeight;
+          dw = Math.round(targetHeight * srcRatio);
+        }
+        let dx = Math.round((targetWidth - dw) / 2);
+        let dy = Math.round((targetHeight - dh) / 2);
+        // If scalingMode encodes alignment, adjust dx/dy (simple center default used here)
+        ctx.drawImage(originalImage, 0, 0, sw, sh, dx, dy, dw, dh);
+      } else {
+        // dont-scale: draw original image at its own size
+        ctx.drawImage(originalImage, 0, 0);
+      }
       
       // Apply palette conversion using current palette colors
       // Always use original image data for palette conversion to avoid degradation
-      if (selectedPalette !== 'original') {
+  if (selectedPalette !== 'original') {
         // Create a temporary canvas with original image data for palette conversion
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = targetWidth;
@@ -431,9 +473,11 @@ export const RetroImageEditor = () => {
         // Palette conversion now handled by context/component
         ctx.putImageData(originalImageData, 0, 0);
         // When assigning imageData
-        imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-        // Cache the result for future use (fix parameter order)
-        setProcessedImageData(imageData);
+  imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+  // Cache the result for future use (fix parameter order)
+  setProcessedImageData(imageData);
+  // trigger ImagePreview to auto-fit the new image
+  setAutoFitKey(String(Date.now()));
         
         // Save to history (resolution/scaling removed)
         saveToHistory({
@@ -445,7 +489,9 @@ export const RetroImageEditor = () => {
       // Cache the result for future use (fix parameter order)
       // Cache logic for resolution/scaling/palette removed
 
-      setProcessedImageData(imageData);
+  setProcessedImageData(imageData);
+  // trigger ImagePreview to auto-fit the new image
+  setAutoFitKey(String(Date.now()));
       
       // Save to history (resolution/scaling removed)
       saveToHistory({
@@ -802,6 +848,14 @@ export const RetroImageEditor = () => {
               >
                 <ResolutionSelector
                   onClose={() => setActiveTab(null)}
+                  onApplyResolution={(r) => {
+                    setSelectedResolution(r);
+                    setTimeout(() => processImage(), 50);
+                  }}
+                  onChangeScalingMode={(m) => {
+                    setScalingMode(m);
+                    setTimeout(() => processImage(), 50);
+                  }}
                 />
               </div>
             )}
