@@ -952,66 +952,102 @@ export const ImagePreview = ({
         )}
       </div>
 
-      {/* Footer (always rendered) */}
+      {/* Footer (render only when we have an original or processed image) */}
       <div className="space-y-6" ref={footerRef}>
-        {/* Image Information */}
-        {originalImage && (
-          <div className="bg-elegant-bg/50 rounded-lg p-4 border border-elegant-border/50">
-            <div className="flex flex-col gap-2 text-sm font-mono">
-              <div className="flex items-center gap-2">
-                <span className="text-foreground font-semibold">{t('originalLabel')}</span>
-                <span className="text-muted-foreground text-xs">{originalImage.width}×{originalImage.height}</span>
-                <span className="text-muted-foreground text-xs">{originalFormat}</span>
-                {!processedImageData && (
-                  <span className="text-muted-foreground text-xs">
-                    {t('zoomedDimensions')
-                      .replace('{width}', Math.round(originalImage.width * (zoom[0] / 100)).toString())
-                      .replace('{height}', Math.round(originalImage.height * (zoom[0] / 100)).toString())}
-                  </span>
-                )}
+        {(originalImage || hasProcessedImage) ? (
+          <>
+            {/* Two-column layout: left = text (unchanged content), right = toggle button */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', width: '100%' }} className="text-sm font-mono">
+              <div style={{ display: 'block' }}>
+                {/* left column: keep the same info layout (stacked/inline as before) */}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-foreground font-semibold">{t('originalLabel')}</span>
+                    <span className="text-muted-foreground text-xs">{originalImage?.width}×{originalImage?.height}</span>
+                    <span className="text-muted-foreground text-xs">{originalFormat}</span>
+                    {!processedImageData && originalImage && (
+                      <span className="text-muted-foreground text-xs">
+                        {t('zoomedDimensions')
+                          .replace('{width}', Math.round(originalImage.width * (zoom[0] / 100)).toString())
+                          .replace('{height}', Math.round(originalImage.height * (zoom[0] / 100)).toString())}
+                      </span>
+                    )}
+                  </div>
+                  {processedImageData && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-foreground font-semibold">{t('processedLabel')}</span>
+                      <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
+                      <span className="text-muted-foreground text-xs">{processedFormat}</span>
+                      <span className="text-muted-foreground text-xs">
+                        {t('zoomedDimensions')
+                          .replace('{width}', Math.round(processedImageData.width * (zoom[0] / 100)).toString())
+                          .replace('{height}', Math.round(processedImageData.height * (zoom[0] / 100)).toString())}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
-              {processedImageData && (
-                <div className="flex items-center gap-2">
-                  <span className="text-foreground font-semibold">{t('processedLabel')}</span>
-                  <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
-                  <span className="text-muted-foreground text-xs">{processedFormat}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {t('zoomedDimensions')
-                      .replace('{width}', Math.round(processedImageData.width * (zoom[0] / 100)).toString())
-                      .replace('{height}', Math.round(processedImageData.height * (zoom[0] / 100)).toString())}
-                  </span>
+              {hasProcessedImage && (
+                <div style={{ textAlign: 'right' }}>
+                  {/* right column: red toggle button (restore original/processed UI control) */}
+                  <Button
+                    onClick={() => {
+                      const next = !showOriginal;
+                      setShowOriginal(next);
+                      // Recalculate preview height to reflect the new image selection
+                      try {
+                        const currentImage = next ? originalImage : (processedImageData || originalImage);
+                        if (currentImage) {
+                          const displayHeight = currentImage.height * (zoom[0] / 100);
+                          const minHeight = 150;
+                          const calculatedHeight = Math.max(minHeight, displayHeight);
+                          setPreviewHeight(Math.ceil(calculatedHeight));
+                        }
+                      } catch (e) {
+                        // ignore
+                      }
+                    }}
+                    variant="highlighted"
+                    size="sm"
+                    className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+                    title={showOriginal ? t('showProcessed') : t('showOriginal')}
+                    aria-label={showOriginal ? t('showProcessed') : t('showOriginal')}
+                  >
+                    <Eye className="h-4 w-4 text-white" />
+                  </Button>
                 </div>
               )}
             </div>
-          </div>
-        )}
-        {/* Palette Viewer - only show when needed */}
-        {(() => {
-          // Only show palette viewer when:
-          // 1. selectedPalette is not 'original' (showing a retro palette), OR
-          // 2. selectedPalette is 'original' AND the image is PNG-8 indexed
-          const showPaletteViewer = selectedPalette !== 'original' || isIndexedPNG;
-          return showPaletteViewer && originalImage ? (
-            <div className="mt-4">
-              <PaletteViewer
-                selectedPalette={selectedPalette}
-                imageData={processedImageData}
-                onPaletteUpdate={onPaletteUpdate}
-                originalImageSource={originalImageSource}
-                // Always forward the parent's current palette (if present). PaletteViewer
-                // expects items with { r,g,b }, so map to that shape. This ensures exports
-                // can use the exact palette shown in the preview even when selectedPalette === 'original'.
-                externalPalette={currentPaletteColors && currentPaletteColors.length > 0
-                  ? currentPaletteColors.map(c => ({ r: c.r, g: c.g, b: c.b }))
-                  : undefined}
-                onImageUpdate={() => {
-                  // Trigger image reprocessing when palette is updated
-                  onSectionOpen?.();
-                }}
-              />
-            </div>
-          ) : null;
-        })()}
+
+            {/* Palette Viewer - only show when needed */}
+            {(() => {
+              // Only show palette viewer when:
+              // 1. selectedPalette is not 'original' (showing a retro palette), OR
+              // 2. selectedPalette is 'original' AND the image is PNG-8 indexed
+              const showPaletteViewer = selectedPalette !== 'original' || isIndexedPNG;
+              return showPaletteViewer && originalImage ? (
+                <div className="mt-4">
+                  <PaletteViewer
+                    selectedPalette={selectedPalette}
+                    imageData={processedImageData}
+                    onPaletteUpdate={onPaletteUpdate}
+                    originalImageSource={originalImageSource}
+                    // Always forward the parent's current palette (if present). PaletteViewer
+                    // expects items with { r,g,b }, so map to that shape. This ensures exports
+                    // can use the exact palette shown in the preview even when selectedPalette === 'original'.
+                    externalPalette={currentPaletteColors && currentPaletteColors.length > 0
+                      ? currentPaletteColors.map(c => ({ r: c.r, g: c.g, b: c.b }))
+                      : undefined}
+                    onImageUpdate={() => {
+                      // Trigger image reprocessing when palette is updated
+                      onSectionOpen?.();
+                    }}
+                  />
+                </div>
+              ) : null;
+            })()}
+          </>
+        ) : null}
       </div>
     </div>
   );
