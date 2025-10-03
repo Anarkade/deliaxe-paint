@@ -14,7 +14,7 @@ import { Color } from '@/lib/colorQuantization';
 // Performance constants for image analysis and rendering
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for performance
 const RESIZE_DEBOUNCE_MS = 100; // Debounce resize calculations
-const ZOOM_BOUNDS = { min: 10, max: 1600 }; // Zoom limits for performance
+const ZOOM_BOUNDS = { min: 10, max: 2000 }; // Zoom limits for performance
 
 // Performance-optimized image format analysis with pixel sampling
 const analyzeImageFormat = (image: HTMLImageElement, t: (key: string) => string): Promise<string> => {
@@ -432,7 +432,7 @@ export const ImagePreview = ({
     if (originalImage && containerWidth > 0) {
       const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
       const fitZoom = Math.floor((containerWidth / currentImage.width) * 100);
-      const newZoom = Math.max(1, Math.min(1600, fitZoom));
+  const newZoom = Math.max(1, Math.min(2000, fitZoom));
       programmaticZoomChange.current = true;
       setZoom([newZoom]);
       setSliderValue([newZoom]);
