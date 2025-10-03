@@ -957,10 +957,10 @@ export const ImagePreview = ({
         {/* Image Information */}
         {originalImage && (
           <div className="bg-elegant-bg/50 rounded-lg p-4 border border-elegant-border/50">
-            <div className="flex flex-wrap items-center gap-4 text-sm font-mono">
+            <div className="flex flex-col gap-2 text-sm font-mono">
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">{t('originalLabel')}</span>
-                <span className="text-foreground font-semibold">{originalImage.width}×{originalImage.height}</span>
+                <span className="text-foreground font-semibold">{t('originalLabel')}</span>
+                <span className="text-muted-foreground text-xs">{originalImage.width}×{originalImage.height}</span>
                 <span className="text-muted-foreground text-xs">{originalFormat}</span>
                 {!processedImageData && (
                   <span className="text-muted-foreground text-xs">
@@ -972,8 +972,8 @@ export const ImagePreview = ({
               </div>
               {processedImageData && (
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">{t('processedLabel')}</span>
-                  <span className="text-foreground font-semibold">{processedImageData.width}×{processedImageData.height}</span>
+                  <span className="text-foreground font-semibold">{t('processedLabel')}</span>
+                  <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
                   <span className="text-muted-foreground text-xs">{processedFormat}</span>
                   <span className="text-muted-foreground text-xs">
                     {t('zoomedDimensions')
