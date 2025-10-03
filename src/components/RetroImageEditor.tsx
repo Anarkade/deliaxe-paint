@@ -97,10 +97,48 @@ export const RetroImageEditor = () => {
     // Clean up image references
     setOriginalImage(null);
     setProcessedImageData(null);
+    setOriginalImageSource(null);
+
+    // Restore UI state and selector defaults (these match the initial values
+    // set when the component mounts). This ensures ResolutionSelector radio
+    // buttons and all related editor state return to their app-start defaults
+    // when the user clicks the Load Image / Import button.
+    setSelectedPalette('original');
+    setSelectedResolution('original');
+    setScalingMode('fit');
+    setAutoFitKey(undefined);
+
+    // Reset camera & preview state
+    setShowCameraPreview(false);
+    setSelectedCameraId(null);
+
+    // Reset processing state and progress
+    setIsProcessing(false);
+    setProcessingProgress(0);
+    setProcessingOperation('');
+
+    // Grid & palette related defaults
+    setIsOriginalPNG8Indexed(false);
+    setOriginalPaletteColors([]);
+    setShowTileGrid(false);
+    setShowFrameGrid(false);
+    setTileWidth(8);
+    setTileHeight(8);
+    setFrameWidth(16);
+    setFrameHeight(16);
+    setTileGridColor('#808080');
+    setFrameGridColor('#96629d');
+    setTileLineThickness(1);
+    setFrameLineThickness(3);
+
+    // Reset zoom state used by the UI
+    setCurrentZoom(100);
+
     // Clear history to free memory
     setHistory([]);
     setHistoryIndex(-1);
-    // Reset interface
+
+    // Reset interface (open load-image panel)
     setActiveTab('load-image');
   }, []);
 
@@ -450,6 +488,9 @@ export const RetroImageEditor = () => {
         ctx.drawImage(originalImage, 0, 0);
       }
       
+      // Read resulting pixels from canvas so we always have imageData to emit
+      imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
+
       // Apply palette conversion using current palette colors
       // Always use original image data for palette conversion to avoid degradation
   if (selectedPalette !== 'original') {
@@ -467,8 +508,8 @@ export const RetroImageEditor = () => {
         // Draw original image with same scaling/positioning logic
         tempCtx.drawImage(originalImage, 0, 0);
         
-        // Get fresh image data from original for palette conversion
-        const originalImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
+    // Get fresh image data from temp canvas for palette conversion
+    const originalImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
         setProcessingProgress(75);
         // Palette conversion now handled by context/component
         ctx.putImageData(originalImageData, 0, 0);
@@ -525,6 +566,8 @@ export const RetroImageEditor = () => {
     detectAndUnscaleImage,
     isOriginalPNG8Indexed,
     originalPaletteColors,
+    selectedResolution,
+    scalingMode,
     t
   ]);
 
@@ -629,7 +672,7 @@ export const RetroImageEditor = () => {
       
       return () => clearTimeout(timeoutId);
     }
-  }, [originalImage, selectedPalette, processImage]);
+  }, [originalImage, selectedPalette, selectedResolution, scalingMode, processImage]);
 
   // Handle palette changes - clear currentPaletteColors for 'original' on non-indexed images
   useEffect(() => {
@@ -848,14 +891,10 @@ export const RetroImageEditor = () => {
               >
                 <ResolutionSelector
                   onClose={() => setActiveTab(null)}
-                  onApplyResolution={(r) => {
-                    setSelectedResolution(r);
-                    setTimeout(() => processImage(), 50);
-                  }}
-                  onChangeScalingMode={(m) => {
-                    setScalingMode(m);
-                    setTimeout(() => processImage(), 50);
-                  }}
+                  onApplyResolution={(r) => setSelectedResolution(r)}
+                  onChangeScalingMode={(m) => setScalingMode(m)}
+                  selectedResolution={selectedResolution}
+                  selectedScalingMode={scalingMode}
                 />
               </div>
             )}

@@ -14,6 +14,7 @@ import { Color } from '@/lib/colorQuantization';
 // Performance constants for image analysis and rendering
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for performance
 const RESIZE_DEBOUNCE_MS = 100; // Debounce resize calculations
+const FIT_DEBOUNCE_MS = 250; // Minimum interval between fitToWidth executions
 const ZOOM_BOUNDS = { min: 10, max: 2000 }; // Zoom limits for performance
 
 // Performance-optimized image format analysis with pixel sampling
@@ -173,6 +174,7 @@ export const ImagePreview = ({
   const [zoom, setZoom] = useState([100]);
   const [sliderValue, setSliderValue] = useState<number[]>([100]);
   const [containerWidth, setContainerWidth] = useState(0);
+  const containerWidthRef = useRef<number>(0);
   const [previewHeight, setPreviewHeight] = useState(400);
   const headerRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
@@ -186,10 +188,24 @@ export const ImagePreview = ({
   const [integerScaling, setIntegerScaling] = useState(false);
   // Note: Grid dimensions now come from props
   const programmaticZoomChange = useRef(false);
+  const isAutoFitting = useRef(false);
+  const lastFitCallRef = useRef<number>(0);
   const [shouldAutoFit, setShouldAutoFit] = useState(true);
   const autoFitAllowed = useRef(true);
   const expectingProcessedChange = useRef(false);
   const isUserDraggingSlider = useRef(false);
+  // When the user interacts with the zoom controls we temporarily suppress
+  // any automatic fit-to-width triggers (both while dragging and for a short
+  // cooldown after release). This ensures user-chosen zoom is never overridden
+  // by auto-fit logic.
+  const suppressAutoFitRef = useRef(false);
+  const suppressAutoFitTimeoutRef = useRef<number | null>(null);
+  // Track if the user has explicitly set a zoom so automatic fits don't
+  // override their choice. This stays true until a new image is loaded or
+  // an explicit auto-fit (resolution change / load) runs.
+  const userSetZoomRef = useRef(false);
+  // One-time permit for explicit forced fitToWidth calls (only allow camera/button)
+  const autoFitPermitRef = useRef(false);
 
   // Get available cameras
   useEffect(() => {
@@ -245,6 +261,8 @@ export const ImagePreview = ({
         // Wait for video metadata to load before setting aspect ratio
         videoRef.current.addEventListener('loadedmetadata', () => {
           setCameraAspectRatio();
+          // Authorize a single forced fit and notify readiness for camera flow
+          try { autoFitPermitRef.current = true; window.dispatchEvent(new CustomEvent('cameraPreviewReady')); } catch (e) { /* ignore */ }
         }, { once: true });
       }
       
@@ -401,7 +419,9 @@ export const ImagePreview = ({
     const update = () => {
       if (containerRef.current) {
         const width = containerRef.current.clientWidth;
-        setContainerWidth(Math.max(200, width));
+        const cw = Math.max(200, width);
+        setContainerWidth(cw);
+        containerWidthRef.current = cw;
       }
     };
 
@@ -410,7 +430,9 @@ export const ImagePreview = ({
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const width = entry.contentRect.width;
-        setContainerWidth(Math.max(200, width));
+        const cw = Math.max(200, width);
+        setContainerWidth(cw);
+        containerWidthRef.current = cw;
       }
     });
 
@@ -426,12 +448,63 @@ export const ImagePreview = ({
     };
   }, []);
   // Fit to width function
-  const fitToWidth = useCallback(() => {
-    if (isUserDraggingSlider.current) return; // Prevent fit to width while user is dragging slider
+  const fitToWidth = useCallback((force = false) => {
+    // If caller requested a forced fit, require a one-time permit so only
+    // authorized flows (camera preview and manual button) can execute it.
+    if (force) {
+      if (!autoFitPermitRef.current) {
+        // eslint-disable-next-line no-console
+        console.debug('[TEMP DEBUG] fitToWidth blocked: no permit for forced call');
+        return;
+      }
+      // consume permit
+      autoFitPermitRef.current = false;
+    }
+    const cw = containerWidthRef.current;
+    const now = Date.now();
+
+    // Prevent rapid repeated calls or re-entrant execution
+    if (isAutoFitting.current) {
+      // eslint-disable-next-line no-console
+      console.debug('[TEMP DEBUG] fitToWidth suppressed: already running');
+      return;
+    }
+    if (now - lastFitCallRef.current < FIT_DEBOUNCE_MS) {
+      // eslint-disable-next-line no-console
+      console.debug('[TEMP DEBUG] fitToWidth suppressed: debounce');
+      return;
+    }
+    lastFitCallRef.current = now;
+    isAutoFitting.current = true;
+    // TEMPORARY DIAGNOSTIC: capture call stack and print caller location and args
+    try {
+      const raw = (new Error()).stack || '';
+      const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+      // Find first stack entry that is not this function itself
+      let callerLine = lines.find(l => !/fitToWidth/.test(l) && !/new Error/.test(l));
+      if (!callerLine) callerLine = lines[1] || lines[0] || 'unknown';
+      const match = callerLine.match(/\(?([^()]+:\d+:\d+)\)?$/);
+      const callerLocation = match ? match[1] : callerLine;
+      // Use console.debug so it can be filtered; also print full stack for deeper inspection
+      // eslint-disable-next-line no-console
+      console.debug('[TEMP DEBUG] fitToWidth called', { force, callerLocation });
+      // eslint-disable-next-line no-console
+      console.debug('[TEMP DEBUG] fitToWidth stack:\n' + lines.join('\n'));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.debug('[TEMP DEBUG] fitToWidth diagnostic failed', err);
+    }
+    // If caller doesn't force, respect user interactions / suppression.
+    if (!force) {
+      if (isUserDraggingSlider.current) return; // Prevent fit to width while user is dragging slider
+      if (suppressAutoFitRef.current) return; // Suppress auto-fit during/after user zoom interactions
+      if (userSetZoomRef.current) return; // Respect explicit user-selected zoom
+    }
     
-    if (originalImage && containerWidth > 0) {
+    try {
+      if (originalImage && cw > 0) {
       const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
-      const fitZoom = Math.floor((containerWidth / currentImage.width) * 100);
+      const fitZoom = Math.floor((cw / currentImage.width) * 100);
   const newZoom = Math.max(1, Math.min(2000, fitZoom));
       programmaticZoomChange.current = true;
       setZoom([newZoom]);
@@ -444,13 +517,48 @@ export const ImagePreview = ({
       const calculatedHeight = Math.max(minHeight, displayHeight);
       setPreviewHeight(Math.ceil(calculatedHeight));
     }
-  }, [originalImage, containerWidth, showOriginal, processedImageData, onZoomChange]);
+    } finally {
+      // Allow a short delay before clearing running flag to avoid immediate reentry
+      setTimeout(() => {
+        isAutoFitting.current = false;
+      }, 0);
+    }
+  }, [originalImage, showOriginal, processedImageData, onZoomChange]);
+
+  // Listen for camera preview readiness and perform a single allowed auto-fit
+  useEffect(() => {
+    const handler = () => {
+      try {
+        // force the fit once when camera preview is ready
+        fitToWidth(true);
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    window.addEventListener('cameraPreviewReady', handler as EventListener);
+    return () => window.removeEventListener('cameraPreviewReady', handler as EventListener);
+  }, [fitToWidth]);
 
   // Set zoom to exactly 100%
   const setZoomTo100 = useCallback(() => {
-    if (isUserDraggingSlider.current) return;
+  // Prevent setting 100% from triggering any auto-fit logic while the user
+  // is actively dragging. Allow the button even if suppression is active so
+  // users can always set an explicit 100% zoom.
+  if (isUserDraggingSlider.current) return;
 
+  // Mark that the user explicitly set the zoom so auto-fit won't override it.
+  userSetZoomRef.current = true;
+
+  // Mark that this is a programmatic zoom change and suppress auto-fit
+  // for a short cooldown so effects triggered by zoom won't call fitToWidth.
     programmaticZoomChange.current = true;
+    if (suppressAutoFitTimeoutRef.current) window.clearTimeout(suppressAutoFitTimeoutRef.current);
+    suppressAutoFitRef.current = true;
+    suppressAutoFitTimeoutRef.current = window.setTimeout(() => {
+      suppressAutoFitRef.current = false;
+      suppressAutoFitTimeoutRef.current = null;
+    }, 700) as unknown as number;
     const newZoom = 100;
     setZoom([newZoom]);
     setSliderValue([newZoom]);
@@ -469,6 +577,11 @@ export const ImagePreview = ({
   // Optimized zoom handling with bounds checking and integer scaling
   const handleZoomChange = useCallback((newZoom: number[]) => {
     isUserDraggingSlider.current = true;
+    // Mark that the user explicitly set the zoom so auto-fit won't override it.
+    userSetZoomRef.current = true;
+    // Suppress auto-fit while user is dragging and for a short cooldown after release
+    if (suppressAutoFitTimeoutRef.current) window.clearTimeout(suppressAutoFitTimeoutRef.current);
+    suppressAutoFitRef.current = true;
     setShouldAutoFit(false);
     autoFitAllowed.current = false;
     expectingProcessedChange.current = false;
@@ -498,22 +611,37 @@ export const ImagePreview = ({
       setPreviewHeight(Math.ceil(calculatedHeight));
     }
     
-    // Reset dragging flag after a short delay
+    // Reset dragging flag after a short delay (increase to avoid auto-fit race)
     setTimeout(() => {
       isUserDraggingSlider.current = false;
-    }, 100);
+      // Keep suppressing auto-fit for a short cooldown after the user releases
+      // the slider so other effects don't immediately trigger fitToWidth.
+      if (suppressAutoFitTimeoutRef.current) window.clearTimeout(suppressAutoFitTimeoutRef.current);
+      suppressAutoFitTimeoutRef.current = window.setTimeout(() => {
+        suppressAutoFitRef.current = false;
+        suppressAutoFitTimeoutRef.current = null;
+      }, 700) as unknown as number;
+    }, 300);
   }, [integerScaling, onZoomChange, originalImage, containerWidth, showOriginal, processedImageData]);
+
+  // Cleanup suppression timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (suppressAutoFitTimeoutRef.current) {
+        window.clearTimeout(suppressAutoFitTimeoutRef.current);
+        suppressAutoFitTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Layout-aware height recalculation effect
   useEffect(() => {
     if (isVerticalLayout !== undefined && originalImage && containerWidth > 0) {
-      // Trigger height recalculation when layout changes with enhanced timing
-      const layoutDelay = 150; // Extra delay for layout transitions
-      setTimeout(() => {
-        fitToWidth();
-      }, layoutDelay);
+      // Layout changed — intentionally not triggering fitToWidth automatically.
+      // Previously this scheduled fitToWidth(true) with a timeout; removed to
+      // ensure fitToWidth only runs from the manual button or the camera flow.
     }
-  }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
+  }, [isVerticalLayout, originalImage, containerWidth]);
 
   // Observe header width and controls width to decide if slider should wrap to its own line
   useEffect(() => {
@@ -544,16 +672,10 @@ export const ImagePreview = ({
 
   // Custom imageLoaded event listener for layout-aware recalculation
   useEffect(() => {
+    // imageLoaded listener retained but no automatic fitToWidth call (manual only)
     const handleImageLoaded = () => {
       if (isUserDraggingSlider.current) return; // Prevent auto-fit while dragging
-      
-      // Add delay for layout transitions to ensure DOM updates are complete
-      const delay = isVerticalLayout !== undefined ? 200 : 100;
-      setTimeout(() => {
-        if (originalImage && containerWidth > 0 && !isUserDraggingSlider.current) {
-          fitToWidth();
-        }
-      }, delay);
+      // previously would call fitToWidth() here; removed to avoid automatic loops
     };
 
     window.addEventListener('imageLoaded', handleImageLoaded);
@@ -561,7 +683,7 @@ export const ImagePreview = ({
     return () => {
       window.removeEventListener('imageLoaded', handleImageLoaded);
     };
-  }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
+  }, [isVerticalLayout, originalImage, containerWidth]);
 
   // Handle integer scaling toggle
   const handleIntegerScalingChange = useCallback((checked: boolean) => {
@@ -583,29 +705,9 @@ export const ImagePreview = ({
     if (originalImage) {
       autoFitAllowed.current = true;
       setShouldAutoFit(true);
-      
-      // Force height recalculation after a brief delay to ensure container is ready
-      const timeoutId = setTimeout(() => {
-        if (containerWidth > 0) {
-          fitToWidth();
-        } else {
-          // If container width isn't ready, retry a few times
-          let retries = 0;
-          const retryInterval = setInterval(() => {
-            if (containerWidth > 0 || retries >= 5) {
-              clearInterval(retryInterval);
-              if (containerWidth > 0) {
-                fitToWidth();
-              }
-            }
-            retries++;
-          }, 100);
-        }
-      }, 100);
-      
-      return () => clearTimeout(timeoutId);
+      // Previously this scheduled fitToWidth(true) and retries; removed to avoid automatic calls
     }
-  }, [originalImage, containerWidth, fitToWidth]);
+  }, [originalImage, containerWidth]);
 
   // Prepare auto-fit when resolution/scaling changes; wait for processed image
   useEffect(() => {
@@ -624,35 +726,19 @@ export const ImagePreview = ({
 
   // Apply fit to width once when auto-fit is pending and container size is known
   useEffect(() => {
+    // Auto-fit pending watcher retained but no automatic fitToWidth invocation
     if (!originalImage || containerWidth <= 0) return;
     if (!shouldAutoFit || isUserDraggingSlider.current) return;
-    
-    // Enhanced auto-fit with immediate height calculation
-    const timeoutId = setTimeout(() => {
-      if (!isUserDraggingSlider.current) {
-        fitToWidth();
-        setShouldAutoFit(false);
-        expectingProcessedChange.current = false;
-      }
-    }, 50);
-    
-    return () => clearTimeout(timeoutId);
-  }, [shouldAutoFit, containerWidth, originalImage, fitToWidth]);
+    // Previously would call fitToWidth(true) here; removed to prevent loops
+    setShouldAutoFit(false);
+    expectingProcessedChange.current = false;
+  }, [shouldAutoFit, containerWidth, originalImage]);
 
   // Layout-aware height recalculation effect
   useEffect(() => {
     if (isUserDraggingSlider.current) return; // Prevent auto-fit while dragging
-    
-    if (isVerticalLayout !== undefined && originalImage && containerWidth > 0) {
-      // Trigger height recalculation when layout changes with enhanced timing
-      const layoutDelay = 150; // Extra delay for layout transitions
-      setTimeout(() => {
-        if (!isUserDraggingSlider.current) {
-          fitToWidth();
-        }
-      }, layoutDelay);
-    }
-  }, [isVerticalLayout, originalImage, containerWidth, fitToWidth]);
+    // Layout change detected; intentionally not triggering fitToWidth automatically
+  }, [isVerticalLayout, originalImage, containerWidth]);
 
   // Calculate preview block height to match the image height only.
   // IMPORTANT: Do NOT include header/footer heights here — the preview cell
@@ -725,6 +811,11 @@ export const ImagePreview = ({
     return zoomFactor; // fallback
   })();
 
+  // Compute wrapper size based on the image currently displayed (processed or original)
+  const currentDisplayedImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
+  const displayedWidth = currentDisplayedImage ? currentDisplayedImage.width * (zoom[0] / 100) : 0;
+  const displayedHeight = currentDisplayedImage ? currentDisplayedImage.height * (zoom[0] / 100) : 0;
+
   return (
     <div className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col">
       {/* Header (hidden when camera preview is shown so video can use full cell) */}
@@ -740,7 +831,7 @@ export const ImagePreview = ({
               />
               <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
             </div>
-            <Button onClick={fitToWidth} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
+            <Button onClick={() => { autoFitPermitRef.current = true; fitToWidth(true); }} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
               <ChevronsLeftRight className="h-4 w-4" />
             </Button>
             <Button onClick={setZoomTo100} variant="highlighted" size="sm" title="100%" aria-label="Set zoom to 100%">
@@ -774,7 +865,7 @@ export const ImagePreview = ({
     }
   >
         {originalImage ? (
-          <div className="relative" style={{ width: `${originalImage.width * (zoom[0] / 100)}px`, height: `${originalImage.height * (zoom[0] / 100)}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="relative" style={{ width: `${displayedWidth}px`, height: `${displayedHeight}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <canvas
               ref={canvasRef}
               style={{ 

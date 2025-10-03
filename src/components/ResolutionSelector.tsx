@@ -1,5 +1,5 @@
 import { Card } from '@/components/ui/card';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -77,16 +77,33 @@ interface ResolutionSelectorProps {
   onClose?: () => void;
   onApplyResolution?: (resolution: ResolutionType) => void;
   onChangeScalingMode?: (mode: CombinedScalingMode) => void;
+  // Optional controlled props from parent
+  selectedResolution?: ResolutionType;
+  selectedScalingMode?: CombinedScalingMode;
 }
 
 export const ResolutionSelector = ({
   onClose,
   onApplyResolution,
   onChangeScalingMode
+  , selectedResolution: selectedResolutionProp, selectedScalingMode: selectedScalingModeProp
 }: ResolutionSelectorProps) => {
-  const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
-  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
+  const [selectedResolution, setSelectedResolution] = useState<ResolutionType>(selectedResolutionProp ?? 'original');
+  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>(selectedScalingModeProp ?? 'fit');
   const { t } = useTranslation();
+
+  // Sync with controlled props when they change
+  useEffect(() => {
+    if (selectedResolutionProp !== undefined && selectedResolutionProp !== selectedResolution) {
+      setSelectedResolution(selectedResolutionProp);
+    }
+  }, [selectedResolutionProp]);
+
+  useEffect(() => {
+    if (selectedScalingModeProp !== undefined && selectedScalingModeProp !== scalingMode) {
+      setScalingMode(selectedScalingModeProp);
+    }
+  }, [selectedScalingModeProp]);
 
   // Build options inside render to ensure translations update
   const resolutionOptions = [

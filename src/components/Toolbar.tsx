@@ -119,7 +119,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               onClick={() => handleTabClick('palette-selector')}
               className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
-              title={t('selectPalette')}
+              title={t('changePalette')}
             >
               <Palette className="h-4 w-4" />
             </Button>
@@ -183,7 +183,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             onClick={() => handleTabClick('palette-selector')}
             className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
-            title={t('selectPalette')}
+            title={t('changePalette')}
           >
             <Palette className="h-4 w-4" />
           </Button>
