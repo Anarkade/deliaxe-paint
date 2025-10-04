@@ -118,11 +118,13 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
       </Button>
 
       <div className="space-y-4">
-        <div className="flex items-center">
-          <Camera className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
-          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>{t('selectCamera')}</h3>
+        <div>
+          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+            <Camera className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+            {t('selectCamera')}
+          </h3>
         </div>
-
+  
         {availableCameras.length === 0 ? (
           <div className="text-center py-8">
             <Camera className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
