@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Download, Cloud, Upload, Share, Copy, X } from 'lucide-react';
+import { Download, Cloud, Upload, Share, Copy, X, FileQuestion, FilePlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { createPNG8IndexedBlob } from '@/lib/pngIndexedEncoder';
 
@@ -381,34 +381,41 @@ export const ExportImage = ({
           </h3>
           <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('exportImageDesc')}</p>
         </div>
-        
         <div className="space-y-4">
+          {/* horizontal separator above the export type/format blocks */}
+          <div className="border-t border-elegant-border my-4" />
           <div className="flex gap-6">
             {/* Export Types (checkboxes) on the left */}
             <div className="flex-1">
-              <label className="text-sm font-medium mb-3 block">{t('exportTypes')}</label>
+              <label className="block text-m font-bold text-foreground pt-5 pb-5">
+                <span className="flex items-center">
+                  <FilePlus className="mr-2 h-3 w-3" />
+                    {t('exportTypes')}
+                </span>
+              </label>
               <div className="grid grid-cols-1 gap-2.5">
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="export-zoom" 
                     checked={exportAtCurrentZoom}
+                    className="h-3 w-3 mt-0 mr-2 flex-shrink-0"
                     onCheckedChange={(checked) => setExportAtCurrentZoom(checked as boolean)}
                   />
-                  <label htmlFor="export-zoom" className="text-sm font-medium leading-tight peer-disabled:cursor-not-allowed peer-disabled:opacity-70 break-words">
+                  <label htmlFor="export-zoom" className="text-xs text-muted-foreground leading-tight break-words text-left">
                     {t('exportAtCurrentZoom')} ({Math.round((currentZoom ?? 1) * 100)}%)
                   </label>
                 </div>
-                
                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="export-grids" 
                     checked={exportWithGrids}
+                     className="h-3 w-3 mt-0 mr-2 flex-shrink-0"
                     onCheckedChange={(checked) => setExportWithGrids(checked as boolean)}
                     disabled={!hasAnyGridEnabled}
                   />
                   <label 
                     htmlFor="export-grids" 
-                    className={`text-sm font-medium leading-tight break-words ${
+                    className={`text-xs text-muted-foreground leading-tight break-words text-left ${
                       !hasAnyGridEnabled 
                         ? 'cursor-not-allowed opacity-50' 
                         : 'peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
@@ -425,23 +432,38 @@ export const ExportImage = ({
 
             {/* Export Format on the right */}
             {paletteColors && paletteColors.length > 0 && paletteColors.length <= 256 && (
-              <div className="flex-1">
-                <label className="text-sm font-medium mb-3 block">{t('exportFormat')}</label>
-                <RadioGroup value={exportFormat} onValueChange={(value: 'png24' | 'png8') => setExportFormat(value)}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="png8" id="png8" />
-                    <Label htmlFor="png8" className="text-sm">{t('png8Indexed')} ({paletteColors.length} colors)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="png24" id="png24" />
-                    <Label htmlFor="png24" className="text-sm">PNG-24 RGB (24-bit)</Label>
-                  </div>
-                </RadioGroup>
+            <div className="flex-1">
+              <label className="block text-m font-bold text-foreground pt-5 pb-5">
+                <span className="flex items-center">
+                  <FilePlus className="mr-2 h-3 w-3" />
+                    {t('exportFormat')}
+                </span>
+              </label>
+              <div className="grid grid-cols-1 gap-2.5">
+                <div className="flex items-center space-x-2">
+                  <RadioGroup value={exportFormat} onValueChange={(value: 'png24' | 'png8') => setExportFormat(value)}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="png8" id="png8" className="h-3 w-3 mt-0 mr-2 flex-shrink-0"/>
+                      <Label htmlFor="png8" className="text-xs font-normal text-muted-foreground leading-tight break-words text-left">{t('png8Indexed')} ({paletteColors.length} colors)</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="png24" id="png24" className="h-3 w-3 mt-2 mr-2 flex-shrink-0"/>
+                      <Label htmlFor="png24" className="text-xs font-normal text-muted-foreground mt-3 leading-tight break-words text-left">PNG-24 RGB (24-bit)</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
               </div>
+            </div>
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          {/* horizontal separator below the export type/format blocks */}
+          <div className="border-t border-elegant-border my-4" />
+
+          {/* buttons with vertical separator between them */}
+          <div className="relative pt-2">
+            <div className="absolute inset-y-0 left-1/2 w-px bg-border transform -translate-x-1/2" />
+            <div className="grid grid-cols-2 gap-3">
             <Button
               onClick={downloadPNG}
               className="flex items-center justify-center gap-2 w-full rounded-lg text-xs whitespace-pre-wrap leading-tight"
@@ -460,6 +482,7 @@ export const ExportImage = ({
               <Copy className="h-4 w-4" />
               {t('copyToClipboard')}
             </Button>
+            </div>
           </div>
         </div>
       </div>
