@@ -57,7 +57,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
   const { t } = useTranslation();
   return (
     <Card
-      className="absolute z-50 p-7 bg-card border-elegant-border rounded-xl shadow-xl left-0 right-0 top-0"
+      className="absolute z-50 left-0 right-0 p-7 bg-card border-elegant-border rounded-xl"
       onClick={(e) => e.stopPropagation()}
       data-section="change-grids"
     >

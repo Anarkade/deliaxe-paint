@@ -315,7 +315,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
   // Show camera selector dialog
   if (showCameraSelector) {
     return (
-      <Card className="p-7 border-pixel-grid bg-card">
+  <Card className="absolute z-50 left-0 right-0 p-7 bg-card border-elegant-border rounded-xl">
         <div className="relative">
           {/* Close button */}
           <Button
@@ -365,7 +365,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
 
   return (
     <Card 
-      className={`p-7 border-pixel-grid bg-card transition-colors ${
+      className={`absolute z-50 left-0 right-0 p-7 bg-card border-elegant-border rounded-xl ${
         isDragOver ? 'border-primary bg-primary/5' : ''
       }`}
       onDragEnter={handleDragEnter}

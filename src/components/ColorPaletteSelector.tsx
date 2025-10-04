@@ -50,7 +50,7 @@ export const ColorPaletteSelector = ({
   }, []);
 
   return (
-    <Card className="p-7 border-pixel-grid bg-card relative">
+  <Card className="absolute z-50 left-0 right-0 p-7 bg-card border-elegant-border rounded-xl">
       {onClose && (
         <Button
           variant="ghost"

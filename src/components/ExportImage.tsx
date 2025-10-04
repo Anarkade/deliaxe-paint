@@ -362,7 +362,7 @@ export const ExportImage = ({
   }, [getImageDataURL, selectedPalette]);
 
   return (
-    <Card className="p-7 border-elegant-border bg-card rounded-xl relative">
+  <Card className="absolute z-50 left-0 right-0 p-7 bg-card border-elegant-border rounded-xl">
       {onClose && (
         <Button
           variant="ghost"
