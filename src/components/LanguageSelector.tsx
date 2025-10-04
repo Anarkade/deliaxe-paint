@@ -58,6 +58,7 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
           {t('changeLanguage')}
         </h3>
       </div>
+      <div className="border-t border-elegant-border my-4" />
       
         <RadioGroup 
           value={currentLanguage} 
