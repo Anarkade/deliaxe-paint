@@ -132,7 +132,7 @@ export const ResolutionSelector = ({
   const scalingOptions = [
     { value: 'stretch', label: t('stretch'), icon: Maximize, desc: t('stretchToFit') },
     { value: 'fit', label: t('fit'), icon: Monitor, desc: t('scaleToFit') },
-    { value: 'dont-scale', label: t('dontScale'), icon: AlignCenter, desc: t('dontScale') },
+    { value: 'dont-scale', label: t('dontScale'), icon: AlignLeft, desc: t('dontScale') },
   ];
 
   const alignmentOptions = [
@@ -152,7 +152,7 @@ export const ResolutionSelector = ({
   };
 
   return (
-    <Card className="p-5 border-pixel-grid bg-card relative">
+    <Card className="p-7 border-pixel-grid bg-card relative">
       {onClose && (
         <Button
           variant="ghost"
@@ -166,10 +166,10 @@ export const ResolutionSelector = ({
       <div className="space-y-5">
         <div>
           <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-            <Monitor className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+            <Proportions className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
             {t('changeResolution')}
           </h3>
-          <p className="text-sm text-muted-foreground mt-1 text-left">{t('changeResolutionDesc')}</p>
+          <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('changeResolutionDesc')}</p>
         </div>
 
         {/* Scaling and Alignment - side by side */}
@@ -177,7 +177,7 @@ export const ResolutionSelector = ({
           <div className="space-y-2">
             <label className="block text-xs font-medium text-foreground">
               <span className="flex items-center">
-                <Scaling className="mr-2 h-4 w-4" />
+                <Scaling className="mr-2 h-3 w-3" />
                 {t('scalingMode')}
               </span>
             </label>
@@ -207,7 +207,7 @@ export const ResolutionSelector = ({
           <div className="space-y-2">
             <label className="block text-xs font-medium text-foreground">
               <span className="flex items-center">
-                <AlignLeft className="mr-2 h-4 w-4" />
+                <AlignLeft className="mr-2 h-3 w-3" />
                 {t('alignment')}
               </span>
             </label>
@@ -237,7 +237,7 @@ export const ResolutionSelector = ({
           <div className="space-y-3">
             <label className="block text-xs font-medium text-foreground">
               <span className="flex items-center">
-                <Proportions className="mr-2 h-4 w-4" />
+                <Proportions className="mr-2 h-3 w-3" />
                 {t('targetResolution')}
               </span>
             </label>

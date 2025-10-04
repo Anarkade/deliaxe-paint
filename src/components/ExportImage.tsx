@@ -362,7 +362,7 @@ export const ExportImage = ({
   }, [getImageDataURL, selectedPalette]);
 
   return (
-    <Card className="p-5 border-elegant-border bg-card rounded-xl relative">
+    <Card className="p-7 border-elegant-border bg-card rounded-xl relative">
       {onClose && (
         <Button
           variant="ghost"
@@ -379,7 +379,7 @@ export const ExportImage = ({
             <Download className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
             {t('exportImage')}
           </h3>
-          <p className="text-sm text-muted-foreground mt-1 text-left">{t('exportImageDesc')}</p>
+          <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('exportImageDesc')}</p>
         </div>
         
         <div className="space-y-4">

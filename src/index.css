@@ -26,11 +26,11 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Elegant professional dark theme */
-    --background: 225 15% 7%;
+    --background: 330 9% 16%;
     --foreground: 40 15% 92%;
 
-    --card: 225 15% 9%;
-    --card-foreground: 40 15% 92%;
+    --card: 259 5% 12%;
+    --card-foreground: 210 40% 98%;
 
     --popover: 225 15% 9%;
     --popover-foreground: 40 15% 92%;
@@ -142,5 +142,12 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Apply a bottom margin to text-xl globally (equivalent to mb-4). */
+  .text-xl {
+    margin-bottom: 1rem;
   }
 }

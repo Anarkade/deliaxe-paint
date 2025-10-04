@@ -11,7 +11,7 @@ export interface ToolbarProps {
 }
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Upload, Palette, Monitor, Grid3X3, Download, Globe } from 'lucide-react';
+import { Upload, Palette, Proportions, Grid3X3, Download, Globe } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 
@@ -130,7 +130,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               disabled={!originalImage}
               title={t('changeResolution')}
             >
-              <Monitor className="h-4 w-4" />
+              <Proportions className="h-4 w-4" />
             </Button>
             <Button
               variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
@@ -194,7 +194,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             disabled={!originalImage}
             title={t('changeResolution')}
           >
-            <Monitor className="h-4 w-4" />
+            <Proportions className="h-4 w-4" />
           </Button>
           <Button
             variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}

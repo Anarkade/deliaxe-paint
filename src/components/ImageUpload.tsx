@@ -315,7 +315,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
   // Show camera selector dialog
   if (showCameraSelector) {
     return (
-      <Card className="p-5 border-pixel-grid bg-card">
+      <Card className="p-7 border-pixel-grid bg-card">
         <div className="relative">
           {/* Close button */}
           <Button
@@ -365,7 +365,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
 
   return (
     <Card 
-      className={`p-5 border-pixel-grid bg-card transition-colors ${
+      className={`p-7 border-pixel-grid bg-card transition-colors ${
         isDragOver ? 'border-primary bg-primary/5' : ''
       }`}
       onDragEnter={handleDragEnter}
@@ -389,14 +389,14 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
             <Upload className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
             {t('loadImage')}
           </h3>
-            <p className="text-sm text-muted-foreground mt-1 text-left">{t('loadImageDesc')}</p>
+            <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('loadImageDesc')}</p>
         </div>
         
         {/* Compact grid layout for primary upload options */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <label className="block text-xs font-medium text-foreground">
-              <Upload className="inline mr-1 h-3 w-3" />
+              <Upload className="inline mr-2 h-3 w-3" />
               {t('uploadImage')}
             </label>
             <div className="relative">

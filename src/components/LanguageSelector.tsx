@@ -41,7 +41,7 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
   }
 
   return (
-    <Card className="p-5 bg-card border-elegant-border relative">
+    <Card className="p-7 bg-card border-elegant-border relative">
       {onClose && (
         <Button
           variant="ghost"
@@ -52,9 +52,9 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
           <X className="h-4 w-4" />
         </Button>
       )}
-      <div className="flex items-center gap-3 mb-4">
-        <Globe className="h-6 w-6 text-primary" />
-        <h3 className="text-xl font-bold text-primary">
+      <div>
+        <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+          <Globe className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
           {t('changeLanguage')}
         </h3>
       </div>

@@ -50,7 +50,7 @@ export const ColorPaletteSelector = ({
   }, []);
 
   return (
-    <Card className="p-5 border-pixel-grid bg-card relative">
+    <Card className="p-7 border-pixel-grid bg-card relative">
       {onClose && (
         <Button
           variant="ghost"
@@ -67,7 +67,7 @@ export const ColorPaletteSelector = ({
             <Palette className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
             {t('changePalette')}
           </h3>
-          <p className="text-sm text-muted-foreground mt-1 text-left">{t('changePaletteDesc')}</p>
+          <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('changePaletteDesc')}</p>
         </div>
         
         <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">

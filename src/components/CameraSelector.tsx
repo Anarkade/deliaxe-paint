@@ -106,7 +106,7 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
   };
 
   return (
-    <Card className="p-5 border-pixel-grid bg-card relative">
+    <Card className="p-7 border-pixel-grid bg-card relative">
       <Button
         variant="ghost"
         size="sm"
@@ -120,7 +120,7 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
       <div className="space-y-4">
         <div className="flex items-center">
           <Camera className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
-          <h3 className="text-xl font-bold" style={{ color: '#7d1b2d' }}>{t('selectCamera')}</h3>
+          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>{t('selectCamera')}</h3>
         </div>
 
         {availableCameras.length === 0 ? (
