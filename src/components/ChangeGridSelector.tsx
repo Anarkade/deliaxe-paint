@@ -83,13 +83,13 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
               {t('changeGridsDesc')}
             </p>
           </div>
-
+          <div className="border-t border-elegant-border my-4" />
           <div className="flex gap-6">
             {/* Tile Grid Column */}
             <div className="flex-1">
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="show-tile-grid" className="h-3 w-3 mt-0 mr-2 flex-shrink-0" checked={showTileGrid} onCheckedChange={checked => setShowTileGrid(!!checked)} />
+                  <Checkbox id="show-tile-grid" className="h-4 w-4 mt-0 mr-2 flex-shrink-0" checked={showTileGrid} onCheckedChange={checked => setShowTileGrid(!!checked)} />
                   <label htmlFor="show-tile-grid" className="block text-sm font-medium text-foreground cursor-pointer text-left">{t('showTileGrid')}</label>
                 </div>
                 {showTileGrid && (
@@ -152,7 +152,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
             <div className="flex-1">
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
-                  <Checkbox id="show-frame-grid" className="h-3 w-3 mt-0 mr-2 flex-shrink-0" checked={showFrameGrid} onCheckedChange={checked => setShowFrameGrid(!!checked)} />
+                  <Checkbox id="show-frame-grid" className="h-4 w-4 mt-0 mr-2 flex-shrink-0" checked={showFrameGrid} onCheckedChange={checked => setShowFrameGrid(!!checked)} />
                   <label htmlFor="show-frame-grid" className="block text-sm font-medium text-foreground cursor-pointer text-left">{t('showFrameGrid')}</label>
                 </div>
                 {showFrameGrid && (

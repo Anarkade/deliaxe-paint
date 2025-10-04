@@ -391,7 +391,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
           </h3>
             <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('loadImageDesc')}</p>
         </div>
-        
+        <div className="border-t border-elegant-border my-4" />
         {/* Compact grid layout for primary upload options */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">

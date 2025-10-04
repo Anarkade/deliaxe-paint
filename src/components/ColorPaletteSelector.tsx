@@ -69,8 +69,8 @@ export const ColorPaletteSelector = ({
           </h3>
           <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('changePaletteDesc')}</p>
         </div>
-        
-        <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3">
+        <div className="border-t border-elegant-border my-4" />        
+        <RadioGroup value={selectedPalette} onValueChange={onPaletteChange} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3 pt-5">
           {paletteOptions.map((option) => (
             <div key={option.value} className="flex space-x-1 min-h-[2.5rem]">
               <RadioGroupItem value={option.value} id={`palette-${option.value}`} className="h-3 w-3 mt-1 flex-shrink-0" />

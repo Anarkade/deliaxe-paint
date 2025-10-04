@@ -398,7 +398,7 @@ export const ExportImage = ({
                   <Checkbox 
                     id="export-zoom" 
                     checked={exportAtCurrentZoom}
-                    className="h-3 w-3 mt-0 mr-2 flex-shrink-0"
+                    className="h-4 w-4 mt-0 mr-2 flex-shrink-0"
                     onCheckedChange={(checked) => setExportAtCurrentZoom(checked as boolean)}
                   />
                   <label htmlFor="export-zoom" className="text-xs text-muted-foreground leading-tight break-words text-left">
@@ -409,7 +409,7 @@ export const ExportImage = ({
                   <Checkbox 
                     id="export-grids" 
                     checked={exportWithGrids}
-                     className="h-3 w-3 mt-0 mr-2 flex-shrink-0"
+                     className="h-4 w-4 mt-0 mr-2 flex-shrink-0"
                     onCheckedChange={(checked) => setExportWithGrids(checked as boolean)}
                     disabled={!hasAnyGridEnabled}
                   />

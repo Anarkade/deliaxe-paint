@@ -171,7 +171,7 @@ export const ResolutionSelector = ({
           </h3>
           <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('changeResolutionDesc')}</p>
         </div>
-
+        <div className="border-t border-elegant-border my-4" />
         {/* Scaling and Alignment - side by side */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">

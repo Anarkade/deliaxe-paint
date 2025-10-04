@@ -57,9 +57,11 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
           <Globe className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
           {t('changeLanguage')}
         </h3>
+        <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">
+          {t('changeLanguageDesc')}
+        </p>
       </div>
-      <div className="border-t border-elegant-border my-4" />
-      
+      <div className="border-t border-elegant-border my-4 pt-5" />
         <RadioGroup 
           value={currentLanguage} 
           onValueChange={(value) => changeLanguage(value as Language)}
@@ -70,7 +72,7 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
             <RadioGroupItem 
               value={lang} 
               id={`lang-${lang}`}
-              className="border-elegant-border text-bone-white data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
+              className="h-3 w-3 mr-2 flex-shrink-0"
             />
             <Label 
               htmlFor={`lang-${lang}`} 
