@@ -188,11 +188,11 @@ export const ResolutionSelector = ({
         <div className="border-t border-elegant-border my-4" />
 
         {/* Scaling and Alignment - side by side */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2 bg-card border border-elegant-border rounded-lg p-5 mr-2 w-max max-w-full">
+        <div className="flex items-center">
+          <div className="space-y-8 bg-card border border-elegant-border rounded-lg p-10 mr-4">
             <label className="block text-m font-bold text-foreground">
               <span className="flex items-center">
-                <Scaling className="mr-2 h-3 w-3" />
+                <Scaling className="mr-2 h-3 w-3 " />
                 {t('scalingMode')}
               </span>
             </label>
@@ -212,7 +212,7 @@ export const ResolutionSelector = ({
                     <RadioGroupItem value={option.value} id={`scaling-${option.value}`} className="h-3 w-3 mt-0.5 mr-2 flex-shrink-0" />
                     <Label htmlFor={`scaling-${option.value}`} className="flex gap-1.5 cursor-pointer text-xs text-left">
                       <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                      <span className="leading-tight text-left whitespace-nowrap">{option.label}</span>
+                      <span className="text-xs text-muted-foreground leading-tight break-words text-left whitespace-nowrap">{option.label}</span>
                     </Label>
                   </div>
                 );
@@ -220,7 +220,7 @@ export const ResolutionSelector = ({
             </RadioGroup>
           </div>
 
-          <div className="space-y-2 bg-card border border-elegant-border rounded-lg p-5 ml-2">
+          <div className="space-y-8 bg-card border border-elegant-border rounded-lg p-10">
             <label className="block text-m font-bold text-foreground">
               <span className="flex items-center">
                 <AlignLeft className="mr-2 h-3 w-3" />
@@ -234,13 +234,13 @@ export const ResolutionSelector = ({
                 setScalingMode(value);
                 onChangeScalingMode?.(value);
               }}
-              className="grid grid-cols-3 gap-y-1 text-xs"
-              style={{ columnGap: '0rem' }}
+              className="text-xs grid grid-cols-3 text-muted-foreground leading-tight break-words text-left"
+              style={{ columnGap: '1.5rem' }}
             >
               {alignmentOptions.map((option) => (
-                <div key={option.value} className="flex items-center space-x-1 min-h-[1.75rem]">
-                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} className="h-3 w-3 mt-0.5 mr-2 flex-shrink-0" />
-                  <Label htmlFor={`alignment-${option.value}`} className="flex cursor-pointer text-xs text-left pt-0.25 h-5 w-5">
+                <div key={option.value} className="flex min-h-[1.7rem]">
+                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} className="h-3 w-3 mr-2 flex-shrink-0" />
+                  <Label htmlFor={`alignment-${option.value}`} className="flex cursor-pointer text-xs text-left h-3 w-4">
                     <AlignmentIcon position={option.position} label={option.label} />
                   </Label>
                 </div>
