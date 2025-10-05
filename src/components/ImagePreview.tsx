@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Eye, RefreshCcw, ZoomIn, Camera, X, Maximize2, ChevronsLeftRight } from 'lucide-react';
+import { Download, Eye, RefreshCcw, ZoomIn, Camera, X, Maximize2, MoveHorizontal } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { PaletteViewer } from './PaletteViewer';
@@ -832,7 +832,7 @@ export const ImagePreview = ({
               <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
             </div>
             <Button onClick={() => { autoFitPermitRef.current = true; fitToWidth(true); }} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
-              <ChevronsLeftRight className="h-4 w-4" />
+              <MoveHorizontal className="h-4 w-4" />
             </Button>
             <Button onClick={setZoomTo100} variant="highlighted" size="sm" title="100%" aria-label="Set zoom to 100%">
               100%

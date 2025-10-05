@@ -53,7 +53,7 @@ export const RetroImageEditor = () => {
   const [selectedPalette, setSelectedPalette] = useState<string>('original');
   // Restore resolution/scaling state that the selector will control
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
-  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('fit');
+  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('scale-to-fit-width');
   const [autoFitKey, setAutoFitKey] = useState<string | undefined>(undefined);
   const ignoreNextCloseRef = useRef(false);
   
@@ -105,7 +105,7 @@ export const RetroImageEditor = () => {
     // when the user clicks the Load Image / Import button.
     setSelectedPalette('original');
     setSelectedResolution('original');
-    setScalingMode('fit');
+    setScalingMode('scale-to-fit-width');
     setAutoFitKey(undefined);
 
     // Reset camera & preview state
@@ -464,7 +464,7 @@ export const RetroImageEditor = () => {
       // Draw image based on scalingMode / alignment
       if (scalingMode === 'stretch') {
         ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
-      } else if (scalingMode === 'fit') {
+      } else if (scalingMode === 'scale-to-fit-width') {
         // maintain aspect ratio and center by default
         const sw = originalImage.width;
         const sh = originalImage.height;

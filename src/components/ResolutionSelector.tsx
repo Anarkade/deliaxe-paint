@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Monitor, AlignCenter, Maximize, X, Scaling, AlignLeft, Proportions } from 'lucide-react';
+import { Monitor, AlignCenter, Maximize, X, Scaling, AlignLeft, Proportions, Expand, ChevronsLeftRight, MoveHorizontal } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 // Custom alignment icon component
@@ -74,7 +74,7 @@ export type ResolutionType =
   | '640x256';
 
 export type AlignmentMode = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-center' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
-export type ScalingMode = 'stretch' | 'fit' | 'dont-scale';
+export type ScalingMode = 'stretch' | 'scale-to-fit-width' | 'dont-scale';
 export type CombinedScalingMode = ScalingMode | AlignmentMode;
 
 interface ResolutionSelectorProps {
@@ -93,7 +93,7 @@ export const ResolutionSelector = ({
   , selectedResolution: selectedResolutionProp, selectedScalingMode: selectedScalingModeProp
 }: ResolutionSelectorProps) => {
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>(selectedResolutionProp ?? 'original');
-  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>(selectedScalingModeProp ?? 'fit');
+  const [scalingMode, setScalingMode] = useState<CombinedScalingMode>(selectedScalingModeProp ?? 'scale-to-fit-width');
   const { t } = useTranslation();
 
   // Sync with controlled props when they change
@@ -138,8 +138,8 @@ export const ResolutionSelector = ({
   ];
 
   const scalingOptions = [
-    { value: 'stretch', label: t('stretch'), icon: Maximize, desc: t('stretchToFit') },
-    { value: 'fit', label: t('fit'), icon: Monitor, desc: t('scaleToFit') },
+    { value: 'stretch', label: t('stretch'), icon: Expand, desc: t('stretchToFit') },
+    { value: 'scale-to-fit-width', label: t('fitToWidth'), icon: MoveHorizontal, desc: t('fitToWidth') },
     { value: 'dont-scale', label: t('dontScale'), icon: AlignLeft, desc: t('dontScale') },
   ];
 
@@ -190,7 +190,7 @@ export const ResolutionSelector = ({
               </span>
             </label>
             <RadioGroup
-              value={['stretch', 'fit', 'dont-scale'].includes(scalingMode as string) ? scalingMode as ScalingMode : 'fit'}
+              value={['stretch', 'scale-to-fit-width', 'dont-scale'].includes(scalingMode as string) ? scalingMode as ScalingMode : 'scale-to-fit-width'}
               onValueChange={(value: ScalingMode) => {
                 setScalingMode(value);
                 onChangeScalingMode?.(value);
