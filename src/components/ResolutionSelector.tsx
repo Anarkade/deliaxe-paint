@@ -8,7 +8,7 @@ import { Monitor, AlignCenter, Maximize, X, Scaling, AlignLeft, Proportions, Exp
 import { useTranslation } from '@/hooks/useTranslation';
 
 // Custom alignment icon component
-const AlignmentIcon = ({ position }: { position: string }) => {
+const AlignmentIcon = ({ position, label }: { position: string; label?: string }) => {
   const getAlignment = () => {
     const [vertical, horizontal] = position.split('-');
     let outerStyle = '';
@@ -43,7 +43,11 @@ const AlignmentIcon = ({ position }: { position: string }) => {
   const { outerStyle } = getAlignment();
   
   return (
-    <div className={`w-4 h-4 border border-current flex ${outerStyle}`}>
+    <div
+      className={`w-4 h-4 border border-current flex ${outerStyle}`}
+      title={label}
+      aria-label={label}
+    >
       <div className="w-1.5 h-1.5 bg-current rounded-sm"></div>
     </div>
   );
@@ -139,7 +143,7 @@ export const ResolutionSelector = ({
 
   const scalingOptions = [
     { value: 'stretch', label: t('stretch'), icon: Expand, desc: t('stretchToFit') },
-    { value: 'scale-to-fit-width', label: t('fitToWidth'), icon: MoveHorizontal, desc: t('fitToWidth') },
+    { value: 'scale-to-fit-width', label: t('keepAspectRatio'), icon: MoveHorizontal, desc: t('keepAspectRatio') },
     { value: 'dont-scale', label: t('dontScale'), icon: AlignLeft, desc: t('dontScale') },
   ];
 
@@ -160,7 +164,7 @@ export const ResolutionSelector = ({
   };
 
   return (
-    <Card className="absolute z-50 left-0 right-0 p-7 bg-card border-elegant-border rounded-xl">
+    <Card className="absolute z-50 left-0 right-0 p-7 bg-card border-elegant-border rounded-xl overflow-visible">
       {onClose && (
         <Button
           variant="ghost"
@@ -171,6 +175,7 @@ export const ResolutionSelector = ({
           <X className="h-4 w-4" />
         </Button>
       )}
+
       <div className="space-y-5">
         <div>
           <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
@@ -179,18 +184,21 @@ export const ResolutionSelector = ({
           </h3>
           <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('changeResolutionDesc')}</p>
         </div>
+
         <div className="border-t border-elegant-border my-4" />
+
         {/* Scaling and Alignment - side by side */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <label className="block text-m font-bold text-foreground pt-5 pb-5">
+          <div className="space-y-2 bg-card border border-elegant-border rounded-lg p-5 mr-2 w-max max-w-full">
+            <label className="block text-m font-bold text-foreground">
               <span className="flex items-center">
                 <Scaling className="mr-2 h-3 w-3" />
                 {t('scalingMode')}
               </span>
             </label>
+
             <RadioGroup
-              value={['stretch', 'scale-to-fit-width', 'dont-scale'].includes(scalingMode as string) ? scalingMode as ScalingMode : 'scale-to-fit-width'}
+              value={['stretch', 'scale-to-fit-width', 'dont-scale'].includes(scalingMode as string) ? (scalingMode as ScalingMode) : 'scale-to-fit-width'}
               onValueChange={(value: ScalingMode) => {
                 setScalingMode(value);
                 onChangeScalingMode?.(value);
@@ -200,11 +208,11 @@ export const ResolutionSelector = ({
               {scalingOptions.map((option) => {
                 const Icon = option.icon;
                 return (
-                  <div key={option.value} className="flex space-x-1 min-h-[1.75rem]">
+                  <div key={option.value} className="flex items-start space-x-2 min-h-[1.75rem]">
                     <RadioGroupItem value={option.value} id={`scaling-${option.value}`} className="h-3 w-3 mt-0.5 mr-2 flex-shrink-0" />
                     <Label htmlFor={`scaling-${option.value}`} className="flex gap-1.5 cursor-pointer text-xs text-left">
                       <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                      <span className="leading-tight break-words text-left">{option.label}</span>
+                      <span className="leading-tight text-left whitespace-nowrap">{option.label}</span>
                     </Label>
                   </div>
                 );
@@ -212,13 +220,14 @@ export const ResolutionSelector = ({
             </RadioGroup>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-m font-bold text-foreground pt-5 pb-5">
+          <div className="space-y-2 bg-card border border-elegant-border rounded-lg p-5 ml-2">
+            <label className="block text-m font-bold text-foreground">
               <span className="flex items-center">
                 <AlignLeft className="mr-2 h-3 w-3" />
                 {t('alignment')}
               </span>
             </label>
+
             <RadioGroup
               value={isAlignmentMode(scalingMode) ? (scalingMode as AlignmentMode) : 'middle-center'}
               onValueChange={(value: AlignmentMode) => {
@@ -229,10 +238,10 @@ export const ResolutionSelector = ({
               style={{ columnGap: '0rem' }}
             >
               {alignmentOptions.map((option) => (
-                <div key={option.value} className="flex space-x-1 min-h-[1.75rem]">
+                <div key={option.value} className="flex items-center space-x-1 min-h-[1.75rem]">
                   <RadioGroupItem value={option.value} id={`alignment-${option.value}`} className="h-3 w-3 mt-0.5 mr-2 flex-shrink-0" />
                   <Label htmlFor={`alignment-${option.value}`} className="flex cursor-pointer text-xs text-left pt-0.25 h-5 w-5">
-                    <AlignmentIcon position={option.position} />
+                    <AlignmentIcon position={option.position} label={option.label} />
                   </Label>
                 </div>
               ))}
@@ -249,6 +258,7 @@ export const ResolutionSelector = ({
                 {t('targetResolution')}
               </span>
             </label>
+
             <RadioGroup
               value={selectedResolution}
               onValueChange={(value) => {
