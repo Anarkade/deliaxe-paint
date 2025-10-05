@@ -52,7 +52,11 @@ const AlignmentIcon = ({ position }: { position: string }) => {
 export type ResolutionType = 
   | 'original'
   | 'unscaled'
+  | '96x65'
+  | '128x128'
+  | '128x160'
   | '160x144'
+  | '160x192'
   | '160x200'
   | '256x192'
   | '256x212'
@@ -109,8 +113,12 @@ export const ResolutionSelector = ({
   const resolutionOptions = [
     { value: 'original', label: t('originalSize'), desc: t('keepOriginalSize') },
     { value: 'unscaled', label: t('unscaledSize'), desc: t('removeScaling') },
+    { value: '96x65', label: '96×65', desc: t('nokia3510ires') },
+    { value: '128x128', label: '128×128', desc: t('pico8res') },
+    { value: '128x160', label: '128×160', desc: t('sonyEricssonRes') },
     { value: '160x144', label: '160×144', desc: t('gameBoyRes') },
-    { value: '160x200', label: '160×200', desc: t('amstradCpc0') },
+    { value: '160x192', label: '160×192', desc: t('atari2600res') },
+    { value: '176x200', label: '160×200', desc: t('amstradCpc0') },
     { value: '240x160', label: '240×160', desc: t('gameBoyAdvance') },
     { value: '256x192', label: '256×192', desc: t('msxZxSpectrum') },
     { value: '256x212', label: '256×212', desc: t('msxPlatform') },
