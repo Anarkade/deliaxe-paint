@@ -38,5 +38,8 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/main'
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          # Prefer a user-provided Personal Access Token stored in the secret GH_PAGES_PAT.
+          # If not provided, fall back to the automatically provided GITHUB_TOKEN.
+          # Create GH_PAGES_PAT with 'repo' scope (write) if your repo blocks pushes from gha bots.
+          personal_token: ${{ secrets.GH_PAGES_PAT || github.token }}
           publish_dir: ./dist
