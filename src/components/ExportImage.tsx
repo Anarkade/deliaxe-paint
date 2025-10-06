@@ -389,7 +389,7 @@ export const ExportImage = ({
             <div className="flex-1">
               <label className="block text-m font-bold text-foreground pt-5 pb-5">
                 <span className="flex items-center">
-                  <FilePlus className="mr-2 h-3 w-3" />
+                  <FilePlus className="mr-2 h-4 w-4" />
                     {t('exportTypes')}
                 </span>
               </label>
@@ -435,7 +435,7 @@ export const ExportImage = ({
             <div className="flex-1">
               <label className="block text-m font-bold text-foreground pt-5 pb-5">
                 <span className="flex items-center">
-                  <FilePlus className="mr-2 h-3 w-3" />
+                  <FilePlus className="mr-2 h-4 w-4" />
                     {t('exportFormat')}
                 </span>
               </label>
