@@ -5,6 +5,8 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  # Allow manual runs from the Actions UI
+  workflow_dispatch: {}
 
 jobs:
   build-and-deploy:
