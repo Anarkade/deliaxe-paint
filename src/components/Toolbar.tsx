@@ -10,6 +10,7 @@ export interface ToolbarProps {
   t: (key: string) => string;
 }
 import { useEffect } from 'react';
+import logoGif from '/logo.gif';
 import { Button } from '@/components/ui/button';
 import { Upload, Palette, Proportions, Grid3X3, Download, Globe } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
@@ -102,8 +103,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   // Add horizontal padding equal to gap-2 so logo and buttons sit inset from edges
   <header className="border-b border-elegant-border bg-[#202225] w-full flex-shrink-0 m-0 px-2 py-0 h-[3.75rem] flex items-center">
         <div className="w-full max-w-none flex items-center justify-between m-0 p-0 h-full">
-          <div className="flex items-center h-full m-0 p-0">
-            <img src="/logo.gif" alt="Vintage Palette Studio" className="h-8 w-8 m-0 p-0 block" />
+            <div className="flex items-center h-full m-0 p-0">
+            <img src={logoGif} alt="Vintage Palette Studio" className="h-8 w-8 m-0 p-0 block" />
           </div>
           <div className="flex items-center gap-2 flex-shrink-0 m-0 p-0 h-full">
             <Button
@@ -166,8 +167,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   return (
     <aside className="h-full w-12 flex flex-col bg-[#202225] border-r border-elegant-border z-50">
       <div className="flex flex-col items-center py-1 space-y-1 h-full">
-        <div className="flex flex-col items-center gap-1 flex-shrink-0 mb-3 pt-2">
-          <img src="/logo.gif" alt="Vintage Palette Studio" className="h-8 w-8" />
+          <div className="flex flex-col items-center gap-1 flex-shrink-0 mb-3 pt-2">
+          <img src={logoGif} alt="Vintage Palette Studio" className="h-8 w-8" />
         </div>
         <div className="flex flex-col items-center gap-1 flex-shrink-0">
           <Button
