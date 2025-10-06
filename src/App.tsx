@@ -16,9 +16,9 @@ const App = () => (
       {/* Use HashRouter in production when served from a subpath (GitHub Pages) to avoid server-side routing issues.
           Use BrowserRouter in development for cleaner URLs. */}
       {(() => {
-        const base = import.meta.env.BASE_URL || '/';
-        const isProdSubpath = import.meta.env.PROD && base !== '/';
-        if (isProdSubpath) {
+        const isProd = import.meta.env.PROD;
+        if (isProd) {
+          // Always use hash routing in production to avoid server 404s on GitHub Pages.
           return (
             <HashRouter>
               <Routes>
@@ -29,7 +29,8 @@ const App = () => (
             </HashRouter>
           );
         }
-        // development or root deployment: use BrowserRouter with correct basename
+        // development: use BrowserRouter with correct basename
+        const base = import.meta.env.BASE_URL || '/';
         const basename = base === '/' ? '/' : base.replace(/\/$/, '');
         return (
           <BrowserRouter basename={basename}>
