@@ -13,13 +13,22 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      {/* Use Vite's BASE_URL as the router basename so routes resolve when served from a subpath (GitHub Pages) */}
+      {(() => {
+        const base = import.meta.env.BASE_URL || '/';
+        // remove trailing slash except for root '/'
+        const basename = base === '/' ? '/' : base.replace(/\/$/, '');
+        return (
+          <BrowserRouter basename={basename}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        );
+      })()}
+      
     </TooltipProvider>
   </QueryClientProvider>
 );
