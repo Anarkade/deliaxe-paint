@@ -21,8 +21,14 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
+      - name: Show Node and npm versions
+        run: |
+          node -v
+          npm -v
+
       - name: Install dependencies
-        run: npm ci
+        # Use --legacy-peer-deps to avoid ERESOLVE peer dependency failures in the Actions environment
+        run: npm ci --legacy-peer-deps
 
       - name: Build
         run: npm run build
