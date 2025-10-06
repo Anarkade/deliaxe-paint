@@ -5,7 +5,11 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/deliaxe-paint/' : '/',
+  // Use relative base in production so the built app works both on GitHub Pages
+  // (when served from /deliaxe-paint/) and on a custom domain that points to the
+  // gh-pages site root. Relative base avoids absolute /deliaxe-paint/ paths which
+  // break when the site is served from a different root (like a custom domain).
+  base: mode === 'production' ? './' : '/',
   server: {
     host: "::",
     port: 8080,
