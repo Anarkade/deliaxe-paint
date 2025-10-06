@@ -7,10 +7,15 @@ const NotFound = () => {
   const { t } = useTranslation();
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
+    // Prefer hash-based route when using HashRouter (GitHub Pages). If hash is present, use it,
+    // otherwise fall back to pathname. Also strip the BASE_URL prefix if present for clarity.
+    const base = import.meta.env.BASE_URL || '/';
+    const hash = window.location.hash ? window.location.hash.replace(/^#/, '') : '';
+    let shownPath = hash || location.pathname;
+    if (base !== '/' && shownPath.startsWith(base)) {
+      shownPath = shownPath.slice(base.length) || '/';
+    }
+    console.error("404 Error: User attempted to access non-existent route:", shownPath);
   }, [location.pathname]);
 
   return (
