@@ -18,7 +18,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          # Vite requires Node >= 20.19.0 (or 22.12+). Use a compatible 20.x version.
+          node-version: '20.19.0'
           cache: 'npm'
 
       - name: Show Node and npm versions
