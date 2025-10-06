@@ -244,6 +244,38 @@ export const RetroImageEditor = () => {
         }
       });
       
+      // Extract palette for indexed PNG
+      const isPng = (typeof source === 'string' && (source.startsWith('data:image/png') || source.endsWith('.png'))) || (typeof source !== 'string' && source.name?.endsWith('.png'));
+      if (isPng) {
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, img.width, img.height);
+            const colors = new Set<string>();
+            for (let i = 0; i < imageData.data.length; i += 4) {
+              const r = imageData.data[i];
+              const g = imageData.data[i + 1];
+              const b = imageData.data[i + 2];
+              colors.add(`${r},${g},${b}`);
+            }
+            if (colors.size <= 256) {
+              const palette = Array.from(colors).map(color => {
+                const [r, g, b] = color.split(',').map(Number);
+                return { r, g, b };
+              });
+              setOriginalPaletteColors(palette);
+              setIsOriginalPNG8Indexed(true);
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+      
       // Performance check: Validate image size and provide recommendations
       const imageDimensions = { width: img.width, height: img.height };
       const shouldOptimize = performanceMonitor.shouldOptimizeProcessing(imageDimensions);
@@ -254,8 +286,36 @@ export const RetroImageEditor = () => {
       }
       
       setOriginalImage(img);
-      setProcessedImageData(null);
       setOriginalImageSource(source);
+
+      // Create an immediate rasterized RGB copy of the loaded image so the
+      // preview shows pixels for indexed PNGs (PNG-8) as well. This is a
+      // best-effort attempt — it may fail for cross-origin images if the
+      // canvas becomes tainted. The later `processImage` run will still
+      // perform the full processing and replace this data if needed.
+      try {
+        const rasterCanvas = document.createElement('canvas');
+        rasterCanvas.width = img.width;
+        rasterCanvas.height = img.height;
+        const rasterCtx = rasterCanvas.getContext('2d');
+        if (rasterCtx) {
+          rasterCtx.imageSmoothingEnabled = false;
+          rasterCtx.drawImage(img, 0, 0);
+          const rasterImageData = rasterCtx.getImageData(0, 0, img.width, img.height);
+          setProcessedImageData(rasterImageData);
+          // Trigger preview autofit immediately
+          setAutoFitKey(String(Date.now()));
+        } else {
+          setProcessedImageData(null);
+        }
+      } catch (err) {
+        // Canvas readback can fail for tainted/cross-origin images. In that
+        // case, leave processedImageData null — `processImage` will run later
+        // (if possible) and handle or report errors.
+        // eslint-disable-next-line no-console
+        console.warn('Immediate rasterization failed for loaded image:', err);
+        setProcessedImageData(null);
+      }
       
       // Force height recalculation after image load with enhanced timing for camera captures
       const isCameraCapture = typeof source !== 'string' && source.name === 'camera-capture.png';
@@ -274,7 +334,7 @@ export const RetroImageEditor = () => {
       }, delay);
       
       // Reset settings when loading new image
-  setSelectedPalette('original');
+      setSelectedPalette('original');
       
       performanceMonitor.endMeasurement(imageDimensions);
       toast.success(t('imageLoaded'));
@@ -393,7 +453,6 @@ export const RetroImageEditor = () => {
   }, []);
 
   const processImage = useCallback(async () => {
-    if (!originalImage) return;
 
     // If all settings are original, don't process - keep the original image
     // Remove resolution/scaling logic from UI state
@@ -404,9 +463,16 @@ export const RetroImageEditor = () => {
     let imageData: ImageData;
     
     try {
-      // Check cache first
-      const imageHash = hashImage(originalImage);
-      // Remove or update cachedResult usage
+      // Require at least a raster (processedImageData) or an original image
+      // before attempting processing. This allows resolution changes to be
+      // applied even when the app only has an in-memory raster (e.g. for
+      // indexed PNGs that were rasterized on load).
+      if (!originalImage && !processedImageData) return;
+
+      // Compute a cache/hash key depending on available source. If we have
+      // a processed raster, hash its pixel buffer; otherwise hash the
+      // original image element.
+      const imageHash = processedImageData ? hashImageData(processedImageData) : (originalImage ? hashImage(originalImage) : '');
 
       // Start performance monitoring
       performanceMonitor.startMeasurement('image_processing');
@@ -414,25 +480,17 @@ export const RetroImageEditor = () => {
       setProcessingProgress(0);
       setProcessingOperation(`Processing with ${selectedPalette} palette...`);
 
-      // Use canvas pool for memory efficiency
-      const canvasResult = getCanvas(originalImage.width, originalImage.height);
-      canvas = canvasResult.canvas;
-      const ctx = canvasResult.ctx;
-      
-      if (!ctx) {
-        toast.error(t('canvasNotSupported'));
-        return;
-      }
-
-      // For PNG-8 indexed images, preserve format by using optimized settings
-      if (isOriginalPNG8Indexed && selectedPalette === 'original') {
-        ctx.imageSmoothingEnabled = false; // Preserve indexed colors
-      }
-
-      // ALWAYS use original image as source for any changes
-      // Determine target dimensions based on selectedResolution
-      let targetWidth = originalImage.width;
-      let targetHeight = originalImage.height;
+      // Use canvas pool for memory efficiency. Request a canvas sized to the
+      // target output. We'll draw the source (either the processed image data
+      // or the original image) into a temporary canvas and then scale/align
+      // that into the output canvas.
+  // Determine target dimensions based on selectedResolution. Use the
+  // processed raster dimensions when available, otherwise fall back to
+  // the original image dimensions.
+  const srcWidth = processedImageData ? processedImageData.width : (originalImage ? originalImage.width : 0);
+  const srcHeight = processedImageData ? processedImageData.height : (originalImage ? originalImage.height : 0);
+  let targetWidth = srcWidth;
+  let targetHeight = srcHeight;
 
       if (selectedResolution !== 'original' && selectedResolution !== 'unscaled') {
         const parts = selectedResolution.split('x');
@@ -453,21 +511,58 @@ export const RetroImageEditor = () => {
         toast.error(t('targetResolutionTooLarge'));
         return;
       }
+      // We'll draw into a temporary RGB canvas first (so interpolation is applied
+      // as for RGB images). The source for this drawing will be the current
+      // processed image (if available) or the original image otherwise. This
+      // makes resolution transforms operate on the processed raster rather than
+      // the raw original file (requirement 1 and 2).
 
-      canvas.width = targetWidth;
-      canvas.height = targetHeight;
+      const tempCanvas = document.createElement('canvas');
+      const sourceCanvas = document.createElement('canvas');
 
-      // Clear canvas with black background
-      ctx.fillStyle = '#000000';
-      ctx.fillRect(0, 0, targetWidth, targetHeight);
+      // Determine source: prefer processedImageData when available
+      if (processedImageData) {
+        sourceCanvas.width = processedImageData.width;
+        sourceCanvas.height = processedImageData.height;
+        const sctx = sourceCanvas.getContext('2d');
+        if (!sctx) {
+          toast.error(t('canvasNotSupported'));
+          return;
+        }
+        sctx.putImageData(processedImageData, 0, 0);
+      } else {
+        // Fallback to original image bitmap
+        sourceCanvas.width = originalImage.width;
+        sourceCanvas.height = originalImage.height;
+        const sctx = sourceCanvas.getContext('2d');
+        if (!sctx) {
+          toast.error(t('canvasNotSupported'));
+          return;
+        }
+        sctx.imageSmoothingEnabled = false;
+        sctx.drawImage(originalImage, 0, 0);
+      }
 
-      // Draw image based on scalingMode / alignment
+      tempCanvas.width = targetWidth;
+      tempCanvas.height = targetHeight;
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) {
+        toast.error(t('canvasNotSupported'));
+        return;
+      }
+
+      // Clear with black background
+      tempCtx.fillStyle = '#000000';
+      tempCtx.fillRect(0, 0, targetWidth, targetHeight);
+
+      // Draw source canvas onto temp canvas using the selected scaling/alignment
+      // logic. Use the sourceCanvas dimensions instead of originalImage.
+      const sw = sourceCanvas.width;
+      const sh = sourceCanvas.height;
+
       if (scalingMode === 'stretch') {
-        ctx.drawImage(originalImage, 0, 0, targetWidth, targetHeight);
+        tempCtx.drawImage(sourceCanvas, 0, 0, sw, sh, 0, 0, targetWidth, targetHeight);
       } else if (scalingMode === 'scale-to-fit-width') {
-        // maintain aspect ratio and center by default
-        const sw = originalImage.width;
-        const sh = originalImage.height;
         const srcRatio = sw / sh;
         const dstRatio = targetWidth / targetHeight;
         let dw = targetWidth;
@@ -479,66 +574,42 @@ export const RetroImageEditor = () => {
           dh = targetHeight;
           dw = Math.round(targetHeight * srcRatio);
         }
-        let dx = Math.round((targetWidth - dw) / 2);
-        let dy = Math.round((targetHeight - dh) / 2);
-        // If scalingMode encodes alignment, adjust dx/dy (simple center default used here)
-        ctx.drawImage(originalImage, 0, 0, sw, sh, dx, dy, dw, dh);
+        const dx = Math.round((targetWidth - dw) / 2);
+        const dy = Math.round((targetHeight - dh) / 2);
+        tempCtx.drawImage(sourceCanvas, 0, 0, sw, sh, dx, dy, dw, dh);
       } else {
-        // dont-scale: draw original image at its own size
-        ctx.drawImage(originalImage, 0, 0);
-      }
-      
-      // Read resulting pixels from canvas so we always have imageData to emit
-      imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-
-      // Apply palette conversion using current palette colors
-      // Always use original image data for palette conversion to avoid degradation
-  if (selectedPalette !== 'original') {
-        // Create a temporary canvas with original image data for palette conversion
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = targetWidth;
-        tempCanvas.height = targetHeight;
-        const tempCtx = tempCanvas.getContext('2d');
-        if (!tempCtx) return;
-        
-        // Clear with black background
-        tempCtx.fillStyle = '#000000';
-        tempCtx.fillRect(0, 0, targetWidth, targetHeight);
-        
-        // Draw original image with same scaling/positioning logic
-        tempCtx.drawImage(originalImage, 0, 0);
-        
-    // Get fresh image data from temp canvas for palette conversion
-    const originalImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
-        setProcessingProgress(75);
-        // Palette conversion now handled by context/component
-        ctx.putImageData(originalImageData, 0, 0);
-        // When assigning imageData
-  imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);
-  // Cache the result for future use (fix parameter order)
-  setProcessedImageData(imageData);
-  // trigger ImagePreview to auto-fit the new image
-  setAutoFitKey(String(Date.now()));
-        
-        // Save to history (resolution/scaling removed)
-        saveToHistory({
-          imageData,
-          palette: selectedPalette
-        });
+        // dont-scale: draw at original size (will be clipped if larger than target)
+        tempCtx.drawImage(sourceCanvas, 0, 0);
       }
 
-      // Cache the result for future use (fix parameter order)
-      // Cache logic for resolution/scaling/palette removed
+      // Read resulting pixels from temp canvas
+      const tempImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
 
-  setProcessedImageData(imageData);
-  // trigger ImagePreview to auto-fit the new image
-  setAutoFitKey(String(Date.now()));
-      
-      // Save to history (resolution/scaling removed)
-      saveToHistory({
-        imageData,
-        palette: selectedPalette
-      });
+      // If the PaletteViewer has a palette (external/original), quantize the
+      // resulting pixels to the nearest colors in that palette (requirement 3).
+      if (Array.isArray(originalPaletteColors) && originalPaletteColors.length > 0) {
+        const paletteColorsArr = originalPaletteColors.map((c: any) => [c.r, c.g, c.b]);
+        applyFixedPalette(tempImageData.data, paletteColorsArr);
+      }
+
+
+      // Put the final pixels onto the real canvas and publish the processed ImageData
+      const canvasResult = getCanvas(targetWidth, targetHeight);
+      canvas = canvasResult.canvas;
+      const ctx = canvasResult.ctx;
+      if (!ctx) {
+        toast.error(t('canvasNotSupported'));
+        return;
+      }
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, targetWidth, targetHeight);
+      ctx.putImageData(tempImageData, 0, 0);
+      imageData = tempImageData;
+
+      // Always set the processed image so the preview/footer shows it
+      setProcessedImageData(imageData);
+      setAutoFitKey(String(Date.now()));
+      saveToHistory({ imageData, palette: selectedPalette });
 
       // End performance monitoring
       setProcessingProgress(100);
@@ -558,6 +629,7 @@ export const RetroImageEditor = () => {
     }
   }, [
     originalImage,
+    processedImageData,
     selectedPalette,
     saveToHistory,
     performanceMonitor,
@@ -570,6 +642,19 @@ export const RetroImageEditor = () => {
     scalingMode,
     t
   ]);
+
+  // Expose the latest processImage via a ref so UI handlers can invoke the
+  // most recent version without stale-closure issues. Handlers will call
+  // this with a short timeout after state updates so the updated state is
+  // captured by the new processImage closure created on render.
+  const processImageRef = useRef<(() => Promise<void>) | null>(null);
+  useEffect(() => {
+    processImageRef.current = processImage;
+    return () => {
+      // Clear only if it still points to this processImage reference
+      if (processImageRef.current === processImage) processImageRef.current = null;
+    };
+  }, [processImage]);
 
   // Helper function to apply a fixed palette to image data using color matching
   const applyFixedPalette = (data: Uint8ClampedArray, palette: number[][]) => {
@@ -664,15 +749,19 @@ export const RetroImageEditor = () => {
       toast.error(t('failedToReadClipboard'));
     }
   };
+  // Centralized debounced processing trigger. Run processing whenever we
+  // have either an original image or a rasterized processedImageData (this
+  // makes resolution changes apply for indexed images that were rasterized
+  // on load). Debounce to avoid repeated runs during rapid UI changes.
   useEffect(() => {
-    if (originalImage) {
+    if (originalImage || processedImageData) {
       const timeoutId = setTimeout(() => {
         processImage();
-      }, PROCESSING_DEBOUNCE_MS); // Configurable debounce for performance
-      
+      }, PROCESSING_DEBOUNCE_MS);
+
       return () => clearTimeout(timeoutId);
     }
-  }, [originalImage, selectedPalette, selectedResolution, scalingMode, processImage]);
+  }, [originalImage, processedImageData, selectedPalette, selectedResolution, scalingMode, processImage]);
 
   // Handle palette changes - clear currentPaletteColors for 'original' on non-indexed images
   useEffect(() => {
@@ -799,6 +888,7 @@ export const RetroImageEditor = () => {
               onCameraPreviewChange={setShowCameraPreview}
               onZoomChange={handlePreviewZoomChange}
               selectedCameraId={selectedCameraId}
+              currentPaletteColors={originalPaletteColors}
               onRequestOpenCameraSelector={() => {
                 // Set flag so the global click handler ignores the next click that would close sections
                 ignoreNextCloseRef.current = true;
@@ -874,9 +964,11 @@ export const RetroImageEditor = () => {
                   selectedPalette={selectedPalette}
                   onPaletteChange={(palette) => {
                     setSelectedPalette(palette);
-                    if (originalImage && palette !== 'original') {
-                      setTimeout(() => processImage(), 50);
-                    }
+                    // Schedule processing using the ref to avoid stale closures.
+                    // Use a small timeout so the state update is flushed first.
+                    setTimeout(() => {
+                      try { processImageRef.current?.(); } catch (e) { /* ignore */ }
+                    }, PROCESSING_DEBOUNCE_MS + 10);
                   }}
                   onClose={() => setActiveTab(null)}
                 />
@@ -891,8 +983,18 @@ export const RetroImageEditor = () => {
               >
                 <ResolutionSelector
                   onClose={() => setActiveTab(null)}
-                  onApplyResolution={(r) => setSelectedResolution(r)}
-                  onChangeScalingMode={(m) => setScalingMode(m)}
+                  onApplyResolution={(r) => {
+                    setSelectedResolution(r);
+                    setTimeout(() => {
+                      try { processImageRef.current?.(); } catch (e) { /* ignore */ }
+                    }, PROCESSING_DEBOUNCE_MS + 10);
+                  }}
+                  onChangeScalingMode={(m) => {
+                    setScalingMode(m);
+                    setTimeout(() => {
+                      try { processImageRef.current?.(); } catch (e) { /* ignore */ }
+                    }, PROCESSING_DEBOUNCE_MS + 10);
+                  }}
                   selectedResolution={selectedResolution}
                   selectedScalingMode={scalingMode}
                 />
