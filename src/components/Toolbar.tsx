@@ -10,7 +10,8 @@ export interface ToolbarProps {
   t: (key: string) => string;
 }
 import { useEffect } from 'react';
-import logoGif from '/logo.gif';
+// Build the logo URL from Vite's BASE_URL so it resolves correctly on GitHub Pages
+const logoGif = `${import.meta.env.BASE_URL}logo.gif`;
 import { Button } from '@/components/ui/button';
 import { Upload, Palette, Proportions, Grid3X3, Download, Globe } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
