@@ -188,11 +188,11 @@ export const ResolutionSelector = ({
         <div className="border-t border-elegant-border my-4" />
 
         {/* Scaling and Alignment - side by side */}
-        <div className="flex items-center">
-          <div className="space-y-8 bg-card border border-elegant-border rounded-lg p-10 mr-4">
+        <div className="flex justify-center">
+          <div className="space-y-8 bg-card border border-elegant-border rounded-lg p-6 mr-6">
             <label className="block text-m font-bold text-foreground">
               <span className="flex items-center">
-                <Scaling className="mr-2 h-3 w-3 " />
+                <Scaling className="mr-2 h-4 w-4" />
                 {t('scalingMode')}
               </span>
             </label>
@@ -220,10 +220,10 @@ export const ResolutionSelector = ({
             </RadioGroup>
           </div>
 
-          <div className="space-y-8 bg-card border border-elegant-border rounded-lg p-10">
+          <div className="space-y-8 bg-card border border-elegant-border rounded-lg p-6">
             <label className="block text-m font-bold text-foreground">
               <span className="flex items-center">
-                <AlignLeft className="mr-2 h-3 w-3" />
+                <AlignLeft className="mr-2 h-4 w-4" />
                 {t('alignment')}
               </span>
             </label>
@@ -235,11 +235,11 @@ export const ResolutionSelector = ({
                 onChangeScalingMode?.(value);
               }}
               className="text-xs grid grid-cols-3 text-muted-foreground leading-tight break-words text-left"
-              style={{ columnGap: '1.5rem' }}
+              style={{ columnGap: '1.0rem' }}
             >
               {alignmentOptions.map((option) => (
-                <div key={option.value} className="flex min-h-[1.7rem]">
-                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} className="h-3 w-3 mr-2 flex-shrink-0" />
+                <div key={option.value} className="flex min-h-[1.6rem]">
+                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} className="h-3 w-3 mr-2 mt-0.5 flex-shrink-0" />
                   <Label htmlFor={`alignment-${option.value}`} className="flex cursor-pointer text-xs text-left h-3 w-4">
                     <AlignmentIcon position={option.position} label={option.label} />
                   </Label>
@@ -248,13 +248,12 @@ export const ResolutionSelector = ({
             </RadioGroup>
           </div>
         </div>
-
         {/* Target Resolution - separated section */}
         <div className="border-t border-elegant-border pt-4">
           <div className="space-y-3">
             <label className="block text-m font-bold text-foreground pt-5 pb-5">
               <span className="flex items-center">
-                <Proportions className="mr-2 h-3 w-3" />
+                <Proportions className="mr-2 h-4 w-4" />
                 {t('targetResolution')}
               </span>
             </label>
