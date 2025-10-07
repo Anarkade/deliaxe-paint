@@ -6,7 +6,9 @@ interface FooterProps {
 
 // Get version from Vite environment variable (set at build time)
 const getVersion = () => {
-  return import.meta.env.VITE_APP_VERSION || 'dev';
+  const fullVersion = import.meta.env.VITE_APP_VERSION || 'dev';
+  // Extract only the version number part (before the first "-")
+  return fullVersion.split('-')[0];
 };
 
 export const Footer: React.FC<FooterProps> = () => (
