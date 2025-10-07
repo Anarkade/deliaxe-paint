@@ -6,10 +6,8 @@
     <title>Deliaxe Paint</title>
     <meta name="description" content="Transform your images with retro color palettes and vintage effects" />
     <meta name="author" content="Anarkade" />
-  <!-- Favicon: prefer the app logo; add a version query to bust cached favicons in browsers -->
-  <link rel="icon" href="./logo.gif?v=2" type="image/gif" />
-  <!-- legacy fallback for browsers expecting .ico (keep file in repo if desired) -->
-  <link rel="shortcut icon" href="./favicon.ico" />
+  <!-- Favicon: prefer the animated app logo (GIF). Use Vite's %BASE_URL% so this resolves in dev and production -->
+  <link rel="icon" href="%BASE_URL%logo.gif" type="image/gif" />
 
     <meta property="og:title" content="Deliaxe Paint" />
     <meta property="og:description" content="Transform your images with retro color palettes and vintage effects" />
