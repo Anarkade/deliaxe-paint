@@ -2,14 +2,30 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import { execSync } from "child_process";
+
+// Get the latest Git tag dynamically
+const getLatestGitTag = () => {
+  try {
+    const tag = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim();
+    return tag;
+  } catch (error) {
+    console.warn('Could not get Git tag, using fallback version');
+    return 'v0.0.0-dev';
+  }
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   // Use relative base in production so the built app works both on GitHub Pages
   // (when served from /deliaxe-paint/) and on a custom domain that points to the
-  // gh-pages site root. Relative base avoids absolute /deliaxe-paint/ paths which
+  // gh-pages site root. Relative base avoids absolute /deliaxe-path/ paths which
   // break when the site is served from a different root (like a custom domain).
   base: mode === 'production' ? './' : '/',
+  define: {
+    // Inject the latest Git tag as an environment variable at build time
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(getLatestGitTag()),
+  },
   server: {
     host: "::",
     port: 8080,
