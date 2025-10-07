@@ -1,8 +1,0 @@
-{
-  "paletteWithCount": "MT: {count} colors palette",
-  "zoomedDimensions": "MT: ({width}×{height} zoomed)",
-  "png8IndexedFormat": "MT: PNG-8 Indexed ({count} colors palette)",
-  "png24RgbFormat": "MT: PNG-24 RGB",
-  "captureButton": "MT: Capture",
-  "clickToChangeColor": "MT: Click in a color to edit it or drag it to change its position within the palette"
-}
