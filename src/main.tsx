@@ -19,7 +19,18 @@ console.log('App boot: starting render')
 // ensure the URL uses a hash-based routing entry so the SPA doesn't hit server 404s.
 {
   const base = import.meta.env.BASE_URL || '/';
-  if (import.meta.env.PROD && base !== '/' && window.location.hash === '') {
+  // Only perform the automatic hash redirect in production when the base is
+  // an absolute path (starts with '/') and not a relative value like './'.
+  // Relative bases (e.g. './') are valid for building assets, but concatenating
+  // them with window.location.origin produces invalid URLs like
+  // 'http://localhost:4173./'. Skip the redirect in those cases.
+  if (
+    import.meta.env.PROD &&
+    base !== '/' &&
+    !base.startsWith('.') &&
+    base.startsWith('/') &&
+    window.location.hash === ''
+  ) {
     // Preserve any extra path after the base and move it into the hash
     const pathname = window.location.pathname;
     const trimmed = pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
