@@ -2,9 +2,12 @@
 # Builds project and starts preview server
 
 $ErrorActionPreference = "Stop"
-$MainWorkspace = "D:\Anarkade\Deliaxe-Paint"
 
-Write-Host "🏗️ Building and previewing project..." -ForegroundColor Green
+# Get workspace path from script location
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$MainWorkspace = Split-Path -Parent $ScriptDir
+
+Write-Host "🏗️ Building and previewing project in: $MainWorkspace" -ForegroundColor Green
 
 Set-Location $MainWorkspace
 

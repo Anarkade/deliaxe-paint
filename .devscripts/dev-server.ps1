@@ -2,9 +2,12 @@
 # Starts dev server in main workspace
 
 $ErrorActionPreference = "Stop"
-$MainWorkspace = "D:\Anarkade\Deliaxe-Paint"
 
-Write-Host "🛠️ Starting development server..." -ForegroundColor Green
+# Get workspace path from script location
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
+$MainWorkspace = Split-Path -Parent $ScriptDir
+
+Write-Host "🛠️ Starting development server in: $MainWorkspace" -ForegroundColor Green
 
 Set-Location $MainWorkspace
 
