@@ -1,5 +1,4 @@
 import React from 'react';
-import { useVersion } from '@/hooks/useVersion';
 
 interface FooterProps {
   isVerticalLayout: boolean;

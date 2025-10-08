@@ -2,3 +2,9 @@ node_modules
 dist
 *.log
 package-lock.json
+
+# Generated version file
+public/version.json
+
+# Vite cache
+.vite
