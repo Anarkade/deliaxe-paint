@@ -4,15 +4,35 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { execSync } from "child_process";
 
-// Get the latest Git tag dynamically
+// Get the latest Git tag dynamically with multiple fallback strategies
 const getLatestGitTag = () => {
   try {
+    // First try: get latest tag
     const tag = execSync('git describe --tags --abbrev=0', { encoding: 'utf8' }).trim();
-    return tag;
+    if (tag) {
+      console.log(`✅ Git tag found: ${tag}`);
+      return tag;
+    }
   } catch (error) {
-    console.warn('Could not get Git tag, using fallback version');
-    return 'v0.0.0-dev';
+    console.warn('⚠️ Could not get Git tag with git describe, trying alternative methods...');
   }
+  
+  try {
+    // Second try: get all tags and sort them
+    const tags = execSync('git tag --sort=-version:refname', { encoding: 'utf8' }).trim();
+    if (tags) {
+      const latestTag = tags.split('\n')[0].trim();
+      console.log(`✅ Git tag found via git tag: ${latestTag}`);
+      return latestTag;
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not get any Git tags');
+  }
+  
+  // Final fallback: use a reasonable version for deployment
+  const fallbackVersion = 'v0.0.14-production';
+  console.log(`📦 Using fallback version: ${fallbackVersion}`);
+  return fallbackVersion;
 };
 
 // https://vitejs.dev/config/
