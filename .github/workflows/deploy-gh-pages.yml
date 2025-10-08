@@ -20,83 +20,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Get latest tag and commit info
-        id: version_info
-        run: |
-          # Get latest tag
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
-          
-          # Get commit count since last tag
-          COMMIT_COUNT=$(git rev-list --count HEAD ^$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD) 2>/dev/null || echo "0")
-          echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
-          
-          # Get short commit hash
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-          
-          # Get current date
-          BUILD_DATE=$(date '+%Y-%m-%d')
-          echo "build_date=$BUILD_DATE" >> $GITHUB_OUTPUT
-
-      - name: Update CHANGELOG.md
-        run: |
-          # Get commit messages since last tag for changelog
-          LATEST_TAG="${{ steps.version_info.outputs.latest_tag }}"
-          COMMITS=$(git log --oneline --pretty=format:"- %s" $(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD 2>/dev/null || git log --oneline --pretty=format:"- %s" -n 5)
-          
-          if [ ! -z "$COMMITS" ]; then
-            # Create temporary changelog entry
-            cat > temp_changelog.md << EOF
-          ## [Unreleased] - ${{ steps.version_info.outputs.build_date }}
-          
-          ### Changed
-          $COMMITS
-          
-          EOF
-            
-            # Insert new entry after the first "# Changelog" line
-            sed -i '/^# Changelog/r temp_changelog.md' CHANGELOG.md
-            rm temp_changelog.md
-          fi
-
-      - name: Update README.md badges
-        run: |
-          # Update version badge in README if it exists
-          LATEST_TAG="${{ steps.version_info.outputs.latest_tag }}"
-          sed -i "s/version-v[0-9]\+\.[0-9]\+\.[0-9]\+/version-$LATEST_TAG/g" README.md || true
-          
-          # Update any build date references
-          sed -i "s/Last updated: [0-9-]\+/Last updated: ${{ steps.version_info.outputs.build_date }}/g" README.md || true
-
-      - name: Commit updated files
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          
-          # Check if there are changes to commit
-          if ! git diff --quiet HEAD -- CHANGELOG.md README.md; then
-            git add CHANGELOG.md README.md
-            git commit -m "docs: auto-update changelog and readme [skip ci]"
-            git push origin main
-          fi
-
-      - name: Check for local build version
-        id: check_version
-        run: |
-          # Check if version.json exists from local build
-          if [ -f "public/version.json" ]; then
-            echo "Using existing version.json from local build"
-            LOCAL_VERSION=$(cat public/version.json | grep -o '"version":"[^"]*"' | cut -d'"' -f4)
-            LOCAL_DATE=$(cat public/version.json | grep -o '"buildDate":"[^"]*"' | cut -d'"' -f4)
-            echo "local_version=$LOCAL_VERSION" >> $GITHUB_OUTPUT
-            echo "local_build_date=$LOCAL_DATE" >> $GITHUB_OUTPUT
-            echo "has_local_version=true" >> $GITHUB_OUTPUT
-          else
-            echo "No local version.json found, will generate during build"
-            echo "has_local_version=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Build
         run: npm run build
 
@@ -107,5 +30,5 @@ jobs:
           publish_dir: ./dist
           publish_branch: gh-pages
           keep_files: false
-          # disable Jekyll processing so files starting with _ are allowed
           enable_jekyll: false
+          cname: deliaxe-paint.anarka.de
