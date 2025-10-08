@@ -868,12 +868,12 @@ export const ImagePreview = ({
     }
   >
         {originalImage ? (
-          <div className="relative" style={{ width: `${displayedWidth}px`, height: `${displayedHeight}px`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="relative" style={{ width: displayedWidth <= containerWidthRef.current ? `${displayedWidth}px` : '100%', height: `${displayedHeight}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
             <canvas
               ref={canvasRef}
               style={{ 
                 imageRendering: 'pixelated',
-                width: '100%',
+                width: displayedWidth <= containerWidthRef.current ? '100%' : 'auto',
                 height: '100%',
                 display: 'block'
               }}
