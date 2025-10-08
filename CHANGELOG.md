@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.18-stable] - 2025-10-08
+
+### Added
+- Comprehensive project documentation (README.md, CHANGELOG.md)
+- Clean repository structure with organized codebase
+
+### Removed
+- Debug components and unused development artifacts
+- Temporary files and debug routes
+
+### Changed
+- Updated .gitignore to exclude generated files
+- Clean production-ready codebase
+
 ## [0.0.17-build-date] - 2025-10-08
 
 ### Added
