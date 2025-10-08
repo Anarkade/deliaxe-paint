@@ -81,6 +81,22 @@ jobs:
             git push origin main
           fi
 
+      - name: Check for local build version
+        id: check_version
+        run: |
+          # Check if version.json exists from local build
+          if [ -f "public/version.json" ]; then
+            echo "Using existing version.json from local build"
+            LOCAL_VERSION=$(cat public/version.json | grep -o '"version":"[^"]*"' | cut -d'"' -f4)
+            LOCAL_DATE=$(cat public/version.json | grep -o '"buildDate":"[^"]*"' | cut -d'"' -f4)
+            echo "local_version=$LOCAL_VERSION" >> $GITHUB_OUTPUT
+            echo "local_build_date=$LOCAL_DATE" >> $GITHUB_OUTPUT
+            echo "has_local_version=true" >> $GITHUB_OUTPUT
+          else
+            echo "No local version.json found, will generate during build"
+            echo "has_local_version=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Build
         run: npm run build
 

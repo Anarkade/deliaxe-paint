@@ -4,7 +4,6 @@
 
 # Generated version files
 /version.json
-public/version.json
 
 # Node dependencies and cache
 node_modules/
