@@ -1,7 +1,6 @@
 # Build output and generated assets
 /dist/
 /assets/
-/index.html
 
 # Generated version files
 /version.json
