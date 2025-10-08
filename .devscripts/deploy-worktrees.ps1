@@ -19,12 +19,15 @@ Write-Host "Building in main workspace: $MainWorkspace" -ForegroundColor Yellow
 Set-Location $MainWorkspace
 
 # Ensure we're on main branch
-git checkout main 2>$null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Already on main or main doesn't exist locally" -ForegroundColor Yellow
+$CurrentBranch = & git branch --show-current 2>$null
+if ($LASTEXITCODE -eq 0 -and $CurrentBranch -ne "main") {
+    Write-Host "Switching to main branch..." -ForegroundColor Yellow
+    & git checkout main
+} else {
+    Write-Host "Already on main branch" -ForegroundColor Yellow
 }
 
-git pull origin main
+& git pull origin main
 
 # Install dependencies and build
 if (-not (Test-Path "node_modules")) {
@@ -54,12 +57,15 @@ if (-not (Test-Path $GhPagesWorkspace)) {
 Set-Location $GhPagesWorkspace
 
 # Ensure we're on gh-pages branch
-git checkout gh-pages 2>$null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "Already on gh-pages or gh-pages doesn't exist" -ForegroundColor Yellow
+$CurrentBranch = & git branch --show-current 2>$null
+if ($LASTEXITCODE -eq 0 -and $CurrentBranch -ne "gh-pages") {
+    Write-Host "Switching to gh-pages branch..." -ForegroundColor Yellow
+    & git checkout gh-pages
+} else {
+    Write-Host "Already on gh-pages branch" -ForegroundColor Yellow
 }
 
-git pull origin gh-pages
+& git pull origin gh-pages
 
 # Clear existing files (except .git and important files)
 $FilesToKeep = @(".git", "CNAME", ".nojekyll", ".gitignore", "README.md")
@@ -90,13 +96,13 @@ Write-Host "Copied dist/ files to gh-pages workspace" -ForegroundColor Blue
 # Step 3: Commit and push
 Write-Host "Committing changes..." -ForegroundColor Yellow
 
-git add -A
+& git add -A
 
 # Check if there are changes to commit
-$Changes = git status --porcelain
+$Changes = & git status --porcelain
 if ($Changes) {
-    git commit -m $Message
-    git push origin gh-pages
+    & git commit -m $Message
+    & git push origin gh-pages
     
     Write-Host "Deployed successfully to GitHub Pages!" -ForegroundColor Green
     Write-Host "Site will be available at: https://deliaxe-paint.anarka.de" -ForegroundColor Cyan
