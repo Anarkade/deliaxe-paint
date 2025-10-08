@@ -11,7 +11,7 @@ export const Footer: React.FC<FooterProps> = () => {
   
   const displayVersion = envVersion ? envVersion.split('-')[0].replace(/^v/, '') : '0.0.16';
   
-  // Format build date to show day and time
+  // Format build date to show day and time in UTC
   const formatBuildDate = (dateString: string) => {
     if (!dateString) return '';
     try {
@@ -21,8 +21,9 @@ export const Footer: React.FC<FooterProps> = () => {
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-      });
+        minute: '2-digit',
+        timeZone: 'UTC'
+      }) + ' UTC';
     } catch {
       return '';
     }

@@ -39,7 +39,7 @@ const getLatestGitTag = () => {
 // Generate version file during build
 const generateVersionFile = () => {
   const version = getLatestGitTag();
-  const buildDate = new Date().toISOString();
+  const buildDate = new Date().toISOString(); // Always UTC
   const versionInfo = {
     version,
     buildDate,
