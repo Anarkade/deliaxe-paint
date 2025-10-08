@@ -1,200 +1,396 @@
-# Deliaxe Paint# Deliaxe Paint# Welcome to your Lovable project
+# Deliaxe Paint# Deliaxe Paint# Deliaxe Paint# Welcome to your Lovable project
 
 
 
 [![Deploy to GitHub Pages](https://github.com/Anarkade/deliaxe-paint/workflows/Build%20and%20deploy%20to%20GitHub%20Pages/badge.svg)](https://github.com/Anarkade/deliaxe-paint/actions)
 
-[![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](https://anarkade.github.io/deliaxe-paint/)
+[![Version](https://img.shields.io/badge/version-v0.0.20-blue.svg)](https://github.com/Anarkade/deliaxe-paint/releases)
 
-**A retro image processing web application with vintage color palettes and effects**## Project info
-
-**A retro image processing web application with vintage color palettes and effects**
+[![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](https://anarkade.github.io/deliaxe-paint/)[![Deploy to GitHub Pages](https://github.com/Anarkade/deliaxe-paint/workflows/Build%20and%20deploy%20to%20GitHub%20Pages/badge.svg)](https://github.com/Anarkade/deliaxe-paint/actions)
 
 
 
-## 🌐 Live Demo
+**A retro image processing web application with vintage color palettes and effects**[![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](https://anarkade.github.io/deliaxe-paint/)
 
-## 🌐 Live Demo**URL**: https://lovable.dev/projects/c17be190-7ca5-4ab4-9d2f-2249fe4ed289
+
+
+*Last updated: 2025-10-09***A retro image processing web application with vintage color palettes and effects**## Project info
+
+
+
+## 🌐 Live Demo**A retro image processing web application with vintage color palettes and effects**
+
+
 
 **GitHub Pages**: https://anarkade.github.io/deliaxe-paint/
 
 
 
-**Production**: https://deliaxe-paint.anarka.de
-
-**Production**: https://deliaxe-paint.anarka.de## How can I edit this code?
-
-**Lovable**: https://lovable.dev/projects/c17be190-7ca5-4ab4-9d2f-2249fe4ed289
+**Production**: https://deliaxe-paint.anarka.de## 🌐 Live Demo
 
 
 
-## ✨ Features
+**Lovable**: https://lovable.dev/projects/c17be190-7ca5-4ab4-9d2f-2249fe4ed289## 🌐 Live Demo**URL**: https://lovable.dev/projects/c17be190-7ca5-4ab4-9d2f-2249fe4ed289
 
-## 📋 Project InfoThere are several ways of editing your application.
+
+
+## ✨ Features**GitHub Pages**: https://anarkade.github.io/deliaxe-paint/
+
+
 
 - **Image Processing**: Upload and transform images with various effects
 
 - **Retro Color Palettes**: Apply vintage color schemes to your images (Game Boy, Mega Drive)
 
-- **Camera Integration**: Capture photos directly from your camera
+- **Camera Integration**: Capture photos directly from your camera**Production**: https://deliaxe-paint.anarka.de
 
-- **Export Options**: Download your processed images in multiple formatsTransform your images with retro color palettes and vintage effects. Built with modern web technologies for a nostalgic digital art experience.**Use Lovable**
+- **Export Options**: Download your processed images in multiple formats
 
-- **Responsive Design**: Works on desktop and mobile devices
+- **Responsive Design**: Works on desktop and mobile devices**Production**: https://deliaxe-paint.anarka.de## How can I edit this code?
 
 - **Real-time Preview**: See changes instantly as you apply effects
 
-- **Drag & Drop**: Easy file uploading with drag and drop support
+- **Drag & Drop**: Easy file uploading with drag and drop support**Lovable**: https://lovable.dev/projects/c17be190-7ca5-4ab4-9d2f-2249fe4ed289
 
-## ✨ FeaturesSimply visit the [Lovable Project](https://lovable.dev/projects/c17be190-7ca5-4ab4-9d2f-2249fe4ed289) and start prompting.
+
 
 ## 🚀 Technologies Used
 
 
 
-This project is built with:
+This project is built with:## ✨ Features
 
-- **Image Processing**: Upload and transform images with various effectsChanges made via Lovable will be committed automatically to this repo.
+
+
+- **Vite** - Fast build tool and dev server## 📋 Project InfoThere are several ways of editing your application.
+
+- **TypeScript** - Type-safe JavaScript
+
+- **React** - UI library with hooks and modern patterns- **Image Processing**: Upload and transform images with various effects
+
+- **shadcn/ui** - Modern component library
+
+- **Tailwind CSS** - Utility-first CSS framework- **Retro Color Palettes**: Apply vintage color schemes to your images (Game Boy, Mega Drive)
+
+- **Image Processing Workers** - Web Workers for performance
+
+- **GitHub Actions** - Automated CI/CD deployment- **Camera Integration**: Capture photos directly from your camera
+
+
+
+## 🛠️ Development- **Export Options**: Download your processed images in multiple formatsTransform your images with retro color palettes and vintage effects. Built with modern web technologies for a nostalgic digital art experience.**Use Lovable**
+
+
+
+### Prerequisites- **Responsive Design**: Works on desktop and mobile devices
+
+
+
+- Node.js (18+ recommended)- **Real-time Preview**: See changes instantly as you apply effects
+
+- npm or yarn
+
+- **Drag & Drop**: Easy file uploading with drag and drop support
+
+### Quick Start
+
+## ✨ FeaturesSimply visit the [Lovable Project](https://lovable.dev/projects/c17be190-7ca5-4ab4-9d2f-2249fe4ed289) and start prompting.
+
+```bash
+
+# Clone the repository## 🚀 Technologies Used
+
+git clone https://github.com/Anarkade/deliaxe-paint.git
+
+
+
+# Navigate to project directory
+
+cd deliaxe-paintThis project is built with:
+
+
+
+# Install dependencies- **Image Processing**: Upload and transform images with various effectsChanges made via Lovable will be committed automatically to this repo.
+
+npm install
 
 - **Vite** - Fast build tool and dev server
 
-- **TypeScript** - Type-safe JavaScript- **Retro Color Palettes**: Apply vintage color schemes to your images
+# Start development server
+
+npm run dev- **TypeScript** - Type-safe JavaScript- **Retro Color Palettes**: Apply vintage color schemes to your images
+
+```
 
 - **React** - UI library with hooks and modern patterns
 
+### Available Scripts
+
 - **shadcn/ui** - Modern component library- **Camera Integration**: Capture photos directly from your camera**Use your preferred IDE**
 
-- **Tailwind CSS** - Utility-first CSS framework
+- `npm run dev` - Start development server
 
-- **Image Processing Workers** - Web Workers for performance- **Export Options**: Download your processed images
+- `npm run build` - Build for production- **Tailwind CSS** - Utility-first CSS framework
 
-- **GitHub Actions** - Automated CI/CD deployment
+- `npm run preview` - Preview production build locally
 
-- **Responsive Design**: Works on desktop and mobile devicesIf you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-## 🛠️ Development
-
-- **Real-time Preview**: See changes instantly as you apply effects
-
-### Prerequisites
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-- Node.js (18+ recommended)
-
-- npm or yarn## 🚀 Technologies Used
+- `npm run lint` - Run ESLint- **Image Processing Workers** - Web Workers for performance- **Export Options**: Download your processed images
 
 
 
-### Quick StartFollow these steps:
+## 🏗️ Build & Deploy- **GitHub Actions** - Automated CI/CD deployment
 
 
 
-```bashThis project is built with:
-
-# Clone the repository
-
-git clone https://github.com/Anarkade/deliaxe-paint.git```sh
+The project uses **automated deployment** with GitHub Actions:- **Responsive Design**: Works on desktop and mobile devicesIf you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
 
 
-# Navigate to project directory- **Vite** - Fast build tool and dev server# Step 1: Clone the repository using the project's Git URL.
-
-cd deliaxe-paint
-
-- **TypeScript** - Type-safe JavaScriptgit clone <YOUR_GIT_URL>
-
-# Install dependencies
-
-npm install- **React** - UI library with hooks and modern patterns
+### Automated Process## 🛠️ Development
 
 
 
-# Start development server- **shadcn/ui** - Modern component library# Step 2: Navigate to the project directory.
+1. **Push to main** → Triggers GitHub Actions workflow- **Real-time Preview**: See changes instantly as you apply effects
 
-npm run dev
+2. **Update docs** → Auto-updates CHANGELOG.md and README.md
 
-```- **Tailwind CSS** - Utility-first CSS frameworkcd <YOUR_PROJECT_NAME>
+3. **Build** → Runs `npm run build` in CI environment### Prerequisites
 
+4. **Deploy** → Publishes `dist/` folder to `gh-pages` branch
 
-
-### Available Scripts- **Image Processing Workers** - Web Workers for performance
-
-
-
-- `npm run dev` - Start development server# Step 3: Install the necessary dependencies.
-
-- `npm run build` - Build for production
-
-- `npm run preview` - Preview production build locally## 🛠️ Developmentnpm i
-
-- `npm run lint` - Run ESLint
+5. **Live** → GitHub Pages serves the updated site automaticallyThe only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
 
 
-## 🏗️ Build & Deploy
-
-### Prerequisites# Step 4: Start the development server with auto-reloading and an instant preview.
-
-The project uses automated deployment with **GitHub Actions**:
-
-npm run dev
-
-### Automated Deployment
-
-- Node.js (16+ recommended)```
-
-1. **Push to main** - Triggers GitHub Actions workflow
-
-2. **Build** - Runs `npm run build` in CI environment- npm or yarn
-
-3. **Deploy** - Publishes `dist/` folder to `gh-pages` branch
-
-4. **Live** - GitHub Pages serves the updated site automatically**Edit a file directly in GitHub**
+### Manual Development Build- Node.js (18+ recommended)
 
 
 
-### Manual Development Build### Quick Start
-
-
-
-```bash- Navigate to the desired file(s).
+```bash- npm or yarn## 🚀 Technologies Used
 
 # Build for production
 
-npm run build```bash- Click the "Edit" button (pencil icon) at the top right of the file view.
+npm run build
 
 
 
-# Preview locally (optional)# Clone the repository- Make your changes and commit the changes.
+# Preview locally (optional)### Quick StartFollow these steps:
 
 npm run preview
 
-```git clone https://github.com/Anarkade/deliaxe-paint.git
+```
 
 
 
-### Version System**Use GitHub Codespaces**
+### Version System```bashThis project is built with:
 
 
 
-- **Automatic version detection** from git tags# Navigate to project directory
+- **Automatic version detection** from git tags# Clone the repository
 
 - **Build timestamp** displayed in footer
 
-- **Static version.json** generation for runtime accesscd deliaxe-paint- Navigate to the main page of your repository.
+- **Auto-updated changelog** with recent commitsgit clone https://github.com/Anarkade/deliaxe-paint.git```sh
+
+- **Static version.json** generation for runtime access
 
 
 
-## 📁 Project Structure- Click on the "Code" button (green button) near the top right.
+## 📁 Project Structure
+
+# Navigate to project directory- **Vite** - Fast build tool and dev server# Step 1: Clone the repository using the project's Git URL.
+
+```
+
+deliaxe-paint/cd deliaxe-paint
+
+├── .github/workflows/     # GitHub Actions CI/CD with auto-docs
+
+├── public/               # Static assets- **TypeScript** - Type-safe JavaScriptgit clone <YOUR_GIT_URL>
+
+│   ├── logo.gif         # App logo and favicon
+
+│   └── version.json     # Generated version info (auto-generated)# Install dependencies
+
+├── src/
+
+│   ├── components/      # React componentsnpm install- **React** - UI library with hooks and modern patterns
+
+│   ├── contexts/        # React contexts
+
+│   ├── hooks/          # Custom React hooks
+
+│   ├── lib/            # Utility libraries
+
+│   ├── locales/        # Internationalization# Start development server- **shadcn/ui** - Modern component library# Step 2: Navigate to the project directory.
+
+│   ├── pages/          # Route pages
+
+│   ├── utils/          # Helper functionsnpm run dev
+
+│   └── workers/        # Web Workers
+
+├── CHANGELOG.md         # Auto-updated with commits```- **Tailwind CSS** - Utility-first CSS frameworkcd <YOUR_PROJECT_NAME>
+
+├── README.md           # Auto-updated with version info
+
+└── dist/               # Production build output (ignored)
+
+```
+
+### Available Scripts- **Image Processing Workers** - Web Workers for performance
+
+## 🔧 Configuration
 
 
 
-```# Install dependencies- Select the "Codespaces" tab.
+### GitHub Pages Setup
 
-deliaxe-paint/
+- `npm run dev` - Start development server# Step 3: Install the necessary dependencies.
 
-├── .github/workflows/     # GitHub Actions CI/CDnpm install- Click on "New codespace" to launch a new Codespace environment.
+The repository is configured to deploy from the `gh-pages` branch:
+
+- `npm run build` - Build for production
+
+1. Repository Settings → Pages
+
+2. Source: "Deploy from a branch"- `npm run preview` - Preview production build locally## 🛠️ Developmentnpm i
+
+3. Branch: `gh-pages`
+
+4. Folder: `/ (root)`- `npm run lint` - Run ESLint
+
+
+
+### Automated Documentation
+
+
+
+The CI/CD pipeline automatically:## 🏗️ Build & Deploy
+
+- Updates `CHANGELOG.md` with recent commits
+
+- Updates version badges in `README.md`### Prerequisites# Step 4: Start the development server with auto-reloading and an instant preview.
+
+- Commits documentation changes with `[skip ci]` tag
+
+The project uses automated deployment with **GitHub Actions**:
+
+## 🐛 Troubleshooting
+
+npm run dev
+
+### Common Issues
+
+### Automated Deployment
+
+1. **Logo 404 Error**: Ensure logo.gif is in `public/` directory
+
+2. **Version Shows v0.0.0**: Check git tags exist and build process runs correctly- Node.js (16+ recommended)```
+
+3. **Cache Issues**: Clear browser cache and Vite cache (`rm -rf .vite node_modules/.vite`)
+
+4. **Deployment Fails**: Check GitHub Actions logs in the Actions tab1. **Push to main** - Triggers GitHub Actions workflow
+
+5. **Docs Not Updated**: Ensure commits have meaningful messages for changelog
+
+2. **Build** - Runs `npm run build` in CI environment- npm or yarn
+
+### Camera Testing
+
+3. **Deploy** - Publishes `dist/` folder to `gh-pages` branch
+
+For camera preview debugging, use this DevTools console snippet:
+
+4. **Live** - GitHub Pages serves the updated site automatically**Edit a file directly in GitHub**
+
+```javascript
+
+(() => {
+
+    const video = document.querySelector('video');
+
+    if (video) {### Manual Development Build### Quick Start
+
+        const rect = video.getBoundingClientRect();
+
+        return {
+
+            videoRect: { w: Math.round(rect.width), h: Math.round(rect.height) },
+
+            videoMeta: { videoWidth: video.videoWidth, videoHeight: video.videoHeight },```bash- Navigate to the desired file(s).
+
+            isSecureContext: window.isSecureContext
+
+        };# Build for production
+
+    }
+
+    return { error: 'No video element found' };npm run build```bash- Click the "Edit" button (pencil icon) at the top right of the file view.
+
+})();
+
+```
+
+
+
+## 🤝 Development Workflow# Preview locally (optional)# Clone the repository- Make your changes and commit the changes.
+
+
+
+1. **Make changes** on feature branches or directly on `main`npm run preview
+
+2. **Push to main** → Auto-triggers deployment and docs update
+
+3. **Monitor deployment** → Check [GitHub Actions](https://github.com/Anarkade/deliaxe-paint/actions)```git clone https://github.com/Anarkade/deliaxe-paint.git
+
+4. **Verify updates** → Docs and site updated automatically
+
+5. **Check live site** → Visit https://anarkade.github.io/deliaxe-paint/
+
+
+
+### Creating Releases### Version System**Use GitHub Codespaces**
+
+
+
+```bash
+
+# Create and push a new tag
+
+git tag -a v1.0.0 -m "Release version 1.0.0"- **Automatic version detection** from git tags# Navigate to project directory
+
+git push origin v1.0.0
+
+- **Build timestamp** displayed in footer
+
+# This will update the version shown in the app footer and README badge
+
+```- **Static version.json** generation for runtime accesscd deliaxe-paint- Navigate to the main page of your repository.
+
+
+
+## 📝 License
+
+
+
+©2025 Anarkade - All rights reserved## 📁 Project Structure- Click on the "Code" button (green button) near the top right.
+
+
+
+## 🤝 Contributing
+
+
+
+This project is primarily maintained by Anarkade. For bug reports or feature requests, please open an issue on GitHub.```# Install dependencies- Select the "Codespaces" tab.
+
+
+
+---deliaxe-paint/
+
+
+
+**Built with ❤️ for retro digital art enthusiasts**├── .github/workflows/     # GitHub Actions CI/CDnpm install- Click on "New codespace" to launch a new Codespace environment.
 
 ├── public/               # Static assets
 

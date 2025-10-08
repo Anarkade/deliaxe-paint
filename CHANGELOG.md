@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Automated documentation updates in CI/CD pipeline
+- Auto-generated changelog entries from commit messages
+- Version badge auto-update in README.md
+
+### Changed
+- GitHub Actions workflow now updates CHANGELOG.md and README.md before deployment
+- Documentation is automatically kept in sync with latest changes
+
 ## [0.0.18-stable] - 2025-10-08
 
 ### Added
