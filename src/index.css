@@ -1,0 +1,153 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Elegant professional dark theme */
+    --background: 330 9% 16%;
+    --foreground: 40 15% 92%;
+
+    --card: 259 5% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 225 15% 9%;
+    --popover-foreground: 40 15% 92%;
+
+    --primary: 345 59% 29%;
+    --primary-foreground: 40 15% 92%;
+
+    --secondary: 225 15% 12%;
+    --secondary-foreground: 40 15% 92%;
+
+    --muted: 225 15% 11%;
+    --muted-foreground: 40 10% 65%;
+
+    --accent: 345 59% 39%;
+    --accent-foreground: 40 15% 92%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 40 15% 92%;
+
+    --border: 225 15% 15%;
+    --input: 225 15% 12%;
+    --ring: 345 59% 29%;
+
+    /* Custom colors */
+    --bone-white: 40 15% 92%;
+    --blood-red: 345 59% 29%;
+    --blood-red-hover: 345 59% 39%;
+    --blood-red-light: 345 59% 49%;
+    --elegant-bg: 225 15% 5%;
+    --elegant-border: 225 15% 18%;
+    --dark-plum: 338 61% 19%;
+    
+    /* Retro button colors */
+    --retro-primary: 345 59% 29%;
+    --retro-primary-foreground: 40 15% 92%;
+    --retro-primary-hover: 345 59% 25%;
+
+    /* Gradients */
+    --gradient-retro: linear-gradient(135deg, hsl(var(--neon-cyan)), hsl(var(--neon-pink)));
+    --gradient-console: linear-gradient(180deg, hsl(var(--console-bg)), hsl(var(--background)));
+    --gradient-glass: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+
+    /* Glass effect shadows */
+    --shadow-glass: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    --shadow-glass-hover: 0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.15);
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Apply a bottom margin to text-xl globally (equivalent to mb-4). */
+  .text-xl {
+    margin-bottom: 1rem;
+  }
+}
