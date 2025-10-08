@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { execSync } from "child_process";
+import fs from "fs";
 
 // Get the latest Git tag dynamically with multiple fallback strategies
 const getLatestGitTag = () => {
@@ -30,22 +31,51 @@ const getLatestGitTag = () => {
   }
   
   // Final fallback: use a reasonable version for deployment
-  const fallbackVersion = 'v0.0.14-production';
+  const fallbackVersion = 'v0.0.15-production';
   console.log(`📦 Using fallback version: ${fallbackVersion}`);
   return fallbackVersion;
 };
 
+// Generate version file during build
+const generateVersionFile = () => {
+  const version = getLatestGitTag();
+  const buildDate = new Date().toISOString();
+  const versionInfo = {
+    version,
+    buildDate,
+    timestamp: Date.now()
+  };
+  
+  // Ensure public directory exists
+  const publicDir = path.resolve(__dirname, 'public');
+  if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(publicDir, { recursive: true });
+  }
+  
+  // Write version file to public directory
+  const versionPath = path.join(publicDir, 'version.json');
+  fs.writeFileSync(versionPath, JSON.stringify(versionInfo, null, 2));
+  console.log(`📝 Version file generated: ${versionPath}`);
+  console.log(`📦 Version: ${version}, Build Date: ${buildDate}`);
+  
+  return version;
+};
+
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
-  // Use relative base in production so the built app works both on GitHub Pages
-  // (when served from /deliaxe-paint/) and on a custom domain that points to the
-  // gh-pages site root. Relative base avoids absolute /deliaxe-path/ paths which
-  // break when the site is served from a different root (like a custom domain).
-  base: mode === 'production' ? './' : '/',
-  define: {
-    // Inject the latest Git tag as an environment variable at build time
-    'import.meta.env.VITE_APP_VERSION': JSON.stringify(getLatestGitTag()),
-  },
+export default defineConfig(({ mode }) => {
+  // Generate version file during build
+  const version = generateVersionFile();
+  
+  return {
+    // Use relative base in production so the built app works both on GitHub Pages
+    // (when served from /deliaxe-paint/) and on a custom domain that points to the
+    // gh-pages site root. Relative base avoids absolute /deliaxe-path/ paths which
+    // break when the site is served from a different root (like a custom domain).
+    base: mode === 'production' ? './' : '/',
+    define: {
+      // Inject the version as an environment variable at build time
+      'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
+    },
   server: {
     host: "::",
     port: 8080,
@@ -84,4 +114,5 @@ export default defineConfig(({ mode }) => ({
     },
     chunkSizeWarningLimit: 1000, // Increase limit to 1000kb
   },
-}));
+};
+});
