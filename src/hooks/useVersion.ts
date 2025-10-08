@@ -20,25 +20,35 @@ export const useVersion = () => {
     const fetchVersion = async () => {
       try {
         // Try to fetch the version.json file from the public directory
-        const response = await fetch(`${import.meta.env.BASE_URL}version.json`);
+        // In development, files in public/ are served from root
+        const versionUrl = '/version.json';
+        console.log('🔍 Fetching version from:', versionUrl);
+        console.log('🌐 BASE_URL:', import.meta.env.BASE_URL);
+        console.log('🔧 Mode:', import.meta.env.MODE);
+        
+        const response = await fetch(versionUrl);
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch version: ${response.status}`);
+          throw new Error(`Failed to fetch version: ${response.status} ${response.statusText}`);
         }
         
         const versionInfo: VersionInfo = await response.json();
+        console.log('✅ Version loaded from JSON:', versionInfo);
+        
         setVersion(versionInfo.version);
         setBuildDate(versionInfo.buildDate);
         setError(null);
       } catch (err) {
-        console.warn('Could not load version from version.json, using fallback:', err);
+        console.warn('⚠️ Could not load version from version.json, using fallback:', err);
         
         // Fallback to environment variable (still available during build)
         const envVersion = import.meta.env.VITE_APP_VERSION;
+        console.log('🔄 Fallback to env version:', envVersion);
+        
         if (envVersion && envVersion !== 'undefined') {
           setVersion(envVersion);
         } else {
-          setVersion('v0.0.15-fallback');
+          setVersion('v0.0.16-fallback');
         }
         
         setError(err instanceof Error ? err.message : 'Unknown error');

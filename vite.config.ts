@@ -58,13 +58,13 @@ const generateVersionFile = () => {
   console.log(`📝 Version file generated: ${versionPath}`);
   console.log(`📦 Version: ${version}, Build Date: ${buildDate}`);
   
-  return version;
+  return { version, buildDate };
 };
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Generate version file during build
-  const version = generateVersionFile();
+  const { version, buildDate } = generateVersionFile();
   
   return {
     // Use relative base in production so the built app works both on GitHub Pages
@@ -73,8 +73,9 @@ export default defineConfig(({ mode }) => {
     // break when the site is served from a different root (like a custom domain).
     base: mode === 'production' ? './' : '/',
     define: {
-      // Inject the version as an environment variable at build time
+      // Inject the version and build date as environment variables at build time
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
+      'import.meta.env.VITE_BUILD_DATE': JSON.stringify(buildDate),
     },
   server: {
     host: "::",
