@@ -391,7 +391,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                             <div className="w-3 h-3 bg-white rounded-full opacity-75" />
                           </div>
                         )}
-                        <span className="absolute bottom-1 right-1 text-xs font-mono bg-black/70 text-white px-1 rounded">
+                        <span className="absolute bottom-1 left-0 right-0 flex justify-center text-xs font-mono bg-black/70 text-white px-1 rounded">
                           {index}
                         </span>
                       </div>
