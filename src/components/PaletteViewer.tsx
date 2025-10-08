@@ -329,13 +329,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       </div>
       
       <div className="space-y-4">
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground text-left">
             <p>{t('clickToChangeColor')}</p>
           </div>
           
-          <div className="grid gap-4 w-full" style={{ 
-            gridTemplateColumns: `repeat(${Math.min(4, Math.ceil(Math.sqrt(paletteColors.length)))}, minmax(0, 1fr))` 
-          }}>
+          <div className="w-full flex justify-center">
+            <div className="flex flex-wrap gap-2">
             {paletteColors.map((color, index) => {
               const hexColor = `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`.toUpperCase();
               const alpha = color.transparent ? 0 : 100;
@@ -374,12 +373,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                     setDraggedIndex(null);
                   }}
                   data-palette-index={index}
-                  className="relative group cursor-move bg-card border border-elegant-border rounded-lg p-3 hover:shadow-lg transition-all touch-manipulation"
+                  className="relative group cursor-move bg-card border border-elegant-border rounded-lg p-1.5 hover:shadow-lg transition-all touch-manipulation"
                 >
-                  <div className="space-y-2">
+                  <div className="flex items-stretch space-x-2">
                     <div className="relative">
                       <div
-                        className="w-full h-12 border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"
+                        className="w-6 h-full border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"
                         style={{
                           backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                           opacity: color.transparent ? 0.5 : 1
@@ -392,24 +391,25 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                             <div className="w-3 h-3 bg-white rounded-full opacity-75" />
                           </div>
                         )}
-                        <span className="absolute top-1 right-1 text-xs font-mono bg-black/70 text-white px-1 rounded">
+                        <span className="absolute bottom-1 right-1 text-xs font-mono bg-black/70 text-white px-1 rounded">
                           {index}
                         </span>
                       </div>
                       <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                     
-                    <div className="text-xs font-mono space-y-0.5 text-muted-foreground">
+                    <div className="text-xs font-mono space-y-0.5 text-muted-foreground text-left">
                       <div className="font-semibold text-foreground">{hexColor}</div>
-                      <div>Red: {color.r}</div>
-                      <div>Green: {color.g}</div>
-                      <div>Blue: {color.b}</div>
-                      <div>Alpha: {alpha}%</div>
+                      <div>R {color.r}</div>
+                      <div>G {color.g}</div>
+                      <div>B {color.b}</div>
+                      <div>A {alpha}%</div>
                     </div>
                   </div>
                 </div>
               );
             })}
+            </div>
           </div>
         </div>
     </div>
