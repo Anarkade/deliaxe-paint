@@ -817,9 +817,12 @@ export const ImagePreview = ({
   const displayedHeight = currentDisplayedImage ? currentDisplayedImage.height * (zoom[0] / 100) : 0;
 
   return (
-    <div className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col">
-      {/* Header (hidden when camera preview is shown so video can use full cell) */}
-    {!showCameraPreview && (
+    <div 
+      className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col"
+      data-image-preview-container
+    >
+      {/* Header (only shown when there's an image loaded and camera preview is not active) */}
+    {!showCameraPreview && originalImage && (
   <div className="flex flex-wrap items-center gap-2 text-sm p-4" ref={headerRef}>
             <span className="w-16 font-bold uppercase">{t('zoom')} {zoom[0]}%</span>
           <div className="flex items-center gap-2" ref={controlsRef}>

@@ -71,6 +71,8 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
+
+
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -149,6 +151,8 @@ function toast({ ...props }: Toast) {
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
+  console.log('🍞 Creating toast with id:', id);
+
   dispatch({
     type: "ADD_TOAST",
     toast: {
@@ -167,6 +171,21 @@ function toast({ ...props }: Toast) {
     update,
   }
 }
+
+// Simple toast variants - keeping original API
+toast.success = (message: string) => {
+  return toast({
+    description: message,
+    variant: "default",
+  });
+};
+
+toast.error = (message: string) => {
+  return toast({
+    description: message,
+    variant: "destructive",
+  });
+};
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
@@ -187,5 +206,7 @@ function useToast() {
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }
 }
+
+
 
 export { useToast, toast }

@@ -6,7 +6,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Download, Cloud, Upload, Share, Copy, X, FileQuestion, FilePlus } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { createPNG8IndexedBlob } from '@/lib/pngIndexedEncoder';
 
 interface ExportImageProps {
