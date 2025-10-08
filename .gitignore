@@ -1,26 +1,44 @@
-# Ignore Vite build output and generated assets
+# Build output and generated assets
 /dist/
 /assets/
 /index.html
-/version.json
 
-# Node dependencies
-/node_modules/
+# Generated version files
+/version.json
+public/version.json
+
+# Node dependencies and cache
+node_modules/
+.vite/
+*.tsbuildinfo
 
 # Logs
-/npm-debug.log*
-/yarn-debug.log*
-/yarn-error.log*
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
 
 # OS files
 .DS_Store
-Thumbs.dbnode_modules
-dist
-*.log
-package-lock.json
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Generated version file
-public/version.json
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# Vite cache
-.vite
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
