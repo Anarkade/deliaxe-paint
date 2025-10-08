@@ -187,6 +187,13 @@ toast.error = (message: string) => {
   });
 };
 
+toast.info = (message: string) => {
+  return toast({
+    description: message,
+    variant: "default",
+  });
+};
+
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
