@@ -37,10 +37,9 @@ jobs:
           # Remove any existing lockfile and node_modules generated on other OSes
           rm -f package-lock.json
           rm -rf node_modules
-          # Avoid optional native binaries that may be platform-specific
-          npm config set optional false
-          # Install with minimal network chatter and without optional deps
-          npm install --prefer-offline --no-audit --no-optional
+          # Install without optional dependencies (use supported flag)
+          # --omit=optional is the supported way to exclude optional deps
+          npm install --prefer-offline --no-audit --omit=optional
       - name: Grant execute permission for binaries
         run: chmod +x node_modules/.bin/*
       - name: Build with Vite
