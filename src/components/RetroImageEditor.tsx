@@ -56,6 +56,8 @@ export const RetroImageEditor = () => {
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('scale-to-fit-width');
   const [autoFitKey, setAutoFitKey] = useState<string | undefined>(undefined);
+  // Track whether the preview is currently showing the original image or the processed one
+  const [previewShowingOriginal, setPreviewShowingOriginal] = useState<boolean>(true);
   const ignoreNextCloseRef = useRef(false);
   
   // Performance and processing state
@@ -461,10 +463,18 @@ export const RetroImageEditor = () => {
       // indexed PNGs that were rasterized on load).
       if (!originalImage && !processedImageData) return;
 
-      // Compute a cache/hash key depending on available source. If we have
-      // a processed raster, hash its pixel buffer; otherwise hash the
-      // original image element.
-      const imageHash = processedImageData ? hashImageData(processedImageData) : (originalImage ? hashImage(originalImage) : '');
+      // Decide which source to use based on what is currently shown in the
+      // preview. If the preview is showing the processed image and we have
+      // processedImageData, use that as the source; otherwise use the
+      // original image element. This prevents repeated transforms from
+      // degrading an already-processed image when the user expects operations
+      // to apply to the shown preview.
+      const useProcessedAsSource = !previewShowingOriginal && !!processedImageData;
+
+      // Compute cache/hash key from the chosen source
+      const imageHash = useProcessedAsSource
+        ? (processedImageData ? hashImageData(processedImageData) : '')
+        : (originalImage ? hashImage(originalImage) : '');
 
       // Start performance monitoring
       performanceMonitor.startMeasurement('image_processing');
@@ -479,8 +489,11 @@ export const RetroImageEditor = () => {
   // Determine target dimensions based on selectedResolution. Use the
   // processed raster dimensions when available, otherwise fall back to
   // the original image dimensions.
-  const srcWidth = processedImageData ? processedImageData.width : (originalImage ? originalImage.width : 0);
-  const srcHeight = processedImageData ? processedImageData.height : (originalImage ? originalImage.height : 0);
+  // Choose source based on what the preview is currently displaying. This prevents
+  // repeated resolution changes from progressively degrading an already-processed
+  // image when the user intends to apply transformations relative to the shown image.
+  const srcWidth = useProcessedAsSource ? processedImageData!.width : (originalImage ? originalImage.width : (processedImageData ? processedImageData.width : 0));
+  const srcHeight = useProcessedAsSource ? processedImageData!.height : (originalImage ? originalImage.height : (processedImageData ? processedImageData.height : 0));
   let targetWidth = srcWidth;
   let targetHeight = srcHeight;
 
@@ -493,9 +506,14 @@ export const RetroImageEditor = () => {
           targetHeight = h;
         }
       } else if (selectedResolution === 'unscaled') {
-        // keep original dimensions
-        targetWidth = originalImage.width;
-        targetHeight = originalImage.height;
+        // keep dimensions of the image currently shown in preview
+        if (useProcessedAsSource && processedImageData) {
+          targetWidth = processedImageData.width;
+          targetHeight = processedImageData.height;
+        } else if (originalImage) {
+          targetWidth = originalImage.width;
+          targetHeight = originalImage.height;
+        }
       }
 
       // Additional safety check for canvas size
@@ -512,8 +530,8 @@ export const RetroImageEditor = () => {
       const tempCanvas = document.createElement('canvas');
       const sourceCanvas = document.createElement('canvas');
 
-      // Determine source: prefer processedImageData when available
-      if (processedImageData) {
+      // Determine source canvas based on preview selection (useProcessedAsSource)
+      if (useProcessedAsSource && processedImageData) {
         sourceCanvas.width = processedImageData.width;
         sourceCanvas.height = processedImageData.height;
         const sctx = sourceCanvas.getContext('2d');
@@ -522,8 +540,7 @@ export const RetroImageEditor = () => {
           return;
         }
         sctx.putImageData(processedImageData, 0, 0);
-      } else {
-        // Fallback to original image bitmap
+      } else if (originalImage) {
         sourceCanvas.width = originalImage.width;
         sourceCanvas.height = originalImage.height;
         const sctx = sourceCanvas.getContext('2d');
@@ -533,6 +550,9 @@ export const RetroImageEditor = () => {
         }
         sctx.imageSmoothingEnabled = false;
         sctx.drawImage(originalImage, 0, 0);
+      } else {
+        toast.error(t('canvasNotSupported'));
+        return;
       }
 
       tempCanvas.width = targetWidth;
@@ -643,6 +663,7 @@ export const RetroImageEditor = () => {
     originalImage,
     processedImageData,
     selectedPalette,
+    previewShowingOriginal,
     saveToHistory,
     performanceMonitor,
     getCanvas,
@@ -908,6 +929,7 @@ export const RetroImageEditor = () => {
               autoFitKey={autoFitKey}
               onZoomChange={handlePreviewZoomChange}
               isVerticalLayout={isVerticalLayout}
+              onShowOriginalChange={(show) => setPreviewShowingOriginal(show)}
             />
 
             {/* Floating Content Sections - now constrained inside preview cell (absolute inset) */}
