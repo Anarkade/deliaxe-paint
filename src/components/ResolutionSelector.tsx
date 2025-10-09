@@ -211,7 +211,6 @@ export const ResolutionSelector = ({
                   <div key={option.value} className="flex items-start min-h-[1.75rem]">
                     <RadioGroupItem value={option.value} id={`scaling-${option.value}`} className="h-3 w-3 mt-0.5 mr-2 flex-shrink-0" />
                       <Label htmlFor={`scaling-${option.value}`} className="flex cursor-pointer text-xs text-left h-3 w-4">
-                        <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                         <span className="text-xs text-muted-foreground leading-tight break-words text-left whitespace-nowrap">{option.label}</span>
                       </Label>
                   </div>
