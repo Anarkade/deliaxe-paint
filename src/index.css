@@ -150,4 +150,27 @@ All colors MUST be HSL.
   .text-xl {
     margin-bottom: 1rem;
   }
+  /* Semantic color helper classes (project-wide) */
+  /* Background colors */
+  .color-bg-highlight {
+    background-color: #202225 !important;
+  }
+
+  .color-bg-main {
+    background-color: #1e1d20 !important;
+  }
+
+  .color-highlight-main {
+    color: #721b35 !important;
+    background-color: transparent !important;
+  }
+
+  /* Text colors */
+  .color-text-subtitle {
+    color: #f8fafc !important;
+  }
+
+  .color-text-common {
+    color: #aea99d !important;
+  }
 }

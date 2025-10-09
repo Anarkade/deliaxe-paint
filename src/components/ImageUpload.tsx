@@ -329,8 +329,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
           
           <div className="space-y-4">
             <div>
-              <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-                <Camera className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+              <h3 className="text-xl font-bold flex items-center color-highlight-main">
+                <Camera className="mr-2 h-6 w-6 color-highlight-main" />
                 {t('selectCamera')}
               </h3>
             </div>
@@ -385,8 +385,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
         )}
         
         <div>
-          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-            <Upload className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+          <h3 className="text-xl font-bold flex items-center color-highlight-main">
+            <Upload className="mr-2 h-6 w-6 color-highlight-main" />
             {t('loadImage')}
           </h3>
             <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('loadImageDesc')}</p>

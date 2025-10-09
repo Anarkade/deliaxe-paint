@@ -143,7 +143,7 @@ export const ResolutionSelector = ({
 
   const scalingOptions = [
     { value: 'stretch', label: t('stretch'), icon: Expand, desc: t('stretchToFit') },
-    { value: 'scale-to-fit-width', label: t('keepAspectRatio'), icon: MoveHorizontal, desc: t('keepAspectRatio') },
+    { value: 'scale-to-fit-width', label: t('keepAspectRatio'), icon: Proportions, desc: t('keepAspectRatio') },
     { value: 'dont-scale', label: t('dontScale'), icon: AlignLeft, desc: t('dontScale') },
   ];
 
@@ -178,8 +178,8 @@ export const ResolutionSelector = ({
 
       <div className="space-y-5">
         <div>
-          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-            <Proportions className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+          <h3 className="text-xl font-bold flex items-center color-highlight-main">
+            <Proportions className="mr-2 h-6 w-6 color-highlight-main" />
             {t('changeResolution')}
           </h3>
           <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('changeResolutionDesc')}</p>
@@ -189,7 +189,7 @@ export const ResolutionSelector = ({
 
         {/* Scaling and Alignment - side by side */}
         <div className="flex justify-center">
-            <div className="space-y-8 bg-[#202225] border border-elegant-border rounded-lg p-6 mr-4">
+            <div className="space-y-8 border border-elegant-border rounded-lg p-6 mr-4 color-bg-highlight">
             <label className="block text-m font-bold text-foreground">
               <span className="flex items-center">
                 <Scaling className="mr-2 h-4 w-4" />
@@ -208,19 +208,19 @@ export const ResolutionSelector = ({
               {scalingOptions.map((option) => {
                 const Icon = option.icon;
                 return (
-                  <div key={option.value} className="flex items-start space-x-2 min-h-[1.75rem]">
+                  <div key={option.value} className="flex items-start min-h-[1.75rem]">
                     <RadioGroupItem value={option.value} id={`scaling-${option.value}`} className="h-3 w-3 mt-0.5 mr-2 flex-shrink-0" />
                       <Label htmlFor={`scaling-${option.value}`} className="flex cursor-pointer text-xs text-left h-3 w-4">
-                      <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-xs text-muted-foreground leading-tight break-words text-left whitespace-nowrap">{option.label}</span>
-                    </Label>
+                        <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                        <span className="text-xs text-muted-foreground leading-tight break-words text-left whitespace-nowrap">{option.label}</span>
+                      </Label>
                   </div>
-                );
+                  );
               })}
             </RadioGroup>
           </div>
 
-          <div className="space-y-8 bg-card border border-elegant-border rounded-lg p-6">
+          <div className="space-y-8 border border-elegant-border rounded-lg p-6 color-bg-highlight">
             <label className="block text-m font-bold text-foreground">
               <span className="flex items-center">
                 <AlignLeft className="mr-2 h-4 w-4" />

@@ -119,8 +119,8 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
 
       <div className="space-y-4">
         <div>
-          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-            <Camera className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+          <h3 className="text-xl font-bold flex items-center color-highlight-main">
+            <Camera className="mr-2 h-6 w-6 color-highlight-main" />
             {t('selectCamera')}
           </h3>
         </div>

@@ -102,7 +102,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     return (
   // height set to 1.5x the button height (h-10 -> 2.5rem * 1.5 = 3.75rem)
   // Add horizontal padding equal to gap-2 so logo and buttons sit inset from edges
-  <header className="border-b border-elegant-border bg-[#202225] w-full flex-shrink-0 m-0 px-2 py-0 h-[3.75rem] flex items-center">
+  <header className="border-b border-elegant-border w-full flex-shrink-0 m-0 px-2 py-0 h-[3.75rem] flex items-center color-bg-highlight">
         <div className="w-full max-w-none flex items-center justify-between m-0 p-0 h-full">
             <div className="flex items-center h-full m-0 p-0">
             <img src={logoGif} alt="Vintage Palette Studio" className="h-8 w-8 m-0 p-0 block" />
@@ -166,7 +166,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     );
   }
   return (
-    <aside className="h-full w-12 flex flex-col bg-[#202225] border-r border-elegant-border z-50">
+    <aside className="h-full w-12 flex flex-col border-r border-elegant-border z-50 color-bg-highlight">
       <div className="flex flex-col items-center py-1 space-y-1 h-full">
           <div className="flex flex-col items-center gap-1 flex-shrink-0 mb-3 pt-2">
           <img src={logoGif} alt="Vintage Palette Studio" className="h-8 w-8" />

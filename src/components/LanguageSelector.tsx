@@ -53,8 +53,8 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
         </Button>
       )}
       <div>
-        <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
-          <Globe className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
+        <h3 className="text-xl font-bold flex items-center color-highlight-main">
+          <Globe className="mr-2 h-6 w-6 color-highlight-main" />
           {t('changeLanguage')}
         </h3>
         <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">

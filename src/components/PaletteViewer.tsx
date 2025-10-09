@@ -386,7 +386,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                     setDraggedIndex(null);
                   }}
                   data-palette-index={index}
-                  className="relative group cursor-move bg-[#202225] border border-elegant-border rounded-lg p-1.5 hover:shadow-lg transition-all touch-manipulation"
+                  className="relative group cursor-move border border-elegant-border rounded-lg p-1.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"
                 >
                   <div className="flex items-stretch space-x-2">
                     <div className="relative">
