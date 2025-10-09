@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Monitor, AlignCenter, Maximize, X, Scaling, AlignLeft, Proportions, Expand, ChevronsLeftRight, MoveHorizontal } from 'lucide-react';
+import { X, Scaling, AlignLeft, Proportions } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 // Custom alignment icon component
