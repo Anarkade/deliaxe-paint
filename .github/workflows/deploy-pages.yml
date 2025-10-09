@@ -31,7 +31,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: "npm"
       - name: Install dependencies (clean, no optional native modules)
         run: |
           # Remove any existing lockfile and node_modules generated on other OSes
