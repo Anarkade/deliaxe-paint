@@ -13,6 +13,7 @@ interface ExportImageProps {
   processedImageData: ImageData | null;
   originalImage?: HTMLImageElement | null;
   selectedPalette: string;
+  originalFilename?: string;
   // selectedResolution removed, now managed internally
   currentZoom?: number;
   showTileGrid?: boolean;
@@ -31,6 +32,7 @@ export const ExportImage = ({
   processedImageData, 
   originalImage, 
   selectedPalette, 
+  originalFilename,
   currentZoom = 1, 
   showTileGrid = false, 
   showFrameGrid = false, 

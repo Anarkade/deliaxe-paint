@@ -1,9 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PaletteType } from './ColorPaletteSelector';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useImageProcessor } from '@/hooks/useImageProcessor';
+import { useState, useEffect, useCallback } from 'react';
+import { type Color } from '@/lib/colorQuantization';
+import { PaletteType } from './ColorPaletteSelector';
 import { Eye, Palette, GripVertical } from 'lucide-react';
 // pngAnalyzer functions are imported dynamically where needed to keep bundle size small
 
@@ -15,12 +14,12 @@ interface PaletteColor {
 }
 
 interface PaletteViewerProps {
-  selectedPalette: PaletteType;
+  selectedPalette: string;
   imageData: ImageData | null;
-  onPaletteUpdate?: (colors: PaletteColor[]) => void;
+  onPaletteUpdate: (colors: Color[]) => void;
   originalImageSource?: File | string | null;
-  externalPalette?: PaletteColor[] | null;
-  onImageUpdate?: () => void;
+  externalPalette?: Color[];
+  onImageUpdate?: (imageData: ImageData) => void;
 }
 
 const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
@@ -63,6 +62,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   );
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isOriginalPNG, setIsOriginalPNG] = useState<boolean>(false);
+  const imageProcessor = useImageProcessor();
 
   const handleDragStart = useCallback((index: number) => {
     setDraggedIndex(index);
@@ -121,9 +121,9 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       setPaletteColors(newColors);
       onPaletteUpdate?.(newColors);
 
-      // Trigger image reprocessing with the new palette immediately
+      // Trigger image reprocessing with the new palette immediately (pass current imageData)
       setTimeout(() => {
-        onImageUpdate?.();
+        if (imageData) onImageUpdate?.(imageData);
       }, 10);
     };
 
@@ -308,6 +308,19 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
     extractColors();
   }, [imageData, selectedPalette, originalImageSource, onPaletteUpdate, externalPalette]);
+
+  const applyPaletteToImage = useCallback(async () => {
+    if (!imageData || paletteColors.length === 0) return;
+
+    const processedImageData = await imageProcessor.applyPalette(imageData, paletteColors);
+    if (processedImageData && onImageUpdate) {
+      onImageUpdate(processedImageData);
+    }
+  }, [imageData, paletteColors, imageProcessor, onImageUpdate]);
+
+  const handleApplyPalette = () => {
+    applyPaletteToImage();
+  };
 
   if (selectedPalette === 'original' && !isOriginalPNG) {
     // If an external palette is provided (e.g., after processing), allow showing the viewer
