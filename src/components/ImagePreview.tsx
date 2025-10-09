@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download, Eye, RefreshCcw, ZoomIn, Camera, X, Maximize2, MoveHorizontal } from 'lucide-react';
+import { Download, Eye, EyeOff, RefreshCcw, ZoomIn, Camera, X, Maximize2, MoveHorizontal } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { PaletteViewer } from './PaletteViewer';
@@ -150,6 +150,7 @@ export const ImagePreview = ({
   selectedCameraId,
   currentPaletteColors, 
   onSectionOpen, 
+  onShowOriginalChange,
   onRequestOpenCameraSelector,
   showTileGrid = false, 
   showFrameGrid = false, 
@@ -998,6 +999,12 @@ export const ImagePreview = ({
                 {/* second column (was left): text/info block */}
                 <div>
                   <div className="flex items-center gap-2">
+                    {/* Icon indicates whether Original is currently shown in preview */}
+                    {showOriginal ? (
+                      <Eye className="h-4 w-4 text-foreground" />
+                    ) : (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    )}
                     <span className="text-foreground font-semibold">{t('original')}</span>
                     <span className="text-muted-foreground text-xs">{originalImage?.width}×{originalImage?.height}</span>
                     <span className="text-muted-foreground text-xs">{originalFormat}</span>
@@ -1011,6 +1018,12 @@ export const ImagePreview = ({
                   </div>
                   {processedImageData && (
                     <div className="flex items-center gap-2">
+                      {/* Icon indicates whether Processed is currently shown in preview */}
+                      {!showOriginal ? (
+                        <Eye className="h-4 w-4 text-foreground" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      )}
                       <span className="text-foreground font-semibold">{t('processed')}</span>
                       <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
                       <span className="text-muted-foreground text-xs">{processedFormat}</span>
