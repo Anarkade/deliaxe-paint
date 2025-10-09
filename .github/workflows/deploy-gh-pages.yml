@@ -16,6 +16,12 @@ jobs:
           
       - run: npm install
       - run: chmod +x node_modules/.bin/*
+      - name: Install rollup native binding fallback (Linux x64)
+        run: |
+          # Try to install the native rollup optional binding for the runner's platform
+          npm install @rollup/rollup-linux-x64-gnu --no-save || true
+          # Also try the musl variant just in case (will be ignored if not applicable)
+          npm install @rollup/rollup-linux-x64-musl --no-save || true
       - run: npm run build
       
       - uses: peaceiris/actions-gh-pages@v3
