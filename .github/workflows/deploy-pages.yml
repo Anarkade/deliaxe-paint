@@ -36,6 +36,8 @@ jobs:
         run: |
           rm -f package-lock.json
           npm install
+      - name: Grant execute permission for binaries
+        run: chmod +x node_modules/.bin/*
       - name: Build with Vite
         run: npm run build
       - name: Add CNAME
