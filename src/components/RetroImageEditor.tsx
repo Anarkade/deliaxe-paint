@@ -47,6 +47,7 @@ export const RetroImageEditor = () => {
   const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
   const [isOriginalPNG8Indexed, setIsOriginalPNG8Indexed] = useState(false);
   const [originalPaletteColors, setOriginalPaletteColors] = useState<Color[]>([]);
+  const [orderedPaletteColors, setOrderedPaletteColors] = useState<Color[]>([]);
   const { t, currentLanguage, changeLanguage, languages, getLanguageName } = useTranslation();
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
@@ -120,6 +121,7 @@ export const RetroImageEditor = () => {
     // Grid & palette related defaults
     setIsOriginalPNG8Indexed(false);
     setOriginalPaletteColors([]);
+    setOrderedPaletteColors([]);
     setShowTileGrid(false);
     setShowFrameGrid(false);
     setTileWidth(8);
@@ -248,31 +250,23 @@ export const RetroImageEditor = () => {
       const isPng = (typeof source === 'string' && (source.startsWith('data:image/png') || source.endsWith('.png'))) || (typeof source !== 'string' && source.name?.endsWith('.png'));
       if (isPng) {
         try {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            canvas.width = img.width;
-            canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            const imageData = ctx.getImageData(0, 0, img.width, img.height);
-            const colors = new Set<string>();
-            for (let i = 0; i < imageData.data.length; i += 4) {
-              const r = imageData.data[i];
-              const g = imageData.data[i + 1];
-              const b = imageData.data[i + 2];
-              colors.add(`${r},${g},${b}`);
-            }
-            if (colors.size <= 256) {
-              const palette = Array.from(colors).map(color => {
-                const [r, g, b] = color.split(',').map(Number);
-                return { r, g, b };
-              });
-              setOriginalPaletteColors(palette);
-              setIsOriginalPNG8Indexed(true);
-            }
+          // Use the named export from pngAnalyzer
+          const pngModule = await import('@/lib/pngAnalyzer');
+          const palette = await pngModule.extractPNGPalette(source as File | string);
+          if (palette && palette.length > 0) {
+            setIsOriginalPNG8Indexed(true);
+            setOriginalPaletteColors(palette as any);
+            setOrderedPaletteColors(palette as any);
+          } else {
+            setIsOriginalPNG8Indexed(false);
+            setOriginalPaletteColors([]);
+            setOrderedPaletteColors([]);
           }
         } catch (e) {
-          // ignore
+          console.error("Failed to analyze PNG for palette:", e);
+          setIsOriginalPNG8Indexed(false);
+          setOriginalPaletteColors([]);
+          setOrderedPaletteColors([]);
         }
       }
       
@@ -354,8 +348,6 @@ export const RetroImageEditor = () => {
       setProcessingOperation('');
     }
   }, [t, performanceMonitor, imageProcessor, getCanvas, returnCanvas]);
-
-  // ...existing code...
 
   // Performance-optimized color similarity check for pixel art detection
   const areColorsSimilar = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): boolean => {
@@ -870,27 +862,16 @@ export const RetroImageEditor = () => {
             <ImagePreview
               originalImage={originalImage}
               processedImageData={processedImageData}
-              originalImageSource={originalImageSource}
+              onDownload={downloadImage}
               onLoadImageClick={loadImage}
+              originalImageSource={originalImageSource}
               selectedPalette={selectedPalette}
-              onPaletteUpdate={(colors) => {
-                try {
-                  // colors come from PaletteViewer and have shape { r,g,b, transparent? }
-                  const mapped = colors.map((c: any) => ({ r: c.r, g: c.g, b: c.b }));
-                  setOriginalPaletteColors(mapped);
-                  // Mark as indexed if we received a non-empty palette
-                  setIsOriginalPNG8Indexed(Array.isArray(mapped) && mapped.length > 0);
-                } catch (e) {
-                  // ignore mapping errors
-                }
-              }}
+              onPaletteUpdate={setOrderedPaletteColors}
+              currentPaletteColors={orderedPaletteColors.length > 0 ? orderedPaletteColors : originalPaletteColors}
               showCameraPreview={showCameraPreview}
               onCameraPreviewChange={setShowCameraPreview}
-              onZoomChange={handlePreviewZoomChange}
               selectedCameraId={selectedCameraId}
-              currentPaletteColors={originalPaletteColors}
               onRequestOpenCameraSelector={() => {
-                // Set flag so the global click handler ignores the next click that would close sections
                 ignoreNextCloseRef.current = true;
                 setTimeout(() => setActiveTab('select-camera'), 0);
               }}
@@ -904,8 +885,9 @@ export const RetroImageEditor = () => {
               frameGridColor={frameGridColor}
               tileLineThickness={tileLineThickness}
               frameLineThickness={frameLineThickness}
+              autoFitKey={autoFitKey}
+              onZoomChange={handlePreviewZoomChange}
               isVerticalLayout={isVerticalLayout}
-              containerStyle={rightColumnWidth ? { maxWidth: `${rightColumnWidth}px` } : undefined}
             />
 
             {/* Floating Content Sections - now constrained inside preview cell (absolute inset) */}
@@ -1043,17 +1025,9 @@ export const RetroImageEditor = () => {
                   processedImageData={processedImageData}
                   originalImage={originalImage}
                   selectedPalette={selectedPalette}
-                  currentZoom={currentZoom / 100}
-                  showTileGrid={showTileGrid}
-                  showFrameGrid={showFrameGrid}
-                  tileWidth={tileWidth}
-                  tileHeight={tileHeight}
-                  frameWidth={frameWidth}
-                  frameHeight={frameHeight}
-                  tileGridColor={tileGridColor}
-                  frameGridColor={frameGridColor}
-                  paletteColors={isOriginalPNG8Indexed ? originalPaletteColors : undefined}
+                  paletteColors={orderedPaletteColors.length > 0 ? orderedPaletteColors : originalPaletteColors}
                   onClose={() => setActiveTab(null)}
+                  originalFilename={originalImageSource instanceof File ? originalImageSource.name : 'image.png'}
                 />
               </div>
             )}
