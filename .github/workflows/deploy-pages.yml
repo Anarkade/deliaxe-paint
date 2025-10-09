@@ -32,10 +32,15 @@ jobs:
         with:
           node-version: "22"
           cache: "npm"
-      - name: Install dependencies
+      - name: Install dependencies (clean, no optional native modules)
         run: |
+          # Remove any existing lockfile and node_modules generated on other OSes
           rm -f package-lock.json
-          npm install
+          rm -rf node_modules
+          # Avoid optional native binaries that may be platform-specific
+          npm config set optional false
+          # Install with minimal network chatter and without optional deps
+          npm install --prefer-offline --no-audit --no-optional
       - name: Grant execute permission for binaries
         run: chmod +x node_modules/.bin/*
       - name: Build with Vite
