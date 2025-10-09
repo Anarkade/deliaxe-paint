@@ -109,6 +109,16 @@ export const ResolutionSelector = ({
     }
   }, [selectedResolutionProp]);
 
+  // When the selector is mounted (opened), default the Target Resolution to 'original'
+  // unless the parent controls the selectedResolution via props. This ensures that
+  // each time the menu is shown the radio defaults to the original image size.
+  useEffect(() => {
+    if (selectedResolutionProp === undefined) {
+      setSelectedResolution('original');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedResolutionProp]);
+
   useEffect(() => {
     if (selectedScalingModeProp !== undefined && selectedScalingModeProp !== scalingMode) {
       setScalingMode(selectedScalingModeProp);
