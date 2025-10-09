@@ -570,8 +570,28 @@ export const RetroImageEditor = () => {
         const dy = Math.round((targetHeight - dh) / 2);
         tempCtx.drawImage(sourceCanvas, 0, 0, sw, sh, dx, dy, dw, dh);
       } else {
-        // dont-scale: draw at original size (will be clipped if larger than target)
-        tempCtx.drawImage(sourceCanvas, 0, 0);
+        // dont-scale or explicit alignment modes: draw at original size
+        // If `scalingMode` is an alignment string like 'middle-center', honor
+        // the horizontal/vertical alignment when placing the source image
+        // inside the target canvas. This allows the image to be positioned
+        // center/left/right and top/middle/bottom instead of always at 0,0.
+        const isAlignmentModeLocal = (m: unknown): m is string => {
+          return typeof m === 'string' && /^(top|middle|bottom)-(left|center|right)$/.test(m);
+        };
+
+        if (isAlignmentModeLocal(scalingMode)) {
+          const [vertical, horizontal] = (scalingMode as string).split('-');
+          // Compute offsets. If the source is larger than the target, offsets
+          // may be negative which intentionally crops the image from that side.
+          const dx = horizontal === 'left' ? 0 : horizontal === 'center' ? Math.round((targetWidth - sw) / 2) : (targetWidth - sw);
+          const dy = vertical === 'top' ? 0 : vertical === 'middle' ? Math.round((targetHeight - sh) / 2) : (targetHeight - sh);
+
+          // Draw full source at original size positioned according to alignment
+          tempCtx.drawImage(sourceCanvas, 0, 0, sw, sh, dx, dy, sw, sh);
+        } else {
+          // Fallback: default dont-scale behavior (top-left)
+          tempCtx.drawImage(sourceCanvas, 0, 0);
+        }
       }
 
       // Read resulting pixels from temp canvas
