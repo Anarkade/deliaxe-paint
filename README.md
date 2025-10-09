@@ -37,6 +37,9 @@
 
 # Deliaxe Paint
 
+[![Version](https://img.shields.io/badge/version-v.0.0.23-ui--tweaks-blue.svg)](https://github.com/Anarkade/deliaxe-paint/releases/tag/v.0.0.23-ui-tweaks)
+[![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](https://anarkade.github.io/deliaxe-paint/)
+
 Deliaxe Paint is a retro image processing web application that applies vintage color palettes and effects to images.
 
 Live demo: https://anarkade.github.io/deliaxe-paint/
