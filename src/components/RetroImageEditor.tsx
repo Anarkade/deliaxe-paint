@@ -960,7 +960,7 @@ export const RetroImageEditor = () => {
             {activeTab === 'resolution' && originalImage && (
               <div
                 data-section="resolution"
-                className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
+                className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-visible`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <ResolutionSelector

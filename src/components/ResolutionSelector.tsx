@@ -94,7 +94,7 @@ export const ResolutionSelector = ({
   onClose,
   onApplyResolution,
   onChangeScalingMode
-  , selectedResolution: selectedResolutionProp, selectedScalingMode: selectedScalingModeProp
+    , selectedResolution: selectedResolutionProp, selectedScalingMode: selectedScalingModeProp
 }: ResolutionSelectorProps) => {
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>(selectedResolutionProp ?? 'original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>(selectedScalingModeProp ?? 'scale-to-fit-width');
@@ -189,7 +189,7 @@ export const ResolutionSelector = ({
 
         {/* Scaling and Alignment - side by side */}
         <div className="flex justify-center">
-          <div className="space-y-8 bg-card border border-elegant-border rounded-lg p-6 mr-6">
+            <div className="space-y-8 bg-[#202225] border border-elegant-border rounded-lg p-6 mr-4">
             <label className="block text-m font-bold text-foreground">
               <span className="flex items-center">
                 <Scaling className="mr-2 h-4 w-4" />
@@ -210,7 +210,7 @@ export const ResolutionSelector = ({
                 return (
                   <div key={option.value} className="flex items-start space-x-2 min-h-[1.75rem]">
                     <RadioGroupItem value={option.value} id={`scaling-${option.value}`} className="h-3 w-3 mt-0.5 mr-2 flex-shrink-0" />
-                    <Label htmlFor={`scaling-${option.value}`} className="flex gap-1.5 cursor-pointer text-xs text-left">
+                      <Label htmlFor={`scaling-${option.value}`} className="flex cursor-pointer text-xs text-left h-3 w-4">
                       <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" />
                       <span className="text-xs text-muted-foreground leading-tight break-words text-left whitespace-nowrap">{option.label}</span>
                     </Label>
