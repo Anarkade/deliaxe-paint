@@ -27,6 +27,14 @@ jobs:
           if [ -f node_modules/esbuild/install.js ]; then
             node node_modules/esbuild/install.js || true
           fi
+      - name: Rebuild @swc/core native binding for current platform
+        run: |
+          if [ -d node_modules/@swc/core ]; then
+            # Try to update the bundled binary for the current platform
+            npm rebuild @swc/core --update-binary || true
+            # Fallback to running the install script if rebuild didn't provide binary
+            node node_modules/@swc/core/install.js || true
+          fi
       - run: npm run build
       
       - uses: peaceiris/actions-gh-pages@v3
