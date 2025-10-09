@@ -14,7 +14,18 @@ jobs:
         with:
           node-version: '22.18.0'
           
-      - run: npm install
+      - run: npm ci
+      - name: Diagnostics - runner platform and node
+        run: |
+          node -e "console.log(JSON.stringify({platform: process.platform, arch: process.arch, node: process.version, execPath: process.execPath}))"
+      - name: Diagnostics - list @swc files
+        run: |
+          ls -la node_modules/@swc || true
+          ls -la node_modules/@swc/core || true
+          head -n 80 node_modules/@swc/core/binding.js || true
+      - name: Diagnostics - try require @swc/core (non-fatal)
+        run: |
+          node -e "try{ require('@swc/core'); console.log('require:@swc/core: OK') } catch(e) { console.error('require:@swc/core: FAILED', e && e.message); console.error(e && e.stack); }"
       - run: chmod +x node_modules/.bin/*
       - name: Install rollup native binding fallback (Linux x64)
         run: |
@@ -37,9 +48,28 @@ jobs:
           fi
       - name: Install @swc/core platform-specific packages (linux x64)
         run: |
-          # Try explicit platform packages for @swc/core
-          npm install @swc/core-linux-x64 --no-save || true
+          # Try explicit platform packages for @swc/core (use the gnu/musl suffixes published by @swc)
+          npm install @swc/core-linux-x64-gnu --no-save || true
           npm install @swc/core-linux-x64-musl --no-save || true
+      - name: Diagnostics - list @swc files after install attempts
+        run: |
+          ls -la node_modules/@swc || true
+          ls -la node_modules/@swc/core || true
+          node -e "try{ require('@swc/core'); console.log('post-install: require:@swc/core: OK') } catch(e) { console.error('post-install: require:@swc/core: FAILED', e && e.message); console.error(e && e.stack); }"
+      - name: Force @swc/core postinstall and rebuild (try to fetch correct binary)
+        run: |
+          echo "Running postinstall/install/rebuild for @swc/core"
+          if [ -f node_modules/@swc/core/postinstall.js ]; then
+            node node_modules/@swc/core/postinstall.js || true
+          fi
+          if [ -f node_modules/@swc/core/install.js ]; then
+            node node_modules/@swc/core/install.js || true
+          fi
+          npm rebuild @swc/core --update-binary || true
+          echo "Listing possible swc-native packages and files"
+          ls -la node_modules | grep swc || true
+          ls -la node_modules/@swc* || true
+          ls -la node_modules/@swc/core || true
       - run: npm run build
       
       - uses: peaceiris/actions-gh-pages@v3
