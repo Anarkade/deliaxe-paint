@@ -118,6 +118,7 @@ interface ImagePreviewProps {
   selectedCameraId?: string;
   currentPaletteColors?: Color[];
   onSectionOpen?: () => void; // New callback for section opening
+  onShowOriginalChange?: (showOriginal: boolean) => void; // Notify parent when preview toggles between original/processed
   onRequestOpenCameraSelector?: () => void;
   showTileGrid?: boolean;
   showFrameGrid?: boolean;
@@ -981,6 +982,7 @@ export const ImagePreview = ({
                       } catch (e) {
                         // ignore
                       }
+                      try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
                     }}
                     variant="highlighted"
                     size="sm"
