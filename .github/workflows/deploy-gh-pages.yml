@@ -38,6 +38,17 @@ jobs:
           npm install @rollup/rollup-linux-x64-gnu --no-save || true
           # Also try the musl variant just in case (will be ignored if not applicable)
           npm install @rollup/rollup-linux-x64-musl --no-save || true
+      - name: Diagnostics - verify rollup native package
+        run: |
+          echo "npm ls for @rollup packages"
+          npm ls @rollup/rollup-linux-x64-gnu --json || true
+          npm ls @rollup/rollup-linux-x64-musl --json || true
+          echo "listing node_modules/@rollup"
+          ls -la node_modules/@rollup || true
+          echo "listing node_modules/@rollup/rollup-linux-x64-gnu"
+          ls -la node_modules/@rollup/rollup-linux-x64-gnu || true
+          echo "trying to require the rollup native package (non-fatal)"
+          node -e "try{ console.log(require.resolve('@rollup/rollup-linux-x64-gnu')) } catch(e){ console.error('require rollup-native failed', e && e.message) }" || true
       - name: Reinstall esbuild binary for current platform
         run: |
           if [ -f node_modules/esbuild/install.js ]; then
