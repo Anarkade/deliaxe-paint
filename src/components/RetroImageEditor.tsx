@@ -639,8 +639,10 @@ export const RetroImageEditor = () => {
       imageData = tempImageData;
 
       // Always set the processed image so the preview/footer shows it
-      setProcessedImageData(imageData);
-      setAutoFitKey(String(Date.now()));
+  setProcessedImageData(imageData);
+  // After processing, ensure the preview switches to the processed image
+  try { setPreviewShowingOriginal(false); } catch (e) { /* ignore */ }
+  setAutoFitKey(String(Date.now()));
       saveToHistory({ imageData, palette: selectedPalette });
 
       // End performance monitoring
@@ -930,6 +932,7 @@ export const RetroImageEditor = () => {
               onZoomChange={handlePreviewZoomChange}
               isVerticalLayout={isVerticalLayout}
               onShowOriginalChange={(show) => setPreviewShowingOriginal(show)}
+              controlledShowOriginal={previewShowingOriginal}
             />
 
             {/* Floating Content Sections - now constrained inside preview cell (absolute inset) */}

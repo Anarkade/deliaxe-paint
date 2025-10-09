@@ -119,6 +119,7 @@ interface ImagePreviewProps {
   currentPaletteColors?: Color[];
   onSectionOpen?: () => void; // New callback for section opening
   onShowOriginalChange?: (showOriginal: boolean) => void; // Notify parent when preview toggles between original/processed
+  controlledShowOriginal?: boolean; // Optional controlled prop to force which image is shown
   onRequestOpenCameraSelector?: () => void;
   showTileGrid?: boolean;
   showFrameGrid?: boolean;
@@ -173,6 +174,12 @@ export const ImagePreview = ({
   const streamRef = useRef<MediaStream | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showOriginal, setShowOriginal] = useState(false);
+  // If parent provides a controlled prop, use it as the source of truth
+  useEffect(() => {
+    if (controlledShowOriginal !== undefined) {
+      setShowOriginal(controlledShowOriginal);
+    }
+  }, [controlledShowOriginal]);
   const [zoom, setZoom] = useState([100]);
   const [sliderValue, setSliderValue] = useState<number[]>([100]);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -967,10 +974,16 @@ export const ImagePreview = ({
               {hasProcessedImage && (
                 <div style={{ textAlign: 'left' }} className="px-4">
                   {/* first column (was right): red toggle button, now aligned left */}
-                  <Button
+                    <Button
                     onClick={() => {
                       const next = !showOriginal;
-                      setShowOriginal(next);
+                      // If parent controls the value, notify it; otherwise update local state
+                      if (controlledShowOriginal !== undefined) {
+                        try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
+                      } else {
+                        setShowOriginal(next);
+                        try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
+                      }
                       // Recalculate preview height to reflect the new image selection
                       try {
                         const currentImage = next ? originalImage : (processedImageData || originalImage);
