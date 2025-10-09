@@ -15,8 +15,8 @@ jobs:
           node-version: '22.18.0'
           
       - run: npm install
+      - run: chmod +x node_modules/.bin/*
       - run: npm run build
-        shell: bash
       
       - uses: peaceiris/actions-gh-pages@v3
         with:
