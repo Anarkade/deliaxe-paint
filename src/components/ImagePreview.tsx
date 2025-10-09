@@ -955,12 +955,12 @@ export const ImagePreview = ({
         )}
       </div>
 
-      {/* Footer (render only when we have an original or processed image) */}
-      <div className="space-y-6" ref={footerRef}>
+  {/* Footer (render only when we have an original or processed image) */}
+  <div className="py-4 space-y-4" ref={footerRef}>
         {(originalImage || hasProcessedImage) ? (
           <>
             {/* Two-column layout: left = text (unchanged content), right = toggle button */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'center', width: '100%' }} className="text-sm font-mono p-4">
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'center', width: '100%' }} className="text-sm font-mono">
               {hasProcessedImage && (
                 <div style={{ textAlign: 'left' }} className="pr-4">
                   {/* first column (was right): red toggle button, now aligned left */}
