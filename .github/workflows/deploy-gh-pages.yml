@@ -14,7 +14,12 @@ jobs:
         with:
           node-version: '22.18.0'
           
-      - run: npm ci
+      - name: Install dependencies (force platform-specific optional deps)
+        run: |
+          echo "Removing committed package-lock.json and node_modules so npm can install platform-native optional deps for the runner"
+          rm -f package-lock.json || true
+          rm -rf node_modules || true
+          npm install
       - name: Diagnostics - runner platform and node
         run: |
           node -e "console.log(JSON.stringify({platform: process.platform, arch: process.arch, node: process.version, execPath: process.execPath}))"
