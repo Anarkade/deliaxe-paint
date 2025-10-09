@@ -11,10 +11,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated documentation updates in CI/CD pipeline
 - Auto-generated changelog entries from commit messages
 - Version badge auto-update in README.md
+ - Semantic CSS color classes: `color-bg-highlight`, `color-bg-main`, `color-highlight-main`, `color-text-subtitle`, `color-text-common`.
+ - `TODO_REPLACE_HARDCODED_COLORS.md` with guidance and regex patterns to replace hardcoded hex colors across the project.
+ - UI polish and accessibility tweaks in multiple components (palette/backgrounds, slider track color, spacing adjustments).
 
 ### Changed
 - GitHub Actions workflow now updates CHANGELOG.md and README.md before deployment
 - Documentation is automatically kept in sync with latest changes
+ - Replaced several hardcoded color values with the new semantic classes across components (e.g. `PaletteViewer`, `Toolbar`, `ImagePreview`, `ResolutionSelector`).
+
+### Fixed
+- Fix ReferenceError in `ResolutionSelector` (missing `Expand` icon import).
+- Fixed duplicated `className` issues in `ChangeGridSelector`.
+- Removed unused `lucide-react` icon imports and cleaned related code.
 
 ## [0.0.18-stable] - 2025-10-08
 
