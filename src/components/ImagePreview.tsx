@@ -850,6 +850,7 @@ export const ImagePreview = ({
               min={ZOOM_BOUNDS.min}
               step={integerScaling ? 100 : 1}
               className="w-full"
+              trackClassName="bg-[#202225]"
             />
           </div>
         </div>
