@@ -98,6 +98,8 @@ export const ResolutionSelector = ({
 }: ResolutionSelectorProps) => {
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>(selectedResolutionProp ?? 'original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>(selectedScalingModeProp ?? 'scale-to-fit-width');
+  // Keep a separate alignment value so we can enable/disable the alignment radios
+  const [alignmentValue, setAlignmentValue] = useState<AlignmentMode>('middle-center');
   const { t } = useTranslation();
 
   // Sync with controlled props when they change
@@ -110,6 +112,13 @@ export const ResolutionSelector = ({
   useEffect(() => {
     if (selectedScalingModeProp !== undefined && selectedScalingModeProp !== scalingMode) {
       setScalingMode(selectedScalingModeProp);
+    }
+  }, [selectedScalingModeProp]);
+
+  // If controlled prop provides an alignment mode, keep alignmentValue in sync
+  useEffect(() => {
+    if (selectedScalingModeProp !== undefined && isAlignmentMode(selectedScalingModeProp)) {
+      setAlignmentValue(selectedScalingModeProp as AlignmentMode);
     }
   }, [selectedScalingModeProp]);
 
@@ -198,10 +207,19 @@ export const ResolutionSelector = ({
             </label>
 
             <RadioGroup
-              value={['stretch', 'scale-to-fit-width', 'dont-scale'].includes(scalingMode as string) ? (scalingMode as ScalingMode) : 'scale-to-fit-width'}
-              onValueChange={(value: ScalingMode) => {
-                setScalingMode(value);
-                onChangeScalingMode?.(value);
+              // If current scalingMode is an alignment mode, treat the scaling selection as 'dont-scale'
+              value={isAlignmentMode(scalingMode) ? 'dont-scale' : (scalingMode as ScalingMode)}
+              onValueChange={(value: ScalingMode | 'dont-scale') => {
+                if (value === 'dont-scale') {
+                  // Enable alignment radios: set scalingMode to the current alignmentValue
+                  setScalingMode(alignmentValue);
+                  onChangeScalingMode?.(alignmentValue);
+                } else {
+                  // Disable alignment radios and reset alignment to middle-center
+                  setScalingMode(value as ScalingMode);
+                  onChangeScalingMode?.(value as ScalingMode);
+                  setAlignmentValue('middle-center');
+                }
               }}
               className="space-y-0 gap-1 flex flex-col"
             >
@@ -228,8 +246,10 @@ export const ResolutionSelector = ({
             </label>
 
             <RadioGroup
-              value={isAlignmentMode(scalingMode) ? (scalingMode as AlignmentMode) : 'middle-center'}
+              value={alignmentValue}
               onValueChange={(value: AlignmentMode) => {
+                setAlignmentValue(value);
+                // When user chooses an alignment, set scalingMode to that alignment (enter alignment mode)
                 setScalingMode(value);
                 onChangeScalingMode?.(value);
               }}
@@ -238,7 +258,7 @@ export const ResolutionSelector = ({
             >
               {alignmentOptions.map((option) => (
                 <div key={option.value} className="flex min-h-[1.6rem]">
-                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} className="h-3 w-3 mr-2 mt-0.5 flex-shrink-0" />
+                  <RadioGroupItem value={option.value} id={`alignment-${option.value}`} className="h-3 w-3 mr-2 mt-0.5 flex-shrink-0" disabled={!isAlignmentMode(scalingMode)} />
                   <Label htmlFor={`alignment-${option.value}`} className="flex cursor-pointer text-xs text-left h-3 w-4">
                     <AlignmentIcon position={option.position} label={option.label} />
                   </Label>
