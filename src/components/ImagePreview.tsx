@@ -166,7 +166,8 @@ export const ImagePreview = ({
   autoFitKey, 
   onZoomChange,
   isVerticalLayout,
-  containerStyle
+  containerStyle,
+  controlledShowOriginal
 }: ImagePreviewProps) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
