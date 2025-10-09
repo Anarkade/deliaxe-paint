@@ -1008,7 +1008,7 @@ export const ImagePreview = ({
                     <span className="text-foreground font-semibold">{t('original')}</span>
                     <span className="text-muted-foreground text-xs">{originalImage?.width}×{originalImage?.height}</span>
                     <span className="text-muted-foreground text-xs">{originalFormat}</span>
-                    {!processedImageData && originalImage && (
+                    {originalImage && (
                       <span className="text-muted-foreground text-xs">
                         {t('zoomedDimensions')
                           .replace('{width}', Math.round(originalImage.width * (zoom[0] / 100)).toString())
