@@ -962,7 +962,7 @@ export const ImagePreview = ({
             {/* Two-column layout: left = text (unchanged content), right = toggle button */}
             <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'center', width: '100%' }} className="text-sm font-mono">
               {hasProcessedImage && (
-                <div style={{ textAlign: 'left' }} className="pr-4">
+                <div style={{ textAlign: 'left' }} className="px-4">
                   {/* first column (was right): red toggle button, now aligned left */}
                   <Button
                     onClick={() => {
