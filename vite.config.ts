@@ -66,11 +66,9 @@ export default defineConfig(({ mode }) => {
   const { version, buildDate } = generateVersionFile();
   
   return {
-    // Use relative base in production so the built app works both on GitHub Pages
-    // (when served from /deliaxe-paint/) and on a custom domain that points to the
-    // gh-pages site root. Relative base avoids absolute /deliaxe-path/ paths which
-    // break when the site is served from a different root (like a custom domain).
-    base: mode === 'production' ? './' : '/',
+    // When using a custom domain, the base should be '/', so all assets are
+    // referenced from the root of the domain.
+    base: '/',
     define: {
       // Inject the version and build date as environment variables at build time
       'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
