@@ -22,6 +22,11 @@ jobs:
           npm install @rollup/rollup-linux-x64-gnu --no-save || true
           # Also try the musl variant just in case (will be ignored if not applicable)
           npm install @rollup/rollup-linux-x64-musl --no-save || true
+      - name: Reinstall esbuild binary for current platform
+        run: |
+          if [ -f node_modules/esbuild/install.js ]; then
+            node node_modules/esbuild/install.js || true
+          fi
       - run: npm run build
       
       - uses: peaceiris/actions-gh-pages@v3
