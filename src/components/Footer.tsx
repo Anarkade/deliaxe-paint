@@ -6,24 +6,19 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = () => {
   // Use environment variables directly
-  const envVersion = import.meta.env.VITE_APP_VERSION;
   const buildDate = import.meta.env.VITE_BUILD_DATE;
-  
-  const displayVersion = envVersion ? envVersion.split('-')[0].replace(/^v/, '') : '0.0.16';
-  
-  // Format build date to show day and time in UTC
-  const formatBuildDate = (dateString: string) => {
+
+  // Format build date as: DD/MM/YYYY, HH:MM UTC
+  const formatBuildDate = (dateString: string | undefined) => {
     if (!dateString) return '';
     try {
-      const date = new Date(dateString);
-      return date.toLocaleString('es-ES', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: 'UTC'
-      }) + ' UTC';
+      const d = new Date(dateString);
+      const dd = String(d.getUTCDate()).padStart(2, '0');
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const yyyy = d.getUTCFullYear();
+      const hh = String(d.getUTCHours()).padStart(2, '0');
+      const min = String(d.getUTCMinutes()).padStart(2, '0');
+      return `build ${dd}/${mm}/${yyyy}, ${hh}:${min} UTC`;
     } catch {
       return '';
     }
@@ -33,7 +28,7 @@ export const Footer: React.FC<FooterProps> = () => {
     <footer className="border-t border-elegant-border bg-card flex-shrink-0 w-full">
       <div className="w-full px-[5px] py-[5px]">
         <p className="text-sm text-muted-foreground text-center">
-          ©2025 Anarkade - v{displayVersion} {buildDate && `(${formatBuildDate(buildDate)})`}
+          ©2025 Anarkade - {buildDate ? formatBuildDate(buildDate) : 'build unknown'}
         </p>
       </div>
     </footer>
