@@ -31,14 +31,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Install dependencies (clean, no optional native modules)
+      - name: Install dependencies (clean, fresh install for runner platform)
         run: |
           # Remove any existing lockfile and node_modules generated on other OSes
           rm -f package-lock.json
           rm -rf node_modules
-          # Install without optional dependencies (use supported flag)
-          # --omit=optional is the supported way to exclude optional deps
-          npm install --prefer-offline --no-audit --omit=optional
+          # Run a fresh install so platform-specific optional binaries are fetched for this runner
+          npm install --prefer-offline --no-audit
       - name: Grant execute permission for binaries
         run: chmod +x node_modules/.bin/*
       - name: Build with Vite
