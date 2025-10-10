@@ -506,13 +506,59 @@ export const RetroImageEditor = () => {
           targetHeight = h;
         }
       } else if (selectedResolution === 'unscaled') {
-        // keep dimensions of the image currently shown in preview
-        if (useProcessedAsSource && processedImageData) {
-          targetWidth = processedImageData.width;
-          targetHeight = processedImageData.height;
-        } else if (originalImage) {
-          targetWidth = originalImage.width;
-          targetHeight = originalImage.height;
+        // For 'unscaled' we want to remove any prior nearest-neighbor-style
+        // upscaling that was applied to pixel-art images. Use
+        // detectAndUnscaleImage to detect a uniform integer scaling factor
+        // and restore the original pixel dimensions when possible.
+        try {
+          if (useProcessedAsSource && processedImageData) {
+            // Create a temporary canvas from the processed ImageData so we can
+            // run the same detection routine which expects an HTMLImageElement.
+            const detectCanvas = document.createElement('canvas');
+            detectCanvas.width = processedImageData.width;
+            detectCanvas.height = processedImageData.height;
+            const dctx = detectCanvas.getContext('2d');
+            if (dctx) {
+              dctx.putImageData(processedImageData, 0, 0);
+              const detectImg = new Image();
+              detectImg.crossOrigin = 'anonymous';
+              // toDataURL is synchronous; wait for image to load before detection
+              detectImg.src = detectCanvas.toDataURL('image/png');
+              await new Promise((resolve, reject) => {
+                detectImg.onload = () => resolve(true);
+                detectImg.onerror = (e) => reject(e);
+              });
+              const unscaled = detectAndUnscaleImage(detectImg);
+              if (unscaled) {
+                targetWidth = unscaled.width;
+                targetHeight = unscaled.height;
+              } else {
+                targetWidth = processedImageData.width;
+                targetHeight = processedImageData.height;
+              }
+            } else {
+              targetWidth = processedImageData.width;
+              targetHeight = processedImageData.height;
+            }
+          } else if (originalImage) {
+            const unscaled = detectAndUnscaleImage(originalImage);
+            if (unscaled) {
+              targetWidth = unscaled.width;
+              targetHeight = unscaled.height;
+            } else {
+              targetWidth = originalImage.width;
+              targetHeight = originalImage.height;
+            }
+          }
+        } catch (err) {
+          // If detection fails for any reason, fall back to the natural size
+          if (useProcessedAsSource && processedImageData) {
+            targetWidth = processedImageData.width;
+            targetHeight = processedImageData.height;
+          } else if (originalImage) {
+            targetWidth = originalImage.width;
+            targetHeight = originalImage.height;
+          }
         }
       }
 
