@@ -1022,7 +1022,11 @@ export const RetroImageEditor = () => {
                       try { processImageRef.current?.(); } catch (e) { /* ignore */ }
                     }, PROCESSING_DEBOUNCE_MS + 10);
                   }}
-                  selectedResolution={selectedResolution}
+                  // Pass `undefined` when opening the selector so it defaults to the
+                  // 'original' radio option on mount. The selector will call
+                  // onApplyResolution when the user chooses a resolution which will
+                  // update the parent state.
+                  selectedResolution={undefined}
                   selectedScalingMode={scalingMode}
                 />
               </div>
