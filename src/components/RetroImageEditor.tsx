@@ -15,7 +15,6 @@ import { toast } from '@/hooks/use-toast';
 import { Upload, Palette, Eye, Monitor, Download, Grid3X3, Globe, X, AlertTriangle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import { processMegaDriveImage, extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette, Color } from '@/lib/colorQuantization';
 // pngAnalyzer is imported dynamically where needed to keep the main bundle small
 import { useImageProcessor } from '@/hooks/useImageProcessor';
@@ -351,100 +350,233 @@ export const RetroImageEditor = () => {
     }
   }, [t, performanceMonitor, imageProcessor, getCanvas, returnCanvas]);
 
-  // Performance-optimized color similarity check for pixel art detection
-  const areColorsSimilar = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number): boolean => {
-    const distance = Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2);
-    const maxDistance = Math.sqrt(3 * 255 ** 2); // Maximum possible Euclidean distance
-    const similarity = 1 - (distance / maxDistance);
-    return similarity >= 0.8; // 80% similarity threshold for pixel art detection
-  };
-
   // Advanced pixel art scaling detection with performance optimizations
-  const detectAndUnscaleImage = useCallback((image: HTMLImageElement) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
+  // Accept either an HTMLImageElement or ImageData to avoid expensive
+  // conversions (toDataURL -> new Image) when we already have ImageData.
+  const detectAndUnscaleImage = useCallback(async (source: HTMLImageElement | ImageData): Promise<{ width: number; height: number; scaleX: number; scaleY: number } | null> => {
+    let imageData: ImageData | null = null;
 
-    canvas.width = image.width;
-    canvas.height = image.height;
-    ctx.imageSmoothingEnabled = false; // Preserve pixel-perfect rendering
-    ctx.drawImage(image, 0, 0);
-    
-    const imageData = ctx.getImageData(0, 0, image.width, image.height);
-    const pixels = imageData.data;
-    
-    // Performance optimization: Test likely scaling factors first (2x, 3x, 4x, etc.)
-    const commonScales = [2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32];
-    const allScales = [...commonScales];
-    
-    // Add remaining scales up to 50
-    for (let i = 1; i <= 50; i++) {
-      if (!commonScales.includes(i)) {
-        allScales.push(i);
+    if (source instanceof HTMLImageElement) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return null;
+      canvas.width = source.width;
+      canvas.height = source.height;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(source, 0, 0);
+      try {
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      } catch (e) {
+        return null;
       }
+    } else if (source && typeof (source as ImageData).data !== 'undefined') {
+      imageData = source as ImageData;
+    } else {
+      return null;
     }
-    
-    // Test each scaling factor
-    for (const scalingFactor of allScales) {
-      // Quick reject: dimensions must be multiples of scaling factor
-      if (image.width % scalingFactor !== 0 || image.height % scalingFactor !== 0) {
-        continue;
+
+    const pixels = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+
+    const quantizeColor = (r: number, g: number, b: number) => ((r & 0xf8) << 7) | ((g & 0xf8) << 2) | ((b & 0xf8) >> 3);
+
+    const quantized = new Uint32Array(width * height);
+    for (let srcIdx = 0, dstIdx = 0; srcIdx < pixels.length; srcIdx += 4, dstIdx++) {
+      quantized[dstIdx] = quantizeColor(pixels[srcIdx], pixels[srcIdx + 1], pixels[srcIdx + 2]);
+    }
+
+    const computeAxisRuns = (axis: 'x' | 'y'): number[] => {
+      const runs: number[] = [];
+      if (axis === 'x') {
+        let currentRun = 1;
+        for (let x = 1; x < width; x++) {
+          let identical = true;
+          for (let y = 0; y < height; y++) {
+            if (quantized[y * width + x] !== quantized[y * width + x - 1]) {
+              identical = false;
+              break;
+            }
+          }
+          if (identical) {
+            currentRun++;
+          } else {
+            runs.push(currentRun);
+            currentRun = 1;
+          }
+        }
+        runs.push(currentRun);
+      } else {
+        let currentRun = 1;
+        for (let y = 1; y < height; y++) {
+          let identical = true;
+          const rowOffset = y * width;
+          const prevRowOffset = (y - 1) * width;
+          for (let x = 0; x < width; x++) {
+            if (quantized[rowOffset + x] !== quantized[prevRowOffset + x]) {
+              identical = false;
+              break;
+            }
+          }
+          if (identical) {
+            currentRun++;
+          } else {
+            runs.push(currentRun);
+            currentRun = 1;
+          }
+        }
+        runs.push(currentRun);
       }
-      
-      const blocksX = image.width / scalingFactor;
-      const blocksY = image.height / scalingFactor;
-      let validBlocks = 0;
-      const totalBlocks = blocksX * blocksY;
-      
-      // Analyze each block for color uniformity
-      for (let blockY = 0; blockY < blocksY; blockY++) {
-        for (let blockX = 0; blockX < blocksX; blockX++) {
-          const startX = blockX * scalingFactor;
-          const startY = blockY * scalingFactor;
-          
-          // Performance optimization: Use Map for color counting
-          const colorCounts = new Map<string, number>();
-          
-          // Sample all pixels in this block
-          for (let y = startY; y < startY + scalingFactor; y++) {
-            for (let x = startX; x < startX + scalingFactor; x++) {
-              const index = (y * image.width + x) * 4;
-              const r = pixels[index];
-              const g = pixels[index + 1];
-              const b = pixels[index + 2];
-              const colorKey = `${r},${g},${b}`;
-              
-              colorCounts.set(colorKey, (colorCounts.get(colorKey) || 0) + 1);
-            }
+      return runs;
+    };
+
+    const estimateScaleFromRuns = (runs: number[], totalSize: number): number | null => {
+      const filtered = runs.filter((len) => len > 0 && len < totalSize);
+      if (filtered.length === 0) {
+        return null;
+      }
+
+      const minLen = Math.min(...filtered);
+      const maxLen = Math.max(...filtered);
+
+      if (minLen === maxLen) {
+        if (minLen === 1) {
+          return 1;
+        }
+        return minLen;
+      }
+
+      const searchStart = Math.max(1, minLen - 0.75);
+      const searchEnd = Math.max(searchStart + 0.75, maxLen + 0.75);
+
+      const evaluateScale = (scale: number) => {
+        if (scale <= 0.5) return Number.POSITIVE_INFINITY;
+        let cost = 0;
+        for (const len of filtered) {
+          const ratio = len / scale;
+          if (ratio < 0.5) {
+            return Number.POSITIVE_INFINITY;
           }
-          
-          // Find dominant color in this block
-          let maxCount = 0;
-          for (const count of colorCounts.values()) {
-            if (count > maxCount) {
-              maxCount = count;
+          const nearest = Math.max(1, Math.round(ratio));
+          const error = ratio - nearest;
+          cost += (error * error) * len;
+        }
+        return cost / filtered.length;
+      };
+
+      let bestScale = searchStart;
+      let bestCost = evaluateScale(bestScale);
+
+      const coarseSteps = 128;
+      for (let i = 1; i <= coarseSteps; i++) {
+        const scale = searchStart + ((searchEnd - searchStart) * i) / coarseSteps;
+        const cost = evaluateScale(scale);
+        if (cost < bestCost) {
+          bestCost = cost;
+          bestScale = scale;
+        }
+      }
+
+      const refineWindow = 0.75;
+      const refineStart = Math.max(1, bestScale - refineWindow);
+      const refineEnd = Math.min(searchEnd, bestScale + refineWindow);
+
+      for (let i = 0; i <= coarseSteps; i++) {
+        const scale = refineStart + ((refineEnd - refineStart) * i) / coarseSteps;
+        const cost = evaluateScale(scale);
+        if (cost < bestCost) {
+          bestCost = cost;
+          bestScale = scale;
+        }
+      }
+
+      return bestScale;
+    };
+
+    const buildBoundaries = (size: number, cells: number): Uint32Array | null => {
+      if (cells <= 0 || cells > size) return null;
+      const base = Math.floor(size / cells);
+      let extra = size % cells;
+      if (base === 0) return null;
+
+      const boundaries = new Uint32Array(cells + 1);
+      boundaries[0] = 0;
+      let position = 0;
+      for (let i = 0; i < cells; i++) {
+        let step = base;
+        if (extra > 0) {
+          step += 1;
+          extra -= 1;
+        }
+        position += step;
+        boundaries[i + 1] = position;
+      }
+      boundaries[cells] = size;
+      return boundaries;
+    };
+
+    const columnRuns = computeAxisRuns('x');
+    const rowRuns = computeAxisRuns('y');
+
+    const estimatedScaleX = estimateScaleFromRuns(columnRuns, width);
+    const estimatedScaleY = estimateScaleFromRuns(rowRuns, height);
+
+    const candidateWidth = estimatedScaleX ? Math.round(width / estimatedScaleX) : width;
+    const candidateHeight = estimatedScaleY ? Math.round(height / estimatedScaleY) : height;
+
+    if ((candidateWidth >= width && candidateHeight >= height) || candidateWidth <= 0 || candidateHeight <= 0) {
+      return null;
+    }
+
+    const xBoundaries = buildBoundaries(width, candidateWidth);
+    const yBoundaries = buildBoundaries(height, candidateHeight);
+
+    if (!xBoundaries || !yBoundaries) {
+      return null;
+    }
+
+    const totalPixels = width * height;
+    const allowedMismatch = Math.max(1, Math.floor(totalPixels * 0.015));
+    let mismatches = 0;
+
+    for (let oy = 0; oy < candidateHeight; oy++) {
+      const yStart = yBoundaries[oy];
+      const yEnd = yBoundaries[oy + 1];
+      for (let ox = 0; ox < candidateWidth; ox++) {
+        const xStart = xBoundaries[ox];
+        const xEnd = xBoundaries[ox + 1];
+        const reference = quantized[yStart * width + xStart];
+        for (let sy = yStart; sy < yEnd; sy++) {
+          const rowOffset = sy * width;
+          for (let sx = xStart; sx < xEnd; sx++) {
+            if (quantized[rowOffset + sx] !== reference) {
+              mismatches++;
+              if (mismatches > allowedMismatch) {
+                return null;
+              }
             }
-          }
-          
-          // Block is valid if >51% of pixels share the same color (pixel art characteristic)
-          const totalPixelsInBlock = scalingFactor * scalingFactor;
-          if (maxCount >= totalPixelsInBlock * 0.51) {
-            validBlocks++;
           }
         }
       }
-      
-      // If all blocks are uniform, we found the scaling factor
-      if (validBlocks === totalBlocks) {
-        return {
-          width: blocksX,
-          height: blocksY
-        };
-      }
     }
-    
-    return null; // No uniform scaling detected
+
+    const finalWidth = candidateWidth;
+    const finalHeight = candidateHeight;
+    const scaleX = width / finalWidth;
+    const scaleY = height / finalHeight;
+
+    if (scaleX <= 1.02 && scaleY <= 1.02) {
+      return null;
+    }
+
+    return {
+      width: finalWidth,
+      height: finalHeight,
+      scaleX,
+      scaleY,
+    };
   }, []);
+
 
   const processImage = useCallback(async () => {
 
@@ -512,42 +644,33 @@ export const RetroImageEditor = () => {
         // and restore the original pixel dimensions when possible.
         try {
           if (useProcessedAsSource && processedImageData) {
-            // Create a temporary canvas from the processed ImageData so we can
-            // run the same detection routine which expects an HTMLImageElement.
-            const detectCanvas = document.createElement('canvas');
-            detectCanvas.width = processedImageData.width;
-            detectCanvas.height = processedImageData.height;
-            const dctx = detectCanvas.getContext('2d');
-            if (dctx) {
-              dctx.putImageData(processedImageData, 0, 0);
-              const detectImg = new Image();
-              detectImg.crossOrigin = 'anonymous';
-              // toDataURL is synchronous; wait for image to load before detection
-              detectImg.src = detectCanvas.toDataURL('image/png');
-              await new Promise((resolve, reject) => {
-                detectImg.onload = () => resolve(true);
-                detectImg.onerror = (e) => reject(e);
-              });
-              const unscaled = detectAndUnscaleImage(detectImg);
-              if (unscaled) {
-                targetWidth = unscaled.width;
-                targetHeight = unscaled.height;
-              } else {
-                targetWidth = processedImageData.width;
-                targetHeight = processedImageData.height;
-              }
+            // We already have ImageData available; pass it directly to the
+            // detection routine to avoid creating a temporary canvas -> dataURL
+            // -> Image roundtrip which is expensive and synchronous.
+            const unscaled = await detectAndUnscaleImage(processedImageData);
+            if (unscaled && ((unscaled.scaleX && unscaled.scaleX > 1) || (unscaled.scaleY && unscaled.scaleY > 1))) {
+              targetWidth = unscaled.width;
+              targetHeight = unscaled.height;
+              const sx = unscaled.scaleX || 1;
+              const sy = unscaled.scaleY || 1;
+              toast.success(`Pixel art scaling ${sx}x × ${sy}y found and removed`);
             } else {
               targetWidth = processedImageData.width;
               targetHeight = processedImageData.height;
+              toast.info('Pixel art scaling not found');
             }
           } else if (originalImage) {
-            const unscaled = detectAndUnscaleImage(originalImage);
-            if (unscaled) {
+            const unscaled = await detectAndUnscaleImage(originalImage);
+            if (unscaled && ((unscaled.scaleX && unscaled.scaleX > 1) || (unscaled.scaleY && unscaled.scaleY > 1))) {
               targetWidth = unscaled.width;
               targetHeight = unscaled.height;
+              const sx = unscaled.scaleX || 1;
+              const sy = unscaled.scaleY || 1;
+              toast.success(`Pixel art scaling ${sx}x × ${sy}y found and removed`);
             } else {
               targetWidth = originalImage.width;
               targetHeight = originalImage.height;
+              toast.info('Pixel art scaling not found');
             }
           }
         } catch (err) {
@@ -559,6 +682,8 @@ export const RetroImageEditor = () => {
             targetWidth = originalImage.width;
             targetHeight = originalImage.height;
           }
+          // Inform the user that detection failed
+          toast.info('Pixel art scaling not found');
         }
       }
 
@@ -607,6 +732,19 @@ export const RetroImageEditor = () => {
       if (!tempCtx) {
         toast.error(t('canvasNotSupported'));
         return;
+      }
+
+      // Use nearest-neighbor scaling when resizing pixel-art so we preserve
+      // crisp blocks when removing integer upscales. This ensures that when
+      // detectAndUnscaleImage finds a smaller target size we actually draw
+      // the pixel-art raster without interpolation.
+      try {
+        tempCtx.imageSmoothingEnabled = false;
+        // some browsers support imageSmoothingQuality
+        // @ts-ignore
+        if (typeof tempCtx.imageSmoothingQuality !== 'undefined') tempCtx.imageSmoothingQuality = 'low';
+      } catch (e) {
+        // ignore if setting smoothing properties fails
       }
 
       // Clear with black background
@@ -721,6 +859,7 @@ export const RetroImageEditor = () => {
     originalPaletteColors,
     selectedResolution,
     scalingMode,
+    toast,
     t
   ]);
 
@@ -1233,6 +1372,7 @@ export const RetroImageEditor = () => {
                   originalImage={originalImage}
                   selectedPalette={selectedPalette}
                   paletteColors={orderedPaletteColors.length > 0 ? orderedPaletteColors : originalPaletteColors}
+                  currentZoom={currentZoom / 100}
                   onClose={() => setActiveTab(null)}
                   originalFilename={originalImageSource instanceof File ? originalImageSource.name : 'image.png'}
                 />
