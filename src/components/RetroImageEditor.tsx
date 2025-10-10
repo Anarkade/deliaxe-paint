@@ -691,34 +691,146 @@ export const RetroImageEditor = () => {
     };
   }, [processImage]);
 
-  // Helper function to apply a fixed palette to image data using color matching
+  // Color conversion helpers (RGB -> XYZ -> Lab) and Delta E 2000 implementation
+  // These are local helpers to avoid adding dependencies and to keep the
+  // color matching deterministic and self-contained.
+  const rgbToXyz = (r: number, g: number, b: number) => {
+    // Convert sRGB [0..255] to linear RGB [0..1]
+    const srgb = [r / 255, g / 255, b / 255].map((v) => {
+      return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    const [lr, lg, lb] = srgb;
+    // sRGB D65 conversion
+    const x = lr * 0.4124564 + lg * 0.3575761 + lb * 0.1804375;
+    const y = lr * 0.2126729 + lg * 0.7151522 + lb * 0.0721750;
+    const z = lr * 0.0193339 + lg * 0.1191920 + lb * 0.9503041;
+    return [x, y, z];
+  };
+
+  const xyzToLab = (x: number, y: number, z: number) => {
+    // D65 reference white
+    const xr = x / 0.95047;
+    const yr = y / 1.00000;
+    const zr = z / 1.08883;
+
+    const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : (7.787 * t) + 16 / 116);
+
+    const fx = f(xr);
+    const fy = f(yr);
+    const fz = f(zr);
+
+    const L = (116 * fy) - 16;
+    const a = 500 * (fx - fy);
+    const b = 200 * (fy - fz);
+    return [L, a, b];
+  };
+
+  const rgbToLab = (r: number, g: number, b: number) => {
+    const [x, y, z] = rgbToXyz(r, g, b);
+    return xyzToLab(x, y, z);
+  };
+
+  // Implementation of Delta E 2000 per Sharma et al. — accurate perceptual
+  // difference metric. For our purposes a straightforward port is enough.
+  const deg2rad = (deg: number) => (deg * Math.PI) / 180;
+  const rad2deg = (rad: number) => (rad * 180) / Math.PI;
+
+  const deltaE2000 = (lab1: number[], lab2: number[]) => {
+    const [L1, a1, b1] = lab1;
+    const [L2, a2, b2] = lab2;
+
+    const avgLp = (L1 + L2) / 2.0;
+    const C1 = Math.sqrt(a1 * a1 + b1 * b1);
+    const C2 = Math.sqrt(a2 * a2 + b2 * b2);
+    const avgC = (C1 + C2) / 2.0;
+
+    const G = 0.5 * (1 - Math.sqrt(Math.pow(avgC, 7) / (Math.pow(avgC, 7) + Math.pow(25, 7))));
+    const a1p = a1 * (1 + G);
+    const a2p = a2 * (1 + G);
+    const C1p = Math.sqrt(a1p * a1p + b1 * b1);
+    const C2p = Math.sqrt(a2p * a2p + b2 * b2);
+    const avgCp = (C1p + C2p) / 2.0;
+
+    const h1p = Math.atan2(b1, a1p) >= 0 ? Math.atan2(b1, a1p) : Math.atan2(b1, a1p) + 2 * Math.PI;
+    const h2p = Math.atan2(b2, a2p) >= 0 ? Math.atan2(b2, a2p) : Math.atan2(b2, a2p) + 2 * Math.PI;
+
+    let deltahp = 0;
+    if (Math.abs(h1p - h2p) <= Math.PI) {
+      deltahp = h2p - h1p;
+    } else if (h2p <= h1p) {
+      deltahp = h2p - h1p + 2 * Math.PI;
+    } else {
+      deltahp = h2p - h1p - 2 * Math.PI;
+    }
+
+    const deltaLp = L2 - L1;
+    const deltaCp = C2p - C1p;
+    const deltaHp = 2 * Math.sqrt(C1p * C2p) * Math.sin(deltahp / 2.0);
+
+    const avgLpminus50sq = (avgLp - 50) * (avgLp - 50);
+    const SL = 1 + ((0.015 * avgLpminus50sq) / Math.sqrt(20 + avgLpminus50sq));
+    const SC = 1 + 0.045 * avgCp;
+
+    const T = 1 - 0.17 * Math.cos(h1p + h2p) + 0.24 * Math.cos(2 * (h1p + h2p)) + 0.32 * Math.cos(3 * (h1p + h2p) + deg2rad(6)) - 0.20 * Math.cos(4 * (h1p + h2p) - deg2rad(63));
+    const SH = 1 + 0.015 * avgCp * T;
+
+    const deltaro = 30 * Math.exp(-((rad2deg((h1p + h2p) / 2) - 275) / 25) * ((rad2deg((h1p + h2p) / 2) - 275) / 25));
+    const RC = 2 * Math.sqrt(Math.pow(avgCp, 7) / (Math.pow(avgCp, 7) + Math.pow(25, 7)));
+    const RT = -Math.sin(deg2rad(2 * deltaro)) * RC;
+
+    const kL = 1;
+    const kC = 1;
+    const kH = 1;
+
+    const deltaE = Math.sqrt(
+      Math.pow(deltaLp / (kL * SL), 2) +
+      Math.pow(deltaCp / (kC * SC), 2) +
+      Math.pow(deltaHp / (kH * SH), 2) +
+      RT * (deltaCp / (kC * SC)) * (deltaHp / (kH * SH))
+    );
+
+    return deltaE;
+  };
+
+  // Helper function to apply a fixed palette to image data using Delta E 2000
+  // for perceptual color matching. We precompute the palette in Lab space and
+  // use a small cache to avoid recomputing matches for repeated input colors.
   const applyFixedPalette = (data: Uint8ClampedArray, palette: number[][]) => {
+    const paletteLab = palette.map(([pr, pg, pb]) => rgbToLab(pr, pg, pb));
+    const cache = new Map<string, number[]>(); // key: 'r,g,b' -> rgb triplet from palette
+
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-      
-      // Find the closest color in the palette using Euclidean distance
-      let minDistance = Infinity;
-      let closestColor = palette[0];
-      
-      for (const paletteColor of palette) {
-        const distance = Math.sqrt(
-          Math.pow(r - paletteColor[0], 2) +
-          Math.pow(g - paletteColor[1], 2) +
-          Math.pow(b - paletteColor[2], 2)
-        );
-        
-        if (distance < minDistance) {
-          minDistance = distance;
-          closestColor = paletteColor;
+
+      const key = `${r},${g},${b}`;
+      const cached = cache.get(key);
+      if (cached) {
+        data[i] = cached[0];
+        data[i + 1] = cached[1];
+        data[i + 2] = cached[2];
+        continue;
+      }
+
+      const lab = rgbToLab(r, g, b);
+      let minDelta = Infinity;
+      let bestIndex = 0;
+
+      for (let p = 0; p < paletteLab.length; p++) {
+        const d = deltaE2000(lab, paletteLab[p]);
+        if (d < minDelta) {
+          minDelta = d;
+          bestIndex = p;
         }
       }
-      
-      data[i] = closestColor[0];     // R
-      data[i + 1] = closestColor[1]; // G
-      data[i + 2] = closestColor[2]; // B
-      // Alpha channel (i + 3) remains unchanged
+
+      const chosen = palette[bestIndex];
+      cache.set(key, chosen);
+
+      data[i] = chosen[0];
+      data[i + 1] = chosen[1];
+      data[i + 2] = chosen[2];
     }
   };
 
