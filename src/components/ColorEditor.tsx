@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
+import { Slider } from '@/components/ui/slider';
 import { type Color } from '@/lib/colorQuantization';
 
 interface DepthSpec { r: number; g: number; b: number }
@@ -160,13 +161,13 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     <div
       ref={rootRef}
       className="absolute z-50 w-[340px]"
-      style={position ? { 
-        left: position.x, 
-        top: position.y 
-      } : { 
-        left: '50%', 
-        top: '50%', 
-        transform: 'translate(-50%, -50%)' 
+      style={position ? {
+        left: position.x,
+        top: position.y
+      } : {
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)'
       }}
     >
       <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor">
@@ -189,20 +190,28 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
           }} />
         </div>
 
-        {/* Row 2: Hue slider */}
+        {/* Row 2: Gradient canvas */}
         <div className="mb-2">
-          <input type="range" min={0} max={360} value={hsl.h} onChange={(e) => handleHueChange(Number(e.target.value))} className="w-full" />
+          <canvas
+            ref={canvasRef}
+            onClick={handleCanvasClick}
+            width={512}
+            height={256}
+            className="w-full h-auto max-w-full border border-elegant-border rounded cursor-crosshair"
+            style={{ display: 'block', aspectRatio: '2/1' }}
+          />
         </div>
 
-        {/* Row 3: Gradient canvas */}
-        <div className="mb-2">
-          <canvas 
-            ref={canvasRef} 
-            onClick={handleCanvasClick} 
-            width={512} 
-            height={256} 
-            className="w-full h-auto max-w-full border border-elegant-border rounded cursor-crosshair"
-            style={{ display: 'block', aspectRatio: '2/1' }} 
+        {/* Row 3: Hue slider (reuse shared Slider from ui to match ImagePreview) */}
+        <div className="mb-2 w-full flex items-center">
+          <Slider
+            value={[hsl.h]}
+            onValueChange={(v) => handleHueChange(v[0])}
+            min={0}
+            max={360}
+            step={1}
+            className="w-full"
+            trackClassName="color-bg-highlight"
           />
         </div>
 
@@ -239,8 +248,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
         </div>
 
         {/* Row 6: Accept */}
-        <div className="flex justify-end">
-          <button className="flex items-center justify-center h-10 px-4 text-sm bg-blood-red border-blood-red text-white rounded" onClick={accept}>Confirm</button>
+        <div className="flex w-full">
+          <button className="w-full flex items-center justify-center h-10 px-4 text-sm bg-blood-red border-blood-red text-white rounded" onClick={accept}>Confirm</button>
         </div>
       </div>
     </div>
