@@ -15,6 +15,7 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
   const { t } = useTranslation();
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
+  const [loadingCamera, setLoadingCamera] = useState<string | null>(null);
 
   // Efficiently enumerate available cameras with error handling
   const getAvailableCameras = useCallback(async () => {
@@ -39,6 +40,7 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
 
   // Probe each camera to obtain a resolution string like "640x480".
   // We probe only once per device and store the result in `resolutions`.
+  // Use a more conservative approach for mobile devices
   useEffect(() => {
     let mounted = true;
 
@@ -73,8 +75,8 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
                 resolve();
               };
               video.addEventListener('loadedmetadata', onLoaded);
-              // safety timeout
-              setTimeout(() => resolve(), 500);
+              // safety timeout - reduced for mobile
+              setTimeout(() => resolve(), 300);
             });
             try { document.body.removeChild(video); } catch {}
           }
@@ -96,18 +98,37 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
       }
     };
 
-    for (const cam of availableCameras) {
-      if (!resolutions[cam.deviceId]) probe(cam.deviceId);
-    }
+    // Only probe cameras that haven't been probed yet, with a small delay between probes
+    availableCameras.forEach((cam, index) => {
+      if (!resolutions[cam.deviceId]) {
+        setTimeout(() => probe(cam.deviceId), index * 100); // Stagger probes
+      }
+    });
 
     return () => { mounted = false; };
   }, [availableCameras, resolutions]);
 
   // Generate user-friendly camera names with fallback for unnamed devices
   const getCameraDisplayName = (camera: MediaDeviceInfo, index: number) => {
-    if (camera.label) return camera.label;
-    const names = [t('camera1'), t('camera2'), t('camera3')];
-    return names[index] || `${t('camera1').replace('1', String(index + 1))}`;
+    if (camera.label) {
+      // Try to identify camera type from label
+      const label = camera.label.toLowerCase();
+      if (label.includes('front') || label.includes('user') || label.includes('selfie')) {
+        return t('camera1').replace('1', ` ${index + 1} (frontal)`);
+      }
+      if (label.includes('back') || label.includes('rear') || label.includes('environment')) {
+        return t('camera1').replace('1', ` ${index + 1} (trasera)`);
+      }
+      return camera.label;
+    }
+    
+    // Fallback names with position hints
+    const names = [
+      t('camera1').replace('1', ' 1 (frontal)'),
+      t('camera1').replace('1', ' 2 (trasera)'),
+      t('camera1').replace('1', ` ${index + 1}`)
+    ];
+    return names[index] || t('camera1').replace('1', ` ${index + 1}`);
   };
 
   return (
@@ -142,27 +163,47 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
             {availableCameras.map((camera, index) => (
               <Button
                 key={camera.deviceId || index}
-                onClick={() => {
-                  if (!resolutions[camera.deviceId]) {
-                    // Try to request permission for this specific camera
-                    navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: camera.deviceId } } })
-                      .then(stream => {
-                        stream.getTracks().forEach(track => track.stop());
-                        onSelect(camera.deviceId);
-                      })
-                      .catch(err => {
-                        console.error('Permission denied for camera', camera.deviceId, err);
-                        // Optionally, show a toast or alert to the user
+                onClick={async () => {
+                  const deviceId = camera.deviceId;
+                  setLoadingCamera(deviceId);
+                  
+                  try {
+                    // For mobile devices, don't rely on pre-probed resolutions
+                    // Just attempt to select the camera directly
+                    if (!resolutions[deviceId]) {
+                      // Try a quick permission check with timeout
+                      const timeoutPromise = new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error('Timeout')), 2000);
                       });
-                  } else {
-                    onSelect(camera.deviceId);
+                      
+                      try {
+                        const stream = await Promise.race([
+                          navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } }),
+                          timeoutPromise
+                        ]) as MediaStream;
+                        stream.getTracks().forEach(track => track.stop());
+                      } catch (permissionError) {
+                        // If permission fails, still try to select the camera
+                        // The parent component will handle the actual camera access
+                        console.warn('Permission check failed for camera', deviceId, permissionError);
+                      }
+                    }
+                    
+                    onSelect(deviceId);
+                  } catch (error) {
+                    console.error('Error selecting camera', deviceId, error);
+                  } finally {
+                    setLoadingCamera(null);
                   }
                 }}
+                disabled={loadingCamera === camera.deviceId}
                 variant="highlighted"
                 className="w-full justify-start text-left"
               >
                 <Camera className="mr-2 h-4 w-4" />
-                {getCameraDisplayName(camera, index)}{resolutions[camera.deviceId] ? ` (${resolutions[camera.deviceId]})` : ''}
+                {getCameraDisplayName(camera, index)}
+                {resolutions[camera.deviceId] ? ` (${resolutions[camera.deviceId]})` : ''}
+                {loadingCamera === camera.deviceId && ' ...'}
               </Button>
             ))}
           </div>
