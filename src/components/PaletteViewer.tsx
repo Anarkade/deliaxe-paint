@@ -385,8 +385,9 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                     }
                     setDraggedIndex(null);
                   }}
+                  onClick={() => selectNewColor(index, selectedPalette)}
                   data-palette-index={index}
-                  className="relative group cursor-move border border-elegant-border rounded-lg p-1.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"
+                  className="relative group cursor-pointer border border-elegant-border rounded-lg p-1.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"
                 >
                   <div className="flex items-stretch space-x-2">
                     <div className="relative">
@@ -396,7 +397,6 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                           backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                           opacity: color.transparent ? 0.5 : 1
                         }}
-                        onClick={() => selectNewColor(index, selectedPalette)}
                         title={t('clickToChangeColor')}
                       >
                         {color.transparent && (
