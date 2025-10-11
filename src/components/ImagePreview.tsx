@@ -814,39 +814,11 @@ export const ImagePreview = ({
     ? (originalPaletteColors && originalPaletteColors.length > 0 ? originalPaletteColors : undefined)
     : (processedPaletteColors && processedPaletteColors.length > 0 ? processedPaletteColors : undefined);
   const paletteViewerExternal = paletteViewerColors?.map(({ r, g, b }) => ({ r, g, b }));
-  const handlePaletteViewerUpdate = useCallback(async (colors: Color[]) => {
-    // Always update the palette
-    onPaletteUpdate?.(colors);
-    
-    // Immediately apply the new palette to create a new processed image
-    // This will update the processed image data that gets passed to PaletteViewer
-    try {
-      const imageProcessor = (await import('@/hooks/useImageProcessor')).useImageProcessor();
-      
-      // Use the original image as the base for reprocessing with the new palette
-      if (originalImage && colors.length > 0) {
-        // Convert original image to ImageData
-        const canvas = document.createElement('canvas');
-        canvas.width = originalImage.width;
-        canvas.height = originalImage.height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(originalImage, 0, 0);
-          const imageData = ctx.getImageData(0, 0, originalImage.width, originalImage.height);
-          
-          // Apply the new palette to create updated processed image
-          const newProcessedImage = await imageProcessor.applyPalette(imageData, colors);
-          if (newProcessedImage) {
-            // The processed image will be updated through the normal flow
-            // This ensures PaletteViewer shows the updated palette and processed image
-            onSectionOpen?.();
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error applying palette update:', error);
+  const handlePaletteViewerUpdate = useCallback((colors: Color[]) => {
+    if (!showOriginal) {
+      onPaletteUpdate?.(colors);
     }
-  }, [originalImage, onPaletteUpdate, onSectionOpen]);
+  }, [showOriginal, onPaletteUpdate]);
   // Compute zoom factor from preview slider (1.0 == 100%) to scale grid spacing
   const zoomFactor = zoom[0] / 100;
   // Determine final rendered size of one image pixel in CSS pixels.
@@ -1106,12 +1078,10 @@ export const ImagePreview = ({
                     onPaletteUpdate={handlePaletteViewerUpdate}
                     originalImageSource={originalImageSource}
                     externalPalette={paletteViewerExternal}
-                    onImageUpdate={(newProcessedImage: ImageData) => {
-                      // When a color is changed in the palette, update the processed image directly
-                      // This will be handled by triggering a reprocess with the new palette
+                    onImageUpdate={() => {
+                      // Trigger image reprocessing when palette is updated
                       onSectionOpen?.();
                     }}
-                    originalImage={originalImage}
                   />
                 </div>
               ) : null;
