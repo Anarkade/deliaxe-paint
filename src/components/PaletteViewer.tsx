@@ -20,6 +20,7 @@ interface PaletteViewerProps {
   originalImageSource?: File | string | null;
   externalPalette?: Color[];
   onImageUpdate?: (imageData: ImageData) => void;
+  originalImage?: HTMLImageElement | null; // Add original image for direct processing
 }
 
 const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
@@ -55,7 +56,7 @@ const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
   }
 };
 
-export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate }: PaletteViewerProps) => {
+export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, originalImage }: PaletteViewerProps) => {
   const { t } = useTranslation();
   const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() => 
     getDefaultPalette(selectedPalette)
@@ -103,7 +104,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
     document.body.appendChild(input);
 
-    const applyColor = (hex: string) => {
+    const applyColor = async (hex: string) => {
       let r = parseInt(hex.substr(1, 2), 16);
       let g = parseInt(hex.substr(3, 2), 16);
       let b = parseInt(hex.substr(5, 2), 16);
@@ -121,10 +122,30 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       setPaletteColors(newColors);
       onPaletteUpdate?.(newColors);
 
-      // Trigger image reprocessing with the new palette immediately (pass current imageData)
-      setTimeout(() => {
-        if (imageData) onImageUpdate?.(imageData);
-      }, 10);
+      // Immediately apply the new palette to the original image to update processed image
+      try {
+        if (originalImage && newColors.length > 0) {
+          const imageProcessor = (await import('@/hooks/useImageProcessor')).useImageProcessor();
+          
+          // Convert original image to ImageData
+          const canvas = document.createElement('canvas');
+          canvas.width = originalImage.width;
+          canvas.height = originalImage.height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(originalImage, 0, 0);
+            const imageData = ctx.getImageData(0, 0, originalImage.width, originalImage.height);
+            
+            // Apply the new palette
+            const newProcessedImage = await imageProcessor.applyPalette(imageData, newColors);
+            if (newProcessedImage && onImageUpdate) {
+              onImageUpdate(newProcessedImage);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error applying palette to image:', error);
+      }
     };
 
     const cleanup = () => {
@@ -385,8 +406,9 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                     }
                     setDraggedIndex(null);
                   }}
+                  onClick={() => selectNewColor(index, selectedPalette)}
                   data-palette-index={index}
-                  className="relative group cursor-move border border-elegant-border rounded-lg p-1.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"
+                  className="relative group cursor-pointer border border-elegant-border rounded-lg p-1.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"
                 >
                   <div className="flex items-stretch space-x-2">
                     <div className="relative">
@@ -396,7 +418,6 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                           backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                           opacity: color.transparent ? 0.5 : 1
                         }}
-                        onClick={() => selectNewColor(index, selectedPalette)}
                         title={t('clickToChangeColor')}
                       >
                         {color.transparent && (
