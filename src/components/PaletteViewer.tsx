@@ -1,6 +1,7 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { useState, useEffect, useCallback } from 'react';
+import ColorEditor from './ColorEditor';
 import { type Color } from '@/lib/colorQuantization';
 import { PaletteType } from './ColorPaletteSelector';
 import { Eye, Palette, GripVertical } from 'lucide-react';
@@ -85,78 +86,30 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   }, [draggedIndex, paletteColors, onPaletteUpdate]);
 
   const selectNewColor = useCallback((index: number, currentPalette: PaletteType) => {
-    // Create a color input element for both desktop and mobile
-    const input = document.createElement('input');
-    input.type = 'color';
-    input.value = `#${paletteColors[index].r.toString(16).padStart(2, '0')}${paletteColors[index].g.toString(16).padStart(2, '0')}${paletteColors[index].b.toString(16).padStart(2, '0')}`.toUpperCase();
-
-    // Mobile-safe placement: keep it on-screen but invisible so iOS/Android open the picker
-    input.style.position = 'fixed';
-    input.style.top = '0px';
-    input.style.left = '0px';
-    input.style.width = '1px';
-    input.style.height = '1px';
-    input.style.opacity = '0';
-    input.style.pointerEvents = 'none';
-    input.setAttribute('aria-hidden', 'true');
-    input.tabIndex = -1;
-
-    document.body.appendChild(input);
-
-    const applyColor = (hex: string) => {
-      let r = parseInt(hex.substr(1, 2), 16);
-      let g = parseInt(hex.substr(3, 2), 16);
-      let b = parseInt(hex.substr(5, 2), 16);
-
-      // For Mega Drive palette, restrict to RGB333 equivalent colors
-      if (currentPalette === 'megadrive') {
-        const rgb333 = toRGB333(r, g, b);
-        r = rgb333.r;
-        g = rgb333.g;
-        b = rgb333.b;
-      }
-
-      const newColors = [...paletteColors];
-      newColors[index] = { ...newColors[index], r, g, b };
-      setPaletteColors(newColors);
-      onPaletteUpdate?.(newColors);
-
-      // Trigger image reprocessing with the new palette immediately (pass current imageData)
-      setTimeout(() => {
-        if (imageData) onImageUpdate?.(imageData);
-      }, 10);
-    };
-
-    const cleanup = () => {
-      if (document.body.contains(input)) {
-        document.body.removeChild(input);
-      }
-    };
-
-    const handleChange = (e: Event) => {
-      const target = e.target as HTMLInputElement;
-      if (!target || !target.value) {
-        cleanup();
-        return;
-      }
-      applyColor(target.value);
-      cleanup();
-    };
-
-    input.addEventListener('change', handleChange, { once: true });
-    input.addEventListener('input', handleChange, { once: true });
-    input.addEventListener('blur', cleanup, { once: true });
-
-    // Open the native color picker (must be within user gesture)
-    try {
-      input.click();
-    } catch {
-      // Fallback: focus then dispatch a click
-      input.focus();
-      const event = new MouseEvent('click', { bubbles: true, cancelable: true, view: window });
-      input.dispatchEvent(event);
-    }
+    // Open custom color editor instead of native input
+    openEditor(index, currentPalette);
   }, [paletteColors, onPaletteUpdate, onImageUpdate]);
+
+  const [editorState, setEditorState] = useState<{ open: boolean; index: number | null; depth: { r: number; g: number; b: number } | null }>({ open: false, index: null, depth: null });
+
+  const openEditor = (index: number, currentPalette: PaletteType) => {
+    // Default 8-8-8, but megadrive uses 3-3-3 quantization for applying result
+    const depth = currentPalette === 'megadrive' ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 };
+    setEditorState({ open: true, index, depth });
+  };
+
+  const closeEditor = () => setEditorState({ open: false, index: null, depth: null });
+
+  const applyEditorColor = (c: PaletteColor) => {
+    if (editorState.index === null) return;
+    const newColors = [...paletteColors];
+    newColors[editorState.index] = { ...newColors[editorState.index], r: c.r, g: c.g, b: c.b };
+    setPaletteColors(newColors);
+    onPaletteUpdate?.(newColors);
+    // Trigger immediate reprocessing
+    setTimeout(() => { if (imageData) onImageUpdate?.(imageData); }, 10);
+    closeEditor();
+  };
 
   // RGB333 conversion helper
   const toRGB333 = (r: number, g: number, b: number) => {
@@ -425,6 +378,16 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             </div>
           </div>
         </div>
+        {editorState.open && editorState.index !== null && (
+          <ColorEditor
+            initial={paletteColors[editorState.index]}
+            depth={editorState.depth || { r: 8, g: 8, b: 8 }}
+            onAccept={(c) => applyEditorColor(c)}
+            onCancel={() => closeEditor()}
+            // Constrain to image preview container so it doesn't go off-screen
+            containerSelector="[data-image-preview-container]"
+          />
+        )}
     </div>
   );
 };
