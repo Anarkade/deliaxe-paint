@@ -16,6 +16,7 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
   const [loadingCamera, setLoadingCamera] = useState<string | null>(null);
+  const [requestingPermissions, setRequestingPermissions] = useState(false);
 
   // Efficiently enumerate available cameras with error handling
   const getAvailableCameras = useCallback(async () => {
@@ -108,6 +109,58 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
     return () => { mounted = false; };
   }, [availableCameras, resolutions]);
 
+  // Request permissions for all cameras to ensure they work properly
+  const requestCameraPermissions = async () => {
+    if (availableCameras.length === 0) return;
+    
+    setRequestingPermissions(true);
+    try {
+      // First, request general video permission
+      const generalStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      generalStream.getTracks().forEach(track => track.stop());
+      
+      // Then request permission for each specific camera
+      for (const camera of availableCameras) {
+        try {
+          const timeoutPromise = new Promise<MediaStream>((_, reject) => {
+            setTimeout(() => reject(new Error('Timeout')), 3000);
+          });
+          
+          const stream = await Promise.race([
+            navigator.mediaDevices.getUserMedia({ 
+              video: { 
+                deviceId: { exact: camera.deviceId },
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+              } 
+            }),
+            timeoutPromise
+          ]);
+          
+          // Get resolution from the stream
+          const track = stream.getVideoTracks()[0];
+          const settings = track.getSettings?.();
+          if (settings?.width && settings?.height) {
+            setResolutions(prev => ({ 
+              ...prev, 
+              [camera.deviceId]: `${Math.round(settings.width)}x${Math.round(settings.height)}` 
+            }));
+          }
+          
+          stream.getTracks().forEach(track => track.stop());
+        } catch (error) {
+          console.warn(`Failed to get permission for camera ${camera.deviceId}:`, error);
+          // Still mark as having no resolution, but don't fail completely
+          setResolutions(prev => ({ ...prev, [camera.deviceId]: '' }));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to request general camera permissions:', error);
+    } finally {
+      setRequestingPermissions(false);
+    }
+  };
+
   // Generate user-friendly camera names with fallback for unnamed devices
   const getCameraDisplayName = (camera: MediaDeviceInfo, index: number) => {
     if (camera.label) {
@@ -124,8 +177,8 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
     
     // Fallback names with position hints
     const names = [
-      t('camera1').replace('1', ' 1 (frontal)'),
-      t('camera1').replace('1', ' 2 (trasera)'),
+      t('camera1').replace('1', ' 1 - frontal'),
+      t('camera1').replace('1', ' 2 - trasera'),
       t('camera1').replace('1', ` ${index + 1}`)
     ];
     return names[index] || t('camera1').replace('1', ` ${index + 1}`);
@@ -150,6 +203,18 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
             {t('selectCamera')}
           </h3>
         </div>
+
+        {availableCameras.length > 0 && (
+          <Button
+            onClick={requestCameraPermissions}
+            disabled={requestingPermissions}
+            variant="outline"
+            className="w-full"
+          >
+            <Camera className="mr-2 h-4 w-4" />
+            {requestingPermissions ? 'Solicitando permisos...' : 'Pedir permiso para usar cámaras'}
+          </Button>
+        )}
   
         {availableCameras.length === 0 ? (
           <div className="text-center py-8">
