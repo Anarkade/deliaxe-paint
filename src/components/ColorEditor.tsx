@@ -191,14 +191,14 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
         </div>
 
         {/* Row 2: Gradient canvas */}
-        <div className="mb-2">
+        <div className="mb-2 overflow-auto">
           <canvas
             ref={canvasRef}
             onClick={handleCanvasClick}
             width={512}
             height={256}
-            className="w-full h-auto max-w-full border border-elegant-border rounded cursor-crosshair"
-            style={{ display: 'block', aspectRatio: '2/1' }}
+            className="border border-elegant-border cursor-crosshair"
+            style={{ display: 'block', width: '512px', height: '256px' }}
           />
         </div>
 
