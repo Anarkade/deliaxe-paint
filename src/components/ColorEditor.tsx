@@ -12,6 +12,7 @@ interface ColorEditorProps {
   onCancel: () => void;
   position?: { x: number; y: number };
   width?: number;
+  suppressInitialCenter?: boolean;
 }
 
 // Helpers: HSL <-> RGB
@@ -58,7 +59,7 @@ function quantizeChannel(value: number, bits: number) {
   return Math.round((quant / steps) * 255);
 }
 
-export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, position, width }) => {
+export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, position, width, suppressInitialCenter }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [editorWidth, setEditorWidth] = useState<number | null>(null);
@@ -187,16 +188,19 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     <div
       ref={rootRef}
       className="absolute z-50"
-      style={position ? ({
-        left: position.x,
-        top: position.y,
-        width: width || (editorWidth ? `${editorWidth}px` : undefined)
-      } as React.CSSProperties) : ({
-        left: '50%',
-        top: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: width || (editorWidth ? `${editorWidth}px` : undefined)
-      } as React.CSSProperties)}
+      style={(() => {
+        // If caller requests to suppress the initial centered render, place
+        // the editor off-screen and hidden until a concrete position is provided.
+        if (!position && suppressInitialCenter) {
+          return { left: '-9999px', top: '-9999px', visibility: 'hidden' } as React.CSSProperties;
+        }
+
+        if (position) {
+          return ({ left: position.x, top: position.y, width: width || (editorWidth ? `${editorWidth}px` : undefined) } as React.CSSProperties);
+        }
+
+        return ({ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: width || (editorWidth ? `${editorWidth}px` : undefined) } as React.CSSProperties);
+      })()}
     >
       <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor">
         <div className="flex items-center justify-between mb-2">
