@@ -116,7 +116,8 @@ interface ImagePreviewProps {
   showCameraPreview?: boolean;
   onCameraPreviewChange?: (show: boolean) => void;
   selectedCameraId?: string;
-  currentPaletteColors?: Color[];
+  originalPaletteColors?: Color[];
+  processedPaletteColors?: Color[];
   onSectionOpen?: () => void; // New callback for section opening
   onShowOriginalChange?: (showOriginal: boolean) => void; // Notify parent when preview toggles between original/processed
   controlledShowOriginal?: boolean; // Optional controlled prop to force which image is shown
@@ -149,7 +150,8 @@ export const ImagePreview = ({
   showCameraPreview, 
   onCameraPreviewChange, 
   selectedCameraId,
-  currentPaletteColors, 
+  originalPaletteColors,
+  processedPaletteColors,
   onSectionOpen, 
   onShowOriginalChange,
   onRequestOpenCameraSelector,
@@ -807,6 +809,16 @@ export const ImagePreview = ({
   }, [originalImage, processedImageData, showOriginal]);
 
   const hasProcessedImage = processedImageData !== null;
+  const paletteViewerSelectedPalette = showOriginal ? 'original' : selectedPalette;
+  const paletteViewerColors = showOriginal
+    ? (originalPaletteColors && originalPaletteColors.length > 0 ? originalPaletteColors : undefined)
+    : (processedPaletteColors && processedPaletteColors.length > 0 ? processedPaletteColors : undefined);
+  const paletteViewerExternal = paletteViewerColors?.map(({ r, g, b }) => ({ r, g, b }));
+  const handlePaletteViewerUpdate = useCallback((colors: Color[]) => {
+    if (!showOriginal) {
+      onPaletteUpdate?.(colors);
+    }
+  }, [showOriginal, onPaletteUpdate]);
   // Compute zoom factor from preview slider (1.0 == 100%) to scale grid spacing
   const zoomFactor = zoom[0] / 100;
   // Determine final rendered size of one image pixel in CSS pixels.
@@ -1061,16 +1073,11 @@ export const ImagePreview = ({
               return showPaletteViewer && originalImage ? (
                 <div className="mt-4">
                   <PaletteViewer
-                    selectedPalette={selectedPalette}
+                    selectedPalette={paletteViewerSelectedPalette}
                     imageData={processedImageData}
-                    onPaletteUpdate={onPaletteUpdate}
+                    onPaletteUpdate={handlePaletteViewerUpdate}
                     originalImageSource={originalImageSource}
-                    // Always forward the parent's current palette (if present). PaletteViewer
-                    // expects items with { r,g,b }, so map to that shape. This ensures exports
-                    // can use the exact palette shown in the preview even when selectedPalette === 'original'.
-                    externalPalette={currentPaletteColors && currentPaletteColors.length > 0
-                      ? currentPaletteColors.map(c => ({ r: c.r, g: c.g, b: c.b }))
-                      : undefined}
+                    externalPalette={paletteViewerExternal}
                     onImageUpdate={() => {
                       // Trigger image reprocessing when palette is updated
                       onSectionOpen?.();

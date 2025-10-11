@@ -1,8 +1,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { LoadImage } from './LoadImage';
 import { CameraSelector } from './CameraSelector';
-import { ColorPaletteSelector } from './ColorPaletteSelector';
-import { usePalette } from '../contexts/PaletteContext';
+import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
 import { ImagePreview } from './ImagePreview';
 import { ExportImage } from './ExportImage';
 import { LanguageSelector } from './LanguageSelector';
@@ -15,7 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { Upload, Palette, Eye, Monitor, Download, Grid3X3, Globe, X, AlertTriangle } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { processMegaDriveImage, extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette, Color } from '@/lib/colorQuantization';
+import { processMegaDriveImage, Color } from '@/lib/colorQuantization';
 // pngAnalyzer is imported dynamically where needed to keep the main bundle small
 import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
@@ -28,6 +27,293 @@ const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory 
 const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size
 const PROCESSING_DEBOUNCE_MS = 100; // Debounce time for image processing
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for color analysis (performance optimization)
+
+const FIXED_PALETTES: Record<string, number[][]> = {
+  cga0: [
+    [0, 0, 0],
+    [255, 85, 255],
+    [85, 255, 255],
+    [255, 255, 255]
+  ],
+  cga1: [
+    [0, 0, 0],
+    [85, 255, 85],
+    [255, 85, 85],
+    [255, 255, 85]
+  ],
+  cga2: [
+    [0, 0, 0],
+    [255, 85, 85],
+    [85, 255, 255],
+    [255, 255, 255]
+  ],
+  gameboyRealistic: [
+    [56, 72, 40],
+    [96, 112, 40],
+    [160, 168, 48],
+    [208, 224, 64]
+  ],
+  amstradCpc: [
+    [0, 0, 0],
+    [128, 128, 128],
+    [255, 255, 255],
+    [128, 0, 0],
+    [255, 0, 0],
+    [255, 128, 128],
+    [255, 127, 0],
+    [255, 255, 128],
+    [255, 255, 0],
+    [128, 128, 0],
+    [0, 128, 0],
+    [0, 255, 0],
+    [128, 255, 0],
+    [128, 255, 128],
+    [0, 255, 128],
+    [0, 128, 128],
+    [0, 255, 255],
+    [128, 255, 255],
+    [0, 128, 255],
+    [0, 0, 255],
+    [0, 0, 128],
+    [128, 0, 255],
+    [128, 128, 255],
+    [255, 128, 255],
+    [255, 0, 255],
+    [255, 0, 128],
+    [128, 0, 128]
+  ],
+  nes: [
+    [88, 88, 88],
+    [0, 35, 124],
+    [13, 16, 153],
+    [48, 0, 146],
+    [79, 0, 108],
+    [96, 0, 53],
+    [92, 5, 0],
+    [70, 24, 0],
+    [39, 45, 0],
+    [9, 62, 0],
+    [0, 69, 0],
+    [0, 65, 6],
+    [0, 53, 69],
+    [0, 0, 0],
+    [0, 0, 0],
+    [0, 0, 0],
+    [161, 161, 161],
+    [11, 83, 215],
+    [51, 55, 254],
+    [102, 33, 247],
+    [149, 21, 190],
+    [172, 22, 110],
+    [166, 39, 33],
+    [134, 67, 0],
+    [89, 98, 0],
+    [45, 122, 0],
+    [12, 133, 0],
+    [58, 217, 116],
+    [57, 195, 223],
+    [66, 66, 66],
+    [0, 0, 0],
+    [0, 0, 0],
+    [255, 255, 255],
+    [81, 165, 254],
+    [128, 132, 254],
+    [188, 106, 254],
+    [249, 91, 254],
+    [254, 94, 196],
+    [254, 115, 105],
+    [228, 147, 33],
+    [174, 182, 0],
+    [121, 211, 0],
+    [81, 223, 33],
+    [58, 215, 116],
+    [57, 195, 223],
+    [66, 66, 66],
+    [0, 0, 0],
+    [0, 0, 0],
+    [255, 255, 255],
+    [181, 217, 254],
+    [202, 202, 254],
+    [227, 190, 254],
+    [249, 183, 254],
+    [254, 186, 231],
+    [254, 195, 188],
+    [244, 209, 153],
+    [222, 224, 134],
+    [198, 236, 135],
+    [178, 242, 157],
+    [167, 240, 195],
+    [168, 231, 240],
+    [172, 172, 172],
+    [0, 0, 0],
+    [0, 0, 0]
+  ],
+  commodore64: [
+    [0, 0, 0],
+    [98, 98, 98],
+    [137, 137, 137],
+    [173, 173, 173],
+    [255, 255, 255],
+    [159, 78, 68],
+    [203, 126, 117],
+    [109, 84, 18],
+    [161, 104, 60],
+    [201, 212, 135],
+    [154, 226, 155],
+    [92, 171, 94],
+    [106, 191, 198],
+    [136, 126, 203],
+    [80, 69, 155],
+    [160, 87, 163]
+  ],
+  zxSpectrum: [
+    [0, 0, 0],
+    [0, 0, 216],
+    [0, 0, 255],
+    [216, 0, 0],
+    [255, 0, 0],
+    [216, 0, 216],
+    [255, 0, 255],
+    [0, 216, 0],
+    [0, 255, 0],
+    [0, 216, 216],
+    [0, 255, 255],
+    [216, 216, 0],
+    [255, 255, 0],
+    [216, 216, 216],
+    [255, 255, 255]
+  ]
+};
+
+const rgbToXyz = (r: number, g: number, b: number) => {
+  const srgb = [r / 255, g / 255, b / 255].map((v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+  const [lr, lg, lb] = srgb;
+  const x = lr * 0.4124564 + lg * 0.3575761 + lb * 0.1804375;
+  const y = lr * 0.2126729 + lg * 0.7151522 + lb * 0.0721750;
+  const z = lr * 0.0193339 + lg * 0.1191920 + lb * 0.9503041;
+  return [x, y, z];
+};
+
+const xyzToLab = (x: number, y: number, z: number) => {
+  const xr = x / 0.95047;
+  const yr = y / 1.0;
+  const zr = z / 1.08883;
+
+  const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : (7.787 * t) + 16 / 116);
+
+  const fx = f(xr);
+  const fy = f(yr);
+  const fz = f(zr);
+
+  const L = (116 * fy) - 16;
+  const a = 500 * (fx - fy);
+  const b = 200 * (fy - fz);
+  return [L, a, b];
+};
+
+const rgbToLab = (r: number, g: number, b: number) => {
+  const [x, y, z] = rgbToXyz(r, g, b);
+  return xyzToLab(x, y, z);
+};
+
+const deg2rad = (deg: number) => (deg * Math.PI) / 180;
+const rad2deg = (rad: number) => (rad * 180) / Math.PI;
+
+const deltaE2000 = (lab1: number[], lab2: number[]) => {
+  const [L1, a1, b1] = lab1;
+  const [L2, a2, b2] = lab2;
+
+  const avgLp = (L1 + L2) / 2.0;
+  const C1 = Math.sqrt(a1 * a1 + b1 * b1);
+  const C2 = Math.sqrt(a2 * a2 + b2 * b2);
+  const avgC = (C1 + C2) / 2.0;
+
+  const G = 0.5 * (1 - Math.sqrt(Math.pow(avgC, 7) / (Math.pow(avgC, 7) + Math.pow(25, 7))));
+  const a1p = a1 * (1 + G);
+  const a2p = a2 * (1 + G);
+  const C1p = Math.sqrt(a1p * a1p + b1 * b1);
+  const C2p = Math.sqrt(a2p * a2p + b2 * b2);
+  const avgCp = (C1p + C2p) / 2.0;
+
+  const h1p = Math.atan2(b1, a1p) >= 0 ? Math.atan2(b1, a1p) : Math.atan2(b1, a1p) + 2 * Math.PI;
+  const h2p = Math.atan2(b2, a2p) >= 0 ? Math.atan2(b2, a2p) : Math.atan2(b2, a2p) + 2 * Math.PI;
+
+  let deltahp = 0;
+  if (Math.abs(h1p - h2p) <= Math.PI) {
+    deltahp = h2p - h1p;
+  } else if (h2p <= h1p) {
+    deltahp = h2p - h1p + 2 * Math.PI;
+  } else {
+    deltahp = h2p - h1p - 2 * Math.PI;
+  }
+
+  const deltaLp = L2 - L1;
+  const deltaCp = C2p - C1p;
+  const deltaHp = 2 * Math.sqrt(C1p * C2p) * Math.sin(deltahp / 2.0);
+
+  const avgLpminus50sq = (avgLp - 50) * (avgLp - 50);
+  const SL = 1 + ((0.015 * avgLpminus50sq) / Math.sqrt(20 + avgLpminus50sq));
+  const SC = 1 + 0.045 * avgCp;
+
+  const T = 1 - 0.17 * Math.cos(h1p + h2p) + 0.24 * Math.cos(2 * (h1p + h2p)) + 0.32 * Math.cos(3 * (h1p + h2p) + deg2rad(6)) - 0.20 * Math.cos(4 * (h1p + h2p) - deg2rad(63));
+  const SH = 1 + 0.015 * avgCp * T;
+
+  const deltaro = 30 * Math.exp(-((rad2deg((h1p + h2p) / 2) - 275) / 25) * ((rad2deg((h1p + h2p) / 2) - 275) / 25));
+  const RC = 2 * Math.sqrt(Math.pow(avgCp, 7) / (Math.pow(avgCp, 7) + Math.pow(25, 7)));
+  const RT = -Math.sin(deg2rad(2 * deltaro)) * RC;
+
+  const kL = 1;
+  const kC = 1;
+  const kH = 1;
+
+  const deltaE = Math.sqrt(
+    Math.pow(deltaLp / (kL * SL), 2) +
+    Math.pow(deltaCp / (kC * SC), 2) +
+    Math.pow(deltaHp / (kH * SH), 2) +
+    RT * (deltaCp / (kC * SC)) * (deltaHp / (kH * SH))
+  );
+
+  return deltaE;
+};
+
+const applyFixedPalette = (data: Uint8ClampedArray, palette: number[][]) => {
+  const paletteLab = palette.map(([pr, pg, pb]) => rgbToLab(pr, pg, pb));
+  const cache = new Map<string, number[]>();
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    const key = `${r},${g},${b}`;
+    const cached = cache.get(key);
+    if (cached) {
+      data[i] = cached[0];
+      data[i + 1] = cached[1];
+      data[i + 2] = cached[2];
+      continue;
+    }
+
+    const lab = rgbToLab(r, g, b);
+    let minDelta = Infinity;
+    let bestIndex = 0;
+
+    for (let p = 0; p < paletteLab.length; p++) {
+      const d = deltaE2000(lab, paletteLab[p]);
+      if (d < minDelta) {
+        minDelta = d;
+        bestIndex = p;
+      }
+    }
+
+    const chosen = palette[bestIndex];
+    cache.set(key, chosen);
+
+    data[i] = chosen[0];
+    data[i + 1] = chosen[1];
+    data[i + 2] = chosen[2];
+  }
+};
 
 // Local history state type used by the editor
 type HistoryState = {
@@ -50,13 +336,14 @@ export const RetroImageEditor = () => {
   const { t, currentLanguage, changeLanguage, languages, getLanguageName } = useTranslation();
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
-  const [selectedPalette, setSelectedPalette] = useState<string>('original');
+  const [selectedPalette, setSelectedPalette] = useState<PaletteType>('original');
   // Restore resolution/scaling state that the selector will control
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('scale-to-fit-width');
   const [autoFitKey, setAutoFitKey] = useState<string | undefined>(undefined);
   // Track whether the preview is currently showing the original image or the processed one
   const [previewShowingOriginal, setPreviewShowingOriginal] = useState<boolean>(true);
+  const previewToggleWasManualRef = useRef(false);
   const ignoreNextCloseRef = useRef(false);
   
   // Performance and processing state
@@ -137,6 +424,10 @@ export const RetroImageEditor = () => {
     // Reset zoom state used by the UI
     setCurrentZoom(100);
 
+  // Reset preview toggle preference so new images auto-show processing results
+  previewToggleWasManualRef.current = false;
+  setPreviewShowingOriginal(true);
+
     // Clear history to free memory
     setHistory([]);
     setHistoryIndex(-1);
@@ -144,9 +435,6 @@ export const RetroImageEditor = () => {
     // Reset interface (open load-image panel)
     setActiveTab('load-image');
   }, []);
-
-  // Async palette conversion with Web Worker support
-  // Removed applyPaletteConversion function as it is now handled by usePalette
 
   const checkOrientation = useCallback(() => {
     const isLandscape = window.innerWidth >= window.innerHeight;
@@ -282,6 +570,8 @@ export const RetroImageEditor = () => {
       
       setOriginalImage(img);
       setOriginalImageSource(source);
+  previewToggleWasManualRef.current = false;
+  setPreviewShowingOriginal(true);
 
       // Create an immediate rasterized RGB copy of the loaded image so the
       // preview shows pixels for indexed PNGs (PNG-8) as well. This is a
@@ -577,6 +867,116 @@ export const RetroImageEditor = () => {
     };
   }, []);
 
+  const applyPaletteConversion = useCallback(async (
+    imageData: ImageData,
+    palette: PaletteType,
+    customColors?: Color[]
+  ): Promise<ImageData> => {
+    const resultImageData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
+    const resultData = resultImageData.data;
+
+    const toTriplets = (colors: Color[]): number[][] => colors.map(({ r, g, b }) => [r, g, b]);
+    const toColorObjects = (triplets: number[][]): Color[] => triplets.map(([r, g, b]) => ({ r, g, b }));
+    const paletteFromCustomOrDefault = (fallback: number[][]): number[][] => {
+      if (customColors && customColors.length > 0) {
+        return toTriplets(customColors);
+      }
+      return fallback;
+    };
+
+    switch (palette) {
+      case 'original': {
+        if (customColors && customColors.length > 0) {
+          setOrderedPaletteColors(customColors.map(({ r, g, b }) => ({ r, g, b })));
+        }
+        return resultImageData;
+      }
+
+      case 'gameboy': {
+        const gbColors = paletteFromCustomOrDefault([
+          [7, 24, 33],
+          [134, 192, 108],
+          [224, 248, 207],
+          [101, 255, 0]
+        ]);
+
+        const findClosestGBColor = (r: number, g: number, b: number) => {
+          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
+          const brightnessPercent = (pixelBrightness / 255) * 100;
+          if (brightnessPercent <= 24) return gbColors[0];
+          if (brightnessPercent <= 49) return gbColors[1];
+          if (brightnessPercent <= 74) return gbColors[2];
+          return gbColors[3];
+        };
+
+        for (let i = 0; i < resultData.length; i += 4) {
+          const closest = findClosestGBColor(resultData[i], resultData[i + 1], resultData[i + 2]);
+          resultData[i] = closest[0];
+          resultData[i + 1] = closest[1];
+          resultData[i + 2] = closest[2];
+        }
+
+        setOrderedPaletteColors(toColorObjects(gbColors));
+        return resultImageData;
+      }
+
+      case 'gameboyBg': {
+        const gbBgColors = paletteFromCustomOrDefault([
+          [7, 24, 33],
+          [48, 104, 80],
+          [134, 192, 108],
+          [224, 248, 207]
+        ]);
+
+        const findClosestGBBgColor = (r: number, g: number, b: number) => {
+          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
+          const brightnessPercent = (pixelBrightness / 255) * 100;
+          if (brightnessPercent <= 24) return gbBgColors[0];
+          if (brightnessPercent <= 49) return gbBgColors[1];
+          if (brightnessPercent <= 74) return gbBgColors[2];
+          return gbBgColors[3];
+        };
+
+        for (let i = 0; i < resultData.length; i += 4) {
+          const closest = findClosestGBBgColor(resultData[i], resultData[i + 1], resultData[i + 2]);
+          resultData[i] = closest[0];
+          resultData[i + 1] = closest[1];
+          resultData[i + 2] = closest[2];
+        }
+
+        setOrderedPaletteColors(toColorObjects(gbBgColors));
+        return resultImageData;
+      }
+
+      case 'megadrive': {
+        try {
+          const megaDriveResult = await imageProcessor.processMegaDriveImage(
+            resultImageData,
+            customColors,
+            (progress) => setProcessingProgress(progress)
+          );
+          setOrderedPaletteColors(megaDriveResult.palette.map(({ r, g, b }) => ({ r, g, b })));
+          return megaDriveResult.imageData;
+        } catch (error) {
+          console.error('Mega Drive processing error:', error);
+          const fallback = processMegaDriveImage(resultImageData, customColors);
+          setOrderedPaletteColors(fallback.palette.map(({ r, g, b }) => ({ r, g, b })));
+          return fallback.imageData;
+        }
+      }
+
+      default: {
+        const preset = FIXED_PALETTES[palette];
+        if (preset && preset.length > 0) {
+          const paletteToApply = paletteFromCustomOrDefault(preset);
+          applyFixedPalette(resultData, paletteToApply);
+          setOrderedPaletteColors(toColorObjects(paletteToApply));
+        }
+        return resultImageData;
+      }
+    }
+  }, [imageProcessor, setProcessingProgress, setOrderedPaletteColors]);
+
 
   const processImage = useCallback(async () => {
 
@@ -801,15 +1201,28 @@ export const RetroImageEditor = () => {
       // Read resulting pixels from temp canvas
       const tempImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
 
-      // If the PaletteViewer has a palette (external/original), quantize the
-      // resulting pixels to the nearest colors in that palette (requirement 3).
-      if (Array.isArray(originalPaletteColors) && originalPaletteColors.length > 0) {
+      // If we're preserving the original palette (indexed PNG), quantize the
+      // pixels to that palette only when the user keeps the 'original' selection.
+      if (selectedPalette === 'original' && Array.isArray(originalPaletteColors) && originalPaletteColors.length > 0) {
         const paletteColorsArr = originalPaletteColors.map((c: any) => [c.r, c.g, c.b]);
         applyFixedPalette(tempImageData.data, paletteColorsArr);
       }
 
 
-      // Put the final pixels onto the real canvas and publish the processed ImageData
+      let convertedImageData = tempImageData;
+
+      if (selectedPalette !== 'original') {
+        convertedImageData = await applyPaletteConversion(
+          tempImageData,
+          selectedPalette,
+          orderedPaletteColors.length > 0 ? orderedPaletteColors : undefined
+        );
+      } else if (isOriginalPNG8Indexed && originalPaletteColors.length > 0) {
+        setOrderedPaletteColors(originalPaletteColors);
+      } else if (selectedPalette === 'original') {
+        setOrderedPaletteColors([]);
+      }
+
       const canvasResult = getCanvas(targetWidth, targetHeight);
       canvas = canvasResult.canvas;
       const ctx = canvasResult.ctx;
@@ -819,14 +1232,19 @@ export const RetroImageEditor = () => {
       }
       ctx.fillStyle = '#000000';
       ctx.fillRect(0, 0, targetWidth, targetHeight);
-      ctx.putImageData(tempImageData, 0, 0);
-      imageData = tempImageData;
+      ctx.putImageData(convertedImageData, 0, 0);
+      imageData = convertedImageData;
 
       // Always set the processed image so the preview/footer shows it
-  setProcessedImageData(imageData);
-  // After processing, ensure the preview switches to the processed image
-  try { setPreviewShowingOriginal(false); } catch (e) { /* ignore */ }
-  setAutoFitKey(String(Date.now()));
+      setProcessedImageData(imageData);
+      if (!previewToggleWasManualRef.current) {
+        try {
+          setPreviewShowingOriginal(false);
+        } catch (e) {
+          /* ignore */
+        }
+      }
+      setAutoFitKey(String(Date.now()));
       saveToHistory({ imageData, palette: selectedPalette });
 
       // End performance monitoring
@@ -857,10 +1275,12 @@ export const RetroImageEditor = () => {
     detectAndUnscaleImage,
     isOriginalPNG8Indexed,
     originalPaletteColors,
+    orderedPaletteColors,
     selectedResolution,
     scalingMode,
     toast,
-    t
+    t,
+    applyPaletteConversion
   ]);
 
   // Expose the latest processImage via a ref so UI handlers can invoke the
@@ -875,149 +1295,6 @@ export const RetroImageEditor = () => {
       if (processImageRef.current === processImage) processImageRef.current = null;
     };
   }, [processImage]);
-
-  // Color conversion helpers (RGB -> XYZ -> Lab) and Delta E 2000 implementation
-  // These are local helpers to avoid adding dependencies and to keep the
-  // color matching deterministic and self-contained.
-  const rgbToXyz = (r: number, g: number, b: number) => {
-    // Convert sRGB [0..255] to linear RGB [0..1]
-    const srgb = [r / 255, g / 255, b / 255].map((v) => {
-      return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-    });
-    const [lr, lg, lb] = srgb;
-    // sRGB D65 conversion
-    const x = lr * 0.4124564 + lg * 0.3575761 + lb * 0.1804375;
-    const y = lr * 0.2126729 + lg * 0.7151522 + lb * 0.0721750;
-    const z = lr * 0.0193339 + lg * 0.1191920 + lb * 0.9503041;
-    return [x, y, z];
-  };
-
-  const xyzToLab = (x: number, y: number, z: number) => {
-    // D65 reference white
-    const xr = x / 0.95047;
-    const yr = y / 1.00000;
-    const zr = z / 1.08883;
-
-    const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : (7.787 * t) + 16 / 116);
-
-    const fx = f(xr);
-    const fy = f(yr);
-    const fz = f(zr);
-
-    const L = (116 * fy) - 16;
-    const a = 500 * (fx - fy);
-    const b = 200 * (fy - fz);
-    return [L, a, b];
-  };
-
-  const rgbToLab = (r: number, g: number, b: number) => {
-    const [x, y, z] = rgbToXyz(r, g, b);
-    return xyzToLab(x, y, z);
-  };
-
-  // Implementation of Delta E 2000 per Sharma et al. — accurate perceptual
-  // difference metric. For our purposes a straightforward port is enough.
-  const deg2rad = (deg: number) => (deg * Math.PI) / 180;
-  const rad2deg = (rad: number) => (rad * 180) / Math.PI;
-
-  const deltaE2000 = (lab1: number[], lab2: number[]) => {
-    const [L1, a1, b1] = lab1;
-    const [L2, a2, b2] = lab2;
-
-    const avgLp = (L1 + L2) / 2.0;
-    const C1 = Math.sqrt(a1 * a1 + b1 * b1);
-    const C2 = Math.sqrt(a2 * a2 + b2 * b2);
-    const avgC = (C1 + C2) / 2.0;
-
-    const G = 0.5 * (1 - Math.sqrt(Math.pow(avgC, 7) / (Math.pow(avgC, 7) + Math.pow(25, 7))));
-    const a1p = a1 * (1 + G);
-    const a2p = a2 * (1 + G);
-    const C1p = Math.sqrt(a1p * a1p + b1 * b1);
-    const C2p = Math.sqrt(a2p * a2p + b2 * b2);
-    const avgCp = (C1p + C2p) / 2.0;
-
-    const h1p = Math.atan2(b1, a1p) >= 0 ? Math.atan2(b1, a1p) : Math.atan2(b1, a1p) + 2 * Math.PI;
-    const h2p = Math.atan2(b2, a2p) >= 0 ? Math.atan2(b2, a2p) : Math.atan2(b2, a2p) + 2 * Math.PI;
-
-    let deltahp = 0;
-    if (Math.abs(h1p - h2p) <= Math.PI) {
-      deltahp = h2p - h1p;
-    } else if (h2p <= h1p) {
-      deltahp = h2p - h1p + 2 * Math.PI;
-    } else {
-      deltahp = h2p - h1p - 2 * Math.PI;
-    }
-
-    const deltaLp = L2 - L1;
-    const deltaCp = C2p - C1p;
-    const deltaHp = 2 * Math.sqrt(C1p * C2p) * Math.sin(deltahp / 2.0);
-
-    const avgLpminus50sq = (avgLp - 50) * (avgLp - 50);
-    const SL = 1 + ((0.015 * avgLpminus50sq) / Math.sqrt(20 + avgLpminus50sq));
-    const SC = 1 + 0.045 * avgCp;
-
-    const T = 1 - 0.17 * Math.cos(h1p + h2p) + 0.24 * Math.cos(2 * (h1p + h2p)) + 0.32 * Math.cos(3 * (h1p + h2p) + deg2rad(6)) - 0.20 * Math.cos(4 * (h1p + h2p) - deg2rad(63));
-    const SH = 1 + 0.015 * avgCp * T;
-
-    const deltaro = 30 * Math.exp(-((rad2deg((h1p + h2p) / 2) - 275) / 25) * ((rad2deg((h1p + h2p) / 2) - 275) / 25));
-    const RC = 2 * Math.sqrt(Math.pow(avgCp, 7) / (Math.pow(avgCp, 7) + Math.pow(25, 7)));
-    const RT = -Math.sin(deg2rad(2 * deltaro)) * RC;
-
-    const kL = 1;
-    const kC = 1;
-    const kH = 1;
-
-    const deltaE = Math.sqrt(
-      Math.pow(deltaLp / (kL * SL), 2) +
-      Math.pow(deltaCp / (kC * SC), 2) +
-      Math.pow(deltaHp / (kH * SH), 2) +
-      RT * (deltaCp / (kC * SC)) * (deltaHp / (kH * SH))
-    );
-
-    return deltaE;
-  };
-
-  // Helper function to apply a fixed palette to image data using Delta E 2000
-  // for perceptual color matching. We precompute the palette in Lab space and
-  // use a small cache to avoid recomputing matches for repeated input colors.
-  const applyFixedPalette = (data: Uint8ClampedArray, palette: number[][]) => {
-    const paletteLab = palette.map(([pr, pg, pb]) => rgbToLab(pr, pg, pb));
-    const cache = new Map<string, number[]>(); // key: 'r,g,b' -> rgb triplet from palette
-
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-
-      const key = `${r},${g},${b}`;
-      const cached = cache.get(key);
-      if (cached) {
-        data[i] = cached[0];
-        data[i + 1] = cached[1];
-        data[i + 2] = cached[2];
-        continue;
-      }
-
-      const lab = rgbToLab(r, g, b);
-      let minDelta = Infinity;
-      let bestIndex = 0;
-
-      for (let p = 0; p < paletteLab.length; p++) {
-        const d = deltaE2000(lab, paletteLab[p]);
-        if (d < minDelta) {
-          minDelta = d;
-          bestIndex = p;
-        }
-      }
-
-      const chosen = palette[bestIndex];
-      cache.set(key, chosen);
-
-      data[i] = chosen[0];
-      data[i + 1] = chosen[1];
-      data[i + 2] = chosen[2];
-    }
-  };
 
 
   const downloadImage = useCallback(() => {
@@ -1095,12 +1372,16 @@ export const RetroImageEditor = () => {
     }
   }, [originalImage, processedImageData, selectedPalette, selectedResolution, scalingMode, processImage]);
 
-  // Handle palette changes - clear currentPaletteColors for 'original' on non-indexed images
+  // Handle palette changes - restore original palette metadata when the selection returns to 'original'
   useEffect(() => {
-    if (selectedPalette === 'original' && !isOriginalPNG8Indexed) {
-  // Removed: setCurrentPaletteColors
+    if (selectedPalette === 'original') {
+      if (isOriginalPNG8Indexed && originalPaletteColors.length > 0) {
+        setOrderedPaletteColors(originalPaletteColors);
+      } else {
+        setOrderedPaletteColors([]);
+      }
     }
-  }, [selectedPalette, isOriginalPNG8Indexed]);
+  }, [selectedPalette, isOriginalPNG8Indexed, originalPaletteColors]);
 
   const languagesSafe = Array.isArray(languages) ? languages : [];
   const sortedLanguages = [...languagesSafe].sort((a, b) => 
@@ -1207,7 +1488,8 @@ export const RetroImageEditor = () => {
               originalImageSource={originalImageSource}
               selectedPalette={selectedPalette}
               onPaletteUpdate={setOrderedPaletteColors}
-              currentPaletteColors={orderedPaletteColors.length > 0 ? orderedPaletteColors : originalPaletteColors}
+              originalPaletteColors={originalPaletteColors}
+              processedPaletteColors={orderedPaletteColors}
               showCameraPreview={showCameraPreview}
               onCameraPreviewChange={setShowCameraPreview}
               selectedCameraId={selectedCameraId}
@@ -1228,7 +1510,10 @@ export const RetroImageEditor = () => {
               autoFitKey={autoFitKey}
               onZoomChange={handlePreviewZoomChange}
               isVerticalLayout={isVerticalLayout}
-              onShowOriginalChange={(show) => setPreviewShowingOriginal(show)}
+              onShowOriginalChange={(show) => {
+                previewToggleWasManualRef.current = true;
+                setPreviewShowingOriginal(show);
+              }}
               controlledShowOriginal={previewShowingOriginal}
             />
 
@@ -1288,6 +1573,9 @@ export const RetroImageEditor = () => {
                   selectedPalette={selectedPalette}
                   onPaletteChange={(palette) => {
                     setSelectedPalette(palette);
+                    if (palette !== 'original') {
+                      setOrderedPaletteColors([]);
+                    }
                     // Schedule processing using the ref to avoid stale closures.
                     // Use a small timeout so the state update is flushed first.
                     setTimeout(() => {
