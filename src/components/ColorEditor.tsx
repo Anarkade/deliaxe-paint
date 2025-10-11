@@ -60,6 +60,7 @@ function quantizeChannel(value: number, bits: number) {
 export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, position }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [editorWidth, setEditorWidth] = useState<number | null>(null);
 
 
 
@@ -89,7 +90,31 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
       }
     }
     ctx.putImageData(image, 0, 0);
+
+    // After drawing, update editor width to match canvas displayed width
+    // Use a small timeout to ensure layout has settled
+    setTimeout(() => {
+      const canvasEl = canvasRef.current;
+      if (!canvasEl) return;
+      const displayedWidth = canvasEl.clientWidth || canvasEl.width;
+      // add some padding to account for editor paddings and borders
+      const padding = 32; // approximate left+right padding + border
+      setEditorWidth(displayedWidth + padding);
+    }, 0);
   }, [hsl.h]);
+
+  // Update editor width on window resize in case canvas clientWidth changes
+  useEffect(() => {
+    const onResize = () => {
+      const canvasEl = canvasRef.current;
+      if (!canvasEl) return;
+      const displayedWidth = canvasEl.clientWidth || canvasEl.width;
+      const padding = 32;
+      setEditorWidth(displayedWidth + padding);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Keep HSL/RGB in sync when color changes programmatically
   useEffect(() => {
@@ -160,15 +185,17 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   const editor = (
     <div
       ref={rootRef}
-      className="absolute z-50 w-[340px]"
-      style={position ? {
+      className="absolute z-50"
+      style={position ? ({
         left: position.x,
-        top: position.y
-      } : {
+        top: position.y,
+        width: editorWidth ? `${editorWidth}px` : undefined
+      } as React.CSSProperties) : ({
         left: '50%',
         top: '50%',
-        transform: 'translate(-50%, -50%)'
-      }}
+        transform: 'translate(-50%, -50%)',
+        width: editorWidth ? `${editorWidth}px` : undefined
+      } as React.CSSProperties)}
     >
       <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor">
         <div className="flex items-center justify-between mb-2">
