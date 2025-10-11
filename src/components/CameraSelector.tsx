@@ -16,7 +16,6 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
   const [loadingCamera, setLoadingCamera] = useState<string | null>(null);
-  const [requestingPermissions, setRequestingPermissions] = useState(false);
 
   // Efficiently enumerate available cameras with error handling
   const getAvailableCameras = useCallback(async () => {
@@ -109,99 +108,6 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
     return () => { mounted = false; };
   }, [availableCameras, resolutions]);
 
-  // Request fresh permissions for cameras by forcing permission dialog
-  const requestCameraPermissions = async () => {
-    if (availableCameras.length === 0) return;
-    
-    setRequestingPermissions(true);
-    console.log('Starting fresh camera permission request...');
-    
-    try {
-      // Strategy: Open a popup window to request fresh permissions
-      const popup = window.open(
-        'data:text/html,<html><body><h1>Solicitando permisos de cámara...</h1><script>async function requestPermissions(){try{const stream=await navigator.mediaDevices.getUserMedia({video:true});stream.getTracks().forEach(t=>t.stop());window.opener.postMessage("permissions-granted","*");window.close();}catch(e){window.opener.postMessage("permissions-denied","*");window.close();}}requestPermissions();</script></body></html>',
-        'camera-permissions',
-        'width=400,height=300,scrollbars=no,resizable=no'
-      );
-      
-      if (!popup) {
-        console.error('Popup blocked by browser');
-        setRequestingPermissions(false);
-        return;
-      }
-      
-      // Wait for message from popup
-      const permissionPromise = new Promise<boolean>((resolve) => {
-        const messageHandler = (event: MessageEvent) => {
-          if (event.data === 'permissions-granted') {
-            window.removeEventListener('message', messageHandler);
-            resolve(true);
-          } else if (event.data === 'permissions-denied') {
-            window.removeEventListener('message', messageHandler);
-            resolve(false);
-          }
-        };
-        window.addEventListener('message', messageHandler);
-        
-        // Timeout after 15 seconds
-        setTimeout(() => {
-          window.removeEventListener('message', messageHandler);
-          popup.close();
-          resolve(false);
-        }, 15000);
-      });
-      
-      const permissionsGranted = await permissionPromise;
-      
-      if (permissionsGranted) {
-        console.log('Fresh permissions granted via popup');
-        
-        // Wait a bit for permissions to propagate
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Re-enumerate devices with fresh permissions
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const cameras = devices.filter((d) => d.kind === 'videoinput');
-        setAvailableCameras(cameras);
-        
-        // Test each camera and populate resolutions
-        for (const camera of cameras) {
-          try {
-            console.log(`Testing camera: ${camera.deviceId}`);
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-              video: { 
-                deviceId: { exact: camera.deviceId },
-                width: { ideal: 640 },
-                height: { ideal: 480 }
-              } 
-            });
-            
-            const track = stream.getVideoTracks()[0];
-            const settings = track.getSettings?.();
-            if (settings?.width && settings?.height) {
-              const resolution = `${Math.round(settings.width)}x${Math.round(settings.height)}`;
-              setResolutions(prev => ({ 
-                ...prev, 
-                [camera.deviceId]: resolution
-              }));
-            }
-            
-            stream.getTracks().forEach(track => track.stop());
-          } catch (error) {
-            console.warn(`Failed to access camera ${camera.deviceId}:`, error);
-            setResolutions(prev => ({ ...prev, [camera.deviceId]: '' }));
-          }
-        }
-      } else {
-        console.log('Fresh permissions were not granted');
-      }
-    } catch (error) {
-      console.error('Permission request process failed:', error);
-    } finally {
-      setRequestingPermissions(false);
-    }
-  };
-
   // Generate user-friendly camera names with fallback for unnamed devices
   const getCameraDisplayName = (camera: MediaDeviceInfo, index: number) => {
     if (camera.label) {
@@ -244,18 +150,6 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
             {t('selectCamera')}
           </h3>
         </div>
-
-        {availableCameras.length > 0 && (
-          <Button
-            onClick={requestCameraPermissions}
-            disabled={requestingPermissions}
-            variant="outline"
-            className="w-full"
-          >
-            <Camera className="mr-2 h-4 w-4" />
-            {requestingPermissions ? 'Verificando acceso a cámaras...' : 'Verificar acceso a cámaras'}
-          </Button>
-        )}
   
         {availableCameras.length === 0 ? (
           <div className="text-center py-8">

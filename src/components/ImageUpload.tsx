@@ -312,57 +312,6 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
     return null;
   }
 
-  // Show camera selector dialog
-  if (showCameraSelector) {
-    return (
-  <Card className="absolute z-50 left-0 right-0 p-7 bg-card border-elegant-border rounded-xl">
-        <div className="relative">
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={closeCameraSelector}
-            className="absolute top-0 right-0 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-xl font-bold flex items-center color-highlight-main">
-                <Camera className="mr-2 h-6 w-6 color-highlight-main" />
-                {t('selectCamera')}
-              </h3>
-            </div>
-            
-            {availableCameras.length === 0 ? (
-              <div className="text-center py-8">
-                <Camera className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                  {t('noCamerasDetected')}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {availableCameras.map((camera, index) => (
-                  <Button
-                    key={camera.deviceId || index}
-                    onClick={() => handleCameraSelection(index)}
-                    variant="highlighted"
-                    className="w-full justify-start text-left"
-                  >
-                    <Camera className="mr-2 h-4 w-4" />
-                    {getCameraDisplayName(camera, index)}
-                  </Button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
-    );
-  }
-
   return (
     <Card 
       className={`absolute z-50 left-0 right-0 p-7 bg-card border-elegant-border rounded-xl ${
@@ -373,6 +322,55 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
       onDragOver={handleDragOver}
       onDrop={handleDrop}
     >
+      {/* Camera selector overlay */}
+      {showCameraSelector && (
+        <div className="absolute inset-0 z-10 bg-card rounded-xl">
+          <div className="relative h-full">
+            {/* Close button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={closeCameraSelector}
+              className="absolute top-2 right-2 h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground z-20"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            
+            <div className="p-7 space-y-4 h-full overflow-y-auto">
+              <div>
+                <h3 className="text-xl font-bold flex items-center color-highlight-main">
+                  <Camera className="mr-2 h-6 w-6 color-highlight-main" />
+                  {t('selectCamera')}
+                </h3>
+              </div>
+              
+              {availableCameras.length === 0 ? (
+                <div className="text-center py-8">
+                  <Camera className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                    {t('noCamerasDetected')}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {availableCameras.map((camera, index) => (
+                    <Button
+                      key={camera.deviceId || index}
+                      onClick={() => handleCameraSelection(index)}
+                      variant="highlighted"
+                      className="w-full justify-start text-left"
+                    >
+                      <Camera className="mr-2 h-4 w-4" />
+                      {getCameraDisplayName(camera, index)}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-5">
         {/* Drag and drop overlay */}
         {isDragOver && (
