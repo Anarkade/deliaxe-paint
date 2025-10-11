@@ -256,35 +256,47 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
           />
         </div>
 
-        {/* Row 4: RGB textboxes */}
-        <div className="mb-2 grid grid-cols-3 gap-2">
-          <div className="flex items-center gap-2">
-            <span className="w-4 text-xs font-mono text-muted-foreground">R</span>
-            <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 text-xs font-mono text-muted-foreground">G</span>
-            <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 text-xs font-mono text-muted-foreground">B</span>
-            <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-          </div>
-        </div>
+        {/* Rows 4 & 5: left color preview rectangle + RGB and HSL textboxes */}
+        <div className="mb-3 flex items-stretch gap-3">
+          {/* Color preview rectangle that spans the combined height of RGB + HSL rows */}
+          <div
+            className="w-10 min-w-[40px] border border-elegant-border rounded-sm"
+            style={{ backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})` }}
+            aria-hidden="true"
+          />
 
-        {/* Row 5: HSL textboxes */}
-        <div className="mb-3 grid grid-cols-3 gap-2">
-          <div className="flex items-center gap-2">
-            <span className="w-4 text-xs font-mono text-muted-foreground">H</span>
-            <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 text-xs font-mono text-muted-foreground">S</span>
-            <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-4 text-xs font-mono text-muted-foreground">L</span>
-            <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+          <div className="flex-1">
+            {/* RGB row */}
+            <div className="mb-2 grid grid-cols-3 gap-2">
+              <div className="flex items-center gap-2">
+                <span className="w-4 text-xs font-mono text-muted-foreground">R</span>
+                <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-4 text-xs font-mono text-muted-foreground">G</span>
+                <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-4 text-xs font-mono text-muted-foreground">B</span>
+                <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+              </div>
+            </div>
+
+            {/* HSL row */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="flex items-center gap-2">
+                <span className="w-4 text-xs font-mono text-muted-foreground">H</span>
+                <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-4 text-xs font-mono text-muted-foreground">S</span>
+                <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-4 text-xs font-mono text-muted-foreground">L</span>
+                <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+              </div>
+            </div>
           </div>
         </div>
 
