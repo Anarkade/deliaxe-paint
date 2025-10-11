@@ -448,6 +448,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             onAccept={(c) => applyEditorColor(c)}
             onCancel={() => closeEditor()}
             position={editorState.position}
+            width={editorState.width}
+            suppressInitialCenter={true}
           />
         )}
     </div>

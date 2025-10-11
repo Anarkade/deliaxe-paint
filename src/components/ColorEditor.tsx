@@ -189,10 +189,19 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
       ref={rootRef}
       className="absolute z-50"
       style={(() => {
-        // If caller requests to suppress the initial centered render, place
-        // the editor off-screen and hidden until a concrete position is provided.
+        // If caller requests to suppress the initial centered render, keep the
+        // editor mounted and measurable but invisible (opacity:0, no pointer
+        // events). This avoids a visible centered flash while still allowing
+        // getBoundingClientRect() to return the element size for positioning.
         if (!position && suppressInitialCenter) {
-          return { left: '-9999px', top: '-9999px', visibility: 'hidden' } as React.CSSProperties;
+          return ({
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: width || (editorWidth ? `${editorWidth}px` : undefined),
+            opacity: 0,
+            pointerEvents: 'none'
+          } as React.CSSProperties);
         }
 
         if (position) {
