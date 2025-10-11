@@ -114,24 +114,64 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
     if (availableCameras.length === 0) return;
     
     setRequestingPermissions(true);
+    console.log('Starting camera permission request process...');
+    
     try {
-      // First, request general video permission
-      const generalStream = await navigator.mediaDevices.getUserMedia({ video: true });
-      generalStream.getTracks().forEach(track => track.stop());
+      // Strategy: Force permission dialog by requesting with specific constraints
+      let permissionsGranted = false;
       
-      // Then request permission for each specific camera
-      for (const camera of availableCameras) {
+      // Try different constraint combinations to force permission dialog
+      const constraintOptions = [
+        { video: { width: { ideal: 1920 }, height: { ideal: 1080 } } },
+        { video: { width: { ideal: 1280 }, height: { ideal: 720 } } },
+        { video: { facingMode: 'environment' } },
+        { video: { facingMode: 'user' } },
+        { video: true }
+      ];
+      
+      for (const constraints of constraintOptions) {
         try {
+          console.log('Trying constraints:', constraints);
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          permissionsGranted = true;
+          console.log('Permissions granted with constraints:', constraints);
+          stream.getTracks().forEach(track => track.stop());
+          break; // Success, no need to try more
+        } catch (error) {
+          console.log('Constraints failed:', constraints, error);
+          // Continue to next option
+        }
+      }
+      
+      if (!permissionsGranted) {
+        console.error('All permission requests failed');
+        setRequestingPermissions(false);
+        return;
+      }
+      
+      // Now enumerate devices again to get fresh labels
+      console.log('Re-enumerating devices after permissions...');
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const cameras = devices.filter((d) => d.kind === 'videoinput');
+      
+      // Update available cameras with fresh data
+      setAvailableCameras(cameras);
+      
+      // Try to access each camera specifically to populate resolutions
+      console.log('Testing access to individual cameras...');
+      for (const camera of cameras) {
+        try {
+          console.log(`Testing camera: ${camera.deviceId} (${camera.label})`);
           const timeoutPromise = new Promise<MediaStream>((_, reject) => {
-            setTimeout(() => reject(new Error('Timeout')), 3000);
+            setTimeout(() => reject(new Error('Timeout')), 1500);
           });
           
           const stream = await Promise.race([
             navigator.mediaDevices.getUserMedia({ 
               video: { 
                 deviceId: { exact: camera.deviceId },
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
+                width: { ideal: 640 },
+                height: { ideal: 480 }
               } 
             }),
             timeoutPromise
@@ -141,21 +181,24 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
           const track = stream.getVideoTracks()[0];
           const settings = track.getSettings?.();
           if (settings?.width && settings?.height) {
+            const resolution = `${Math.round(settings.width)}x${Math.round(settings.height)}`;
+            console.log(`Camera ${camera.deviceId} resolution: ${resolution}`);
             setResolutions(prev => ({ 
               ...prev, 
-              [camera.deviceId]: `${Math.round(settings.width)}x${Math.round(settings.height)}` 
+              [camera.deviceId]: resolution
             }));
           }
           
           stream.getTracks().forEach(track => track.stop());
         } catch (error) {
-          console.warn(`Failed to get permission for camera ${camera.deviceId}:`, error);
-          // Still mark as having no resolution, but don't fail completely
+          console.warn(`Failed to access camera ${camera.deviceId}:`, error);
           setResolutions(prev => ({ ...prev, [camera.deviceId]: '' }));
         }
       }
+      
+      console.log('Camera permission request process completed');
     } catch (error) {
-      console.error('Failed to request general camera permissions:', error);
+      console.error('Permission request process failed:', error);
     } finally {
       setRequestingPermissions(false);
     }
@@ -212,7 +255,7 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
             className="w-full"
           >
             <Camera className="mr-2 h-4 w-4" />
-            {requestingPermissions ? 'Solicitando permisos...' : 'Pedir permiso para usar cámaras'}
+            {requestingPermissions ? 'Verificando acceso a cámaras...' : 'Verificar acceso a cámaras'}
           </Button>
         )}
   
