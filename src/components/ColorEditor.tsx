@@ -58,7 +58,7 @@ function quantizeChannel(value: number, bits: number) {
   return Math.round((quant / steps) * 255);
 }
 
-export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, position }) => {
+export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, position, width }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [editorWidth, setEditorWidth] = useState<number | null>(null);
