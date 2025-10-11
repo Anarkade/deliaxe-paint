@@ -225,9 +225,20 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
   }, [t]);
 
   const handleCameraPreviewRequest = useCallback(async () => {
-    // Get available cameras first
-    await getAvailableCameras();
-    setShowCameraSelector(true);
+    try {
+      // First request camera permission to ensure enumerateDevices works on mobile
+      const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      tempStream.getTracks().forEach(track => track.stop());
+      
+      // Now enumerate devices with proper permissions
+      await getAvailableCameras();
+      setShowCameraSelector(true);
+    } catch (error) {
+      console.error('Camera permission denied:', error);
+      // Still try to get cameras in case permission was already granted
+      await getAvailableCameras();
+      setShowCameraSelector(true);
+    }
   }, [getAvailableCameras]);
 
   const handleCameraSelection = useCallback(async (cameraIndex: number) => {
