@@ -117,17 +117,20 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
     console.log('Starting fresh camera permission request...');
     
     try {
-      // Strategy: Create a temporary iframe to request fresh permissions
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.left = '-9999px';
-      iframe.style.top = '-9999px';
-      iframe.style.width = '1px';
-      iframe.style.height = '1px';
-      iframe.style.opacity = '0';
-      iframe.src = 'data:text/html,<script>navigator.mediaDevices.getUserMedia({video:true}).then(s=>{s.getTracks().forEach(t=>t.stop());window.parent.postMessage("permissions-granted","*")}).catch(e=>{window.parent.postMessage("permissions-denied","*")})</script>';
+      // Strategy: Open a popup window to request fresh permissions
+      const popup = window.open(
+        'data:text/html,<html><body><h1>Solicitando permisos de cámara...</h1><script>async function requestPermissions(){try{const stream=await navigator.mediaDevices.getUserMedia({video:true});stream.getTracks().forEach(t=>t.stop());window.opener.postMessage("permissions-granted","*");window.close();}catch(e){window.opener.postMessage("permissions-denied","*");window.close();}}requestPermissions();</script></body></html>',
+        'camera-permissions',
+        'width=400,height=300,scrollbars=no,resizable=no'
+      );
       
-      // Create a promise that resolves when iframe sends message
+      if (!popup) {
+        console.error('Popup blocked by browser');
+        setRequestingPermissions(false);
+        return;
+      }
+      
+      // Wait for message from popup
       const permissionPromise = new Promise<boolean>((resolve) => {
         const messageHandler = (event: MessageEvent) => {
           if (event.data === 'permissions-granted') {
@@ -140,19 +143,21 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
         };
         window.addEventListener('message', messageHandler);
         
-        // Timeout after 10 seconds
+        // Timeout after 15 seconds
         setTimeout(() => {
           window.removeEventListener('message', messageHandler);
+          popup.close();
           resolve(false);
-        }, 10000);
+        }, 15000);
       });
       
-      document.body.appendChild(iframe);
       const permissionsGranted = await permissionPromise;
-      document.body.removeChild(iframe);
       
       if (permissionsGranted) {
-        console.log('Fresh permissions granted via iframe');
+        console.log('Fresh permissions granted via popup');
+        
+        // Wait a bit for permissions to propagate
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Re-enumerate devices with fresh permissions
         const devices = await navigator.mediaDevices.enumerateDevices();
