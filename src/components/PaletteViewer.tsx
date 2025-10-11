@@ -90,15 +90,64 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     openEditor(index, currentPalette);
   }, [paletteColors, onPaletteUpdate, onImageUpdate]);
 
-  const [editorState, setEditorState] = useState<{ open: boolean; index: number | null; depth: { r: number; g: number; b: number } | null }>({ open: false, index: null, depth: null });
+  const [editorState, setEditorState] = useState<{ 
+    open: boolean; 
+    index: number | null; 
+    depth: { r: number; g: number; b: number } | null;
+    position?: { x: number; y: number };
+  }>({ open: false, index: null, depth: null });
 
   const openEditor = (index: number, currentPalette: PaletteType) => {
     // Default 8-8-8, but megadrive uses 3-3-3 quantization for applying result
     const depth = currentPalette === 'megadrive' ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 };
-    setEditorState({ open: true, index, depth });
+
+    // Calculate position relative to the PaletteViewer container
+    const selectedElement = document.querySelector(`[data-palette-index="${index}"]`) as HTMLElement;
+    const paletteContainer = selectedElement?.closest('.relative.space-y-4') as HTMLElement;
+    
+    let position: { x: number; y: number } | undefined;
+    
+    if (selectedElement && paletteContainer) {
+      const selectedRect = selectedElement.getBoundingClientRect();
+      const containerRect = paletteContainer.getBoundingClientRect();
+      
+      // Find all palette color blocks to determine boundaries
+      const allColorBlocks = Array.from(paletteContainer.querySelectorAll('[data-palette-index]')) as HTMLElement[];
+      const colorBlockRects = allColorBlocks.map(block => block.getBoundingClientRect());
+      
+      // Find leftmost and rightmost boundaries
+      const leftMost = Math.min(...colorBlockRects.map(rect => rect.left));
+      const rightMost = Math.max(...colorBlockRects.map(rect => rect.right));
+      
+      const editorWidth = 340;
+      const editorHeight = 280; // approximate height
+      
+      // Position relative to container (not viewport)
+      const relativeSelectedLeft = selectedRect.left - containerRect.left;
+      const relativeSelectedTop = selectedRect.top - containerRect.top;
+      const relativeSelectedWidth = selectedRect.width;
+      
+      const relativeLeftMost = leftMost - containerRect.left;
+      const relativeRightMost = rightMost - containerRect.left;
+      
+      // Center horizontally on the selected color block
+      let x = relativeSelectedLeft + (relativeSelectedWidth / 2) - (editorWidth / 2);
+      
+      // Constrain to palette boundaries
+      const minX = relativeLeftMost;
+      const maxX = relativeRightMost - editorWidth;
+      x = Math.max(minX, Math.min(maxX, x));
+      
+      // Position above the selected color block
+      const y = relativeSelectedTop - editorHeight - 8; // 8px gap
+      
+      position = { x: Math.round(x), y: Math.round(y) };
+    }
+
+    setEditorState({ open: true, index, depth, position });
   };
 
-  const closeEditor = () => setEditorState({ open: false, index: null, depth: null });
+  const closeEditor = () => setEditorState({ open: false, index: null, depth: null, position: undefined });
 
   const applyEditorColor = (c: PaletteColor) => {
     if (editorState.index === null) return;
@@ -286,7 +335,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   }
 
   return (
-    <div className="space-y-4 p-4 border border-elegant-border bg-card/50 rounded-lg">
+    <div className="relative space-y-4 p-4 border border-elegant-border bg-card/50 rounded-lg">
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-neon-cyan flex items-center">
           <Palette className="mr-2 h-5 w-5" />
@@ -384,8 +433,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             depth={editorState.depth || { r: 8, g: 8, b: 8 }}
             onAccept={(c) => applyEditorColor(c)}
             onCancel={() => closeEditor()}
-            // Constrain to image preview container so it doesn't go off-screen
-            containerSelector="[data-image-preview-container]"
+            position={editorState.position}
           />
         )}
     </div>

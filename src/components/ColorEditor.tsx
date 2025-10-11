@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ReactDOM from 'react-dom';
 import { type Color } from '@/lib/colorQuantization';
 
 interface DepthSpec { r: number; g: number; b: number }
@@ -8,8 +9,7 @@ interface ColorEditorProps {
   depth?: DepthSpec; // bits per channel, default 8-8-8
   onAccept: (c: Color) => void;
   onCancel: () => void;
-  containerSelector?: string; // selector to constrain movement, default [data-image-preview-container]
-  initialPosition?: { x: number; y: number };
+  position?: { x: number; y: number };
 }
 
 // Helpers: HSL <-> RGB
@@ -56,12 +56,11 @@ function quantizeChannel(value: number, bits: number) {
   return Math.round((quant / steps) * 255);
 }
 
-export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, containerSelector = '[data-image-preview-container]', initialPosition }) => {
+export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, position }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [pos, setPos] = useState<{ x: number; y: number }>(() => initialPosition || { x: 50, y: 50 });
-  const [dragging, setDragging] = useState(false);
-  const dragOffset = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+
 
   const [color, setColor] = useState<Color>({ r: initial.r, g: initial.g, b: initial.b });
   const [hsl, setHsl] = useState(() => rgbToHsl(initial.r, initial.g, initial.b));
@@ -72,8 +71,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     if (!c) return;
     const ctx = c.getContext('2d');
     if (!ctx) return;
-    const w = c.width = 300;
-    const h = c.height = 160;
+    const w = c.width = 512;
+    const h = c.height = 256;
 
     const image = ctx.createImageData(w, h);
     for (let y = 0; y < h; y++) {
@@ -102,7 +101,10 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     const onDown = (e: MouseEvent) => {
       const root = rootRef.current;
       if (!root) return;
-      if (!root.contains(e.target as Node)) {
+      // Ignore clicks that land on the browser scrollbar: elementFromPoint returns null in that case
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      if (!el) return;
+      if (!root.contains(el)) {
         onCancel();
       }
     };
@@ -110,45 +112,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     return () => window.removeEventListener('mousedown', onDown);
   }, [onCancel]);
 
-  // Dragging handlers
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!dragging) return;
-      const container = document.querySelector(containerSelector) as HTMLElement | null;
-      const root = rootRef.current;
-      if (!root) return;
-      const newX = e.clientX - dragOffset.current.x;
-      const newY = e.clientY - dragOffset.current.y;
 
-      // Constrain
-      let minX = 0, minY = 0, maxX = window.innerWidth - root.offsetWidth, maxY = window.innerHeight - root.offsetHeight;
-      if (container) {
-        const r = container.getBoundingClientRect();
-        minX = r.left; minY = r.top; maxX = r.right - root.offsetWidth; maxY = r.bottom - root.offsetHeight;
-      }
-
-      setPos({ x: Math.max(minX, Math.min(maxX, newX)), y: Math.max(minY, Math.min(maxY, newY)) });
-    };
-
-    const onUp = () => setDragging(false);
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-  }, [dragging, containerSelector]);
-
-  const startDragIfAllowed = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    // don't start drag when interacting with inputs, buttons, canvas, sliders
-    const disallowed = ['INPUT', 'BUTTON', 'CANVAS', 'TEXTAREA', 'SELECT', 'A'];
-    if (disallowed.includes(target.tagName)) return;
-    const root = rootRef.current;
-    if (!root) return;
-    dragOffset.current = { x: e.clientX - root.getBoundingClientRect().left, y: e.clientY - root.getBoundingClientRect().top };
-    setDragging(true);
-  };
 
   // Handlers for canvas pick
   const handleCanvasClick = (e: React.MouseEvent) => {
@@ -192,13 +156,20 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     onAccept({ r: qr, g: qg, b: qb });
   };
 
-  return (
+  const editor = (
     <div
       ref={rootRef}
-      onMouseDown={startDragIfAllowed}
-      style={{ position: 'fixed', left: pos.x, top: pos.y, zIndex: 9999 }}
+      className="absolute z-50 w-[340px]"
+      style={position ? { 
+        left: position.x, 
+        top: position.y 
+      } : { 
+        left: '50%', 
+        top: '50%', 
+        transform: 'translate(-50%, -50%)' 
+      }}
     >
-      <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-[340px]" role="dialog" aria-label="Color editor">
+      <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor">
         <div className="flex items-center justify-between mb-2">
           <div className="font-semibold">Color editor</div>
           <div className="text-xs text-muted-foreground">Bits: {depth.r}-{depth.g}-{depth.b}</div>
@@ -225,31 +196,59 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
 
         {/* Row 3: Gradient canvas */}
         <div className="mb-2">
-          <canvas ref={canvasRef} onClick={handleCanvasClick} style={{ width: '100%', height: '160px', display: 'block', cursor: 'crosshair', borderRadius: 4 }} />
+          <canvas 
+            ref={canvasRef} 
+            onClick={handleCanvasClick} 
+            width={512} 
+            height={256} 
+            className="w-full h-auto max-w-full border border-elegant-border rounded cursor-crosshair"
+            style={{ display: 'block', aspectRatio: '2/1' }} 
+          />
         </div>
 
         {/* Row 4: RGB textboxes */}
         <div className="mb-2 grid grid-cols-3 gap-2">
-          <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-          <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-          <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+          <div className="flex items-center gap-2">
+            <span className="w-4 text-xs font-mono text-muted-foreground">R</span>
+            <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-4 text-xs font-mono text-muted-foreground">G</span>
+            <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-4 text-xs font-mono text-muted-foreground">B</span>
+            <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+          </div>
         </div>
 
         {/* Row 5: HSL textboxes */}
         <div className="mb-3 grid grid-cols-3 gap-2">
-          <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-          <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-          <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+          <div className="flex items-center gap-2">
+            <span className="w-4 text-xs font-mono text-muted-foreground">H</span>
+            <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-4 text-xs font-mono text-muted-foreground">S</span>
+            <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-4 text-xs font-mono text-muted-foreground">L</span>
+            <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+          </div>
         </div>
 
         {/* Row 6: Accept */}
         <div className="flex justify-end">
-          <button className="btn" onClick={() => onCancel()} style={{ marginRight: 8 }}>Cancel</button>
-          <button className="btn btn-primary" onClick={accept}>Accept</button>
+          <button className="flex items-center justify-center h-10 px-4 text-sm bg-blood-red border-blood-red text-white rounded" onClick={accept}>Confirm</button>
         </div>
       </div>
     </div>
   );
-};
 
+  // Render directly in the component tree instead of using a portal
+  // This integrates better with the page scroll
+  return editor;
+
+};
 export default ColorEditor;
