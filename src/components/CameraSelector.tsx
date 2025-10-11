@@ -109,94 +109,87 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
     return () => { mounted = false; };
   }, [availableCameras, resolutions]);
 
-  // Request permissions for all cameras to ensure they work properly
+  // Request fresh permissions for cameras by forcing permission dialog
   const requestCameraPermissions = async () => {
     if (availableCameras.length === 0) return;
     
     setRequestingPermissions(true);
-    console.log('Starting camera permission request process...');
+    console.log('Starting fresh camera permission request...');
     
     try {
-      // Strategy: Force permission dialog by requesting with specific constraints
-      let permissionsGranted = false;
+      // Strategy: Create a temporary iframe to request fresh permissions
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.left = '-9999px';
+      iframe.style.top = '-9999px';
+      iframe.style.width = '1px';
+      iframe.style.height = '1px';
+      iframe.style.opacity = '0';
+      iframe.src = 'data:text/html,<script>navigator.mediaDevices.getUserMedia({video:true}).then(s=>{s.getTracks().forEach(t=>t.stop());window.parent.postMessage("permissions-granted","*")}).catch(e=>{window.parent.postMessage("permissions-denied","*")})</script>';
       
-      // Try different constraint combinations to force permission dialog
-      const constraintOptions = [
-        { video: { width: { ideal: 1920 }, height: { ideal: 1080 } } },
-        { video: { width: { ideal: 1280 }, height: { ideal: 720 } } },
-        { video: { facingMode: 'environment' } },
-        { video: { facingMode: 'user' } },
-        { video: true }
-      ];
+      // Create a promise that resolves when iframe sends message
+      const permissionPromise = new Promise<boolean>((resolve) => {
+        const messageHandler = (event: MessageEvent) => {
+          if (event.data === 'permissions-granted') {
+            window.removeEventListener('message', messageHandler);
+            resolve(true);
+          } else if (event.data === 'permissions-denied') {
+            window.removeEventListener('message', messageHandler);
+            resolve(false);
+          }
+        };
+        window.addEventListener('message', messageHandler);
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          window.removeEventListener('message', messageHandler);
+          resolve(false);
+        }, 10000);
+      });
       
-      for (const constraints of constraintOptions) {
-        try {
-          console.log('Trying constraints:', constraints);
-          const stream = await navigator.mediaDevices.getUserMedia(constraints);
-          permissionsGranted = true;
-          console.log('Permissions granted with constraints:', constraints);
-          stream.getTracks().forEach(track => track.stop());
-          break; // Success, no need to try more
-        } catch (error) {
-          console.log('Constraints failed:', constraints, error);
-          // Continue to next option
-        }
-      }
+      document.body.appendChild(iframe);
+      const permissionsGranted = await permissionPromise;
+      document.body.removeChild(iframe);
       
-      if (!permissionsGranted) {
-        console.error('All permission requests failed');
-        setRequestingPermissions(false);
-        return;
-      }
-      
-      // Now enumerate devices again to get fresh labels
-      console.log('Re-enumerating devices after permissions...');
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const cameras = devices.filter((d) => d.kind === 'videoinput');
-      
-      // Update available cameras with fresh data
-      setAvailableCameras(cameras);
-      
-      // Try to access each camera specifically to populate resolutions
-      console.log('Testing access to individual cameras...');
-      for (const camera of cameras) {
-        try {
-          console.log(`Testing camera: ${camera.deviceId} (${camera.label})`);
-          const timeoutPromise = new Promise<MediaStream>((_, reject) => {
-            setTimeout(() => reject(new Error('Timeout')), 1500);
-          });
-          
-          const stream = await Promise.race([
-            navigator.mediaDevices.getUserMedia({ 
+      if (permissionsGranted) {
+        console.log('Fresh permissions granted via iframe');
+        
+        // Re-enumerate devices with fresh permissions
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter((d) => d.kind === 'videoinput');
+        setAvailableCameras(cameras);
+        
+        // Test each camera and populate resolutions
+        for (const camera of cameras) {
+          try {
+            console.log(`Testing camera: ${camera.deviceId}`);
+            const stream = await navigator.mediaDevices.getUserMedia({ 
               video: { 
                 deviceId: { exact: camera.deviceId },
                 width: { ideal: 640 },
                 height: { ideal: 480 }
               } 
-            }),
-            timeoutPromise
-          ]);
-          
-          // Get resolution from the stream
-          const track = stream.getVideoTracks()[0];
-          const settings = track.getSettings?.();
-          if (settings?.width && settings?.height) {
-            const resolution = `${Math.round(settings.width)}x${Math.round(settings.height)}`;
-            console.log(`Camera ${camera.deviceId} resolution: ${resolution}`);
-            setResolutions(prev => ({ 
-              ...prev, 
-              [camera.deviceId]: resolution
-            }));
+            });
+            
+            const track = stream.getVideoTracks()[0];
+            const settings = track.getSettings?.();
+            if (settings?.width && settings?.height) {
+              const resolution = `${Math.round(settings.width)}x${Math.round(settings.height)}`;
+              setResolutions(prev => ({ 
+                ...prev, 
+                [camera.deviceId]: resolution
+              }));
+            }
+            
+            stream.getTracks().forEach(track => track.stop());
+          } catch (error) {
+            console.warn(`Failed to access camera ${camera.deviceId}:`, error);
+            setResolutions(prev => ({ ...prev, [camera.deviceId]: '' }));
           }
-          
-          stream.getTracks().forEach(track => track.stop());
-        } catch (error) {
-          console.warn(`Failed to access camera ${camera.deviceId}:`, error);
-          setResolutions(prev => ({ ...prev, [camera.deviceId]: '' }));
         }
+      } else {
+        console.log('Fresh permissions were not granted');
       }
-      
-      console.log('Camera permission request process completed');
     } catch (error) {
       console.error('Permission request process failed:', error);
     } finally {
