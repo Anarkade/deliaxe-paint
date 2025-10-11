@@ -95,6 +95,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     index: number | null; 
     depth: { r: number; g: number; b: number } | null;
     position?: { x: number; y: number };
+    width?: number;
   }>({ open: false, index: null, depth: null });
 
   const openEditor = (index: number, currentPalette: PaletteType) => {
@@ -125,8 +126,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         const leftMost = Math.min(...colorBlockRects.map(rect => rect.left));
         const rightMost = Math.max(...colorBlockRects.map(rect => rect.right));
         
-        const editorWidth = 340;
-        const editorHeight = editorRect.height; // Real measured height
+  const editorWidth = editorRect.width || 340;
+  const editorHeight = editorRect.height; // Real measured height
         
         // Position relative to container (not viewport)
         const relativeSelectedLeft = selectedRect.left - containerRect.left;
@@ -136,21 +137,26 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         const relativeLeftMost = leftMost - containerRect.left;
         const relativeRightMost = rightMost - containerRect.left;
         
-        // Center horizontally on the selected color block
-        let x = relativeSelectedLeft + (relativeSelectedWidth / 2) - (editorWidth / 2);
-        
-        // Constrain to palette boundaries
-        const minX = relativeLeftMost;
-        const maxX = relativeRightMost - editorWidth;
-        x = Math.max(minX, Math.min(maxX, x));
+  // Center horizontally on the selected color block
+  let x = relativeSelectedLeft + (relativeSelectedWidth / 2) - (editorWidth / 2);
+
+  // Constrain to palette boundaries
+  const minX = relativeLeftMost;
+  const maxX = relativeRightMost - editorWidth;
+
+  // If the editor is wider than the palette area, shrink it to fit
+  const availableWidth = relativeRightMost - relativeLeftMost;
+  const effectiveWidth = Math.max(100, Math.min(editorWidth, availableWidth));
+
+  x = Math.max(minX, Math.min(maxX, x));
         
         // Position above the selected color block with extra margin to ensure it doesn't overlap
         const y = relativeSelectedTop - editorHeight - 20; // 20px extra margin
         
         position = { x: Math.round(x), y: Math.round(y) };
-        
-        // Update position
-        setEditorState({ open: true, index, depth, position });
+
+        // Update position and width (so the editor can shrink if it doesn't fit)
+        setEditorState({ open: true, index, depth, position, width: Math.round(effectiveWidth) });
       }
     }, 10); // Small delay to ensure editor is rendered
   };

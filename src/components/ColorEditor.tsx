@@ -11,6 +11,7 @@ interface ColorEditorProps {
   onAccept: (c: Color) => void;
   onCancel: () => void;
   position?: { x: number; y: number };
+  width?: number;
 }
 
 // Helpers: HSL <-> RGB
@@ -189,12 +190,12 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
       style={position ? ({
         left: position.x,
         top: position.y,
-        width: editorWidth ? `${editorWidth}px` : undefined
+        width: width || (editorWidth ? `${editorWidth}px` : undefined)
       } as React.CSSProperties) : ({
         left: '50%',
         top: '50%',
         transform: 'translate(-50%, -50%)',
-        width: editorWidth ? `${editorWidth}px` : undefined
+        width: width || (editorWidth ? `${editorWidth}px` : undefined)
       } as React.CSSProperties)}
     >
       <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor">
