@@ -19,6 +19,11 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
   // Efficiently enumerate available cameras with error handling
   const getAvailableCameras = useCallback(async () => {
     try {
+      // First, request a temporary stream to obtain permissions and populate device labels
+      const tempStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      tempStream.getTracks().forEach(track => track.stop());
+
+      // Now enumerate devices with proper labels
       const devices = await navigator.mediaDevices.enumerateDevices();
       const cameras = devices.filter((d) => d.kind === 'videoinput');
       setAvailableCameras(cameras);
@@ -119,8 +124,8 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
 
       <div className="space-y-4">
         <div>
-          <h3 className="text-xl font-bold flex items-center color-highlight-main">
-            <Camera className="mr-2 h-6 w-6 color-highlight-main" />
+          <h3 className="text-xl font-bold flex items-center" style={{ color: '#7d1b2d' }}>
+            <Camera className="mr-2 h-6 w-6" style={{ color: '#7d1b2d' }} />
             {t('selectCamera')}
           </h3>
         </div>
@@ -137,7 +142,22 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
             {availableCameras.map((camera, index) => (
               <Button
                 key={camera.deviceId || index}
-                onClick={() => onSelect(camera.deviceId)}
+                onClick={() => {
+                  if (!resolutions[camera.deviceId]) {
+                    // Try to request permission for this specific camera
+                    navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: camera.deviceId } } })
+                      .then(stream => {
+                        stream.getTracks().forEach(track => track.stop());
+                        onSelect(camera.deviceId);
+                      })
+                      .catch(err => {
+                        console.error('Permission denied for camera', camera.deviceId, err);
+                        // Optionally, show a toast or alert to the user
+                      });
+                  } else {
+                    onSelect(camera.deviceId);
+                  }
+                }}
                 variant="highlighted"
                 className="w-full justify-start text-left"
               >
