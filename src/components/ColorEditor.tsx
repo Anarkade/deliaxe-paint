@@ -151,9 +151,10 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
         }
 
         const idx = (y * w + x) * 4;
-        image.data[idx] = rgb.r;
-        image.data[idx + 1] = rgb.g;
-        image.data[idx + 2] = rgb.b;
+        // quantize per-channel according to depth
+        image.data[idx] = quantizeChannel(rgb.r, depth.r);
+        image.data[idx + 1] = quantizeChannel(rgb.g, depth.g);
+        image.data[idx + 2] = quantizeChannel(rgb.b, depth.b);
         image.data[idx + 3] = 255;
       }
     }
@@ -196,7 +197,10 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   useEffect(() => {
     const isFocused = (el: HTMLInputElement | null) => !!(el && document.activeElement === el);
     if (!isFocused(hexRef.current)) {
-      setHexInput(toHex(color.r, color.g, color.b));
+      const qr = quantizeChannel(color.r, depth.r);
+      const qg = quantizeChannel(color.g, depth.g);
+      const qb = quantizeChannel(color.b, depth.b);
+      setHexInput(toHex(qr, qg, qb));
     }
     if (!isFocused(rRef.current)) { setRInput(String(color.r)); }
     if (!isFocused(gRef.current)) { setGInput(String(color.g)); }
@@ -409,32 +413,65 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
               // build a gradient string depending on mode
               if (mode === 'hue') {
                 // multi-stop hue gradient using current S/L with uniformly spaced stops
-                const s = hsl.s;
-                const l = hsl.l;
-                const steps = 12; // number of segments (12 gives 13 stops including 0 and 360)
-                const stops: string[] = [];
-                for (let i = 0; i <= steps; i++) {
-                  const hueVal = Math.round((i / steps) * 360);
-                  const perc = ((i / steps) * 100).toFixed(2);
-                  stops.push(`hsl(${hueVal} ${s}% ${l}%) ${perc}%`);
-                }
-                return 'linear-gradient(90deg, ' + stops.join(', ') + ')';
+                    const s = hsl.s;
+                    const l = hsl.l;
+                    const steps = 12; // number of segments (12 gives 13 stops including 0 and 360)
+                    const stops: string[] = [];
+                    for (let i = 0; i <= steps; i++) {
+                      const hueVal = Math.round((i / steps) * 360);
+                      const perc = ((i / steps) * 100).toFixed(2);
+                      const rgb = hslToRgb(hueVal, s, l);
+                      const rq = quantizeChannel(rgb.r, depth.r);
+                      const gq = quantizeChannel(rgb.g, depth.g);
+                      const bq = quantizeChannel(rgb.b, depth.b);
+                      stops.push(`rgb(${rq} ${gq} ${bq}) ${perc}%`);
+                    }
+                    return 'linear-gradient(90deg, ' + stops.join(', ') + ')';
               } else if (mode === 'saturation') {
                 // vary saturation from 0% to 100% keeping H/L
-                return `linear-gradient(90deg, hsl(${hsl.h} 0% ${hsl.l}%) 0%, hsl(${hsl.h} 100% ${hsl.l}%) 100%)`;
+                    const rgb0 = hslToRgb(hsl.h, 0, hsl.l);
+                    const rgb1 = hslToRgb(hsl.h, 100, hsl.l);
+                    const r0 = quantizeChannel(rgb0.r, depth.r);
+                    const g0 = quantizeChannel(rgb0.g, depth.g);
+                    const b0 = quantizeChannel(rgb0.b, depth.b);
+                    const r1 = quantizeChannel(rgb1.r, depth.r);
+                    const g1 = quantizeChannel(rgb1.g, depth.g);
+                    const b1 = quantizeChannel(rgb1.b, depth.b);
+                    return `linear-gradient(90deg, rgb(${r0} ${g0} ${b0}) 0%, rgb(${r1} ${g1} ${b1}) 100%)`;
               } else if (mode === 'lightness') {
                 // lightness mode: vary lightness 0% -> 100%
-                return `linear-gradient(90deg, hsl(${hsl.h} ${hsl.s}% 0%) 0%, hsl(${hsl.h} ${hsl.s}% 100%) 100%)`;
+                    const lr0 = hslToRgb(hsl.h, hsl.s, 0);
+                    const lr1 = hslToRgb(hsl.h, hsl.s, 100);
+                    const lr0r = quantizeChannel(lr0.r, depth.r);
+                    const lr0g = quantizeChannel(lr0.g, depth.g);
+                    const lr0b = quantizeChannel(lr0.b, depth.b);
+                    const lr1r = quantizeChannel(lr1.r, depth.r);
+                    const lr1g = quantizeChannel(lr1.g, depth.g);
+                    const lr1b = quantizeChannel(lr1.b, depth.b);
+                    return `linear-gradient(90deg, rgb(${lr0r} ${lr0g} ${lr0b}) 0%, rgb(${lr1r} ${lr1g} ${lr1b}) 100%)`;
               } else if (mode === 'red' || mode === 'green' || mode === 'blue') {
                 // RGB modes: vary the selected channel from 0 -> 255 while keeping others constant
                 const stepsRgb = 8; // reasonable number of stops
                 const stopsRgb: string[] = [];
                 for (let i = 0; i <= stepsRgb; i++) {
                   const val = Math.round((i / stepsRgb) * 255);
-                  const perc = ((i / stepsRgb) * 100).toFixed(0);
-                  if (mode === 'red') stopsRgb.push(`rgb(${val}, ${color.g}, ${color.b}) ${perc}%`);
-                  else if (mode === 'green') stopsRgb.push(`rgb(${color.r}, ${val}, ${color.b}) ${perc}%`);
-                  else stopsRgb.push(`rgb(${color.r}, ${color.g}, ${val}) ${perc}%`);
+                      const perc = ((i / stepsRgb) * 100).toFixed(0);
+                      if (mode === 'red') {
+                        const rq = quantizeChannel(val, depth.r);
+                        const gq = quantizeChannel(color.g, depth.g);
+                        const bq = quantizeChannel(color.b, depth.b);
+                        stopsRgb.push(`rgb(${rq} ${gq} ${bq}) ${perc}%`);
+                      } else if (mode === 'green') {
+                        const rq = quantizeChannel(color.r, depth.r);
+                        const gq = quantizeChannel(val, depth.g);
+                        const bq = quantizeChannel(color.b, depth.b);
+                        stopsRgb.push(`rgb(${rq} ${gq} ${bq}) ${perc}%`);
+                      } else {
+                        const rq = quantizeChannel(color.r, depth.r);
+                        const gq = quantizeChannel(color.g, depth.g);
+                        const bq = quantizeChannel(val, depth.b);
+                        stopsRgb.push(`rgb(${rq} ${gq} ${bq}) ${perc}%`);
+                      }
                 }
                 return 'linear-gradient(90deg, ' + stopsRgb.join(', ') + ')';
               }
@@ -496,7 +533,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 className="w-full"
                 trackClassName="color-bg-highlight"
                 rangeClassName="color-range-transparent"
-                thumbStyle={{ background: `rgb(${color.r}, ${color.g}, ${color.b})` }}
+                thumbStyle={{ background: `rgb(${quantizeChannel(color.r, depth.r)}, ${quantizeChannel(color.g, depth.g)}, ${quantizeChannel(color.b, depth.b)})` }}
               />
             </div>
 
@@ -504,7 +541,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
         Reduced horizontal gaps and allocate extra width to the color rectangle (first column) */}
             <div className="my-4 grid gap-x-2 gap-y-0.5 w-full" style={{ gridTemplateColumns: '3fr 1fr 1fr 1fr', gridTemplateRows: 'auto auto' }}>
               {/* Col1 row1: rect with RGB text */}
-              <div className="col-start-1 row-start-1 border border-elegant-border rounded-sm relative flex items-start justify-start" style={{ backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`, width: previewWidth ? `${previewWidth}px` : undefined }} aria-hidden="true">
+              <div className="col-start-1 row-start-1 border border-elegant-border rounded-sm relative flex items-start justify-start" style={{ backgroundColor: `rgb(${quantizeChannel(color.r, depth.r)}, ${quantizeChannel(color.g, depth.g)}, ${quantizeChannel(color.b, depth.b)})`, width: previewWidth ? `${previewWidth}px` : undefined }} aria-hidden="true">
                 {/* painted rectangle area (color only) - width copies hex input */}
               </div>
 
