@@ -72,7 +72,29 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   const [color, setColor] = useState<Color>({ r: initial.r, g: initial.g, b: initial.b });
   const [hsl, setHsl] = useState(() => rgbToHsl(initial.r, initial.g, initial.b));
   const hexRef = useRef<HTMLInputElement | null>(null);
+  const rRef = useRef<HTMLInputElement | null>(null);
+  const gRef = useRef<HTMLInputElement | null>(null);
+  const bRef = useRef<HTMLInputElement | null>(null);
+  const hRef = useRef<HTMLInputElement | null>(null);
+  const sRef = useRef<HTMLInputElement | null>(null);
+  const lRef = useRef<HTMLInputElement | null>(null);
   const [previewWidth, setPreviewWidth] = useState<number | null>(null);
+  // Per-input text state so users can type invalid characters. Errors
+  // indicate invalid current content and are shown immediately.
+  const [hexInput, setHexInput] = useState<string>(() => toHex(initial.r, initial.g, initial.b));
+  const [hexError, setHexError] = useState(false);
+  const [rInput, setRInput] = useState<string>(() => String(initial.r));
+  const [gInput, setGInput] = useState<string>(() => String(initial.g));
+  const [bInput, setBInput] = useState<string>(() => String(initial.b));
+  const [hInput, setHInput] = useState<string>(() => String(rgbToHsl(initial.r, initial.g, initial.b).h));
+  const [sInput, setSInput] = useState<string>(() => String(rgbToHsl(initial.r, initial.g, initial.b).s));
+  const [lInput, setLInput] = useState<string>(() => String(rgbToHsl(initial.r, initial.g, initial.b).l));
+  const [rError, setRError] = useState(false);
+  const [gError, setGError] = useState(false);
+  const [bError, setBError] = useState(false);
+  const [hError, setHError] = useState(false);
+  const [sError, setSError] = useState(false);
+  const [lError, setLError] = useState(false);
   // Dragging state for moving the editor
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
@@ -135,6 +157,23 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     const newHsl = rgbToHsl(color.r, color.g, color.b);
     setHsl(newHsl);
   }, [color.r, color.g, color.b]);
+
+  // Sync applied color/hsl values into the input textboxes when the
+  // user is not actively editing (input not focused). This prevents
+  // clobbering an in-progress typed invalid value.
+  useEffect(() => {
+    const isFocused = (el: HTMLInputElement | null) => !!(el && document.activeElement === el);
+    if (!isFocused(hexRef.current)) {
+      setHexInput(toHex(color.r, color.g, color.b));
+      setHexError(false);
+    }
+    if (!isFocused(rRef.current)) { setRInput(String(color.r)); setRError(false); }
+    if (!isFocused(gRef.current)) { setGInput(String(color.g)); setGError(false); }
+    if (!isFocused(bRef.current)) { setBInput(String(color.b)); setBError(false); }
+    if (!isFocused(hRef.current)) { setHInput(String(hsl.h)); setHError(false); }
+    if (!isFocused(sRef.current)) { setSInput(String(hsl.s)); setSError(false); }
+    if (!isFocused(lRef.current)) { setLInput(String(hsl.l)); setLError(false); }
+  }, [color, hsl]);
 
   // Outside click to cancel
   useEffect(() => {
@@ -391,52 +430,163 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
 
               {/* Col1 row2: hex textbox centered below the rect */}
               <div className="col-start-1 row-start-2 flex justify-start items-center py-1">
-                <input ref={hexRef} className="max-w-[80px] w-full bg-background border border-elegant-border rounded px-2 py-1 font-mono text-sm text-center" value={toHex(color.r, color.g, color.b)} onChange={(e) => {
-                  const v = e.target.value.replace(/[^0-9a-fA-F#]/g, '');
-                  if (/^#?[0-9A-Fa-f]{6}$/.test(v)) {
-                    const hex = v.startsWith('#') ? v : `#${v}`;
-                    const r = parseInt(hex.substr(1,2), 16);
-                    const g = parseInt(hex.substr(3,2), 16);
-                    const b = parseInt(hex.substr(5,2), 16);
-                    setColor({ r, g, b });
-                  }
-                }} />
+                <input
+                  ref={hexRef}
+                  className={`max-w-[80px] w-full bg-background border rounded px-2 py-1 font-mono text-sm text-center ${hexError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  value={hexInput}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setHexInput(v);
+                    // permissive: allow any chars, but validate immediately
+                    const cleaned = v.replace(/[^0-9a-fA-F#]/g, '');
+                    if (/^#?[0-9A-Fa-f]{6}$/.test(cleaned)) {
+                      const hex = cleaned.startsWith('#') ? cleaned : `#${cleaned}`;
+                      const r = parseInt(hex.substr(1,2), 16);
+                      const g = parseInt(hex.substr(3,2), 16);
+                      const b = parseInt(hex.substr(5,2), 16);
+                      setColor({ r, g, b });
+                      setHexError(false);
+                    } else {
+                      setHexError(true);
+                    }
+                  }}
+                />
               </div>
 
               {/* Col2 row1: R label left + textbox (input right-aligned to match bottom) */}
               <div className="col-start-2 row-start-1 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">R</div>
-                <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input
+                  ref={rRef}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${rError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  value={rInput}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setRInput(v);
+                    // validate numeric range
+                    const n = Number(v);
+                    if (/^\s*-?\d+\s*$/.test(v) && !Number.isNaN(n) && n >= 0 && n <= 255) {
+                      setColor({ ...color, r: Math.round(n) });
+                      setRError(false);
+                    } else {
+                      setRError(true);
+                    }
+                  }}
+                />
               </div>
 
               {/* Col3 row1: G label left + textbox (input right-aligned to match bottom) */}
               <div className="col-start-3 row-start-1 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">G</div>
-                <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input
+                  ref={gRef}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${gError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  value={gInput}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setGInput(v);
+                    const n = Number(v);
+                    if (/^\s*-?\d+\s*$/.test(v) && !Number.isNaN(n) && n >= 0 && n <= 255) {
+                      setColor({ ...color, g: Math.round(n) });
+                      setGError(false);
+                    } else {
+                      setGError(true);
+                    }
+                  }}
+                />
               </div>
 
               {/* Col4 row1: B label left + textbox (input right-aligned to match bottom) */}
               <div className="col-start-4 row-start-1 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">B</div>
-                <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input
+                  ref={bRef}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${bError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  value={bInput}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setBInput(v);
+                    const n = Number(v);
+                    if (/^\s*-?\d+\s*$/.test(v) && !Number.isNaN(n) && n >= 0 && n <= 255) {
+                      setColor({ ...color, b: Math.round(n) });
+                      setBError(false);
+                    } else {
+                      setBError(true);
+                    }
+                  }}
+                />
               </div>
 
               {/* Col2 row2: H input */}
               <div className="col-start-2 row-start-2 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">H</div>
-                <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input
+                  ref={hRef}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${hError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  value={hInput}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setHInput(v);
+                    const n = Number(v);
+                    if (/^\s*-?\d+\s*$/.test(v) && !Number.isNaN(n) && n >= 0 && n <= 360) {
+                      const newH = Math.round(n);
+                      const rgb = hslToRgb(newH, hsl.s, hsl.l);
+                      setHsl({ ...hsl, h: newH });
+                      setColor(rgb);
+                      setHError(false);
+                    } else {
+                      setHError(true);
+                    }
+                  }}
+                />
               </div>
 
               {/* Col3 row2: S input */}
               <div className="col-start-3 row-start-2 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">S</div>
-                <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input
+                  ref={sRef}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${sError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  value={sInput}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setSInput(v);
+                    const n = Number(v);
+                    if (/^\s*-?\d+\s*$/.test(v) && !Number.isNaN(n) && n >= 0 && n <= 100) {
+                      const newS = Math.round(n);
+                      const rgb = hslToRgb(hsl.h, newS, hsl.l);
+                      setHsl({ ...hsl, s: newS });
+                      setColor(rgb);
+                      setSError(false);
+                    } else {
+                      setSError(true);
+                    }
+                  }}
+                />
               </div>
 
               {/* Col4 row2: L input */}
               <div className="col-start-4 row-start-2 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">L</div>
-                <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input
+                  ref={lRef}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${lError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  value={lInput}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setLInput(v);
+                    const n = Number(v);
+                    if (/^\s*-?\d+\s*$/.test(v) && !Number.isNaN(n) && n >= 0 && n <= 100) {
+                      const newL = Math.round(n);
+                      const rgb = hslToRgb(hsl.h, hsl.s, newL);
+                      setHsl({ ...hsl, l: newL });
+                      setColor(rgb);
+                      setLError(false);
+                    } else {
+                      setLError(true);
+                    }
+                  }}
+                />
               </div>
             </div>
         </div>
