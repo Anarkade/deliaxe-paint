@@ -181,6 +181,7 @@ export const ImagePreview = ({
   // If parent provides a controlled prop, use it as the source of truth
   useEffect(() => {
     if (controlledShowOriginal !== undefined) {
+      console.debug('[debug] ImagePreview.controlledShowOriginal effect - setting showOriginal ->', controlledShowOriginal);
       setShowOriginal(controlledShowOriginal);
     }
   }, [controlledShowOriginal]);
@@ -1008,6 +1009,7 @@ export const ImagePreview = ({
                       if (controlledShowOriginal !== undefined) {
                         try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
                       } else {
+                        console.debug('[debug] ImagePreview.toggleButton - setShowOriginal ->', next);
                         setShowOriginal(next);
                         try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
                       }

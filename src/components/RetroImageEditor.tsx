@@ -431,6 +431,7 @@ export const RetroImageEditor = () => {
 
   // Reset preview toggle preference so new images auto-show processing results
   previewToggleWasManualRef.current = false;
+  console.debug('[debug] RetroImageEditor.resetEditor - setPreviewShowingOriginal -> true');
   setPreviewShowingOriginal(true);
 
     // Clear history to free memory
@@ -455,7 +456,7 @@ export const RetroImageEditor = () => {
     window.addEventListener('orientationchange', checkOrientation);
     const onOpenCameraSelectorRequest = () => {
       ignoreNextCloseRef.current = true;
-      setTimeout(() => setActiveTab('select-camera'), 0);
+  setTimeout(() => setActiveTab('select-camera'), 0);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     window.addEventListener('openCameraSelectorRequest', onOpenCameraSelectorRequest as EventListener);
@@ -573,9 +574,10 @@ export const RetroImageEditor = () => {
         return;
       }
       
-      setOriginalImage(img);
-      setOriginalImageSource(source);
+    setOriginalImage(img);
+    setOriginalImageSource(source);
   previewToggleWasManualRef.current = false;
+  console.debug('[debug] RetroImageEditor.loadImage - setPreviewShowingOriginal -> true');
   setPreviewShowingOriginal(true);
 
       // Create an immediate rasterized RGB copy of the loaded image so the
@@ -1252,6 +1254,7 @@ export const RetroImageEditor = () => {
       setProcessedImageData(imageData);
       if (!previewToggleWasManualRef.current) {
         try {
+          console.debug('[debug] RetroImageEditor.processImage - setPreviewShowingOriginal -> false');
           setPreviewShowingOriginal(false);
         } catch (e) {
           /* ignore */
@@ -1359,8 +1362,9 @@ export const RetroImageEditor = () => {
         // Persist processed image and ensure preview shows it
         suppressNextProcessRef.current = true;
         setProcessedImageData(newProcessed);
-        previewToggleWasManualRef.current = true;
-        setPreviewShowingOriginal(false);
+  previewToggleWasManualRef.current = true;
+  console.debug('[debug] RetroImageEditor.handlePaletteUpdateFromViewer - setPreviewShowingOriginal -> false');
+  setPreviewShowingOriginal(false);
         saveToHistory({ imageData: newProcessed, palette: selectedPalette });
       } else {
         // If we couldn't produce a new processed raster, at least save the
@@ -1588,9 +1592,10 @@ export const RetroImageEditor = () => {
               onZoomChange={handlePreviewZoomChange}
               isVerticalLayout={isVerticalLayout}
               onShowOriginalChange={(show) => {
-                previewToggleWasManualRef.current = true;
-                setPreviewShowingOriginal(show);
-              }}
+                        previewToggleWasManualRef.current = true;
+                        console.debug('[debug] RetroImageEditor.onShowOriginalChange - setPreviewShowingOriginal ->', show);
+                        setPreviewShowingOriginal(show);
+                      }}
               controlledShowOriginal={previewShowingOriginal}
               onImageUpdate={(img) => {
                 // Persist processed image updates coming from child components
@@ -1599,6 +1604,7 @@ export const RetroImageEditor = () => {
                 // Ensure preview shows processed image and mark toggle as manual so
                 // we don't auto-revert
                 previewToggleWasManualRef.current = true;
+                console.debug('[debug] RetroImageEditor.onImageUpdate - setPreviewShowingOriginal -> false');
                 setPreviewShowingOriginal(false);
               }}
             />
