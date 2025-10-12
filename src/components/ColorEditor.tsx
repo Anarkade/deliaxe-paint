@@ -554,7 +554,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                       width: `${sizePx}px`,
                       height: `${sizePx}px`,
                       borderRadius: '9999px',
-                      border: '3px solid rgba(0,0,0,0.5)',
+                      border: '3px solid #7F7F7F',
                       background: bg,
                       pointerEvents: 'none',
                       transform: 'translateZ(0)'
@@ -597,7 +597,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 className="w-full"
                 trackClassName="color-bg-highlight"
                 rangeClassName="color-range-transparent"
-                thumbStyle={{ background: `rgb(${quantizeChannel(color.r, depth.r)}, ${quantizeChannel(color.g, depth.g)}, ${quantizeChannel(color.b, depth.b)})` }}
+                thumbStyle={{ background: `rgb(${quantizeChannel(color.r, depth.r)}, ${quantizeChannel(color.g, depth.g)}, ${quantizeChannel(color.b, depth.b)})`, border: '2px solid #7F7F7F' }}
               />
             </div>
 
