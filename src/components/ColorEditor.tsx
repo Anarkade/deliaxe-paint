@@ -165,14 +165,13 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     const isFocused = (el: HTMLInputElement | null) => !!(el && document.activeElement === el);
     if (!isFocused(hexRef.current)) {
       setHexInput(toHex(color.r, color.g, color.b));
-      setHexError(false);
     }
-    if (!isFocused(rRef.current)) { setRInput(String(color.r)); setRError(false); }
-    if (!isFocused(gRef.current)) { setGInput(String(color.g)); setGError(false); }
-    if (!isFocused(bRef.current)) { setBInput(String(color.b)); setBError(false); }
-    if (!isFocused(hRef.current)) { setHInput(String(hsl.h)); setHError(false); }
-    if (!isFocused(sRef.current)) { setSInput(String(hsl.s)); setSError(false); }
-    if (!isFocused(lRef.current)) { setLInput(String(hsl.l)); setLError(false); }
+    if (!isFocused(rRef.current)) { setRInput(String(color.r)); }
+    if (!isFocused(gRef.current)) { setGInput(String(color.g)); }
+    if (!isFocused(bRef.current)) { setBInput(String(color.b)); }
+    if (!isFocused(hRef.current)) { setHInput(String(hsl.h)); }
+    if (!isFocused(sRef.current)) { setSInput(String(hsl.s)); }
+    if (!isFocused(lRef.current)) { setLInput(String(hsl.l)); }
   }, [color, hsl]);
 
   // Outside click to cancel
@@ -432,7 +431,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
               <div className="col-start-1 row-start-2 flex justify-start items-center py-1">
                 <input
                   ref={hexRef}
-                  className={`max-w-[80px] w-full bg-background border rounded px-2 py-1 font-mono text-sm text-center ${hexError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  className={`max-w-[80px] w-full bg-background rounded px-2 py-1 font-mono text-sm text-center border-2 focus:ring-transparent focus:outline-none ${hexError ? 'border-red-500' : 'border-input'}`}
                   value={hexInput}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -458,7 +457,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 <div className="text-xs text-muted-foreground">R</div>
                 <input
                   ref={rRef}
-                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${rError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${rError ? 'border-red-500' : 'border-input'}`}
                   value={rInput}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -480,7 +479,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 <div className="text-xs text-muted-foreground">G</div>
                 <input
                   ref={gRef}
-                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${gError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${gError ? 'border-red-500' : 'border-input'}`}
                   value={gInput}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -501,7 +500,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 <div className="text-xs text-muted-foreground">B</div>
                 <input
                   ref={bRef}
-                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${bError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${bError ? 'border-red-500' : 'border-input'}`}
                   value={bInput}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -522,7 +521,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 <div className="text-xs text-muted-foreground">H</div>
                 <input
                   ref={hRef}
-                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${hError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${hError ? 'border-red-500' : 'border-input'}`}
                   value={hInput}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -546,7 +545,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 <div className="text-xs text-muted-foreground">S</div>
                 <input
                   ref={sRef}
-                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${sError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${sError ? 'border-red-500' : 'border-input'}`}
                   value={sInput}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -570,7 +569,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 <div className="text-xs text-muted-foreground">L</div>
                 <input
                   ref={lRef}
-                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none ${lError ? 'border-red-500 ring-red-400' : 'border-white ring-white'}`}
+                  className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${lError ? 'border-red-500' : 'border-input'}`}
                   value={lInput}
                   onChange={(e) => {
                     const v = e.target.value;
