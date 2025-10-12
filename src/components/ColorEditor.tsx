@@ -218,7 +218,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
         return ({ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: width || (editorWidth ? `${editorWidth}px` : undefined) } as React.CSSProperties);
       })()}
     >
-      <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor">
+      <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor"
+        style={{ ['--slider-s' as any]: `${hsl.s}%`, ['--slider-l' as any]: `${hsl.l}%` }}>
         {/* Scoped styles: remove spinner controls from number inputs inside this dialog */}
         <style>{`
           [role="dialog"][aria-label="Color editor"] input[type=number]::-webkit-outer-spin-button,
@@ -229,6 +230,29 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
           [role="dialog"][aria-label="Color editor"] input[type=number] {
             -moz-appearance: textfield;
             appearance: textfield;
+          }
+          /* Slider track: full hue gradient left->right (S=50% L=50%) */
+          [role="dialog"][aria-label="Color editor"] .color-bg-highlight {
+            background: linear-gradient(90deg,
+              hsl(0 var(--slider-s,50%) var(--slider-l,50%)) 0%,
+              hsl(30 var(--slider-s,50%) var(--slider-l,50%)) 8%,
+              hsl(60 var(--slider-s,50%) var(--slider-l,50%)) 17%,
+              hsl(90 var(--slider-s,50%) var(--slider-l,50%)) 25%,
+              hsl(120 var(--slider-s,50%) var(--slider-l,50%)) 33%,
+              hsl(150 var(--slider-s,50%) var(--slider-l,50%)) 42%,
+              hsl(180 var(--slider-s,50%) var(--slider-l,50%)) 50%,
+              hsl(210 var(--slider-s,50%) var(--slider-l,50%)) 58%,
+              hsl(240 var(--slider-s,50%) var(--slider-l,50%)) 67%,
+              hsl(270 var(--slider-s,50%) var(--slider-l,50%)) 75%,
+              hsl(300 var(--slider-s,50%) var(--slider-l,50%)) 83%,
+              hsl(330 var(--slider-s,50%) var(--slider-l,50%)) 92%,
+              hsl(360 var(--slider-s,50%) var(--slider-l,50%)) 100%
+            );
+            border-radius: 9999px;
+          }
+          /* Filled range should be transparent so it doesn't obscure the track gradient */
+          [role="dialog"][aria-label="Color editor"] .color-range-transparent {
+            background: transparent !important;
           }
         `}</style>
         {/* Title removed as requested (single-title line removed) */}
@@ -258,6 +282,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 step={1}
                 className="w-full"
                 trackClassName="color-bg-highlight"
+                rangeClassName="color-range-transparent"
+                thumbStyle={{ background: `hsl(${hsl.h} 50% 50%)` }}
               />
             </div>
 
