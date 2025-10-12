@@ -262,7 +262,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     const isInteractive = (el: Element | null) => {
       if (!el) return false;
       try {
-        return !!el.closest('input,button,textarea,select,a,label,[role="slider"],[role="textbox"]');
+        // include canvas so clicks on the gradient/canvas don't start a drag
+        return !!el.closest('input,button,textarea,select,a,label,canvas,[role="slider"],[role="textbox"]');
       } catch (err) {
         return false;
       }
@@ -321,6 +322,48 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     const p = ctx.getImageData(x, y, 1, 1).data;
     const newColor = { r: p[0], g: p[1], b: p[2] };
     setColor(newColor);
+  };
+
+  // Compute marker position (in pixels within the displayed canvas) for the selected color
+  const computeMarkerPos = (): { left: number; top: number } => {
+    const size = canvasDisplayWidth || 256;
+    const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+    let px = 0; let py = 0;
+    const w = 256; const h = 256;
+    if (mode === 'hue') {
+      // x -> saturation, y -> lightness
+      const s = hsl.s / 100;
+      const l = hsl.l / 100;
+      px = Math.round(s * (size - 1));
+      py = Math.round(l * (size - 1));
+    } else if (mode === 'saturation') {
+      // x -> hue, y -> lightness
+      const hueFrac = (hsl.h % 360) / 360;
+      const l = hsl.l / 100;
+      px = Math.round(hueFrac * (size - 1));
+      py = Math.round(l * (size - 1));
+    } else if (mode === 'lightness') {
+      // x -> saturation, y -> hue
+      const s = hsl.s / 100;
+      const hueFrac = (hsl.h % 360) / 360;
+      px = Math.round(s * (size - 1));
+      py = Math.round(hueFrac * (size - 1));
+    } else if (mode === 'red') {
+      // x -> G, y -> B, R fixed
+      px = Math.round((color.g / 255) * (size - 1));
+      py = Math.round((color.b / 255) * (size - 1));
+    } else if (mode === 'green') {
+      // x -> B, y -> R
+      px = Math.round((color.b / 255) * (size - 1));
+      py = Math.round((color.r / 255) * (size - 1));
+    } else if (mode === 'blue') {
+      // x -> R, y -> G
+      px = Math.round((color.r / 255) * (size - 1));
+      py = Math.round((color.g / 255) * (size - 1));
+    }
+    px = clamp(px, 0, size - 1);
+    py = clamp(py, 0, size - 1);
+    return { left: px, top: py };
   };
 
   // When HSL sliders change
@@ -498,6 +541,32 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 className="border border-elegant-border cursor-crosshair"
                 style={{ display: 'block', width: canvasDisplayWidth ? `${canvasDisplayWidth}px` : '256px', height: '256px' }}
               />
+              {/* Marker indicating selected color position (non-interactive) */}
+              {canvasDisplayWidth ? (() => {
+                const pos = computeMarkerPos();
+                const sizePx = 16; // marker diameter
+                const left = Math.round(pos.left - sizePx / 2);
+                const top = Math.round(pos.top - sizePx / 2);
+                const bg = `rgb(${quantizeChannel(color.r, depth.r)}, ${quantizeChannel(color.g, depth.g)}, ${quantizeChannel(color.b, depth.b)})`;
+                return (
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      position: 'absolute',
+                      left: `${left}px`,
+                      top: `${top}px`,
+                      width: `${sizePx}px`,
+                      height: `${sizePx}px`,
+                      borderRadius: '9999px',
+                      border: '3px solid rgba(0,0,0,0.5)',
+                      boxShadow: '0 0 0 3px rgba(255,255,255,0.2) inset',
+                      background: bg,
+                      pointerEvents: 'none',
+                      transform: 'translateZ(0)'
+                    }}
+                  />
+                );
+              })() : null}
             </div>
 
             {/* Row 3: Hue slider (reuse shared Slider from ui to match ImagePreview) */}
