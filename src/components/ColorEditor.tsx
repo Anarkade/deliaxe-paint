@@ -73,6 +73,9 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   const [hsl, setHsl] = useState(() => rgbToHsl(initial.r, initial.g, initial.b));
   const hexRef = useRef<HTMLInputElement | null>(null);
   const [previewWidth, setPreviewWidth] = useState<number | null>(null);
+  // Dragging state for moving the editor
+  const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
+  const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
 
   // Draw gradient canvas for current hue
   useEffect(() => {
@@ -138,10 +141,10 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     const onDown = (e: MouseEvent) => {
       const root = rootRef.current;
       if (!root) return;
-      // Ignore clicks that land on the browser scrollbar: elementFromPoint returns null in that case
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      if (!el) return;
-      if (!root.contains(el)) {
+      const target = e.target as Node | null;
+      if (!target) return; // defensive
+      // If the click target is not inside our root, treat as outside click
+      if (!root.contains(target)) {
         onCancel();
       }
     };
@@ -165,6 +168,72 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
   }, [color, canvasDisplayWidth]);
+
+  // Close on Escape key
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        onCancel();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onCancel]);
+
+  // Drag to move handlers
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+
+    const isInteractive = (el: Element | null) => {
+      if (!el) return false;
+      try {
+        return !!el.closest('input,button,textarea,select,a,label,[role="slider"],[role="textbox"]');
+      } catch (err) {
+        return false;
+      }
+    };
+
+    const onMouseDown = (ev: MouseEvent) => {
+      const target = ev.target as Element | null;
+      if (isInteractive(target)) return; // don't start drag from interactive elements
+  // start dragging (do not immediately set dragPos to avoid jump)
+  ev.preventDefault();
+      const startMouseX = ev.clientX;
+      const startMouseY = ev.clientY;
+      // Compute the element's offset relative to its offsetParent. Using
+      // getBoundingClientRect() gives viewport coordinates; left/top style
+      // computed against the offsetParent must use coordinates relative to
+      // that parent to avoid jumps when switching from a centered transform
+      // to absolute left/top values.
+      const rect = root.getBoundingClientRect();
+      const op = root.offsetParent as Element | null;
+      const opRect = op ? op.getBoundingClientRect() : { left: 0, top: 0 } as DOMRect;
+      const startX = Math.round(rect.left - (opRect.left || 0));
+      const startY = Math.round(rect.top - (opRect.top || 0));
+      dragStartRef.current = { mouseX: startMouseX, mouseY: startMouseY, startX, startY };
+
+      const onMouseMove = (mv: MouseEvent) => {
+        const s = dragStartRef.current;
+        if (!s) return;
+        const dx = mv.clientX - s.mouseX;
+        const dy = mv.clientY - s.mouseY;
+        setDragPos({ x: Math.round(s.startX + dx), y: Math.round(s.startY + dy) });
+      };
+
+      const onMouseUp = () => {
+        dragStartRef.current = null;
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+      };
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    };
+
+    root.addEventListener('mousedown', onMouseDown);
+    return () => root.removeEventListener('mousedown', onMouseDown);
+  }, []);
 
 
 
@@ -211,7 +280,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   };
 
   const editor = (
-    <div
+      <div
       ref={rootRef}
       className="absolute z-50"
       style={(() => {
@@ -221,6 +290,10 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
         // getBoundingClientRect() to return the element size for positioning.
             // prefer canvasDisplayWidth (measured displayed canvas) when available
             const computedWidth = width || (canvasDisplayWidth ? `${canvasDisplayWidth + 32}px` : (editorWidth ? `${editorWidth}px` : undefined));
+            // If the user has dragged the editor, use that absolute position
+            if (dragPos) {
+              return ({ left: dragPos.x, top: dragPos.y, width: computedWidth } as React.CSSProperties);
+            }
             if (!position && suppressInitialCenter) {
               return ({
                 left: '50%',
@@ -239,7 +312,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
             return ({ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: computedWidth } as React.CSSProperties);
       })()}
     >
-      <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor"
+      <div className="color-bg-highlight rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor"
         style={{ ['--slider-s' as any]: `${hsl.s}%`, ['--slider-l' as any]: `${hsl.l}%` }}>
         {/* Scoped styles: remove spinner controls from number inputs inside this dialog */}
         <style>{`
@@ -291,8 +364,6 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 className="border border-elegant-border cursor-crosshair"
                 style={{ display: 'block', width: canvasDisplayWidth ? `${canvasDisplayWidth}px` : '256px', height: '256px' }}
               />
-              {/* RGB depth label positioned top-left of the gradient area */}
-              <div className="absolute left-2 top-2 text-xs text-muted-foreground">RGB {depth.r}-{depth.g}-{depth.b}</div>
             </div>
 
             {/* Row 3: Hue slider (reuse shared Slider from ui to match ImagePreview) */}
@@ -320,7 +391,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
 
               {/* Col1 row2: hex textbox centered below the rect */}
               <div className="col-start-1 row-start-2 flex justify-start items-center py-1">
-                <input ref={hexRef} className="max-w-[80px] w-full bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm text-center" value={toHex(color.r, color.g, color.b)} onChange={(e) => {
+                <input ref={hexRef} className="max-w-[80px] w-full bg-background border border-elegant-border rounded px-2 py-1 font-mono text-sm text-center" value={toHex(color.r, color.g, color.b)} onChange={(e) => {
                   const v = e.target.value.replace(/[^0-9a-fA-F#]/g, '');
                   if (/^#?[0-9A-Fa-f]{6}$/.test(v)) {
                     const hex = v.startsWith('#') ? v : `#${v}`;
@@ -335,44 +406,44 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
               {/* Col2 row1: R label left + textbox (input right-aligned to match bottom) */}
               <div className="col-start-2 row-start-1 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">R</div>
-                <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
 
               {/* Col3 row1: G label left + textbox (input right-aligned to match bottom) */}
               <div className="col-start-3 row-start-1 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">G</div>
-                <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
 
               {/* Col4 row1: B label left + textbox (input right-aligned to match bottom) */}
               <div className="col-start-4 row-start-1 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">B</div>
-                <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
 
               {/* Col2 row2: H input */}
               <div className="col-start-2 row-start-2 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">H</div>
-                <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
 
               {/* Col3 row2: S input */}
               <div className="col-start-3 row-start-2 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">S</div>
-                <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
 
               {/* Col4 row2: L input */}
               <div className="col-start-4 row-start-2 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">L</div>
-                <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
+                <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="w-[34px] bg-background border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
             </div>
         </div>
 
         {/* Row 6: Accept */}
         <div className="flex w-full">
-          <button className="w-full flex items-center justify-center h-10 px-4 text-sm bg-blood-red border-blood-red text-white rounded" onClick={accept}>Confirm</button>
+          <button className="w-full flex items-center justify-center h-10 px-4 text-sm bg-blood-red border-blood-red text-white rounded" onClick={accept}>Confirm RGB {depth.r}-{depth.g}-{depth.b} color</button>
         </div>
       </div>
     </div>
