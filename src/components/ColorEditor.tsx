@@ -62,8 +62,10 @@ function quantizeChannel(value: number, bits: number) {
 export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, position, width, suppressInitialCenter }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [editorWidth, setEditorWidth] = useState<number | null>(null);
-  const [canvasDisplayWidth, setCanvasDisplayWidth] = useState<number | null>(null);
+  // Default to the desired displayed canvas size (512x256) so the editor
+  // can mount already sized and avoid a visual flash centered at the page.
+  const [editorWidth, setEditorWidth] = useState<number | null>(512 + 32);
+  const [canvasDisplayWidth, setCanvasDisplayWidth] = useState<number | null>(512);
 
 
 
@@ -99,11 +101,13 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     setTimeout(() => {
       const canvasEl = canvasRef.current;
       if (!canvasEl) return;
-      const displayedWidth = canvasEl.clientWidth || canvasEl.width;
-      // add some padding to account for editor paddings and borders
+      // Use the canvas intrinsic width (512) rather than clientWidth so
+      // changes caused by DOM reflows (e.g. slider interactions) don't
+      // accidentally modify the displayed width.
+      const intrinsicWidth = canvasEl.width || 512;
       const padding = 32; // approximate left+right padding + border
-      setEditorWidth(displayedWidth + padding);
-      setCanvasDisplayWidth(displayedWidth);
+      setEditorWidth(intrinsicWidth + padding);
+      setCanvasDisplayWidth(intrinsicWidth);
     }, 0);
   }, [hsl.h]);
 
@@ -240,7 +244,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 width={512}
                 height={256}
                 className="border border-elegant-border cursor-crosshair"
-                style={{ display: 'block', width: '100%', height: '256px' }}
+                style={{ display: 'block', width: canvasDisplayWidth ? `${canvasDisplayWidth}px` : '512px', height: '256px' }}
               />
             </div>
 
