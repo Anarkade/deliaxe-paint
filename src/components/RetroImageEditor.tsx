@@ -979,6 +979,14 @@ export const RetroImageEditor = () => {
 
 
   const processImage = useCallback(async () => {
+    // If a suppression flag is set (due to a manual palette/image edit),
+    // consume it and skip processing so we don't overwrite the user's manual
+    // adjustments. This covers both debounced automatic runs and direct
+    // invocations that may happen shortly after a manual edit.
+    if (suppressNextProcessRef.current) {
+      suppressNextProcessRef.current = false;
+      return;
+    }
 
     // If all settings are original, don't process - keep the original image
     // Remove resolution/scaling logic from UI state
@@ -1296,6 +1304,70 @@ export const RetroImageEditor = () => {
     };
   }, [processImage]);
 
+  // Handle palette updates coming from the PaletteViewer. When a user edits
+  // a palette color we want to persist the new palette immediately and also
+  // prevent the automatic processing from running and overwriting the
+  // manual edits. Save a history snapshot so undo/redo works as expected.
+  const handlePaletteUpdateFromViewer = useCallback(async (colors: Color[]) => {
+    // When the user edits the palette in the viewer we need to ensure the
+    // in-memory processed image reflects that change and is persisted so
+    // toggling between original/processed will restore the edited state.
+    try {
+      // Prevent automatic reprocessing from overwriting the manual change
+      suppressNextProcessRef.current = true;
+
+      // If we already have a processed raster, apply the new palette to it.
+      let newProcessed: ImageData | null = null;
+
+      if (processedImageData) {
+        try {
+          // imageProcessor.applyPalette returns ImageData
+          newProcessed = await imageProcessor.applyPalette(processedImageData, colors as any);
+        } catch (err) {
+          console.warn('applyPalette failed on processed raster, falling back to original raster', err);
+          newProcessed = null;
+        }
+      }
+
+      // If we don't have a processed raster or applyPalette failed, rasterize the original image and apply the palette
+      if (!newProcessed && originalImage) {
+        try {
+          const tmpCanvas = document.createElement('canvas');
+          tmpCanvas.width = originalImage.width;
+          tmpCanvas.height = originalImage.height;
+          const tmpCtx = tmpCanvas.getContext('2d');
+          if (tmpCtx) {
+            tmpCtx.imageSmoothingEnabled = false;
+            tmpCtx.drawImage(originalImage, 0, 0);
+            const base = tmpCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
+            newProcessed = await imageProcessor.applyPalette(base, colors as any);
+          }
+        } catch (err) {
+          console.warn('Failed to rasterize original image and apply palette:', err);
+        }
+      }
+
+      // Persist palette and processed image
+      setOrderedPaletteColors(colors);
+
+      if (newProcessed) {
+        // Persist processed image and ensure preview shows it
+        suppressNextProcessRef.current = true;
+        setProcessedImageData(newProcessed);
+        previewToggleWasManualRef.current = true;
+        setPreviewShowingOriginal(false);
+        saveToHistory({ imageData: newProcessed, palette: selectedPalette });
+      } else {
+        // If we couldn't produce a new processed raster, at least save the
+        // palette so the UI reflects the change and let the debounced
+        // processing run later (unless suppressed).
+        saveToHistory({ imageData: processedImageData || new ImageData(1, 1), palette: selectedPalette });
+      }
+    } catch (err) {
+      console.error('handlePaletteUpdateFromViewer error:', err);
+    }
+  }, [processedImageData, originalImage, imageProcessor, selectedPalette, saveToHistory]);
+
 
   const downloadImage = useCallback(() => {
     if (!processedImageData) return;
@@ -1487,7 +1559,7 @@ export const RetroImageEditor = () => {
               onLoadImageClick={loadImage}
               originalImageSource={originalImageSource}
               selectedPalette={selectedPalette}
-              onPaletteUpdate={setOrderedPaletteColors}
+              onPaletteUpdate={handlePaletteUpdateFromViewer}
               originalPaletteColors={originalPaletteColors}
               processedPaletteColors={orderedPaletteColors}
               showCameraPreview={showCameraPreview}
