@@ -257,30 +257,31 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
               />
             </div>
 
-            {/* Rows area: exact 2-row x 5-column layout specified by user (explicit placement) */}
-            <div className="my-4 grid grid-cols-5 grid-rows-2 gap-x-4 gap-y-1 w-full">
+      {/* Rows area: exact 2-row x 5-column layout specified by user (explicit placement)
+        Reduced horizontal gaps and allocate extra width to the color rectangle (first column) */}
+      <div className="my-4 grid grid-rows-2 gap-x-2 gap-y-0.5 w-full" style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr' }}>
               {/* Col1: rect (row 1-2, col 1) */}
               <div className="col-start-1 row-start-1 row-end-3 border border-elegant-border rounded-sm" style={{ backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`, minHeight: '80px' }} aria-hidden="true" />
 
-              {/* Col2 row1: label left */}
-              <div className="col-start-2 row-start-1 flex items-start">
-                <div className="text-xs text-left text-muted-foreground">RGB {depth.r}-{depth.g}-{depth.b}</div>
+              {/* Col2 row1: RGB label bottom-right of its cell */}
+              <div className="col-start-2 row-start-1 flex items-end justify-end h-full pr-1">
+                <div className="text-xs text-right text-muted-foreground">RGB {depth.r}-{depth.g}-{depth.b}</div>
               </div>
 
-              {/* Col3 row1: R label left + textbox */}
-              <div className="col-start-3 row-start-1 flex items-center gap-2">
+              {/* Col3 row1: R label left + textbox (input right-aligned to match bottom) */}
+              <div className="col-start-3 row-start-1 flex items-center justify-end gap-2">
                 <div className="text-xs">R</div>
                 <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
 
-              {/* Col4 row1: G label left + textbox */}
-              <div className="col-start-4 row-start-1 flex items-center gap-2">
+              {/* Col4 row1: G label left + textbox (input right-aligned to match bottom) */}
+              <div className="col-start-4 row-start-1 flex items-center justify-end gap-2">
                 <div className="text-xs">G</div>
                 <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
 
-              {/* Col5 row1: B label left + textbox */}
-              <div className="col-start-5 row-start-1 flex items-center gap-2">
+              {/* Col5 row1: B label left + textbox (input right-aligned to match bottom) */}
+              <div className="col-start-5 row-start-1 flex items-center justify-end gap-2">
                 <div className="text-xs">B</div>
                 <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
@@ -300,20 +301,20 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
               </div>
 
               {/* Col3 row2: H input */}
-              <div className="col-start-3 row-start-2 flex items-center gap-2">
-                <div className="w-6 text-xs font-mono text-muted-foreground">H</div>
+              <div className="col-start-3 row-start-2 flex items-center justify-end gap-2">
+                <div className="text-xs">H</div>
                 <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
 
               {/* Col4 row2: S input */}
-              <div className="col-start-4 row-start-2 flex items-center gap-2">
-                <div className="w-6 text-xs font-mono text-muted-foreground">S</div>
+              <div className="col-start-4 row-start-2 flex items-center justify-end gap-2">
+                <div className="text-xs">S</div>
                 <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
 
               {/* Col5 row2: L input */}
-              <div className="col-start-5 row-start-2 flex items-center gap-2">
-                <div className="w-6 text-xs font-mono text-muted-foreground">L</div>
+              <div className="col-start-5 row-start-2 flex items-center justify-end gap-2">
+                <div className="text-xs">L</div>
                 <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
             </div>
