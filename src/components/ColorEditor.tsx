@@ -489,7 +489,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
           {/* Container constrained to canvas displayed width (so grid matches canvas width) */}
           <div className="mb-2" style={{ width: canvasDisplayWidth ? `${canvasDisplayWidth}px` : '100%', maxWidth: '100%' }}>
             {/* Row 2: Gradient canvas */}
-            <div className="mb-2 overflow-auto relative">
+            <div className="overflow-auto relative">
               <canvas
                 ref={canvasRef}
                 onClick={handleCanvasClick}
@@ -501,7 +501,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
             </div>
 
             {/* Row 3: Hue slider (reuse shared Slider from ui to match ImagePreview) */}
-            <div className="mb-2 w-full flex items-center">
+            <div className="my-4 w-full flex items-center">
               <Slider
                 value={(() => {
                   if (mode === 'hue') return [hsl.h];
