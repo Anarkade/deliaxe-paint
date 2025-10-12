@@ -62,10 +62,10 @@ function quantizeChannel(value: number, bits: number) {
 export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, position, width, suppressInitialCenter }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  // Default to the desired displayed canvas size (512x256) so the editor
+  // Default to the desired displayed canvas size (256px width) so the editor
   // can mount already sized and avoid a visual flash centered at the page.
-  const [editorWidth, setEditorWidth] = useState<number | null>(512 + 32);
-  const [canvasDisplayWidth, setCanvasDisplayWidth] = useState<number | null>(512);
+  const [editorWidth, setEditorWidth] = useState<number | null>(256 + 32);
+  const [canvasDisplayWidth, setCanvasDisplayWidth] = useState<number | null>(256);
 
 
 
@@ -78,8 +78,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     if (!c) return;
     const ctx = c.getContext('2d');
     if (!ctx) return;
-    const w = c.width = 512;
-    const h = c.height = 256;
+  const w = c.width = 256;
+  const h = c.height = 256;
 
     const image = ctx.createImageData(w, h);
     for (let y = 0; y < h; y++) {
@@ -200,22 +200,24 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
         // editor mounted and measurable but invisible (opacity:0, no pointer
         // events). This avoids a visible centered flash while still allowing
         // getBoundingClientRect() to return the element size for positioning.
-        if (!position && suppressInitialCenter) {
-          return ({
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: width || (editorWidth ? `${editorWidth}px` : undefined),
-            opacity: 0,
-            pointerEvents: 'none'
-          } as React.CSSProperties);
-        }
+            // prefer canvasDisplayWidth (measured displayed canvas) when available
+            const computedWidth = width || (canvasDisplayWidth ? `${canvasDisplayWidth + 32}px` : (editorWidth ? `${editorWidth}px` : undefined));
+            if (!position && suppressInitialCenter) {
+              return ({
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: computedWidth,
+                opacity: 0,
+                pointerEvents: 'none'
+              } as React.CSSProperties);
+            }
 
-        if (position) {
-          return ({ left: position.x, top: position.y, width: width || (editorWidth ? `${editorWidth}px` : undefined) } as React.CSSProperties);
-        }
+            if (position) {
+              return ({ left: position.x, top: position.y, width: computedWidth } as React.CSSProperties);
+            }
 
-        return ({ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: width || (editorWidth ? `${editorWidth}px` : undefined) } as React.CSSProperties);
+            return ({ left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: computedWidth } as React.CSSProperties);
       })()}
     >
       <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor"
@@ -265,10 +267,10 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
               <canvas
                 ref={canvasRef}
                 onClick={handleCanvasClick}
-                width={512}
+                width={256}
                 height={256}
                 className="border border-elegant-border cursor-crosshair"
-                style={{ display: 'block', width: canvasDisplayWidth ? `${canvasDisplayWidth}px` : '512px', height: '256px' }}
+                style={{ display: 'block', width: canvasDisplayWidth ? `${canvasDisplayWidth}px` : '256px', height: '256px' }}
               />
             </div>
 
@@ -289,61 +291,56 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
 
       {/* Rows area: exact 2-row x 5-column layout specified by user (explicit placement)
         Reduced horizontal gaps and allocate extra width to the color rectangle (first column) */}
-            <div className="my-4 grid grid-rows-2 gap-x-2 gap-y-0.5 w-full" style={{ gridTemplateColumns: '3fr 1fr 1fr 1fr 1fr' }}>
-              {/* Col1: rect (row 1-2, col 1) */}
-              <div className="col-start-1 row-start-1 row-end-3 border border-elegant-border rounded-sm" style={{ backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`, minHeight: '80px' }} aria-hidden="true" />
-
-              {/* Col2 row1: RGB label bottom-right of its cell */}
-              <div className="col-start-2 row-start-1 flex items-center justify-end h-full pr-1">
-                <div className="text-xs text-right text-muted-foreground">RGB {depth.r}-{depth.g}-{depth.b}</div>
+            <div className="my-4 grid grid-rows-2 gap-x-2 gap-y-0.5 w-full" style={{ gridTemplateColumns: '3fr 1fr 1fr 1fr' }}>
+              {/* Col1: rect (row 1-2, col 1) with RGB text and hex input inside */}
+              <div className="col-start-1 row-start-1 row-end-3 border border-elegant-border rounded-sm relative" style={{ backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`, minHeight: '80px' }} aria-hidden="true">
+                <div className="absolute top-2 right-2 text-xs text-right text-muted-foreground">RGB {depth.r}-{depth.g}-{depth.b}</div>
+                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+                  <input className="max-w-[80px] w-full bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm text-center" value={toHex(color.r, color.g, color.b)} onChange={(e) => {
+                    const v = e.target.value.replace(/[^0-9a-fA-F#]/g, '');
+                    if (/^#?[0-9A-Fa-f]{6}$/.test(v)) {
+                      const hex = v.startsWith('#') ? v : `#${v}`;
+                      const r = parseInt(hex.substr(1,2), 16);
+                      const g = parseInt(hex.substr(3,2), 16);
+                      const b = parseInt(hex.substr(5,2), 16);
+                      setColor({ r, g, b });
+                    }
+                  }} />
+                </div>
               </div>
 
-              {/* Col3 row1: R label left + textbox (input right-aligned to match bottom) */}
-              <div className="col-start-3 row-start-1 flex items-center justify-end gap-2">
+              {/* Col2 row1: R label left + textbox (input right-aligned to match bottom) */}
+              <div className="col-start-2 row-start-1 flex items-center justify-end gap-2">
                 <div className="text-xs text-muted-foreground">R</div>
                 <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
 
-              {/* Col4 row1: G label left + textbox (input right-aligned to match bottom) */}
-              <div className="col-start-4 row-start-1 flex items-center justify-end gap-2">
+              {/* Col3 row1: G label left + textbox (input right-aligned to match bottom) */}
+              <div className="col-start-3 row-start-1 flex items-center justify-end gap-2">
                 <div className="text-xs text-muted-foreground">G</div>
                 <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
 
-              {/* Col5 row1: B label left + textbox (input right-aligned to match bottom) */}
-              <div className="col-start-5 row-start-1 flex items-center justify-end gap-2">
+              {/* Col4 row1: B label left + textbox (input right-aligned to match bottom) */}
+              <div className="col-start-4 row-start-1 flex items-center justify-end gap-2">
                 <div className="text-xs text-muted-foreground">B</div>
                 <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
 
-              {/* Col2 row2: hex textbox centered */}
-              <div className="col-start-2 row-start-2 flex justify-center items-center">
-                <input className="max-w-[80px] w-full bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm text-center" value={toHex(color.r, color.g, color.b)} onChange={(e) => {
-                  const v = e.target.value.replace(/[^0-9a-fA-F#]/g, '');
-                  if (/^#?[0-9A-Fa-f]{6}$/.test(v)) {
-                    const hex = v.startsWith('#') ? v : `#${v}`;
-                    const r = parseInt(hex.substr(1,2), 16);
-                    const g = parseInt(hex.substr(3,2), 16);
-                    const b = parseInt(hex.substr(5,2), 16);
-                    setColor({ r, g, b });
-                  }
-                }} />
-              </div>
-
-              {/* Col3 row2: H input */}
-              <div className="col-start-3 row-start-2 flex items-center justify-end gap-2">
+              {/* Col2 row2: H input */}
+              <div className="col-start-2 row-start-2 flex items-center justify-end gap-2">
                 <div className="text-xs text-muted-foreground">H</div>
                 <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
 
-              {/* Col4 row2: S input */}
-              <div className="col-start-4 row-start-2 flex items-center justify-end gap-2">
+              {/* Col3 row2: S input */}
+              <div className="col-start-3 row-start-2 flex items-center justify-end gap-2">
                 <div className="text-xs text-muted-foreground">S</div>
                 <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
 
-              {/* Col5 row2: L input */}
-              <div className="col-start-5 row-start-2 flex items-center justify-end gap-2">
+              {/* Col4 row2: L input */}
+              <div className="col-start-4 row-start-2 flex items-center justify-end gap-2">
                 <div className="text-xs text-muted-foreground">L</div>
                 <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
