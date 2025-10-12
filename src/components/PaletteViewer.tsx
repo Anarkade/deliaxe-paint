@@ -1,10 +1,10 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import { useImageProcessor } from '@/hooks/useImageProcessor';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import ColorEditor from './ColorEditor';
 import { type Color } from '@/lib/colorQuantization';
 import { PaletteType } from './ColorPaletteSelector';
-import { Eye, Palette, GripVertical } from 'lucide-react';
+import { Eye, Palette, GripVertical, Lock } from 'lucide-react';
 // pngAnalyzer functions are imported dynamically where needed to keep bundle size small
 
 interface PaletteColor {
@@ -21,6 +21,8 @@ interface PaletteViewerProps {
   originalImageSource?: File | string | null;
   externalPalette?: Color[];
   onImageUpdate?: (imageData: ImageData) => void;
+  // When true, the ImagePreview is showing the original image
+  showOriginal?: boolean;
 }
 
 const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
@@ -56,13 +58,15 @@ const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
   }
 };
 
-export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate }: PaletteViewerProps) => {
+export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal }: PaletteViewerProps) => {
   const { t } = useTranslation();
   const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() => 
     getDefaultPalette(selectedPalette)
   );
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isOriginalPNG, setIsOriginalPNG] = useState<boolean>(false);
+  const [blockedIndex, setBlockedIndex] = useState<number | null>(null);
+  const blockedTimerRef = useRef<number | null>(null);
   const imageProcessor = useImageProcessor();
 
   const handleDragStart = useCallback((index: number) => {
@@ -86,9 +90,21 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   }, [draggedIndex, paletteColors, onPaletteUpdate]);
 
   const selectNewColor = useCallback((index: number, currentPalette: PaletteType) => {
+    // If this is the 'original' palette and the preview is showing the original,
+    // block editing and show a temporary lock overlay instead of opening the editor.
+    if (currentPalette === 'original' && typeof showOriginal !== 'undefined' && showOriginal) {
+      setBlockedIndex(index);
+      if (blockedTimerRef.current) window.clearTimeout(blockedTimerRef.current);
+      blockedTimerRef.current = window.setTimeout(() => {
+        setBlockedIndex(null);
+        blockedTimerRef.current = null;
+      }, 1000) as unknown as number;
+      return;
+    }
+
     // Open custom color editor instead of native input
     openEditor(index, currentPalette);
-  }, [paletteColors, onPaletteUpdate, onImageUpdate]);
+  }, [paletteColors, onPaletteUpdate, onImageUpdate, showOriginal]);
 
   const [editorState, setEditorState] = useState<{ 
     open: boolean; 
@@ -166,12 +182,15 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const applyEditorColor = (c: PaletteColor) => {
     if (editorState.index === null) return;
 
-    // Before updating the palette, if we have a processed image, replace
-    // every pixel that exactly matches the old palette color with the new
-    // color selected by the editor. Then notify the parent via onImageUpdate
-    // so ImagePreview can immediately reflect the change.
+    // Update the palette UI first so the change is visible immediately
+    const newColors = [...paletteColors];
+    const oldColor = newColors[editorState.index];
+    newColors[editorState.index] = { ...newColors[editorState.index], r: c.r, g: c.g, b: c.b };
+    setPaletteColors(newColors);
+    onPaletteUpdate?.(newColors);
+
+    // Then update the processed image pixels (if available) and notify parent
     try {
-      const oldColor = paletteColors[editorState.index];
       if (imageData && onImageUpdate) {
         // Clone ImageData so we don't mutate the original reference
         const cloned = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
@@ -181,21 +200,15 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             d[i] = c.r;
             d[i + 1] = c.g;
             d[i + 2] = c.b;
-            // leave alpha (d[i+3]) unchanged
+            // leave alpha unchanged
           }
         }
-        // Synchronously notify parent of the updated processed image
         onImageUpdate(cloned);
       }
     } catch (err) {
-      // If anything goes wrong, fall back to the original behavior
       console.warn('Error replacing pixels in processed image:', err);
     }
 
-    const newColors = [...paletteColors];
-    newColors[editorState.index] = { ...newColors[editorState.index], r: c.r, g: c.g, b: c.b };
-    setPaletteColors(newColors);
-    onPaletteUpdate?.(newColors);
     closeEditor();
   };
 
@@ -440,6 +453,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                         }}
                         title={t('clickToChangeColor')}
                       >
+                        {selectedPalette === 'original' && blockedIndex !== null && showOriginal && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <Lock className="h-4 w-4 text-white" />
+                          </div>
+                        )}
                         {color.transparent && (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-3 h-3 bg-white rounded-full opacity-75" />

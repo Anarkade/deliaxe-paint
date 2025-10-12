@@ -113,6 +113,7 @@ interface ImagePreviewProps {
   originalImageSource?: File | string; // Add source for PNG analysis
   selectedPalette?: PaletteType;
   onPaletteUpdate?: (colors: Color[]) => void;
+  onImageUpdate?: (imageData: ImageData) => void;
   showCameraPreview?: boolean;
   onCameraPreviewChange?: (show: boolean) => void;
   selectedCameraId?: string;
@@ -1095,14 +1096,19 @@ export const ImagePreview = ({
                 <div className="mt-4">
                   <PaletteViewer
                     selectedPalette={paletteViewerSelectedPalette}
-                    imageData={processedImageData}
-                    onPaletteUpdate={handlePaletteViewerUpdate}
+                        imageData={processedImageData}
+                        onPaletteUpdate={handlePaletteViewerUpdate}
                     originalImageSource={originalImageSource}
                     externalPalette={paletteViewerExternal}
-                    onImageUpdate={() => {
-                      // Trigger image reprocessing when palette is updated
-                      onSectionOpen?.();
-                    }}
+                        onImageUpdate={(img) => {
+                          // When the palette viewer provides an updated processed image,
+                          // forward it to parent and ensure the preview switches to processed.
+                          try { onShowOriginalChange?.(false); } catch (e) { /* ignore */ }
+                          try { onImageUpdate?.(img); } catch (e) { /* ignore */ }
+                          // Notify any section-open callbacks if present
+                          onSectionOpen?.();
+                        }}
+                        showOriginal={showOriginal}
                   />
                 </div>
               ) : null;

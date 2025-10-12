@@ -1515,6 +1515,15 @@ export const RetroImageEditor = () => {
                 setPreviewShowingOriginal(show);
               }}
               controlledShowOriginal={previewShowingOriginal}
+              onImageUpdate={(img) => {
+                // Persist processed image updates coming from child components
+                // (for example PaletteViewer when a palette color is edited).
+                setProcessedImageData(img);
+                // Ensure preview shows processed image and mark toggle as manual so
+                // we don't auto-revert
+                previewToggleWasManualRef.current = true;
+                setPreviewShowingOriginal(false);
+              }}
             />
 
             {/* Floating Content Sections - now constrained inside preview cell (absolute inset) */}
