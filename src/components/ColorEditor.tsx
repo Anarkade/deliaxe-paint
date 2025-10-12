@@ -71,6 +71,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
 
   const [color, setColor] = useState<Color>({ r: initial.r, g: initial.g, b: initial.b });
   const [hsl, setHsl] = useState(() => rgbToHsl(initial.r, initial.g, initial.b));
+  const hexRef = useRef<HTMLInputElement | null>(null);
+  const [previewWidth, setPreviewWidth] = useState<number | null>(null);
 
   // Draw gradient canvas for current hue
   useEffect(() => {
@@ -146,6 +148,23 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     window.addEventListener('mousedown', onDown);
     return () => window.removeEventListener('mousedown', onDown);
   }, [onCancel]);
+
+  // Measure hex input width so the painted preview rectangle can copy it.
+  // Use getBoundingClientRect() for a pixel-accurate measurement and re-run
+  // the measurement whenever the selected color or the canvas display width
+  // changes (so the input's layout/styling may have changed).
+  useEffect(() => {
+    const measure = () => {
+      const el = hexRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      if (rect && rect.width) setPreviewWidth(Math.max(0, Math.round(rect.width)));
+    };
+    // measure on next tick and on resize
+    setTimeout(measure, 0);
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [color, canvasDisplayWidth]);
 
 
 
@@ -263,7 +282,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
           {/* Container constrained to canvas displayed width (so grid matches canvas width) */}
           <div className="mb-2" style={{ width: canvasDisplayWidth ? `${canvasDisplayWidth}px` : '100%', maxWidth: '100%' }}>
             {/* Row 2: Gradient canvas */}
-            <div className="mb-2 overflow-auto">
+            <div className="mb-2 overflow-auto relative">
               <canvas
                 ref={canvasRef}
                 onClick={handleCanvasClick}
@@ -272,6 +291,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                 className="border border-elegant-border cursor-crosshair"
                 style={{ display: 'block', width: canvasDisplayWidth ? `${canvasDisplayWidth}px` : '256px', height: '256px' }}
               />
+              {/* RGB depth label positioned top-left of the gradient area */}
+              <div className="absolute left-2 top-2 text-xs text-muted-foreground">RGB {depth.r}-{depth.g}-{depth.b}</div>
             </div>
 
             {/* Row 3: Hue slider (reuse shared Slider from ui to match ImagePreview) */}
@@ -291,58 +312,60 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
 
       {/* Rows area: exact 2-row x 5-column layout specified by user (explicit placement)
         Reduced horizontal gaps and allocate extra width to the color rectangle (first column) */}
-            <div className="my-4 grid grid-rows-2 gap-x-2 gap-y-0.5 w-full" style={{ gridTemplateColumns: '3fr 1fr 1fr 1fr' }}>
-              {/* Col1: rect (row 1-2, col 1) with RGB text and hex input inside */}
-              <div className="col-start-1 row-start-1 row-end-3 border border-elegant-border rounded-sm relative" style={{ backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`, minHeight: '80px' }} aria-hidden="true">
-                <div className="absolute top-2 right-2 text-xs text-right text-muted-foreground">RGB {depth.r}-{depth.g}-{depth.b}</div>
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                  <input className="max-w-[80px] w-full bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm text-center" value={toHex(color.r, color.g, color.b)} onChange={(e) => {
-                    const v = e.target.value.replace(/[^0-9a-fA-F#]/g, '');
-                    if (/^#?[0-9A-Fa-f]{6}$/.test(v)) {
-                      const hex = v.startsWith('#') ? v : `#${v}`;
-                      const r = parseInt(hex.substr(1,2), 16);
-                      const g = parseInt(hex.substr(3,2), 16);
-                      const b = parseInt(hex.substr(5,2), 16);
-                      setColor({ r, g, b });
-                    }
-                  }} />
-                </div>
+            <div className="my-4 grid gap-x-2 gap-y-0.5 w-full" style={{ gridTemplateColumns: '3fr 1fr 1fr 1fr', gridTemplateRows: 'auto auto' }}>
+              {/* Col1 row1: rect with RGB text */}
+              <div className="col-start-1 row-start-1 border border-elegant-border rounded-sm relative flex items-start justify-start" style={{ backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`, width: previewWidth ? `${previewWidth}px` : undefined }} aria-hidden="true">
+                {/* painted rectangle area (color only) - width copies hex input */}
+              </div>
+
+              {/* Col1 row2: hex textbox centered below the rect */}
+              <div className="col-start-1 row-start-2 flex justify-start items-center py-1">
+                <input ref={hexRef} className="max-w-[80px] w-full bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm text-center" value={toHex(color.r, color.g, color.b)} onChange={(e) => {
+                  const v = e.target.value.replace(/[^0-9a-fA-F#]/g, '');
+                  if (/^#?[0-9A-Fa-f]{6}$/.test(v)) {
+                    const hex = v.startsWith('#') ? v : `#${v}`;
+                    const r = parseInt(hex.substr(1,2), 16);
+                    const g = parseInt(hex.substr(3,2), 16);
+                    const b = parseInt(hex.substr(5,2), 16);
+                    setColor({ r, g, b });
+                  }
+                }} />
               </div>
 
               {/* Col2 row1: R label left + textbox (input right-aligned to match bottom) */}
-              <div className="col-start-2 row-start-1 flex items-center justify-end gap-2">
+              <div className="col-start-2 row-start-1 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">R</div>
-                <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+                <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
 
               {/* Col3 row1: G label left + textbox (input right-aligned to match bottom) */}
-              <div className="col-start-3 row-start-1 flex items-center justify-end gap-2">
+              <div className="col-start-3 row-start-1 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">G</div>
-                <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+                <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
 
               {/* Col4 row1: B label left + textbox (input right-aligned to match bottom) */}
-              <div className="col-start-4 row-start-1 flex items-center justify-end gap-2">
+              <div className="col-start-4 row-start-1 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">B</div>
-                <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+                <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
 
               {/* Col2 row2: H input */}
-              <div className="col-start-2 row-start-2 flex items-center justify-end gap-2">
+              <div className="col-start-2 row-start-2 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">H</div>
-                <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+                <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
 
               {/* Col3 row2: S input */}
-              <div className="col-start-3 row-start-2 flex items-center justify-end gap-2">
+              <div className="col-start-3 row-start-2 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">S</div>
-                <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+                <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
 
               {/* Col4 row2: L input */}
-              <div className="col-start-4 row-start-2 flex items-center justify-end gap-2">
+              <div className="col-start-4 row-start-2 flex items-center justify-end gap-1.5">
                 <div className="text-xs text-muted-foreground">L</div>
-                <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="w-[40px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+                <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="w-[34px] bg-transparent border border-elegant-border rounded px-1 py-1 font-mono text-sm text-center leading-none" />
               </div>
             </div>
         </div>
