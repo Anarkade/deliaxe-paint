@@ -324,46 +324,42 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     setColor(newColor);
   };
 
-  // Compute marker position (in pixels within the displayed canvas) for the selected color
+  // Compute marker position (in pixels within the displayed canvas) for the selected color.
+  // Align the marker center to the intrinsic canvas pixel center to avoid half-pixel offsets.
   const computeMarkerPos = (): { left: number; top: number } => {
-    const size = canvasDisplayWidth || 256;
+    const displayed = canvasDisplayWidth || 256;
+    const intrinsic = 256;
+    const scale = displayed / intrinsic;
     const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
-    let px = 0; let py = 0;
-    const w = 256; const h = 256;
+
+    let ix = 0; let iy = 0; // intrinsic pixel indices 0..intrinsic-1
+
     if (mode === 'hue') {
-      // x -> saturation, y -> lightness
-      const s = hsl.s / 100;
-      const l = hsl.l / 100;
-      px = Math.round(s * (size - 1));
-      py = Math.round(l * (size - 1));
+      ix = Math.round((hsl.s / 100) * (intrinsic - 1));
+      iy = Math.round((hsl.l / 100) * (intrinsic - 1));
     } else if (mode === 'saturation') {
-      // x -> hue, y -> lightness
-      const hueFrac = (hsl.h % 360) / 360;
-      const l = hsl.l / 100;
-      px = Math.round(hueFrac * (size - 1));
-      py = Math.round(l * (size - 1));
+      ix = Math.round(((hsl.h % 360) / 360) * (intrinsic - 1));
+      iy = Math.round((hsl.l / 100) * (intrinsic - 1));
     } else if (mode === 'lightness') {
-      // x -> saturation, y -> hue
-      const s = hsl.s / 100;
-      const hueFrac = (hsl.h % 360) / 360;
-      px = Math.round(s * (size - 1));
-      py = Math.round(hueFrac * (size - 1));
+      ix = Math.round((hsl.s / 100) * (intrinsic - 1));
+      iy = Math.round(((hsl.h % 360) / 360) * (intrinsic - 1));
     } else if (mode === 'red') {
-      // x -> G, y -> B, R fixed
-      px = Math.round((color.g / 255) * (size - 1));
-      py = Math.round((color.b / 255) * (size - 1));
+      ix = Math.round((color.g / 255) * (intrinsic - 1));
+      iy = Math.round((color.b / 255) * (intrinsic - 1));
     } else if (mode === 'green') {
-      // x -> B, y -> R
-      px = Math.round((color.b / 255) * (size - 1));
-      py = Math.round((color.r / 255) * (size - 1));
+      ix = Math.round((color.b / 255) * (intrinsic - 1));
+      iy = Math.round((color.r / 255) * (intrinsic - 1));
     } else if (mode === 'blue') {
-      // x -> R, y -> G
-      px = Math.round((color.r / 255) * (size - 1));
-      py = Math.round((color.g / 255) * (size - 1));
+      ix = Math.round((color.r / 255) * (intrinsic - 1));
+      iy = Math.round((color.g / 255) * (intrinsic - 1));
     }
-    px = clamp(px, 0, size - 1);
-    py = clamp(py, 0, size - 1);
-    return { left: px, top: py };
+
+    // Convert intrinsic pixel index to displayed pixel center
+    const cx = (ix + 0.5) * scale;
+    const cy = (iy + 0.5) * scale;
+    const left = clamp(Math.round(cx), 0, Math.max(0, Math.round(displayed - 1)));
+    const top = clamp(Math.round(cy), 0, Math.max(0, Math.round(displayed - 1)));
+    return { left, top };
   };
 
   // When HSL sliders change
@@ -532,7 +528,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
           {/* Container constrained to canvas displayed width (so grid matches canvas width) */}
           <div className="mb-2" style={{ width: canvasDisplayWidth ? `${canvasDisplayWidth}px` : '100%', maxWidth: '100%' }}>
             {/* Row 2: Gradient canvas */}
-            <div className="overflow-auto relative">
+            <div className="overflow-hidden relative">
               <canvas
                 ref={canvasRef}
                 onClick={handleCanvasClick}
@@ -559,7 +555,6 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                       height: `${sizePx}px`,
                       borderRadius: '9999px',
                       border: '3px solid rgba(0,0,0,0.5)',
-                      boxShadow: '0 0 0 3px rgba(255,255,255,0.2) inset',
                       background: bg,
                       pointerEvents: 'none',
                       transform: 'translateZ(0)'
