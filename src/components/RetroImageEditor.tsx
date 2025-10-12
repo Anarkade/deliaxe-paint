@@ -345,6 +345,10 @@ export const RetroImageEditor = () => {
   const [previewShowingOriginal, setPreviewShowingOriginal] = useState<boolean>(true);
   const previewToggleWasManualRef = useRef(false);
   const ignoreNextCloseRef = useRef(false);
+  // When true, skip the next scheduled processImage run because the change
+  // originated from a manual palette-driven ImageData edit that should be
+  // preserved as-is.
+  const suppressNextProcessRef = useRef(false);
   
   // Performance and processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -1364,6 +1368,13 @@ export const RetroImageEditor = () => {
   // on load). Debounce to avoid repeated runs during rapid UI changes.
   useEffect(() => {
     if (originalImage || processedImageData) {
+      // If a manual palette-driven image update occurred, suppress the
+      // next automatic processing run so the user's edit is not overwritten.
+      if (suppressNextProcessRef.current) {
+        suppressNextProcessRef.current = false;
+        return;
+      }
+
       const timeoutId = setTimeout(() => {
         processImage();
       }, PROCESSING_DEBOUNCE_MS);
@@ -1515,15 +1526,19 @@ export const RetroImageEditor = () => {
                 setPreviewShowingOriginal(show);
               }}
               controlledShowOriginal={previewShowingOriginal}
-              onImageUpdate={(img) => {
-                // Persist processed image updates coming from child components
-                // (for example PaletteViewer when a palette color is edited).
-                setProcessedImageData(img);
-                // Ensure preview shows processed image and mark toggle as manual so
-                // we don't auto-revert
-                previewToggleWasManualRef.current = true;
-                setPreviewShowingOriginal(false);
-              }}
+                onImageUpdate={(img) => {
+                  // Persist processed image updates coming from child components
+                  // (for example PaletteViewer when a palette color is edited).
+                  // Set a one-time suppression so the debounced processImage
+                  // effect doesn't immediately re-run and overwrite this manual
+                  // modification.
+                  suppressNextProcessRef.current = true;
+                  setProcessedImageData(img);
+                  // Ensure preview shows processed image and mark toggle as manual so
+                  // we don't auto-revert
+                  previewToggleWasManualRef.current = true;
+                  setPreviewShowingOriginal(false);
+                }}
             />
 
             {/* Floating Content Sections - now constrained inside preview cell (absolute inset) */}

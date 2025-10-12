@@ -182,17 +182,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const applyEditorColor = (c: PaletteColor) => {
     if (editorState.index === null) return;
 
-    // Update the palette UI first so the change is visible immediately
-    const newColors = [...paletteColors];
-    const oldColor = newColors[editorState.index];
-    newColors[editorState.index] = { ...newColors[editorState.index], r: c.r, g: c.g, b: c.b };
-    setPaletteColors(newColors);
-    onPaletteUpdate?.(newColors);
+    const index = editorState.index;
+    const oldColor = paletteColors[index];
 
-    // Then update the processed image pixels (if available) and notify parent
+    // First: if we have a processed ImageData, clone it and replace exact RGB matches
     try {
       if (imageData && onImageUpdate) {
-        // Clone ImageData so we don't mutate the original reference
         const cloned = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
         const d = cloned.data;
         for (let i = 0; i < d.length; i += 4) {
@@ -203,11 +198,18 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             // leave alpha unchanged
           }
         }
+        // Notify parent with updated processed image so preview updates immediately
         onImageUpdate(cloned);
       }
     } catch (err) {
       console.warn('Error replacing pixels in processed image:', err);
     }
+
+    // Then update the palette UI so the swatch shows the new color
+    const newColors = [...paletteColors];
+    newColors[index] = { ...newColors[index], r: c.r, g: c.g, b: c.b };
+    setPaletteColors(newColors);
+    onPaletteUpdate?.(newColors);
 
     closeEditor();
   };
