@@ -426,19 +426,6 @@ export const ImagePreview = ({
     }
   }, [processedImageData, t]);
 
-  // When a new processedImageData is supplied, ensure the preview switches
-  // to showing the processed image and notify the parent if it cares.
-  useEffect(() => {
-    if (processedImageData) {
-      setShowOriginal(false);
-      try {
-        onShowOriginalChange?.(false);
-      } catch (e) {
-        // ignore caller errors
-      }
-    }
-  }, [processedImageData, onShowOriginalChange]);
-
   // Calculate container width and fit-to-width zoom (observe element size)
   useEffect(() => {
     const update = () => {
