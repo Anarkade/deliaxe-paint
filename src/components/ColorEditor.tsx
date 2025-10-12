@@ -95,25 +95,46 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   const [hError, setHError] = useState(false);
   const [sError, setSError] = useState(false);
   const [lError, setLError] = useState(false);
+  // Editor mode: 'hue' | 'saturation' | 'lightness'
+  const [mode, setMode] = useState<'hue' | 'saturation' | 'lightness'>('hue');
   // Dragging state for moving the editor
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
 
-  // Draw gradient canvas for current hue
+  // Draw gradient canvas for current HSL and active mode
   useEffect(() => {
     const c = canvasRef.current;
     if (!c) return;
     const ctx = c.getContext('2d');
     if (!ctx) return;
-  const w = c.width = 256;
-  const h = c.height = 256;
+    const w = c.width = 256;
+    const h = c.height = 256;
 
     const image = ctx.createImageData(w, h);
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
-        const sat = (x / (w - 1)) * 100;
-        const light = (1 - (y / (h - 1))) * 100; // top 100 -> bottom 0
-        const rgb = hslToRgb(hsl.h, sat, light);
+        let rgb;
+        if (mode === 'hue') {
+          // x -> saturation 0% (left) -> 100% (right)
+          // y -> lightness 0% (top) -> 100% (bottom)
+          const sat = (x / (w - 1)) * 100;
+          const light = (y / (h - 1)) * 100;
+          rgb = hslToRgb(hsl.h, sat, light);
+        } else if (mode === 'saturation') {
+          // x -> hue 0 (left) -> 360 (right)
+          // y -> lightness 0% (top) -> 100% (bottom)
+          const hue = (x / (w - 1)) * 360;
+          const light = (y / (h - 1)) * 100;
+          rgb = hslToRgb(hue, hsl.s, light);
+        } else {
+          // mode === 'lightness'
+          // x -> saturation 0% (left) -> 100% (right)
+          // y -> hue 0 (top) -> 360 (bottom)
+          const sat = (x / (w - 1)) * 100;
+          const hue = (y / (h - 1)) * 360;
+          rgb = hslToRgb(hue, sat, hsl.l);
+        }
+
         const idx = (y * w + x) * 4;
         image.data[idx] = rgb.r;
         image.data[idx + 1] = rgb.g;
@@ -124,19 +145,15 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     ctx.putImageData(image, 0, 0);
 
     // After drawing, update editor width to match canvas displayed width
-    // Use a small timeout to ensure layout has settled
     setTimeout(() => {
       const canvasEl = canvasRef.current;
       if (!canvasEl) return;
-      // Use the canvas intrinsic width (512) rather than clientWidth so
-      // changes caused by DOM reflows (e.g. slider interactions) don't
-      // accidentally modify the displayed width.
       const intrinsicWidth = canvasEl.width || 512;
       const padding = 32; // approximate left+right padding + border
       setEditorWidth(intrinsicWidth + padding);
       setCanvasDisplayWidth(intrinsicWidth);
     }, 0);
-  }, [hsl.h]);
+  }, [hsl, mode]);
 
   // Update editor width on window resize in case canvas clientWidth changes
   useEffect(() => {
@@ -353,7 +370,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
       <div className="color-bg-highlight rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor"
         style={{ ['--slider-s' as any]: `${hsl.s}%`, ['--slider-l' as any]: `${hsl.l}%` }}>
         {/* Scoped styles: remove spinner controls from number inputs inside this dialog */}
-        <style>{`
+          <style>{`
           [role="dialog"][aria-label="Color editor"] input[type=number]::-webkit-outer-spin-button,
           [role="dialog"][aria-label="Color editor"] input[type=number]::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -363,23 +380,29 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
             -moz-appearance: textfield;
             appearance: textfield;
           }
-          /* Slider track: full hue gradient left->right (S=50% L=50%) */
+          /* Dynamic slider track gradient (mode-aware) */
           [role="dialog"][aria-label="Color editor"] .color-bg-highlight {
-            background: linear-gradient(90deg,
-              hsl(0 var(--slider-s,50%) var(--slider-l,50%)) 0%,
-              hsl(30 var(--slider-s,50%) var(--slider-l,50%)) 8%,
-              hsl(60 var(--slider-s,50%) var(--slider-l,50%)) 17%,
-              hsl(90 var(--slider-s,50%) var(--slider-l,50%)) 25%,
-              hsl(120 var(--slider-s,50%) var(--slider-l,50%)) 33%,
-              hsl(150 var(--slider-s,50%) var(--slider-l,50%)) 42%,
-              hsl(180 var(--slider-s,50%) var(--slider-l,50%)) 50%,
-              hsl(210 var(--slider-s,50%) var(--slider-l,50%)) 58%,
-              hsl(240 var(--slider-s,50%) var(--slider-l,50%)) 67%,
-              hsl(270 var(--slider-s,50%) var(--slider-l,50%)) 75%,
-              hsl(300 var(--slider-s,50%) var(--slider-l,50%)) 83%,
-              hsl(330 var(--slider-s,50%) var(--slider-l,50%)) 92%,
-              hsl(360 var(--slider-s,50%) var(--slider-l,50%)) 100%
-            );
+            background: ${(() => {
+              // build a gradient string depending on mode
+              if (mode === 'hue') {
+                // multi-stop hue gradient using current S/L with uniformly spaced stops
+                const s = hsl.s;
+                const l = hsl.l;
+                const steps = 12; // number of segments (12 gives 13 stops including 0 and 360)
+                const stops: string[] = [];
+                for (let i = 0; i <= steps; i++) {
+                  const hueVal = Math.round((i / steps) * 360);
+                  const perc = ((i / steps) * 100).toFixed(2);
+                  stops.push(`hsl(${hueVal} ${s}% ${l}%) ${perc}%`);
+                }
+                return 'linear-gradient(90deg, ' + stops.join(', ') + ')';
+              } else if (mode === 'saturation') {
+                // vary saturation from 0% to 100% keeping H/L
+                return `linear-gradient(90deg, hsl(${hsl.h} 0% ${hsl.l}%) 0%, hsl(${hsl.h} 100% ${hsl.l}%) 100%)`;
+              }
+              // lightness mode: vary lightness 0% -> 100%
+              return `linear-gradient(90deg, hsl(${hsl.h} ${hsl.s}% 0%) 0%, hsl(${hsl.h} ${hsl.s}% 100%) 100%)`;
+            })()};
             border-radius: 9999px;
           }
           /* Filled range should be transparent so it doesn't obscure the track gradient */
@@ -407,15 +430,28 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
             {/* Row 3: Hue slider (reuse shared Slider from ui to match ImagePreview) */}
             <div className="mb-2 w-full flex items-center">
               <Slider
-                value={[hsl.h]}
-                onValueChange={(v) => handleHueChange(v[0])}
-                min={0}
-                max={360}
+                value={mode === 'hue' ? [hsl.h] : mode === 'saturation' ? [hsl.s] : [hsl.l]}
+                onValueChange={(v) => {
+                  const val = Math.round(v[0]);
+                  if (mode === 'hue') {
+                    handleHueChange(val);
+                  } else if (mode === 'saturation') {
+                    handleHSLTextChange('s', val);
+                  } else {
+                    handleHSLTextChange('l', val);
+                  }
+                }}
+                min={mode === 'hue' ? 0 : 0}
+                max={mode === 'hue' ? 360 : 100}
                 step={1}
                 className="w-full"
                 trackClassName="color-bg-highlight"
                 rangeClassName="color-range-transparent"
-                thumbStyle={{ background: `hsl(${hsl.h} 50% 50%)` }}
+                thumbStyle={{ background: (() => {
+                  if (mode === 'hue') return `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`;
+                  if (mode === 'saturation') return `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`;
+                  return `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`;
+                })() }}
               />
             </div>
 
@@ -523,6 +559,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                   ref={hRef}
                   className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${hError ? 'border-red-500' : 'border-input'}`}
                   value={hInput}
+                  onFocus={() => setMode('hue')}
+                  onClick={() => setMode('hue')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setHInput(v);
@@ -547,6 +585,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                   ref={sRef}
                   className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${sError ? 'border-red-500' : 'border-input'}`}
                   value={sInput}
+                  onFocus={() => setMode('saturation')}
+                  onClick={() => setMode('saturation')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setSInput(v);
@@ -571,6 +611,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                   ref={lRef}
                   className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${lError ? 'border-red-500' : 'border-input'}`}
                   value={lInput}
+                  onFocus={() => setMode('lightness')}
+                  onClick={() => setMode('lightness')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setLInput(v);
