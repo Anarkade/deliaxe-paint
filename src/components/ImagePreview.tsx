@@ -148,7 +148,6 @@ export const ImagePreview = ({
   originalImageSource, 
   selectedPalette = 'original', 
   onPaletteUpdate, 
-  onImageUpdate,
   showCameraPreview, 
   onCameraPreviewChange, 
   selectedCameraId,
