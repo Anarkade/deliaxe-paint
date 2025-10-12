@@ -95,8 +95,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   const [hError, setHError] = useState(false);
   const [sError, setSError] = useState(false);
   const [lError, setLError] = useState(false);
-  // Editor mode: 'hue' | 'saturation' | 'lightness'
-  const [mode, setMode] = useState<'hue' | 'saturation' | 'lightness'>('hue');
+  // Editor mode: 'hue' | 'saturation' | 'lightness' | 'red' | 'green' | 'blue'
+  const [mode, setMode] = useState<'hue' | 'saturation' | 'lightness' | 'red' | 'green' | 'blue'>('hue');
   // Dragging state for moving the editor
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
@@ -126,13 +126,28 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
           const hue = (x / (w - 1)) * 360;
           const light = (y / (h - 1)) * 100;
           rgb = hslToRgb(hue, hsl.s, light);
-        } else {
+        } else if (mode === 'lightness') {
           // mode === 'lightness'
           // x -> saturation 0% (left) -> 100% (right)
           // y -> hue 0 (top) -> 360 (bottom)
           const sat = (x / (w - 1)) * 100;
           const hue = (y / (h - 1)) * 360;
           rgb = hslToRgb(hue, sat, hsl.l);
+        } else if (mode === 'red') {
+          // mode red: X -> Green 0..255, Y -> Blue 0..255, R fixed
+          const g = Math.round((x / (w - 1)) * 255);
+          const b = Math.round((y / (h - 1)) * 255);
+          rgb = { r: color.r, g, b };
+        } else if (mode === 'green') {
+          // mode green: X -> Blue 0..255, Y -> Red 0..255, G fixed
+          const b = Math.round((x / (w - 1)) * 255);
+          const r = Math.round((y / (h - 1)) * 255);
+          rgb = { r, g: color.g, b };
+        } else if (mode === 'blue') {
+          // mode blue: X -> Red 0..255, Y -> Green 0..255, B fixed
+          const r = Math.round((x / (w - 1)) * 255);
+          const g = Math.round((y / (h - 1)) * 255);
+          rgb = { r, g, b: color.b };
         }
 
         const idx = (y * w + x) * 4;
@@ -312,6 +327,14 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     setColor(rgb);
   };
 
+  const handleRGBSliderChange = (key: 'r' | 'g' | 'b', val: number) => {
+    const clamped = Math.max(0, Math.min(255, Math.round(val)));
+    const newColor = { ...color, [key]: clamped } as any;
+    setColor(newColor);
+    const newHsl = rgbToHsl(newColor.r, newColor.g, newColor.b);
+    setHsl(newHsl);
+  };
+
   const handleHSLTextChange = (key: 'h' | 's' | 'l', value: number) => {
     const clamped = key === 'h' ? Math.max(0, Math.min(360, Math.round(value))) : Math.max(0, Math.min(100, Math.round(value)));
     const newHsl = { ...hsl, [key]: clamped } as any;
@@ -399,9 +422,22 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
               } else if (mode === 'saturation') {
                 // vary saturation from 0% to 100% keeping H/L
                 return `linear-gradient(90deg, hsl(${hsl.h} 0% ${hsl.l}%) 0%, hsl(${hsl.h} 100% ${hsl.l}%) 100%)`;
+              } else if (mode === 'lightness') {
+                // lightness mode: vary lightness 0% -> 100%
+                return `linear-gradient(90deg, hsl(${hsl.h} ${hsl.s}% 0%) 0%, hsl(${hsl.h} ${hsl.s}% 100%) 100%)`;
+              } else if (mode === 'red' || mode === 'green' || mode === 'blue') {
+                // RGB modes: vary the selected channel from 0 -> 255 while keeping others constant
+                const stepsRgb = 8; // reasonable number of stops
+                const stopsRgb: string[] = [];
+                for (let i = 0; i <= stepsRgb; i++) {
+                  const val = Math.round((i / stepsRgb) * 255);
+                  const perc = ((i / stepsRgb) * 100).toFixed(0);
+                  if (mode === 'red') stopsRgb.push(`rgb(${val}, ${color.g}, ${color.b}) ${perc}%`);
+                  else if (mode === 'green') stopsRgb.push(`rgb(${color.r}, ${val}, ${color.b}) ${perc}%`);
+                  else stopsRgb.push(`rgb(${color.r}, ${color.g}, ${val}) ${perc}%`);
+                }
+                return 'linear-gradient(90deg, ' + stopsRgb.join(', ') + ')';
               }
-              // lightness mode: vary lightness 0% -> 100%
-              return `linear-gradient(90deg, hsl(${hsl.h} ${hsl.s}% 0%) 0%, hsl(${hsl.h} ${hsl.s}% 100%) 100%)`;
             })()};
             border-radius: 9999px;
           }
@@ -430,28 +466,37 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
             {/* Row 3: Hue slider (reuse shared Slider from ui to match ImagePreview) */}
             <div className="mb-2 w-full flex items-center">
               <Slider
-                value={mode === 'hue' ? [hsl.h] : mode === 'saturation' ? [hsl.s] : [hsl.l]}
+                value={(() => {
+                  if (mode === 'hue') return [hsl.h];
+                  if (mode === 'saturation') return [hsl.s];
+                  if (mode === 'lightness') return [hsl.l];
+                  if (mode === 'red') return [color.r];
+                  if (mode === 'green') return [color.g];
+                  return [color.b];
+                })()}
                 onValueChange={(v) => {
                   const val = Math.round(v[0]);
                   if (mode === 'hue') {
                     handleHueChange(val);
                   } else if (mode === 'saturation') {
                     handleHSLTextChange('s', val);
-                  } else {
+                  } else if (mode === 'lightness') {
                     handleHSLTextChange('l', val);
+                  } else if (mode === 'red') {
+                    handleRGBSliderChange('r', val);
+                  } else if (mode === 'green') {
+                    handleRGBSliderChange('g', val);
+                  } else {
+                    handleRGBSliderChange('b', val);
                   }
                 }}
                 min={mode === 'hue' ? 0 : 0}
-                max={mode === 'hue' ? 360 : 100}
+                max={mode === 'hue' ? 360 : (mode === 'red' || mode === 'green' || mode === 'blue' ? 255 : 100)}
                 step={1}
                 className="w-full"
                 trackClassName="color-bg-highlight"
                 rangeClassName="color-range-transparent"
-                thumbStyle={{ background: (() => {
-                  if (mode === 'hue') return `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`;
-                  if (mode === 'saturation') return `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`;
-                  return `hsl(${hsl.h} ${hsl.s}% ${hsl.l}%)`;
-                })() }}
+                thumbStyle={{ background: `rgb(${color.r}, ${color.g}, ${color.b})` }}
               />
             </div>
 
@@ -495,6 +540,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                   ref={rRef}
                   className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${rError ? 'border-red-500' : 'border-input'}`}
                   value={rInput}
+            onFocus={() => setMode('red')}
+            onClick={() => setMode('red')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setRInput(v);
@@ -517,6 +564,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                   ref={gRef}
                   className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${gError ? 'border-red-500' : 'border-input'}`}
                   value={gInput}
+            onFocus={() => setMode('green')}
+            onClick={() => setMode('green')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setGInput(v);
@@ -538,6 +587,8 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
                   ref={bRef}
                   className={`w-[34px] bg-background rounded px-1 py-1 font-mono text-sm text-center leading-none border-2 focus:ring-transparent focus:outline-none ${bError ? 'border-red-500' : 'border-input'}`}
                   value={bInput}
+            onFocus={() => setMode('blue')}
+            onClick={() => setMode('blue')}
                   onChange={(e) => {
                     const v = e.target.value;
                     setBInput(v);
