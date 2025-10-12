@@ -40,7 +40,61 @@ export const useImageProcessor = () => {
 
     workerRef.current.onmessage = (event: MessageEvent<ProcessingResponse>) => {
       const { type, data, id, progress } = event.data;
-      const payload: unknown = data;
+      let payload: any = data;
+
+      // Helper: if payload contains a packaged ImageData (width/height/buffer)
+      // or an object with imageData:{width,height,buffer}, reconstruct
+      // actual ImageData instances so callers can pass them to canvas APIs.
+      const tryReconstructImageData = (obj: any): any => {
+        if (!obj || typeof obj !== 'object') return obj;
+
+        // Case: response is an object with top-level width/height/buffer
+        if (typeof obj.width === 'number' && typeof obj.height === 'number' && obj.buffer) {
+          try {
+            const buf = obj.buffer as ArrayBuffer;
+            const arr = new Uint8ClampedArray(buf);
+            return new ImageData(arr, obj.width, obj.height);
+          } catch (e) {
+            // Reconstruction failed, return original
+            return obj;
+          }
+        }
+
+        // Case: object contains imageData property packaged
+        if (obj.imageData && typeof obj.imageData === 'object') {
+          const idata = obj.imageData as any;
+          if (typeof idata.width === 'number' && typeof idata.height === 'number' && idata.buffer) {
+            try {
+              const buf = idata.buffer as ArrayBuffer;
+              const arr = new Uint8ClampedArray(buf);
+              // Replace the packaged imageData with a real ImageData instance
+              const reconstructed = new ImageData(arr, idata.width, idata.height);
+              const copy = { ...obj, imageData: reconstructed };
+              return copy;
+            } catch (e) {
+              return obj;
+            }
+          }
+        }
+
+        // If it's an object, try to recursively reconstruct nested fields
+        const out: any = Array.isArray(obj) ? [] : {};
+        let changed = false;
+        for (const k of Object.keys(obj)) {
+          const v = obj[k];
+          const r = tryReconstructImageData(v);
+          out[k] = r;
+          if (r !== v) changed = true;
+        }
+        return changed ? out : obj;
+      };
+
+      try {
+        payload = tryReconstructImageData(payload);
+      } catch (e) {
+        // If reconstruction throws for unexpected reasons, keep original payload
+        payload = data;
+      }
       const request = pendingRequests.current.get(id);
 
       if (!request) return;
@@ -114,17 +168,35 @@ export const useImageProcessor = () => {
         error: null 
       }));
 
+      // To avoid structured-clone of large ImageData (which can cause
+      // DataCloneError / OOM), serialize the pixel buffer into a fresh
+      // ArrayBuffer and transfer it to the worker. The worker will
+      // reconstruct an ImageData instance from the buffer.
+      const transferables: Transferable[] = [];
+
+      const imagePayload: Record<string, unknown> = {
+        operation: options.operation,
+        options: options.options
+      };
+
+      if (imageData) {
+        // Make a copy of the pixels to own a non-shared ArrayBuffer
+        const pixels = new Uint8ClampedArray(imageData.data);
+        imagePayload['imageData'] = {
+          width: imageData.width,
+          height: imageData.height,
+          buffer: pixels.buffer
+        };
+        transferables.push(pixels.buffer);
+      }
+
       const message: ProcessingMessage = {
         type: 'PROCESS_IMAGE',
-        data: {
-          imageData,
-          operation: options.operation,
-          options: options.options
-        } as Record<string, unknown>,
+        data: imagePayload as Record<string, unknown>,
         id
       };
 
-      workerRef.current.postMessage(message);
+      workerRef.current.postMessage(message, transferables);
     });
   }, []);
 
@@ -163,8 +235,26 @@ export const useImageProcessor = () => {
         } as Record<string, unknown>,
         id
       };
+      // Serialize imageData for transfer to the worker
+      const transferables: Transferable[] = [];
+      const payload: Record<string, unknown> = { originalPalette };
+      if (imageData) {
+        const pixels = new Uint8ClampedArray(imageData.data);
+        payload['imageData'] = {
+          width: imageData.width,
+          height: imageData.height,
+          buffer: pixels.buffer
+        };
+        transferables.push(pixels.buffer);
+      }
 
-      workerRef.current.postMessage(message);
+      const wrapped: ProcessingMessage = {
+        type: 'MEGA_DRIVE_PROCESS',
+        data: payload,
+        id
+      };
+
+      workerRef.current.postMessage(wrapped, transferables);
     });
   }, []);
 

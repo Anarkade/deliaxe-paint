@@ -345,6 +345,11 @@ export const RetroImageEditor = () => {
   const [previewShowingOriginal, setPreviewShowingOriginal] = useState<boolean>(true);
   const previewToggleWasManualRef = useRef(false);
   const ignoreNextCloseRef = useRef(false);
+  // When set, skip the immediate automated processing pass to avoid
+  // overwriting intentional manual palette/image edits from the UI.
+  // This flag is toggled by child components before calling onImageUpdate
+  // so the next automated process run can be suppressed once.
+  const suppressNextProcessRef = useRef<boolean>(false);
   
   // Performance and processing state
   const [isProcessing, setIsProcessing] = useState(false);

@@ -166,11 +166,14 @@ self.addEventListener('message', (event: MessageEvent<ProcessingMessage>) => {
 
     switch (type) {
       case 'PROCESS_IMAGE': {
-        const imageData = payload.imageData as ImageData | undefined;
+        // Reconstruct ImageData from transferred buffer
+        const raw = payload.imageData as { width?: number; height?: number; buffer?: ArrayBuffer } | undefined;
         const operation = typeof payload.operation === 'string' ? payload.operation : '';
         const options = (payload.options as Record<string, unknown>) || {};
-        if (!imageData) throw new Error('Missing imageData for PROCESS_IMAGE');
-        result = processImageData(imageData, operation, options);
+        if (!raw || !raw.buffer || !raw.width || !raw.height) throw new Error('Missing imageData for PROCESS_IMAGE');
+        const pixels = new Uint8ClampedArray(raw.buffer);
+        const reconstructed = new ImageData(pixels, raw.width, raw.height);
+        result = processImageData(reconstructed, operation, options);
         break;
       }
 
@@ -182,26 +185,32 @@ self.addEventListener('message', (event: MessageEvent<ProcessingMessage>) => {
       }
 
       case 'APPLY_PALETTE': {
-        const imageData = payload.imageData as ImageData | undefined;
+        const raw = payload.imageData as { width?: number; height?: number; buffer?: ArrayBuffer } | undefined;
         const palette = Array.isArray(payload.palette) ? (payload.palette as Color[]) : [];
-        if (!imageData) throw new Error('Missing imageData for APPLY_PALETTE');
-        result = applyQuantizedPalette(imageData, palette);
+        if (!raw || !raw.buffer || !raw.width || !raw.height) throw new Error('Missing imageData for APPLY_PALETTE');
+        const pixels = new Uint8ClampedArray(raw.buffer);
+        const reconstructed = new ImageData(pixels, raw.width, raw.height);
+        result = applyQuantizedPalette(reconstructed, palette);
         break;
       }
 
       case 'EXTRACT_COLORS': {
-        const imageData = payload.imageData as ImageData | undefined;
-        if (!imageData) throw new Error('Missing imageData for EXTRACT_COLORS');
-        result = extractColorsFromImageData(imageData);
+        const raw = payload.imageData as { width?: number; height?: number; buffer?: ArrayBuffer } | undefined;
+        if (!raw || !raw.buffer || !raw.width || !raw.height) throw new Error('Missing imageData for EXTRACT_COLORS');
+        const pixels = new Uint8ClampedArray(raw.buffer);
+        const reconstructed = new ImageData(pixels, raw.width, raw.height);
+        result = extractColorsFromImageData(reconstructed);
         break;
       }
 
       case 'MEGA_DRIVE_PROCESS': {
-        const imageData = payload.imageData as ImageData | undefined;
+        const raw = payload.imageData as { width?: number; height?: number; buffer?: ArrayBuffer } | undefined;
         const rawPalette = Array.isArray(payload.originalPalette) ? (payload.originalPalette as Color[]) : undefined;
         const originalPalette = rawPalette ? rawPalette.map(c => ({ r: c.r, g: c.g, b: c.b })) : undefined;
-        if (!imageData) throw new Error('Missing imageData for MEGA_DRIVE_PROCESS');
-        result = processMegaDriveInWorker(imageData, originalPalette);
+        if (!raw || !raw.buffer || !raw.width || !raw.height) throw new Error('Missing imageData for MEGA_DRIVE_PROCESS');
+        const pixels = new Uint8ClampedArray(raw.buffer);
+        const reconstructed = new ImageData(pixels, raw.width, raw.height);
+        result = processMegaDriveInWorker(reconstructed, originalPalette);
         break;
       }
 
@@ -210,11 +219,57 @@ self.addEventListener('message', (event: MessageEvent<ProcessingMessage>) => {
     }
 
     // Send result back to main thread
+    // If result contains ImageData, convert its pixel buffer to a transferable
+    // object so the main thread can receive it without structured-clone.
     const response: ProcessingResponse = {
       type: 'PROCESSING_COMPLETE',
       data: result,
       id
     };
+
+    // If the result is an object with imageData property (like mega-drive),
+    // ensure we send back the pixels as ArrayBuffer transferables.
+    try {
+      if (result && typeof result === 'object') {
+        const resObj = result as Record<string, unknown>;
+        const transferList: Transferable[] = [];
+
+        if (resObj.imageData && resObj.imageData instanceof ImageData) {
+          const img = resObj.imageData as ImageData;
+          // Wrap imageData for transfer
+          resObj.imageData = {
+            width: img.width,
+            height: img.height,
+            buffer: img.data.buffer
+          } as Record<string, unknown>;
+          transferList.push((img.data as Uint8ClampedArray).buffer);
+        } else if (resObj instanceof ImageData) {
+          const img = resObj as ImageData;
+          const packaged = {
+            width: img.width,
+            height: img.height,
+            buffer: img.data.buffer
+          };
+          // Send the packaged image data as the data payload
+          const packagedResp: ProcessingResponse = {
+            type: 'PROCESSING_COMPLETE',
+            data: packaged,
+            id
+          };
+          (self as any).postMessage(packagedResp, [ (img.data as Uint8ClampedArray).buffer ]);
+          return;
+        }
+
+        // Send response with transferList if any
+        if (transferList.length > 0) {
+          (self as any).postMessage(response, transferList);
+          return;
+        }
+      }
+    } catch (e) {
+      // Fall back to normal postMessage if transfer fails
+      console.warn('Failed to send transferables from worker, falling back to structured-clone', e);
+    }
 
     self.postMessage(response);
 
