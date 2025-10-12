@@ -218,6 +218,10 @@ export const ImagePreview = ({
   const userSetZoomRef = useRef(false);
   // One-time permit for explicit forced fitToWidth calls (only allow camera/button)
   const autoFitPermitRef = useRef(false);
+  // Remember the most-recent zoom used while viewing each image
+  // Default to 100% so initial view uses 100% unless changed by user/fit
+  const mostRecentZoomOriginal = useRef<number>(100);
+  const mostRecentZoomProcessed = useRef<number>(100);
 
   // Get available cameras
   useEffect(() => {
@@ -518,10 +522,13 @@ export const ImagePreview = ({
       const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
       const fitZoom = Math.floor((cw / currentImage.width) * 100);
   const newZoom = Math.max(1, Math.min(2000, fitZoom));
-      programmaticZoomChange.current = true;
-      setZoom([newZoom]);
-      setSliderValue([newZoom]);
-      onZoomChange?.(newZoom);
+  programmaticZoomChange.current = true;
+  setZoom([newZoom]);
+  setSliderValue([newZoom]);
+  onZoomChange?.(newZoom);
+  // store per-view recent zoom
+  if (showOriginal) mostRecentZoomOriginal.current = newZoom;
+  else mostRecentZoomProcessed.current = newZoom;
       
       // Calculate and set height based on fit-to-width zoom
       const displayHeight = currentImage.height * (newZoom / 100);
@@ -571,10 +578,12 @@ export const ImagePreview = ({
       suppressAutoFitRef.current = false;
       suppressAutoFitTimeoutRef.current = null;
     }, 700) as unknown as number;
-    const newZoom = 100;
-    setZoom([newZoom]);
-    setSliderValue([newZoom]);
-    onZoomChange?.(newZoom);
+  const newZoom = 100;
+  setZoom([newZoom]);
+  setSliderValue([newZoom]);
+  onZoomChange?.(newZoom);
+  if (showOriginal) mostRecentZoomOriginal.current = newZoom;
+  else mostRecentZoomProcessed.current = newZoom;
 
     // Recalculate and set height based on 100% zoom
     if (originalImage) {
@@ -608,10 +617,14 @@ export const ImagePreview = ({
       setZoom([applied]);
       setSliderValue([applied]);
       onZoomChange?.(applied);
+      if (showOriginal) mostRecentZoomOriginal.current = applied;
+      else mostRecentZoomProcessed.current = applied;
     } else {
       setZoom([clampedZoom]);
       setSliderValue([clampedZoom]);
       onZoomChange?.(clampedZoom);
+      if (showOriginal) mostRecentZoomOriginal.current = clampedZoom;
+      else mostRecentZoomProcessed.current = clampedZoom;
     }
     
     // Recalculate height when zoom changes
@@ -997,11 +1010,19 @@ export const ImagePreview = ({
                         setShowOriginal(next);
                         try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
                       }
-                      // Recalculate preview height to reflect the new image selection
+
+                      // Restore the most-recent zoom for the view being switched to
                       try {
+                        const restoreZoom = next ? mostRecentZoomOriginal.current : mostRecentZoomProcessed.current;
+                        // Apply restored zoom to state and notify
+                        setZoom([restoreZoom]);
+                        setSliderValue([restoreZoom]);
+                        onZoomChange?.(restoreZoom);
+
+                        // Recalculate preview height based on restored zoom
                         const currentImage = next ? originalImage : (processedImageData || originalImage);
                         if (currentImage) {
-                          const displayHeight = currentImage.height * (zoom[0] / 100);
+                          const displayHeight = currentImage.height * (restoreZoom / 100);
                           const minHeight = 150;
                           const calculatedHeight = Math.max(minHeight, displayHeight);
                           setPreviewHeight(Math.ceil(calculatedHeight));
