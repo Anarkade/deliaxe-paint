@@ -63,6 +63,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [editorWidth, setEditorWidth] = useState<number | null>(null);
+  const [canvasDisplayWidth, setCanvasDisplayWidth] = useState<number | null>(null);
 
 
 
@@ -102,6 +103,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
       // add some padding to account for editor paddings and borders
       const padding = 32; // approximate left+right padding + border
       setEditorWidth(displayedWidth + padding);
+      setCanvasDisplayWidth(displayedWidth);
     }, 0);
   }, [hsl.h]);
 
@@ -113,6 +115,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
       const displayedWidth = canvasEl.clientWidth || canvasEl.width;
       const padding = 32;
       setEditorWidth(displayedWidth + padding);
+      setCanvasDisplayWidth(displayedWidth);
     };
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
@@ -212,92 +215,108 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
       })()}
     >
       <div className="bg-card rounded-lg border border-elegant-border shadow-lg p-3 w-full" role="dialog" aria-label="Color editor">
-        <div className="flex items-center justify-between mb-2">
-          <div className="font-semibold">Color editor</div>
-          <div className="text-xs text-muted-foreground">Bits: {depth.r}-{depth.g}-{depth.b}</div>
-        </div>
-
-        {/* Row 1: Hex textbox */}
-        <div className="mb-2">
-          <input className="w-full bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" value={toHex(color.r, color.g, color.b)} onChange={(e) => {
-            const v = e.target.value.replace(/[^0-9a-fA-F#]/g, '');
-            if (/^#?[0-9A-Fa-f]{6}$/.test(v)) {
-              const hex = v.startsWith('#') ? v : `#${v}`;
-              const r = parseInt(hex.substr(1,2), 16);
-              const g = parseInt(hex.substr(3,2), 16);
-              const b = parseInt(hex.substr(5,2), 16);
-              setColor({ r, g, b });
-            }
-          }} />
-        </div>
+        {/* Scoped styles: remove spinner controls from number inputs inside this dialog */}
+        <style>{`
+          [role="dialog"][aria-label="Color editor"] input[type=number]::-webkit-outer-spin-button,
+          [role="dialog"][aria-label="Color editor"] input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+          [role="dialog"][aria-label="Color editor"] input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+          }
+        `}</style>
+        {/* Title removed as requested (single-title line removed) */}
 
         {/* Row 2: Gradient canvas */}
-        <div className="mb-2 overflow-auto">
-          <canvas
-            ref={canvasRef}
-            onClick={handleCanvasClick}
-            width={512}
-            height={256}
-            className="border border-elegant-border cursor-crosshair"
-            style={{ display: 'block', width: '512px', height: '256px' }}
-          />
-        </div>
-
-        {/* Row 3: Hue slider (reuse shared Slider from ui to match ImagePreview) */}
-        <div className="mb-2 w-full flex items-center">
-          <Slider
-            value={[hsl.h]}
-            onValueChange={(v) => handleHueChange(v[0])}
-            min={0}
-            max={360}
-            step={1}
-            className="w-full"
-            trackClassName="color-bg-highlight"
-          />
-        </div>
-
-        {/* Rows 4 & 5: left color preview rectangle + RGB and HSL textboxes */}
-        <div className="mb-3 flex items-stretch gap-3">
-          {/* Color preview rectangle that spans the combined height of RGB + HSL rows */}
-          <div
-            className="w-10 min-w-[40px] border border-elegant-border rounded-sm"
-            style={{ backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})` }}
-            aria-hidden="true"
-          />
-
-          <div className="flex-1">
-            {/* RGB row */}
-            <div className="mb-2 grid grid-cols-3 gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-4 text-xs font-mono text-muted-foreground">R</span>
-                <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-4 text-xs font-mono text-muted-foreground">G</span>
-                <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-4 text-xs font-mono text-muted-foreground">B</span>
-                <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
-              </div>
+          {/* Container constrained to canvas displayed width (so grid matches canvas width) */}
+          <div className="mb-2" style={{ width: canvasDisplayWidth ? `${canvasDisplayWidth}px` : '100%', maxWidth: '100%' }}>
+            {/* Row 2: Gradient canvas */}
+            <div className="mb-2 overflow-auto">
+              <canvas
+                ref={canvasRef}
+                onClick={handleCanvasClick}
+                width={512}
+                height={256}
+                className="border border-elegant-border cursor-crosshair"
+                style={{ display: 'block', width: '100%', height: '256px' }}
+              />
             </div>
 
-            {/* HSL row */}
-            <div className="grid grid-cols-3 gap-2">
-              <div className="flex items-center gap-2">
-                <span className="w-4 text-xs font-mono text-muted-foreground">H</span>
-                <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+            {/* Row 3: Hue slider (reuse shared Slider from ui to match ImagePreview) */}
+            <div className="mb-2 w-full flex items-center">
+              <Slider
+                value={[hsl.h]}
+                onValueChange={(v) => handleHueChange(v[0])}
+                min={0}
+                max={360}
+                step={1}
+                className="w-full"
+                trackClassName="color-bg-highlight"
+              />
+            </div>
+
+            {/* Rows area: exact 2-row x 5-column layout specified by user (explicit placement) */}
+            <div className="my-4 grid grid-cols-5 grid-rows-2 gap-x-4 gap-y-1 w-full">
+              {/* Col1: rect (row 1-2, col 1) */}
+              <div className="col-start-1 row-start-1 row-end-3 border border-elegant-border rounded-sm" style={{ backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`, minHeight: '80px' }} aria-hidden="true" />
+
+              {/* Col2 row1: label left */}
+              <div className="col-start-2 row-start-1 flex items-start">
+                <div className="text-xs text-left text-muted-foreground">RGB {depth.r}-{depth.g}-{depth.b}</div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-4 text-xs font-mono text-muted-foreground">S</span>
-                <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+
+              {/* Col3 row1: R label left + textbox */}
+              <div className="col-start-3 row-start-1 flex items-center gap-2">
+                <div className="text-xs">R</div>
+                <input type="number" value={color.r} min={0} max={255} onChange={(e) => handleRGBTextChange('r', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
-              <div className="flex items-center gap-2">
-                <span className="w-4 text-xs font-mono text-muted-foreground">L</span>
-                <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="flex-1 bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+
+              {/* Col4 row1: G label left + textbox */}
+              <div className="col-start-4 row-start-1 flex items-center gap-2">
+                <div className="text-xs">G</div>
+                <input type="number" value={color.g} min={0} max={255} onChange={(e) => handleRGBTextChange('g', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+              </div>
+
+              {/* Col5 row1: B label left + textbox */}
+              <div className="col-start-5 row-start-1 flex items-center gap-2">
+                <div className="text-xs">B</div>
+                <input type="number" value={color.b} min={0} max={255} onChange={(e) => handleRGBTextChange('b', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+              </div>
+
+              {/* Col2 row2: hex textbox centered */}
+              <div className="col-start-2 row-start-2 flex justify-center items-center">
+                <input className="max-w-[80px] w-full bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm text-center" value={toHex(color.r, color.g, color.b)} onChange={(e) => {
+                  const v = e.target.value.replace(/[^0-9a-fA-F#]/g, '');
+                  if (/^#?[0-9A-Fa-f]{6}$/.test(v)) {
+                    const hex = v.startsWith('#') ? v : `#${v}`;
+                    const r = parseInt(hex.substr(1,2), 16);
+                    const g = parseInt(hex.substr(3,2), 16);
+                    const b = parseInt(hex.substr(5,2), 16);
+                    setColor({ r, g, b });
+                  }
+                }} />
+              </div>
+
+              {/* Col3 row2: H input */}
+              <div className="col-start-3 row-start-2 flex items-center gap-2">
+                <div className="w-6 text-xs font-mono text-muted-foreground">H</div>
+                <input type="number" value={hsl.h} min={0} max={360} onChange={(e) => handleHSLTextChange('h', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+              </div>
+
+              {/* Col4 row2: S input */}
+              <div className="col-start-4 row-start-2 flex items-center gap-2">
+                <div className="w-6 text-xs font-mono text-muted-foreground">S</div>
+                <input type="number" value={hsl.s} min={0} max={100} onChange={(e) => handleHSLTextChange('s', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
+              </div>
+
+              {/* Col5 row2: L input */}
+              <div className="col-start-5 row-start-2 flex items-center gap-2">
+                <div className="w-6 text-xs font-mono text-muted-foreground">L</div>
+                <input type="number" value={hsl.l} min={0} max={100} onChange={(e) => handleHSLTextChange('l', Number(e.target.value))} className="w-[60px] bg-transparent border border-elegant-border rounded px-2 py-1 font-mono text-sm" />
               </div>
             </div>
-          </div>
         </div>
 
         {/* Row 6: Accept */}

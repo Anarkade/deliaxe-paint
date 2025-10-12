@@ -5,12 +5,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+  "build": "vite build",
+  "postbuild": "node ./scripts/postbuild-local.cjs",
     "build:dev": "vite build --mode development",
     "check:build": "node scripts/check_build_sanity.cjs",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "preview:local": "npx vite preview --port 4173",
+  "preview": "vite preview",
+  "preview:local": "vite preview --port 4173",
+  "serve": "vite preview --port 4173",
+  "start": "vite",
     "verify:translations": "node scripts/verifyTranslationsCsv.cjs"
   },
   "dependencies": {
