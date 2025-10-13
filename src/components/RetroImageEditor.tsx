@@ -369,13 +369,12 @@ export const RetroImageEditor = () => {
 
   const writeOrderedPalette = useCallback((colors: Color[], source: string) => {
     try {
-      console.debug('[debug] setOrderedPaletteColors requested', { source, count: Array.isArray(colors) ? colors.length : 0 });
+      // development logging removed
     } catch (e) { /* ignore logging errors */ }
 
     // If user manually edited the palette recently, ignore automatic updates
     // unless the update originates from the manual path.
     if (manualPaletteOverrideRef.current && source !== 'manual') {
-      console.debug('[debug] setOrderedPaletteColors suppressed by manual override', { source });
       return;
     }
 
@@ -383,7 +382,6 @@ export const RetroImageEditor = () => {
     try {
       const serialized = paletteKey(colors);
       if (lastWrittenPaletteRef.current === serialized) {
-        console.debug('[debug] writeOrderedPalette - no-op identical palette, skipping setOrderedPaletteColors', { source });
         return;
       }
       lastWrittenPaletteRef.current = serialized;
@@ -479,7 +477,6 @@ export const RetroImageEditor = () => {
 
   // Reset preview toggle preference so new images auto-show processing results
   previewToggleWasManualRef.current = false;
-  console.debug('[debug] RetroImageEditor.resetEditor - setPreviewShowingOriginal -> true');
   setPreviewShowingOriginal(true);
 
   // Clear any manual palette override when resetting the editor
@@ -628,7 +625,6 @@ export const RetroImageEditor = () => {
     setOriginalImage(img);
     setOriginalImageSource(source);
   previewToggleWasManualRef.current = false;
-  console.debug('[debug] RetroImageEditor.loadImage - setPreviewShowingOriginal -> true');
   setPreviewShowingOriginal(true);
 
       // Create an immediate rasterized RGB copy of the loaded image so the
@@ -1305,9 +1301,8 @@ export const RetroImageEditor = () => {
 
       // Always set the processed image so the preview/footer shows it
       setProcessedImageData(imageData);
-      if (!previewToggleWasManualRef.current) {
+        if (!previewToggleWasManualRef.current) {
         try {
-          console.debug('[debug] RetroImageEditor.processImage - setPreviewShowingOriginal -> false');
           setPreviewShowingOriginal(false);
         } catch (e) {
           /* ignore */
@@ -1440,7 +1435,6 @@ export const RetroImageEditor = () => {
       manualPaletteTimeoutRef.current = window.setTimeout(() => {
         manualPaletteOverrideRef.current = false;
         manualPaletteTimeoutRef.current = null;
-        console.debug('[debug] manualPaletteOverride cleared after timeout');
       }, 400) as unknown as number;
 
       // If we already have a processed raster, apply the new palette to it.
@@ -1487,10 +1481,9 @@ export const RetroImageEditor = () => {
           // avoids creating a feedback loop where PaletteViewer extracts colors
           // from the updated raster and re-emits them, causing repeated
           // reprocessing.
-          if (currentHash !== newHash) {
+            if (currentHash !== newHash) {
             setProcessedImageData(newProcessed);
             previewToggleWasManualRef.current = true;
-            console.debug('[debug] RetroImageEditor.handlePaletteUpdateFromViewer - setPreviewShowingOriginal -> false');
             setPreviewShowingOriginal(false);
             saveToHistory({ imageData: newProcessed, palette: selectedPalette });
           } else {
@@ -1503,7 +1496,6 @@ export const RetroImageEditor = () => {
           // to avoid losing the user's manual edit.
           setProcessedImageData(newProcessed);
           previewToggleWasManualRef.current = true;
-          console.debug('[debug] RetroImageEditor.handlePaletteUpdateFromViewer - setPreviewShowingOriginal -> false');
           setPreviewShowingOriginal(false);
           saveToHistory({ imageData: newProcessed, palette: selectedPalette });
         }
@@ -1734,18 +1726,16 @@ export const RetroImageEditor = () => {
               isVerticalLayout={isVerticalLayout}
               onShowOriginalChange={(show) => {
                         previewToggleWasManualRef.current = true;
-                        console.debug('[debug] RetroImageEditor.onShowOriginalChange - setPreviewShowingOriginal ->', show);
                         setPreviewShowingOriginal(show);
                       }}
               controlledShowOriginal={previewShowingOriginal}
-              onImageUpdate={(img) => {
+                    onImageUpdate={(img) => {
                 // Persist processed image updates coming from child components
                 // (for example PaletteViewer when a palette color is edited).
                 setProcessedImageData(img);
                 // Ensure preview shows processed image and mark toggle as manual so
                 // we don't auto-revert
                 previewToggleWasManualRef.current = true;
-                console.debug('[debug] RetroImageEditor.onImageUpdate - setPreviewShowingOriginal -> false');
                 setPreviewShowingOriginal(false);
               }}
             />

@@ -182,7 +182,6 @@ export const ImagePreview = ({
   // If parent provides a controlled prop, use it as the source of truth
   useEffect(() => {
     if (controlledShowOriginal !== undefined) {
-      console.debug('[debug] ImagePreview.controlledShowOriginal effect - setting showOriginal ->', controlledShowOriginal);
       setShowOriginal(controlledShowOriginal);
     }
   }, [controlledShowOriginal]);
@@ -472,8 +471,6 @@ export const ImagePreview = ({
     // authorized flows (camera preview and manual button) can execute it.
     if (force) {
       if (!autoFitPermitRef.current) {
-        // eslint-disable-next-line no-console
-        console.debug('[TEMP DEBUG] fitToWidth blocked: no permit for forced call');
         return;
       }
       // consume permit
@@ -484,13 +481,9 @@ export const ImagePreview = ({
 
     // Prevent rapid repeated calls or re-entrant execution
     if (isAutoFitting.current) {
-      // eslint-disable-next-line no-console
-      console.debug('[TEMP DEBUG] fitToWidth suppressed: already running');
       return;
     }
     if (now - lastFitCallRef.current < FIT_DEBOUNCE_MS) {
-      // eslint-disable-next-line no-console
-      console.debug('[TEMP DEBUG] fitToWidth suppressed: debounce');
       return;
     }
     lastFitCallRef.current = now;
@@ -504,14 +497,9 @@ export const ImagePreview = ({
       if (!callerLine) callerLine = lines[1] || lines[0] || 'unknown';
       const match = callerLine.match(/\(?([^()]+:\d+:\d+)\)?$/);
       const callerLocation = match ? match[1] : callerLine;
-      // Use console.debug so it can be filtered; also print full stack for deeper inspection
-      // eslint-disable-next-line no-console
-      console.debug('[TEMP DEBUG] fitToWidth called', { force, callerLocation });
-      // eslint-disable-next-line no-console
-      console.debug('[TEMP DEBUG] fitToWidth stack:\n' + lines.join('\n'));
+  // diagnostic logging removed
     } catch (err) {
-      // eslint-disable-next-line no-console
-      console.debug('[TEMP DEBUG] fitToWidth diagnostic failed', err);
+      // diagnostic logging removed
     }
     // If caller doesn't force, respect user interactions / suppression.
     if (!force) {
@@ -1019,7 +1007,6 @@ export const ImagePreview = ({
                       if (controlledShowOriginal !== undefined) {
                         try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
                       } else {
-                        console.debug('[debug] ImagePreview.toggleButton - setShowOriginal ->', next);
                         setShowOriginal(next);
                         try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
                       }
