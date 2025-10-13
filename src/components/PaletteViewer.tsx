@@ -243,13 +243,15 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         return { r, g, b };
       });
     
-    // Fill remaining slots with black if needed
-    while (sortedColors.length < paletteColors.length) {
-      sortedColors.push({ r: 0, g: 0, b: 0 });
-    }
-    
+    // Do not create black placeholder colors when the image has fewer
+    // unique colors than the UI palette slots. Leave the palette as-is
+    // (shorter) and let the parent decide how to handle missing slots
+    // (for example by initializing defaults). This prevents emitting
+    // misleading all-black placeholder palettes.
     setPaletteColors(sortedColors);
-    emitPaletteUpdate(sortedColors);
+    if (sortedColors.length > 0) {
+      emitPaletteUpdate(sortedColors);
+    }
   }, [imageData, originalImageSource, paletteColors.length, onPaletteUpdate]);
 
   // Extract unique colors from the current image data and update when it changes
@@ -285,8 +287,17 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       // For retro palettes, use the default or processed palette
       if (selectedPalette !== 'original') {
         const defaultPalette = getDefaultPalette(selectedPalette);
-        setPaletteColors(defaultPalette);
-        emitPaletteUpdate(defaultPalette);
+        if (defaultPalette && defaultPalette.length > 0) {
+          setPaletteColors(defaultPalette);
+          emitPaletteUpdate(defaultPalette);
+        } else {
+          // No built-in default: do not emit placeholder black colors.
+          // Leave the viewer empty and allow the parent to provide a
+          // palette (or to initialize defaults). Emitting black placeholders
+          // caused incorrect first-run processing on RGB images.
+          setPaletteColors([]);
+          try { lastSentPaletteRef.current = ''; } catch (e) { /* ignore */ }
+        }
         return;
       }
 
@@ -358,28 +369,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     if (!externalPalette || externalPalette.length === 0) return null;
   }
 
-  // Ensure retro palettes (even when there is no original palette) initialize
-  // and emit so the parent can create processedPaletteColors / processedImageData.
-  useEffect(() => {
-    if (selectedPalette === 'original') return;
-    if (paletteColors && paletteColors.length > 0) return;
-
-    // Try to get built-in defaults first
-    const defaults = getDefaultPalette(selectedPalette);
-    if (defaults && defaults.length > 0) {
-      setPaletteColors(defaults as PaletteColor[]);
-      emitPaletteUpdate(defaults);
-      return;
-    }
-
-    // Fallback: create placeholder slots. Prefer externalPalette length if available.
-    const len = (externalPalette && externalPalette.length) ? externalPalette.length : 16;
-    const placeholders: PaletteColor[] = Array.from({ length: len }, () => ({ r: 0, g: 0, b: 0 }));
-    setPaletteColors(placeholders);
-    emitPaletteUpdate(placeholders);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPalette, externalPalette]);
-
+  
   return (
     <div className="relative space-y-4 p-4 border border-elegant-border bg-card/50 rounded-lg">
       <div className="space-y-4">

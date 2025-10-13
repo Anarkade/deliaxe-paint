@@ -15,6 +15,7 @@ import { Upload, Palette, Eye, Monitor, Download, Grid3X3, Globe, X, AlertTriang
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { processMegaDriveImage, Color } from '@/lib/colorQuantization';
+import { getDefaultPalette } from '@/lib/defaultPalettes';
 // pngAnalyzer is imported dynamically where needed to keep the main bundle small
 import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
@@ -1797,7 +1798,20 @@ export const RetroImageEditor = () => {
                   onPaletteChange={(palette) => {
                     setSelectedPalette(palette);
                     if (palette !== 'original') {
-                      writeOrderedPalette([], 'undo-clear');
+                      try {
+                        const defaults = getDefaultPalette(palette as string) || [];
+                        if (defaults && defaults.length > 0) {
+                          // convert SimpleColor -> Color
+                          const casted = defaults.map(({ r, g, b }) => ({ r, g, b } as Color));
+                          writeOrderedPalette(casted, 'selectedPalette-default');
+                        } else {
+                          // fall back to clearing if no default available
+                          writeOrderedPalette([], 'undo-clear');
+                        }
+                      } catch (e) {
+                        // In case of any failure, preserve previous behavior
+                        writeOrderedPalette([], 'undo-clear-error');
+                      }
                     }
                     // Schedule processing using the scheduler to avoid stale closures
                     // and prevent duplicate/reentrant processing.

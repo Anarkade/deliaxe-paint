@@ -813,25 +813,31 @@ export const ImagePreview = ({
   }, [originalImage, processedImageData, showOriginal]);
 
   const hasProcessedImage = processedImageData !== null;
-  const paletteViewerSelectedPalette = showOriginal ? 'original' : selectedPalette;
+  // Pass the real selectedPalette to the PaletteViewer. PaletteViewer will
+  // itself block editing when showOriginal is true. Previously we forced the
+  // viewer to receive 'original' which prevented applying retro palettes
+  // when the preview was still showing the original image.
+  const paletteViewerSelectedPalette = selectedPalette;
   const paletteViewerColors = showOriginal
     ? (originalPaletteColors && originalPaletteColors.length > 0 ? originalPaletteColors : undefined)
     : (processedPaletteColors && processedPaletteColors.length > 0 ? processedPaletteColors : undefined);
   const paletteViewerExternal = paletteViewerColors?.map(({ r, g, b }) => ({ r, g, b }));
   const handlePaletteViewerUpdate = useCallback((colors: Color[]) => {
-    if (!showOriginal) {
-      try {
-        const key = (colors || []).map(c => `${c.r},${c.g},${c.b}`).join('|');
-        // keep a ref on the function closure
-        (handlePaletteViewerUpdate as any)._lastKey = (handlePaletteViewerUpdate as any)._lastKey || null;
-        if ((handlePaletteViewerUpdate as any)._lastKey === key) return;
-        (handlePaletteViewerUpdate as any)._lastKey = key;
-      } catch (e) {
-        // ignore serialization errors and forward
-      }
-      onPaletteUpdate?.(colors);
+    try {
+      const key = (colors || []).map(c => `${c.r},${c.g},${c.b}`).join('|');
+      // dedupe repeated emissions across closures
+      (handlePaletteViewerUpdate as any)._lastKey = (handlePaletteViewerUpdate as any)._lastKey || null;
+      if ((handlePaletteViewerUpdate as any)._lastKey === key) return;
+      (handlePaletteViewerUpdate as any)._lastKey = key;
+    } catch (e) {
+      // ignore serialization errors and forward
     }
-  }, [showOriginal, onPaletteUpdate]);
+    // Always forward palette updates to the parent. The parent (RetroImageEditor)
+    // decides how to apply them (and may rasterize/apply the palette and switch
+    // the preview to processed). Blocking here when showOriginal is true caused
+    // the observed race where the first application was ignored.
+    onPaletteUpdate?.(colors);
+  }, [onPaletteUpdate]);
   // Compute zoom factor from preview slider (1.0 == 100%) to scale grid spacing
   const zoomFactor = zoom[0] / 100;
   // Determine final rendered size of one image pixel in CSS pixels.
