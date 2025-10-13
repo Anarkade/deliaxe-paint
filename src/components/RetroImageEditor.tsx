@@ -350,6 +350,15 @@ export const RetroImageEditor = () => {
   // This flag is toggled by child components before calling onImageUpdate
   // so the next automated process run can be suppressed once.
   const suppressNextProcessRef = useRef<boolean>(false);
+  // When the user manually edits the palette we set this flag so automatic
+  // processing won't overwrite the manual palette until the user explicitly
+  // changes the palette selection or resets the editor.
+  const manualPaletteOverrideRef = useRef<boolean>(false);
+  // Processing guards to prevent re-entrant or duplicate work
+  const processingRef = useRef<boolean>(false);
+  const lastProcessKeyRef = useRef<string | null>(null);
+  const pendingProcessKeyRef = useRef<string | null>(null);
+  const lastReceivedPaletteRef = useRef<string | null>(null);
   
   // Performance and processing state
   const [isProcessing, setIsProcessing] = useState(false);
@@ -433,6 +442,9 @@ export const RetroImageEditor = () => {
   previewToggleWasManualRef.current = false;
   console.debug('[debug] RetroImageEditor.resetEditor - setPreviewShowingOriginal -> true');
   setPreviewShowingOriginal(true);
+
+  // Clear any manual palette override when resetting the editor
+  manualPaletteOverrideRef.current = false;
 
     // Clear history to free memory
     setHistory([]);
@@ -894,6 +906,8 @@ export const RetroImageEditor = () => {
     switch (palette) {
       case 'original': {
         if (customColors && customColors.length > 0) {
+          // customColors are explicit from caller (user selection) so always
+          // respect them and update ordered palette.
           setOrderedPaletteColors(customColors.map(({ r, g, b }) => ({ r, g, b })));
         }
         return resultImageData;
@@ -923,7 +937,7 @@ export const RetroImageEditor = () => {
           resultData[i + 2] = closest[2];
         }
 
-        setOrderedPaletteColors(toColorObjects(gbColors));
+  if (!manualPaletteOverrideRef.current) setOrderedPaletteColors(toColorObjects(gbColors));
         return resultImageData;
       }
 
@@ -951,7 +965,7 @@ export const RetroImageEditor = () => {
           resultData[i + 2] = closest[2];
         }
 
-        setOrderedPaletteColors(toColorObjects(gbBgColors));
+  if (!manualPaletteOverrideRef.current) setOrderedPaletteColors(toColorObjects(gbBgColors));
         return resultImageData;
       }
 
@@ -962,12 +976,12 @@ export const RetroImageEditor = () => {
             customColors,
             (progress) => setProcessingProgress(progress)
           );
-          setOrderedPaletteColors(megaDriveResult.palette.map(({ r, g, b }) => ({ r, g, b })));
+          if (!manualPaletteOverrideRef.current) setOrderedPaletteColors(megaDriveResult.palette.map(({ r, g, b }) => ({ r, g, b })));
           return megaDriveResult.imageData;
         } catch (error) {
           console.error('Mega Drive processing error:', error);
           const fallback = processMegaDriveImage(resultImageData, customColors);
-          setOrderedPaletteColors(fallback.palette.map(({ r, g, b }) => ({ r, g, b })));
+          if (!manualPaletteOverrideRef.current) setOrderedPaletteColors(fallback.palette.map(({ r, g, b }) => ({ r, g, b })));
           return fallback.imageData;
         }
       }
@@ -977,7 +991,7 @@ export const RetroImageEditor = () => {
         if (preset && preset.length > 0) {
           const paletteToApply = paletteFromCustomOrDefault(preset);
           applyFixedPalette(resultData, paletteToApply);
-          setOrderedPaletteColors(toColorObjects(paletteToApply));
+          if (!manualPaletteOverrideRef.current) setOrderedPaletteColors(toColorObjects(paletteToApply));
         }
         return resultImageData;
       }
@@ -1312,17 +1326,76 @@ export const RetroImageEditor = () => {
     };
   }, [processImage]);
 
+  // Build a simple key representing the current processing inputs so we can
+  // avoid running the same work repeatedly when nothing meaningful changed.
+  const buildProcessKey = useCallback(() => {
+    try {
+      const srcHash = (!previewShowingOriginal && processedImageData)
+        ? hashImageData(processedImageData)
+        : (originalImage ? hashImage(originalImage) : '');
+      const paletteKey = orderedPaletteColors && orderedPaletteColors.length > 0
+        ? JSON.stringify(orderedPaletteColors)
+        : '';
+      return `${srcHash}|${selectedPalette}|${selectedResolution}|${scalingMode}|${paletteKey}|${previewShowingOriginal}`;
+    } catch (e) {
+      return `${Date.now()}`; // fallback to something unique on error
+    }
+  }, [processedImageData, originalImage, orderedPaletteColors, selectedPalette, selectedResolution, scalingMode, previewShowingOriginal]);
+
+  // Schedule processing with non-reentrant semantics. If a process is already
+  // running we remember the latest requested key and run it once the active
+  // processing finishes (take-latest behavior). If the computed key equals
+  // the last completed key we skip work.
+  const scheduleProcessImage = useCallback(async (force = false) => {
+    const key = buildProcessKey();
+    if (!force && lastProcessKeyRef.current === key && !processingRef.current) return;
+    if (processingRef.current) {
+      // Remember latest request and exit (will be picked up when current finishes)
+      pendingProcessKeyRef.current = key;
+      return;
+    }
+    processingRef.current = true;
+    lastProcessKeyRef.current = key;
+    try {
+      await processImageRef.current?.();
+    } catch (err) {
+      console.error('scheduleProcessImage process failed:', err);
+    } finally {
+      processingRef.current = false;
+      // If another request arrived while we were running, and it's different,
+      // schedule it (debounced by PROCESSING_DEBOUNCE_MS to avoid tight loops).
+      const next = pendingProcessKeyRef.current;
+      pendingProcessKeyRef.current = null;
+      if (next && next !== key) {
+        setTimeout(() => {
+          try { scheduleProcessImage(); } catch (e) { /* ignore */ }
+        }, PROCESSING_DEBOUNCE_MS);
+      }
+    }
+  }, [buildProcessKey]);
+
   // Handle palette updates coming from the PaletteViewer. When a user edits
   // a palette color we want to persist the new palette immediately and also
   // prevent the automatic processing from running and overwriting the
   // manual edits. Save a history snapshot so undo/redo works as expected.
   const handlePaletteUpdateFromViewer = useCallback(async (colors: Color[]) => {
+    // Deduplicate identical palette updates (compare serialized representation)
+    try {
+      const incomingKey = JSON.stringify(colors || []);
+      if (lastReceivedPaletteRef.current === incomingKey) return;
+      lastReceivedPaletteRef.current = incomingKey;
+    } catch (e) {
+      // If serialization fails, continue (best-effort)
+    }
     // When the user edits the palette in the viewer we need to ensure the
     // in-memory processed image reflects that change and is persisted so
     // toggling between original/processed will restore the edited state.
     try {
       // Prevent automatic reprocessing from overwriting the manual change
       suppressNextProcessRef.current = true;
+      // Mark that the user manually edited the palette so automated
+      // processing doesn't overwrite it.
+      manualPaletteOverrideRef.current = true;
 
       // If we already have a processed raster, apply the new palette to it.
       let newProcessed: ImageData | null = null;
@@ -1361,11 +1434,33 @@ export const RetroImageEditor = () => {
       if (newProcessed) {
         // Persist processed image and ensure preview shows it
         suppressNextProcessRef.current = true;
-        setProcessedImageData(newProcessed);
-  previewToggleWasManualRef.current = true;
-  console.debug('[debug] RetroImageEditor.handlePaletteUpdateFromViewer - setPreviewShowingOriginal -> false');
-  setPreviewShowingOriginal(false);
-        saveToHistory({ imageData: newProcessed, palette: selectedPalette });
+        try {
+          const newHash = hashImageData(newProcessed);
+          const currentHash = processedImageData ? hashImageData(processedImageData) : null;
+          // Only update state if the processed raster actually changed. This
+          // avoids creating a feedback loop where PaletteViewer extracts colors
+          // from the updated raster and re-emits them, causing repeated
+          // reprocessing.
+          if (currentHash !== newHash) {
+            setProcessedImageData(newProcessed);
+            previewToggleWasManualRef.current = true;
+            console.debug('[debug] RetroImageEditor.handlePaletteUpdateFromViewer - setPreviewShowingOriginal -> false');
+            setPreviewShowingOriginal(false);
+            saveToHistory({ imageData: newProcessed, palette: selectedPalette });
+          } else {
+            // Even if the image didn't change, persist the ordered palette.
+            // Do not toggle preview or save history to avoid feedback.
+            setOrderedPaletteColors(colors);
+          }
+        } catch (e) {
+          // If hashing fails for any reason, fall back to applying the update
+          // to avoid losing the user's manual edit.
+          setProcessedImageData(newProcessed);
+          previewToggleWasManualRef.current = true;
+          console.debug('[debug] RetroImageEditor.handlePaletteUpdateFromViewer - setPreviewShowingOriginal -> false');
+          setPreviewShowingOriginal(false);
+          saveToHistory({ imageData: newProcessed, palette: selectedPalette });
+        }
       } else {
         // If we couldn't produce a new processed raster, at least save the
         // palette so the UI reflects the change and let the debounced
@@ -1446,7 +1541,7 @@ export const RetroImageEditor = () => {
   useEffect(() => {
     if (originalImage || processedImageData) {
       const timeoutId = setTimeout(() => {
-        processImage();
+        scheduleProcessImage();
       }, PROCESSING_DEBOUNCE_MS);
 
       return () => clearTimeout(timeoutId);
@@ -1668,10 +1763,10 @@ export const RetroImageEditor = () => {
                     if (palette !== 'original') {
                       setOrderedPaletteColors([]);
                     }
-                    // Schedule processing using the ref to avoid stale closures.
-                    // Use a small timeout so the state update is flushed first.
+                    // Schedule processing using the scheduler to avoid stale closures
+                    // and prevent duplicate/reentrant processing.
                     setTimeout(() => {
-                      try { processImageRef.current?.(); } catch (e) { /* ignore */ }
+                      try { scheduleProcessImage(); } catch (e) { /* ignore */ }
                     }, PROCESSING_DEBOUNCE_MS + 10);
                   }}
                   onClose={() => setActiveTab(null)}
@@ -1690,13 +1785,13 @@ export const RetroImageEditor = () => {
                   onApplyResolution={(r) => {
                     setSelectedResolution(r);
                     setTimeout(() => {
-                      try { processImageRef.current?.(); } catch (e) { /* ignore */ }
+                      try { scheduleProcessImage(); } catch (e) { /* ignore */ }
                     }, PROCESSING_DEBOUNCE_MS + 10);
                   }}
                   onChangeScalingMode={(m) => {
                     setScalingMode(m);
                     setTimeout(() => {
-                      try { processImageRef.current?.(); } catch (e) { /* ignore */ }
+                      try { scheduleProcessImage(); } catch (e) { /* ignore */ }
                     }, PROCESSING_DEBOUNCE_MS + 10);
                   }}
                   // Pass `undefined` when opening the selector so it defaults to the

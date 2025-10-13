@@ -60,6 +60,19 @@ const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
 
 export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal }: PaletteViewerProps) => {
   const { t } = useTranslation();
+  const lastSentPaletteRef = useRef<string | null>(null);
+
+  const emitPaletteUpdate = useCallback((colors: any) => {
+    try {
+      const serialized = JSON.stringify(colors || []);
+      if (lastSentPaletteRef.current === serialized) return;
+      lastSentPaletteRef.current = serialized;
+      onPaletteUpdate?.(colors as Color[]);
+    } catch (err) {
+      // Fallback to direct call if serialization fails for some reason
+      onPaletteUpdate?.(colors as Color[]);
+    }
+  }, [onPaletteUpdate]);
   const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() => 
     getDefaultPalette(selectedPalette)
   );
@@ -85,7 +98,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     newColors.splice(targetIndex, 0, draggedColor);
     
     setPaletteColors(newColors);
-    onPaletteUpdate?.(newColors);
+  emitPaletteUpdate(newColors);
     setDraggedIndex(null);
   }, [draggedIndex, paletteColors, onPaletteUpdate]);
 
@@ -187,7 +200,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     const oldColor = newColors[editorState.index];
     newColors[editorState.index] = { ...newColors[editorState.index], r: c.r, g: c.g, b: c.b };
     setPaletteColors(newColors);
-    onPaletteUpdate?.(newColors);
+    emitPaletteUpdate(newColors);
 
     // Then update the processed image pixels (if available) and notify parent
     try {
@@ -236,7 +249,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         if (pngPalette && pngPalette.length > 0) {
           const colors = pngPalette.slice(0, paletteColors.length || 256);
           setPaletteColors(colors);
-          onPaletteUpdate?.(colors);
+          emitPaletteUpdate(colors);
           return;
         }
       } catch (error) {
@@ -274,7 +287,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     }
     
     setPaletteColors(sortedColors);
-    onPaletteUpdate?.(sortedColors);
+    emitPaletteUpdate(sortedColors);
   }, [imageData, originalImageSource, paletteColors.length, onPaletteUpdate]);
 
   // Extract unique colors from the current image data and update when it changes
@@ -283,7 +296,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       // If external palette is provided (from processing), use it
       if (externalPalette && externalPalette.length > 0) {
         setPaletteColors(externalPalette);
-        onPaletteUpdate?.(externalPalette);
+        emitPaletteUpdate(externalPalette);
         return;
       }
 
@@ -295,7 +308,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           if (pngPalette && pngPalette.length > 0) {
             setIsOriginalPNG(true);
             setPaletteColors(pngPalette); // Keep original order
-            onPaletteUpdate?.(pngPalette);
+            emitPaletteUpdate(pngPalette);
             return;
           }
         } catch (error) {
@@ -309,7 +322,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       if (selectedPalette !== 'original') {
         const defaultPalette = getDefaultPalette(selectedPalette);
         setPaletteColors(defaultPalette);
-        onPaletteUpdate?.(defaultPalette);
+        emitPaletteUpdate(defaultPalette);
         return;
       }
 
@@ -324,40 +337,40 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
               const extractedPalette = await module.extractPNGPalette(originalImageSource as File | string);
               if (extractedPalette && extractedPalette.length > 0) {
                 setPaletteColors(extractedPalette);
-                onPaletteUpdate?.(extractedPalette);
+                emitPaletteUpdate(extractedPalette);
                 return;
               }
             } else {
               // Non-indexed image - clear palette
               setPaletteColors([]);
-              onPaletteUpdate?.([]);
+              emitPaletteUpdate([]);
               return;
             }
           } catch (error) {
             // If analysis fails, assume non-indexed and clear palette
             setPaletteColors([]);
-            onPaletteUpdate?.([]);
+            emitPaletteUpdate([]);
             return;
           }
         }
         
         // If no original image source or extraction failed, clear palette for 'original' mode
         setPaletteColors([]);
-        onPaletteUpdate?.([]);
+        emitPaletteUpdate([]);
         return;
       }
 
       // Priority 2: Use external palette for non-original selections
       if (externalPalette && externalPalette.length > 0) {
         setPaletteColors(externalPalette);
-        onPaletteUpdate?.(externalPalette);
+        emitPaletteUpdate(externalPalette);
         return;
       }
 
       // Priority 3: Use default retro palettes
       const defaultPalette = getDefaultPalette(selectedPalette);
       setPaletteColors(defaultPalette);
-      onPaletteUpdate?.(defaultPalette);
+      emitPaletteUpdate(defaultPalette);
     };
 
     extractColors();

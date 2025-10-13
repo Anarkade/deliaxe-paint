@@ -155,6 +155,7 @@ export const ImagePreview = ({
   processedPaletteColors,
   onSectionOpen, 
   onShowOriginalChange,
+  onImageUpdate,
   onRequestOpenCameraSelector,
   showTileGrid = false, 
   showFrameGrid = false, 
@@ -831,6 +832,15 @@ export const ImagePreview = ({
   const paletteViewerExternal = paletteViewerColors?.map(({ r, g, b }) => ({ r, g, b }));
   const handlePaletteViewerUpdate = useCallback((colors: Color[]) => {
     if (!showOriginal) {
+      try {
+        const key = JSON.stringify(colors || []);
+        // keep a ref on the function closure
+        (handlePaletteViewerUpdate as any)._lastKey = (handlePaletteViewerUpdate as any)._lastKey || null;
+        if ((handlePaletteViewerUpdate as any)._lastKey === key) return;
+        (handlePaletteViewerUpdate as any)._lastKey = key;
+      } catch (e) {
+        // ignore serialization errors and forward
+      }
       onPaletteUpdate?.(colors);
     }
   }, [showOriginal, onPaletteUpdate]);
