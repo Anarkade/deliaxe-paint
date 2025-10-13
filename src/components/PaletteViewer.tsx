@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import ColorEditor from './ColorEditor';
 import { type Color } from '@/lib/colorQuantization';
 import { PaletteType } from './ColorPaletteSelector';
+import getDefaultPalette, { SimpleColor } from '@/lib/defaultPalettes';
 import { Eye, Palette, GripVertical, Lock } from 'lucide-react';
 // pngAnalyzer functions are imported dynamically where needed to keep bundle size small
 
@@ -25,38 +26,7 @@ interface PaletteViewerProps {
   showOriginal?: boolean;
 }
 
-const getDefaultPalette = (paletteType: PaletteType): PaletteColor[] => {
-  switch (paletteType) {
-    case 'gameboy':
-      return [
-        { r: 15, g: 56, b: 15 },    // Darkest green
-        { r: 48, g: 98, b: 48 },    // Dark green  
-        { r: 139, g: 172, b: 15 },  // Light green
-        { r: 155, g: 188, b: 15 }   // Lightest green
-      ];
-    case 'megadrive':
-      return [
-        { r: 0, g: 0, b: 0 },       // Black
-        { r: 0, g: 0, b: 146 },     // Dark Blue
-        { r: 0, g: 146, b: 0 },     // Dark Green
-        { r: 0, g: 146, b: 146 },   // Dark Cyan
-        { r: 146, g: 0, b: 0 },     // Dark Red
-        { r: 146, g: 0, b: 146 },   // Dark Magenta
-        { r: 146, g: 73, b: 0 },    // Brown
-        { r: 182, g: 182, b: 182 }, // Light Gray
-        { r: 73, g: 73, b: 73 },    // Dark Gray
-        { r: 73, g: 73, b: 255 },   // Blue
-        { r: 73, g: 255, b: 73 },   // Green
-        { r: 73, g: 255, b: 255 },  // Cyan
-        { r: 255, g: 73, b: 73 },   // Red
-        { r: 255, g: 73, b: 255 },  // Magenta
-        { r: 255, g: 255, b: 73 },  // Yellow
-        { r: 255, g: 255, b: 255 }  // White
-      ];
-    default:
-      return [];
-  }
-};
+// default palettes now live in src/lib/defaultPalettes.ts
 
 export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal }: PaletteViewerProps) => {
   const { t } = useTranslation();
@@ -77,8 +47,9 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       onPaletteUpdate?.(colors as Color[]);
     }
   }, [onPaletteUpdate]);
-  const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() => 
-    getDefaultPalette(selectedPalette)
+  const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() =>
+    // initialize with known defaults for the selected palette (may be empty)
+    (getDefaultPalette(selectedPalette) as PaletteColor[])
   );
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isOriginalPNG, setIsOriginalPNG] = useState<boolean>(false);
@@ -387,10 +358,27 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     if (!externalPalette || externalPalette.length === 0) return null;
   }
 
-  // Always show for retro palettes
-  if (selectedPalette !== 'original' && paletteColors.length === 0) {
-    return null;
-  }
+  // Ensure retro palettes (even when there is no original palette) initialize
+  // and emit so the parent can create processedPaletteColors / processedImageData.
+  useEffect(() => {
+    if (selectedPalette === 'original') return;
+    if (paletteColors && paletteColors.length > 0) return;
+
+    // Try to get built-in defaults first
+    const defaults = getDefaultPalette(selectedPalette);
+    if (defaults && defaults.length > 0) {
+      setPaletteColors(defaults as PaletteColor[]);
+      emitPaletteUpdate(defaults);
+      return;
+    }
+
+    // Fallback: create placeholder slots. Prefer externalPalette length if available.
+    const len = (externalPalette && externalPalette.length) ? externalPalette.length : 16;
+    const placeholders: PaletteColor[] = Array.from({ length: len }, () => ({ r: 0, g: 0, b: 0 }));
+    setPaletteColors(placeholders);
+    emitPaletteUpdate(placeholders);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPalette, externalPalette]);
 
   return (
     <div className="relative space-y-4 p-4 border border-elegant-border bg-card/50 rounded-lg">
