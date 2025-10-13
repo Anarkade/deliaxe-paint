@@ -354,6 +354,45 @@ export const RetroImageEditor = () => {
   // processing won't overwrite the manual palette until the user explicitly
   // changes the palette selection or resets the editor.
   const manualPaletteOverrideRef = useRef<boolean>(false);
+  const manualPaletteTimeoutRef = useRef<number | null>(null);
+
+  // Helper to update ordered palette with instrumentation and respect the
+  // manual override flag. The `source` string helps trace where updates come from.
+  const lastWrittenPaletteRef = useRef<string | null>(null);
+
+  const paletteKey = (cols: Color[] | null | undefined) => {
+    try {
+      if (!cols || cols.length === 0) return '';
+      return cols.map(c => `${c.r},${c.g},${c.b}`).join('|');
+    } catch (e) { return JSON.stringify(cols || []); }
+  };
+
+  const writeOrderedPalette = useCallback((colors: Color[], source: string) => {
+    try {
+      console.debug('[debug] setOrderedPaletteColors requested', { source, count: Array.isArray(colors) ? colors.length : 0 });
+    } catch (e) { /* ignore logging errors */ }
+
+    // If user manually edited the palette recently, ignore automatic updates
+    // unless the update originates from the manual path.
+    if (manualPaletteOverrideRef.current && source !== 'manual') {
+      console.debug('[debug] setOrderedPaletteColors suppressed by manual override', { source });
+      return;
+    }
+
+    // Perform the actual state update
+    try {
+      const serialized = paletteKey(colors);
+      if (lastWrittenPaletteRef.current === serialized) {
+        console.debug('[debug] writeOrderedPalette - no-op identical palette, skipping setOrderedPaletteColors', { source });
+        return;
+      }
+      lastWrittenPaletteRef.current = serialized;
+    } catch (e) {
+      // fall through to set
+    }
+
+    setOrderedPaletteColors(colors);
+  }, []);
   // Processing guards to prevent re-entrant or duplicate work
   const processingRef = useRef<boolean>(false);
   const lastProcessKeyRef = useRef<string | null>(null);
@@ -423,7 +462,7 @@ export const RetroImageEditor = () => {
     // Grid & palette related defaults
     setIsOriginalPNG8Indexed(false);
     setOriginalPaletteColors([]);
-    setOrderedPaletteColors([]);
+  writeOrderedPalette([], 'init');
     setShowTileGrid(false);
     setShowFrameGrid(false);
     setTileWidth(8);
@@ -563,17 +602,17 @@ export const RetroImageEditor = () => {
           if (palette && palette.length > 0) {
             setIsOriginalPNG8Indexed(true);
             setOriginalPaletteColors(palette as any);
-            setOrderedPaletteColors(palette as any);
+            writeOrderedPalette(palette as any, 'png-extract');
           } else {
             setIsOriginalPNG8Indexed(false);
             setOriginalPaletteColors([]);
-            setOrderedPaletteColors([]);
+            writeOrderedPalette([], 'png-extract-fallback');
           }
         } catch (e) {
           console.error("Failed to analyze PNG for palette:", e);
           setIsOriginalPNG8Indexed(false);
           setOriginalPaletteColors([]);
-          setOrderedPaletteColors([]);
+          writeOrderedPalette([], 'no-palette');
         }
       }
       
@@ -908,7 +947,7 @@ export const RetroImageEditor = () => {
         if (customColors && customColors.length > 0) {
           // customColors are explicit from caller (user selection) so always
           // respect them and update ordered palette.
-          setOrderedPaletteColors(customColors.map(({ r, g, b }) => ({ r, g, b })));
+          writeOrderedPalette(customColors.map(({ r, g, b }) => ({ r, g, b })), 'applyPaletteConversion-custom');
         }
         return resultImageData;
       }
@@ -937,7 +976,7 @@ export const RetroImageEditor = () => {
           resultData[i + 2] = closest[2];
         }
 
-  if (!manualPaletteOverrideRef.current) setOrderedPaletteColors(toColorObjects(gbColors));
+  if (!manualPaletteOverrideRef.current) writeOrderedPalette(toColorObjects(gbColors), 'applyPaletteConversion-gb');
         return resultImageData;
       }
 
@@ -965,7 +1004,7 @@ export const RetroImageEditor = () => {
           resultData[i + 2] = closest[2];
         }
 
-  if (!manualPaletteOverrideRef.current) setOrderedPaletteColors(toColorObjects(gbBgColors));
+  if (!manualPaletteOverrideRef.current) writeOrderedPalette(toColorObjects(gbBgColors), 'applyPaletteConversion-gbBg');
         return resultImageData;
       }
 
@@ -976,12 +1015,12 @@ export const RetroImageEditor = () => {
             customColors,
             (progress) => setProcessingProgress(progress)
           );
-          if (!manualPaletteOverrideRef.current) setOrderedPaletteColors(megaDriveResult.palette.map(({ r, g, b }) => ({ r, g, b })));
+          if (!manualPaletteOverrideRef.current) writeOrderedPalette(megaDriveResult.palette.map(({ r, g, b }) => ({ r, g, b })), 'applyPaletteConversion-mega');
           return megaDriveResult.imageData;
         } catch (error) {
           console.error('Mega Drive processing error:', error);
           const fallback = processMegaDriveImage(resultImageData, customColors);
-          if (!manualPaletteOverrideRef.current) setOrderedPaletteColors(fallback.palette.map(({ r, g, b }) => ({ r, g, b })));
+          if (!manualPaletteOverrideRef.current) writeOrderedPalette(fallback.palette.map(({ r, g, b }) => ({ r, g, b })), 'applyPaletteConversion-mega-fallback');
           return fallback.imageData;
         }
       }
@@ -991,7 +1030,7 @@ export const RetroImageEditor = () => {
         if (preset && preset.length > 0) {
           const paletteToApply = paletteFromCustomOrDefault(preset);
           applyFixedPalette(resultData, paletteToApply);
-          if (!manualPaletteOverrideRef.current) setOrderedPaletteColors(toColorObjects(paletteToApply));
+          if (!manualPaletteOverrideRef.current) writeOrderedPalette(toColorObjects(paletteToApply), 'applyPaletteConversion-fixed');
         }
         return resultImageData;
       }
@@ -1247,9 +1286,9 @@ export const RetroImageEditor = () => {
           orderedPaletteColors.length > 0 ? orderedPaletteColors : undefined
         );
       } else if (isOriginalPNG8Indexed && originalPaletteColors.length > 0) {
-        setOrderedPaletteColors(originalPaletteColors);
+  writeOrderedPalette(originalPaletteColors, 'restore-original-palette');
       } else if (selectedPalette === 'original') {
-        setOrderedPaletteColors([]);
+  writeOrderedPalette([], 'restore-original-palette-clear');
       }
 
       const canvasResult = getCanvas(targetWidth, targetHeight);
@@ -1379,9 +1418,9 @@ export const RetroImageEditor = () => {
   // prevent the automatic processing from running and overwriting the
   // manual edits. Save a history snapshot so undo/redo works as expected.
   const handlePaletteUpdateFromViewer = useCallback(async (colors: Color[]) => {
-    // Deduplicate identical palette updates (compare serialized representation)
+    // Deduplicate identical palette updates (compare canonical r,g,b representation)
     try {
-      const incomingKey = JSON.stringify(colors || []);
+      const incomingKey = (paletteKey as any)(colors);
       if (lastReceivedPaletteRef.current === incomingKey) return;
       lastReceivedPaletteRef.current = incomingKey;
     } catch (e) {
@@ -1394,8 +1433,15 @@ export const RetroImageEditor = () => {
       // Prevent automatic reprocessing from overwriting the manual change
       suppressNextProcessRef.current = true;
       // Mark that the user manually edited the palette so automated
-      // processing doesn't overwrite it.
+      // processing doesn't overwrite it and start a short timeout to
+      // clear the override after the race window.
       manualPaletteOverrideRef.current = true;
+      if (manualPaletteTimeoutRef.current) window.clearTimeout(manualPaletteTimeoutRef.current as any);
+      manualPaletteTimeoutRef.current = window.setTimeout(() => {
+        manualPaletteOverrideRef.current = false;
+        manualPaletteTimeoutRef.current = null;
+        console.debug('[debug] manualPaletteOverride cleared after timeout');
+      }, 400) as unknown as number;
 
       // If we already have a processed raster, apply the new palette to it.
       let newProcessed: ImageData | null = null;
@@ -1428,8 +1474,8 @@ export const RetroImageEditor = () => {
         }
       }
 
-      // Persist palette and processed image
-      setOrderedPaletteColors(colors);
+  // Persist palette and processed image (via helper)
+  writeOrderedPalette(colors, 'manual');
 
       if (newProcessed) {
         // Persist processed image and ensure preview shows it
@@ -1450,7 +1496,7 @@ export const RetroImageEditor = () => {
           } else {
             // Even if the image didn't change, persist the ordered palette.
             // Do not toggle preview or save history to avoid feedback.
-            setOrderedPaletteColors(colors);
+            writeOrderedPalette(colors, 'handlePaletteUpdateFromViewer:save');
           }
         } catch (e) {
           // If hashing fails for any reason, fall back to applying the update
@@ -1552,9 +1598,9 @@ export const RetroImageEditor = () => {
   useEffect(() => {
     if (selectedPalette === 'original') {
       if (isOriginalPNG8Indexed && originalPaletteColors.length > 0) {
-        setOrderedPaletteColors(originalPaletteColors);
+  writeOrderedPalette(originalPaletteColors, 'selectedPalette-original-restore');
       } else {
-        setOrderedPaletteColors([]);
+  writeOrderedPalette([], 'selectedPalette-original-clear');
       }
     }
   }, [selectedPalette, isOriginalPNG8Indexed, originalPaletteColors]);
@@ -1761,7 +1807,7 @@ export const RetroImageEditor = () => {
                   onPaletteChange={(palette) => {
                     setSelectedPalette(palette);
                     if (palette !== 'original') {
-                      setOrderedPaletteColors([]);
+                      writeOrderedPalette([], 'undo-clear');
                     }
                     // Schedule processing using the scheduler to avoid stale closures
                     // and prevent duplicate/reentrant processing.

@@ -64,7 +64,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
   const emitPaletteUpdate = useCallback((colors: any) => {
     try {
-      const serialized = JSON.stringify(colors || []);
+      // Serialize canonically using only r,g,b triplets to avoid unstable
+      // JSON string differences (extra properties or key ordering) which
+      // can cause spurious re-emissions.
+      const arr = (colors || []).map((c: any) => `${c.r},${c.g},${c.b}`);
+      const serialized = arr.join('|');
       if (lastSentPaletteRef.current === serialized) return;
       lastSentPaletteRef.current = serialized;
       onPaletteUpdate?.(colors as Color[]);
@@ -203,25 +207,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     emitPaletteUpdate(newColors);
 
     // Then update the processed image pixels (if available) and notify parent
-    try {
-      if (imageData && onImageUpdate) {
-        // Clone ImageData so we don't mutate the original reference
-        const cloned = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
-        const d = cloned.data;
-        for (let i = 0; i < d.length; i += 4) {
-          if (d[i] === oldColor.r && d[i + 1] === oldColor.g && d[i + 2] === oldColor.b) {
-            d[i] = c.r;
-            d[i + 1] = c.g;
-            d[i + 2] = c.b;
-            // leave alpha unchanged
-          }
-        }
-        onImageUpdate(cloned);
-      }
-    } catch (err) {
-      console.warn('Error replacing pixels in processed image:', err);
-    }
+    // Let the parent handle applying the palette to the processed raster
+    // and persisting the ordered palette via the onPaletteUpdate callback.
+    // Doing both onImageUpdate and onPaletteUpdate from the viewer created
+    // duplicated flows that could cause feedback loops.
 
+    // Close editor after all notifications
     closeEditor();
   };
 
@@ -249,7 +240,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         if (pngPalette && pngPalette.length > 0) {
           const colors = pngPalette.slice(0, paletteColors.length || 256);
           setPaletteColors(colors);
-          emitPaletteUpdate(colors);
+          try { lastSentPaletteRef.current = (colors || []).map((c: any) => `${c.r},${c.g},${c.b}`).join('|'); } catch (e) { /* ignore */ }
           return;
         }
       } catch (error) {
@@ -293,10 +284,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   // Extract unique colors from the current image data and update when it changes
   useEffect(() => {
     const extractColors = async () => {
-      // If external palette is provided (from processing), use it
+      // If external palette is provided (from processing), use it but DO NOT re-emit
+      // to avoid creating a feedback loop. Mark the last sent canonical value
+      // so future user edits still emit normally.
       if (externalPalette && externalPalette.length > 0) {
         setPaletteColors(externalPalette);
-        emitPaletteUpdate(externalPalette);
+        try { lastSentPaletteRef.current = (externalPalette || []).map((c: any) => `${c.r},${c.g},${c.b}`).join('|'); } catch (e) { /* ignore */ }
         return;
       }
 
@@ -308,7 +301,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           if (pngPalette && pngPalette.length > 0) {
             setIsOriginalPNG(true);
             setPaletteColors(pngPalette); // Keep original order
-            emitPaletteUpdate(pngPalette);
+            try { lastSentPaletteRef.current = (pngPalette || []).map((c: any) => `${c.r},${c.g},${c.b}`).join('|'); } catch (e) { /* ignore */ }
             return;
           }
         } catch (error) {
@@ -342,22 +335,22 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
               }
             } else {
               // Non-indexed image - clear palette
-              setPaletteColors([]);
-              emitPaletteUpdate([]);
-              return;
+                setPaletteColors([]);
+                try { lastSentPaletteRef.current = ''; } catch (e) { /* ignore */ }
+                return;
             }
           } catch (error) {
             // If analysis fails, assume non-indexed and clear palette
             setPaletteColors([]);
-            emitPaletteUpdate([]);
+            try { lastSentPaletteRef.current = ''; } catch (e) { /* ignore */ }
             return;
           }
         }
         
-        // If no original image source or extraction failed, clear palette for 'original' mode
-        setPaletteColors([]);
-        emitPaletteUpdate([]);
-        return;
+  // If no original image source or extraction failed, clear palette for 'original' mode
+  setPaletteColors([]);
+  try { lastSentPaletteRef.current = ''; } catch (e) { /* ignore */ }
+  return;
       }
 
       // Priority 2: Use external palette for non-original selections

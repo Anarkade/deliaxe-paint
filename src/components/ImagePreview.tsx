@@ -833,7 +833,7 @@ export const ImagePreview = ({
   const handlePaletteViewerUpdate = useCallback((colors: Color[]) => {
     if (!showOriginal) {
       try {
-        const key = JSON.stringify(colors || []);
+        const key = (colors || []).map(c => `${c.r},${c.g},${c.b}`).join('|');
         // keep a ref on the function closure
         (handlePaletteViewerUpdate as any)._lastKey = (handlePaletteViewerUpdate as any)._lastKey || null;
         if ((handlePaletteViewerUpdate as any)._lastKey === key) return;
