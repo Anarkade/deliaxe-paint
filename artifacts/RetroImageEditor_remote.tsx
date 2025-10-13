@@ -1,3 +1,4 @@
+// This file has been deleted.
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { LoadImage } from './LoadImage';
 import { CameraSelector } from './CameraSelector';
