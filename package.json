@@ -10,6 +10,7 @@
     "build:dev": "vite build --mode development",
     "check:build": "node scripts/check_build_sanity.cjs",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
   "preview": "vite preview",
   "preview:local": "vite preview --port 4173",
   "serve": "vite preview --port 4173",
