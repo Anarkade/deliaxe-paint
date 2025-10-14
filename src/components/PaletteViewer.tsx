@@ -468,10 +468,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-lg font-bold text-neon-cyan flex items-center">
-            <Palette className="mr-2 h-5 w-5" />
-            {paletteColors.length > 0 ? t('paletteWithCount').replace('{count}', paletteColors.length.toString()) : t('extractColors')}
-          </h3>
+          <label className="block text-m font-bold text-foreground pt-2 pb-2">
+            <span className="flex items-center">
+              <Palette className="mr-2 h-4 w-4" />
+              {paletteColors.length > 0 ? t('paletteWithCount').replace('{count}', paletteColors.length.toString()) : t('extractColors')}
+            </span>
+          </label>
 
           <div className="text-xs text-muted-foreground text-left">
             <p>{t('clickToChangeColor')}</p>
