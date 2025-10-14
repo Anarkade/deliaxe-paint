@@ -33,33 +33,20 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const { t } = useTranslation();
   const lastSentPaletteRef = useRef<string | null>(null);
 
-  // Responsive columns: show 16 columns normally, but if the viewport
-  // width is less than (switchPreview button width * 9) show 8 columns.
+  // Responsive columns: show 16 columns normally. When viewport width <= 480px
+  // switch to 8 columns and render each color block as 48x48 px.
   const [columns, setColumns] = useState<number>(16);
 
   useEffect(() => {
     const updateColumns = () => {
-      try {
-        const switchLabel = t('switchPreview');
-        const btn = document.querySelector(`[aria-label="${switchLabel}"],[title="${switchLabel}"]`) as HTMLElement | null;
-        const btnWidth = btn ? btn.getBoundingClientRect().width : 0;
-        const fallbackBtn = 32; // fallback width in px if button not found
-        const threshold = (btnWidth > 0 ? btnWidth : fallbackBtn) * 9;
-        setColumns(window.innerWidth < threshold ? 8 : 16);
-      } catch (e) {
-        // ignore and keep default
-      }
+      const isSmall = window.innerWidth <= 480;
+      setColumns(isSmall ? 8 : 16);
     };
 
     updateColumns();
     window.addEventListener('resize', updateColumns);
-    const mo = new MutationObserver(updateColumns);
-    mo.observe(document.body, { childList: true, subtree: true });
-    return () => {
-      window.removeEventListener('resize', updateColumns);
-      mo.disconnect();
-    };
-  }, [t]);
+    return () => window.removeEventListener('resize', updateColumns);
+  }, []);
 
   const emitPaletteUpdate = useCallback((colors: any) => {
     try {
@@ -459,6 +446,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                               style={{
                                 backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                                 opacity: color.transparent ? 0.5 : 1,
+                                ...(columns === 8 ? { width: '48px', height: '48px' } : {})
                               }}
                             >
                               {selectedPalette === 'original' && blockedIndex !== null && showOriginal && (
