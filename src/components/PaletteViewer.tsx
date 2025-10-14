@@ -529,7 +529,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           <label className="block text-m font-bold text-foreground py-1 mb-0.5">
             <span className="flex items-center">
               {paletteColors.length > 0 && <Palette className="mr-2 h-4 w-4" />}
-              {paletteColors.length > 0 ? t('paletteWithDetailedCount').replace('{count}', paletteColors.length.toString()) : null}
+              {paletteColors.length > 0 ? detailedCountLabel : null}
             </span>
           </label>
           {paletteColors.length > 0 && (
