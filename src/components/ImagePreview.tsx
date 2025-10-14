@@ -869,7 +869,7 @@ export const ImagePreview = ({
               <span className="whitespace-nowrap">{t('zoom')}</span>
               <span className="text-sm text-muted-foreground">{zoom[0]}%</span>
             </span>
-          <div className="flex items-center gap-2" ref={controlsRef}>
+          <div className="flex items-center gap-2 ml-4" ref={controlsRef}>
             <div className="flex items-center space-x-2">
               <Checkbox 
                 id="integer-scaling" 
