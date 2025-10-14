@@ -36,6 +36,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   // Responsive columns: show 16 columns normally. When viewport width <= 480px
   // switch to 8 columns and render each color block as 48x48 px.
   const [columns, setColumns] = useState<number>(16);
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const [cellSize, setCellSize] = useState<number | null>(null);
 
   useEffect(() => {
     const updateColumns = () => {
@@ -47,6 +49,33 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
   }, []);
+
+  // Calculate cell size so exactly `columns` blocks fit in the grid width.
+  useEffect(() => {
+    const updateCellSize = () => {
+      const gridEl = gridRef.current;
+      if (!gridEl) {
+        setCellSize(null);
+        return;
+      }
+      const gridW = gridEl.clientWidth;
+      // Tailwind gap-2 => 0.5rem => typically 8px at 16px root
+      const gapPx = 8;
+      const available = Math.max(0, gridW - gapPx * (columns - 1));
+      const size = Math.floor(available / columns);
+      // Ensure a sensible minimum
+      setCellSize(size > 24 ? size : 24);
+    };
+
+    updateCellSize();
+    const ro = new ResizeObserver(() => updateCellSize());
+    if (gridRef.current) ro.observe(gridRef.current);
+    window.addEventListener('resize', updateCellSize);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', updateCellSize);
+    };
+  }, [columns]);
 
   const emitPaletteUpdate = useCallback((colors: any) => {
     try {
@@ -392,6 +421,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         <div className="w-full flex justify-center">
           <div
             className="grid gap-2 w-full"
+            ref={gridRef}
             style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
           >
             {paletteColors.map((color, index) => {
@@ -446,7 +476,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                               style={{
                                 backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                                 opacity: color.transparent ? 0.5 : 1,
-                                ...(columns === 8 ? { width: '48px', height: '48px' } : {})
+                                ...(columns === 8 && cellSize ? { width: `${cellSize}px`, height: `${cellSize}px` } : {})
                               }}
                             >
                               {selectedPalette === 'original' && blockedIndex !== null && showOriginal && (
