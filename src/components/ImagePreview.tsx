@@ -192,7 +192,9 @@ export const ImagePreview = ({
   const [previewHeight, setPreviewHeight] = useState(400);
   const headerRef = useRef<HTMLDivElement>(null);
   const controlsRef = useRef<HTMLDivElement>(null);
+  const leftControlsRef = useRef<HTMLDivElement>(null);
   const [sliderFullWidth, setSliderFullWidth] = useState(false);
+  const [leftWrapToSecondLine, setLeftWrapToSecondLine] = useState(false);
   const footerRef = useRef<HTMLDivElement>(null);
   const [originalFormat, setOriginalFormat] = useState<string>('');
   const [processedFormat, setProcessedFormat] = useState<string>('');
@@ -662,23 +664,28 @@ export const ImagePreview = ({
   // Observe header width and controls width to decide if slider should wrap to its own line
   useEffect(() => {
     const update = () => {
+      const leftEl = leftControlsRef.current;
       const header = headerRef.current;
-      const controls = controlsRef.current;
-      if (!header || !controls) {
+      if (!header || !leftEl) {
+        setLeftWrapToSecondLine(false);
         setSliderFullWidth(false);
         return;
       }
-      const containerW = header.clientWidth;
-      const controlsW = controls.offsetWidth;
-      const availableForSlider = Math.max(0, containerW - controlsW);
-      const needsWrap = availableForSlider < containerW * 0.5;
-      setSliderFullWidth(needsWrap);
+
+      // Use window.innerWidth to compare against half the viewport width
+      const leftW = leftEl.getBoundingClientRect().width || leftEl.offsetWidth || 0;
+      const viewportW = window.innerWidth || header.clientWidth || 0;
+      const shouldWrapLeft = leftW > (viewportW / 2);
+
+      setLeftWrapToSecondLine(shouldWrapLeft);
+      // When the left group wraps, the slider should occupy a full row
+      setSliderFullWidth(shouldWrapLeft);
     };
 
     update();
     const ro = new ResizeObserver(() => update());
+    if (leftControlsRef.current) ro.observe(leftControlsRef.current);
     if (headerRef.current) ro.observe(headerRef.current);
-    if (controlsRef.current) ro.observe(controlsRef.current);
     window.addEventListener('resize', update);
     return () => {
       ro.disconnect();
@@ -865,38 +872,42 @@ export const ImagePreview = ({
       {/* Header (only shown when there's an image loaded and camera preview is not active) */}
     {!showCameraPreview && originalImage && (
   <div className="flex flex-wrap items-center gap-2 text-sm p-4" ref={headerRef}>
-            <span className="font-bold uppercase flex items-center gap-2">
-              <span className="whitespace-nowrap">{t('zoom')}</span>
-              <span className="text-sm text-muted-foreground">{zoom[0]}%</span>
-            </span>
-          <div className="flex items-center gap-2 ml-4" ref={controlsRef}>
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="integer-scaling" 
-                checked={integerScaling}
-                onCheckedChange={handleIntegerScalingChange}
-              />
-              <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
+            {/* Left group: zoom label + controls. This may wrap to its own line */}
+            <div ref={leftControlsRef} className={leftWrapToSecondLine ? 'w-full flex flex-wrap items-center gap-2' : 'flex items-center gap-2'}>
+              <span className="font-bold uppercase flex items-center gap-2">
+                <span className="whitespace-nowrap">{t('zoom')}</span>
+                <span className="text-sm text-muted-foreground">{zoom[0]}%</span>
+              </span>
+              <div className="flex items-center gap-2 ml-4" ref={controlsRef}>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="integer-scaling" 
+                    checked={integerScaling}
+                    onCheckedChange={handleIntegerScalingChange}
+                  />
+                  <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
+                </div>
+                <Button onClick={() => { autoFitPermitRef.current = true; fitToWidth(true); }} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
+                  <MoveHorizontal className="h-4 w-4" />
+                </Button>
+                <Button onClick={setZoomTo100} variant="highlighted" size="sm" title="100%" aria-label="Set zoom to 100%">
+                  100%
+                </Button>
+              </div>
             </div>
-            <Button onClick={() => { autoFitPermitRef.current = true; fitToWidth(true); }} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
-              <MoveHorizontal className="h-4 w-4" />
-            </Button>
-            <Button onClick={setZoomTo100} variant="highlighted" size="sm" title="100%" aria-label="Set zoom to 100%">
-              100%
-            </Button>
-          </div>
 
-          <div className={sliderFullWidth ? 'w-full mt-2' : 'flex-1'}>
-            <Slider
-              value={sliderValue}
-              onValueChange={handleZoomChange}
-              max={ZOOM_BOUNDS.max}
-              min={ZOOM_BOUNDS.min}
-              step={integerScaling ? 100 : 1}
-              className="w-full"
-              trackClassName="color-bg-highlight"
-            />
-          </div>
+            {/* Right group: slider. If leftWrapToSecondLine is true, slider becomes full-width below */}
+            <div className={sliderFullWidth ? 'w-full mt-2' : 'flex-1'}>
+              <Slider
+                value={sliderValue}
+                onValueChange={handleZoomChange}
+                max={ZOOM_BOUNDS.max}
+                min={ZOOM_BOUNDS.min}
+                step={integerScaling ? 100 : 1}
+                className="w-full"
+                trackClassName="color-bg-highlight"
+              />
+            </div>
         </div>
       )}
 
