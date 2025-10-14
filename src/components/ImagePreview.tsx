@@ -865,7 +865,10 @@ export const ImagePreview = ({
       {/* Header (only shown when there's an image loaded and camera preview is not active) */}
     {!showCameraPreview && originalImage && (
   <div className="flex flex-wrap items-center gap-2 text-sm p-4" ref={headerRef}>
-            <span className="w-16 font-bold uppercase">{t('zoom')} {zoom[0]}%</span>
+            <span className="font-bold uppercase flex items-center gap-2">
+              <span className="whitespace-nowrap">{t('zoom')}</span>
+              <span className="text-sm text-muted-foreground">{zoom[0]}%</span>
+            </span>
           <div className="flex items-center gap-2" ref={controlsRef}>
             <div className="flex items-center space-x-2">
               <Checkbox 
