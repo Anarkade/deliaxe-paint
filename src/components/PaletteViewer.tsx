@@ -33,6 +33,34 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const { t } = useTranslation();
   const lastSentPaletteRef = useRef<string | null>(null);
 
+  // Responsive columns: show 16 columns normally, but if the viewport
+  // width is less than (switchPreview button width * 9) show 8 columns.
+  const [columns, setColumns] = useState<number>(16);
+
+  useEffect(() => {
+    const updateColumns = () => {
+      try {
+        const switchLabel = t('switchPreview');
+        const btn = document.querySelector(`[aria-label="${switchLabel}"],[title="${switchLabel}"]`) as HTMLElement | null;
+        const btnWidth = btn ? btn.getBoundingClientRect().width : 0;
+        const fallbackBtn = 32; // fallback width in px if button not found
+        const threshold = (btnWidth > 0 ? btnWidth : fallbackBtn) * 9;
+        setColumns(window.innerWidth < threshold ? 8 : 16);
+      } catch (e) {
+        // ignore and keep default
+      }
+    };
+
+    updateColumns();
+    window.addEventListener('resize', updateColumns);
+    const mo = new MutationObserver(updateColumns);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      window.removeEventListener('resize', updateColumns);
+      mo.disconnect();
+    };
+  }, [t]);
+
   const emitPaletteUpdate = useCallback((colors: any) => {
     try {
       // Serialize canonically using only r,g,b triplets to avoid unstable
@@ -377,7 +405,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         <div className="w-full flex justify-center">
           <div
             className="grid gap-2 w-full"
-            style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
+            style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
           >
             {paletteColors.map((color, index) => {
               const hexColor = `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`.toUpperCase();
