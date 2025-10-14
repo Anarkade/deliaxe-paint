@@ -68,7 +68,7 @@ export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelecto
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-2"
         >
         {sortedLanguages.map((lang) => (
-          <div key={lang} className="flex items-center space-x-1 py-0">
+          <div key={lang} className="flex items-center space-x-1 py-0 mb-5">
             <RadioGroupItem 
               value={lang} 
               id={`lang-${lang}`}

@@ -444,11 +444,11 @@ export const ExportImage = ({
               <div className="grid grid-cols-1 gap-2.5">
                 <div className="flex items-center space-x-2">
                   <RadioGroup value={exportFormat} onValueChange={(value: 'png24' | 'png8') => setExportFormat(value)}>
-                    <div className="flex items-center space-x-2 mb-5">
+                    <div className="flex items-center space-x-2">
                       <RadioGroupItem value="png8" id="png8" className="h-3 w-3 mt-0 mr-2 flex-shrink-0"/>
                       <Label htmlFor="png8" className="text-xs font-normal text-muted-foreground leading-tight break-words text-left">{t('png8Indexed')} ({paletteColors.length} colors)</Label>
                     </div>
-                    <div className="flex items-center space-x-2 mb-5">
+                    <div className="flex items-center space-x-2">
                       <RadioGroupItem value="png24" id="png24" className="h-3 w-3 mt-2 mr-2 flex-shrink-0"/>
                       <Label htmlFor="png24" className="text-xs font-normal text-muted-foreground mt-3 leading-tight break-words text-left">PNG-24 RGB (24-bit)</Label>
                     </div>
