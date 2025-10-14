@@ -6,6 +6,7 @@ import { type Color } from '@/lib/colorQuantization';
 import { PaletteType } from './ColorPaletteSelector';
 import getDefaultPalette, { SimpleColor } from '@/lib/defaultPalettes';
 import { Eye, Palette, GripVertical, Lock } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 // pngAnalyzer functions are imported dynamically where needed to keep bundle size small
 
 interface PaletteColor {
@@ -373,19 +374,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   return (
     <div className="relative space-y-4 p-4 border border-elegant-border bg-card/50 rounded-lg">
       <div className="space-y-4">
-        <h3 className="text-lg font-bold text-neon-cyan flex items-center">
-          <Palette className="mr-2 h-5 w-5" />
-          {paletteColors.length > 0 ? t('paletteWithCount').replace('{count}', paletteColors.length.toString()) : t('extractColors')}
-        </h3>
-      </div>
-      
-      <div className="space-y-4">
-          <div className="text-xs text-muted-foreground text-left">
-            <p>{t('clickToChangeColor')}</p>
-          </div>
-          
-          <div className="w-full flex justify-center">
-            <div className="flex flex-wrap gap-2">
+        <div className="w-full flex justify-center">
+          <div
+            className="grid gap-2 w-full"
+            style={{ gridTemplateColumns: 'repeat(16, minmax(0, 1fr))' }}
+          >
             {paletteColors.map((color, index) => {
               const hexColor = `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`.toUpperCase();
               const alpha = color.transparent ? 0 : 100;
@@ -425,42 +418,47 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                   }}
                   onClick={() => selectNewColor(index, selectedPalette)}
                   data-palette-index={index}
-                  className="relative group cursor-pointer border border-elegant-border rounded-lg p-1.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"
+                  className="relative group cursor-pointer border border-elegant-border rounded-lg p-0.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"
                 >
-                  <div className="flex items-stretch space-x-2">
-                    <div className="relative">
-                      <div
-                        className="w-6 h-full border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"
-                        style={{
-                          backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
-                          opacity: color.transparent ? 0.5 : 1
-                        }}
-                        title={t('clickToChangeColor')}
-                      >
-                        {selectedPalette === 'original' && blockedIndex !== null && showOriginal && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                            <Lock className="h-4 w-4 text-white" />
+                  <div className="w-full">
+                    {/* Tooltip: wrap the color block and grip icon so hovering the whole area shows details */}
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="relative">
+                            <div
+                              className="w-full aspect-square border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"
+                              style={{
+                                backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
+                                opacity: color.transparent ? 0.5 : 1,
+                              }}
+                            >
+                              {selectedPalette === 'original' && blockedIndex !== null && showOriginal && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                  <Lock className="h-4 w-4 text-white" />
+                                </div>
+                              )}
+                              {color.transparent && (
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="w-3 h-3 bg-white rounded-full opacity-75" />
+                                </div>
+                              )}
+                              <span className="absolute bottom-0.5 left-0.5 inline-block text-left text-xs font-mono bg-black/70 text-white px-1 rounded">
+                                {index}
+                              </span>
+                            </div>
+                            <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
-                        )}
-                        {color.transparent && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-3 h-3 bg-white rounded-full opacity-75" />
-                          </div>
-                        )}
-                        <span className="absolute bottom-1 left-0 right-0 flex justify-center text-xs font-mono bg-black/70 text-white px-1 rounded">
-                          {index}
-                        </span>
-                      </div>
-                      <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    
-                    <div className="text-xs font-mono space-y-0.5 text-muted-foreground text-left">
-                      <div className="font-semibold text-foreground">{hexColor}</div>
-                      <div>R {color.r}</div>
-                      <div>G {color.g}</div>
-                      <div>B {color.b}</div>
-                      <div>A {alpha}%</div>
-                    </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="font-mono text-xs text-muted-foreground">
+                          <div className="font-semibold text-foreground">{hexColor}</div>
+                          <div>R {color.r}</div>
+                          <div>G {color.g}</div>
+                          <div>B {color.b}</div>
+                          <div>A {alpha}%</div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
               );
@@ -468,6 +466,18 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             </div>
           </div>
         </div>
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold text-neon-cyan flex items-center">
+            <Palette className="mr-2 h-5 w-5" />
+            {paletteColors.length > 0 ? t('paletteWithCount').replace('{count}', paletteColors.length.toString()) : t('extractColors')}
+          </h3>
+
+          <div className="text-xs text-muted-foreground text-left">
+            <p>{t('clickToChangeColor')}</p>
+          </div>
+        </div>
+
         {editorState.open && editorState.index !== null && (
           <ColorEditor
             initial={paletteColors[editorState.index]}
