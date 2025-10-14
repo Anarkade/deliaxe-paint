@@ -468,7 +468,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         </div>
 
         <div className="space-y-4">
-          <label className="block text-m font-bold text-foreground pt-2 pb-2">
+          <label className="block text-m font-bold text-foreground py-1 mb-0.5">
             <span className="flex items-center">
               <Palette className="mr-2 h-4 w-4" />
               {paletteColors.length > 0 ? t('paletteWithCount').replace('{count}', paletteColors.length.toString()) : t('extractColors')}
