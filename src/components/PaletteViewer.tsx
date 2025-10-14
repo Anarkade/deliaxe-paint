@@ -415,6 +415,18 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   }
 
   
+  // Prepare the detailed palette label with depth placeholders replaced
+  const detailedCountLabel = paletteColors.length > 0 ? (() => {
+    const depth = editorState.depth || { r: 8, g: 8, b: 8 };
+    const bits = (depth.r || 0) + (depth.g || 0) + (depth.b || 0);
+    return t('paletteWithDetailedCount')
+      .replace('{count}', paletteColors.length.toString())
+      .replace('{depthR}', String(depth.r))
+      .replace('{depthG}', String(depth.g))
+      .replace('{depthB}', String(depth.b))
+      .replace('{depthBits}', String(bits));
+  })() : null;
+
   return (
     <div className="relative space-y-4 p-4 border border-elegant-border bg-card/50 rounded-lg">
       <div className="space-y-4">
@@ -517,7 +529,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           <label className="block text-m font-bold text-foreground py-1 mb-0.5">
             <span className="flex items-center">
               {paletteColors.length > 0 && <Palette className="mr-2 h-4 w-4" />}
-              {paletteColors.length > 0 ? t('paletteWithCount').replace('{count}', paletteColors.length.toString()) : null}
+              {paletteColors.length > 0 ? t('paletteWithDetailedCount').replace('{count}', paletteColors.length.toString()) : null}
             </span>
           </label>
           {paletteColors.length > 0 && (
