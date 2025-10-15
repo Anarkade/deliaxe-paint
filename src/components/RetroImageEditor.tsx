@@ -1416,7 +1416,7 @@ export const RetroImageEditor = () => {
   // a palette color we want to persist the new palette immediately and also
   // prevent the automatic processing from running and overwriting the
   // manual edits. Save a history snapshot so undo/redo works as expected.
-  const handlePaletteUpdateFromViewer = useCallback(async (colors: Color[]) => {
+  const handlePaletteUpdateFromViewer = useCallback(async (colors: Color[], meta?: any) => {
     // Deduplicate identical palette updates (compare canonical r,g,b representation)
     try {
       const incomingKey = (paletteKey as any)(colors);
@@ -1441,10 +1441,30 @@ export const RetroImageEditor = () => {
         manualPaletteTimeoutRef.current = null;
       }, 400) as unknown as number;
 
-      // If we already have a processed raster, apply the new palette to it.
+      // If this update includes a 'replace' meta (single-color exact replace)
+      // then perform exact pixel replacement on the current processed raster
+      // if available to avoid nearest-neighbor remapping.
       let newProcessed: ImageData | null = null;
+      if (meta && meta.kind === 'replace' && processedImageData) {
+        try {
+          const { oldColor, newColor } = meta;
+          const cloned = new ImageData(new Uint8ClampedArray(processedImageData.data), processedImageData.width, processedImageData.height);
+          const data = cloned.data;
+          for (let i = 0; i < data.length; i += 4) {
+            if (data[i] === oldColor.r && data[i + 1] === oldColor.g && data[i + 2] === oldColor.b) {
+              data[i] = newColor.r;
+              data[i + 1] = newColor.g;
+              data[i + 2] = newColor.b;
+            }
+          }
+          newProcessed = cloned;
+        } catch (e) {
+          console.warn('Exact replace failed, falling back to applyPalette', e);
+          newProcessed = null;
+        }
+      }
 
-      if (processedImageData) {
+      if (!newProcessed && processedImageData) {
         try {
           // imageProcessor.applyPalette returns ImageData
           newProcessed = await imageProcessor.applyPalette(processedImageData, colors as any);

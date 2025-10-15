@@ -16,10 +16,11 @@ interface PaletteColor {
   transparent?: boolean;
 }
 
-interface PaletteViewerProps {
+  interface PaletteViewerProps {
   selectedPalette: string;
   imageData: ImageData | null;
-  onPaletteUpdate: (colors: Color[]) => void;
+  // Accept optional metadata for updates (e.g. single-color replace)
+  onPaletteUpdate: (colors: Color[], meta?: any) => void;
   originalImageSource?: File | string | null;
   externalPalette?: Color[];
   onImageUpdate?: (imageData: ImageData) => void;
@@ -77,7 +78,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     };
   }, [columns]);
 
-  const emitPaletteUpdate = useCallback((colors: any) => {
+  const emitPaletteUpdate = useCallback((colors: any, meta?: any) => {
     try {
       // Serialize canonically using only r,g,b triplets to avoid unstable
       // JSON string differences (extra properties or key ordering) which
@@ -86,10 +87,10 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       const serialized = arr.join('|');
       if (lastSentPaletteRef.current === serialized) return;
       lastSentPaletteRef.current = serialized;
-      onPaletteUpdate?.(colors as Color[]);
+      onPaletteUpdate?.(colors as Color[], meta);
     } catch (err) {
       // Fallback to direct call if serialization fails for some reason
-      onPaletteUpdate?.(colors as Color[]);
+      onPaletteUpdate?.(colors as Color[], meta);
     }
   }, [onPaletteUpdate]);
   const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() =>
@@ -221,6 +222,43 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     const oldColor = newColors[editorState.index];
     newColors[editorState.index] = { ...newColors[editorState.index], r: c.r, g: c.g, b: c.b };
     setPaletteColors(newColors);
+
+    // If we have a processed raster, perform exact per-pixel replacement of
+    // the old color with the new color so we don't rely on nearest-neighbor
+    // quantization. This ensures the user's explicit edit replaces exact
+    // pixels rather than remapping to the closest palette entry.
+    try {
+      if (imageData && typeof oldColor !== 'undefined' && oldColor !== null) {
+        const cloned = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
+        const data = cloned.data;
+        const or = oldColor.r;
+        const og = oldColor.g;
+        const ob = oldColor.b;
+        const nr = c.r;
+        const ng = c.g;
+        const nb = c.b;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i] === or && data[i + 1] === og && data[i + 2] === ob) {
+            data[i] = nr;
+            data[i + 1] = ng;
+            data[i + 2] = nb;
+            // keep alpha as-is
+          }
+        }
+        // Notify parent with the updated processed raster first so it can
+        // persist the ImageData before we emit the palette change metadata.
+        try { onImageUpdate?.(cloned); } catch (e) { /* ignore */ }
+        // Emit palette update with metadata describing the single-color replace
+        emitPaletteUpdate(newColors, { kind: 'replace', index: editorState.index, oldColor: { r: or, g: og, b: ob }, newColor: { r: nr, g: ng, b: nb } });
+        // Close editor after notifications
+        closeEditor();
+        return;
+      }
+    } catch (e) {
+      // Fall back to emitting palette update only
+    }
+
+    // Default behavior: emit palette update (no raster available)
     emitPaletteUpdate(newColors);
 
     // Then update the processed image pixels (if available) and notify parent

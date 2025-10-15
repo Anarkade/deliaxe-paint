@@ -112,7 +112,7 @@ interface ImagePreviewProps {
   onLoadImageClick?: (source: File | string) => void;
   originalImageSource?: File | string; // Add source for PNG analysis
   selectedPalette?: PaletteType;
-  onPaletteUpdate?: (colors: Color[]) => void;
+  onPaletteUpdate?: (colors: Color[], meta?: any) => void;
   onImageUpdate?: (imageData: ImageData) => void;
   showCameraPreview?: boolean;
   onCameraPreviewChange?: (show: boolean) => void;
@@ -833,7 +833,7 @@ export const ImagePreview = ({
     ? (originalPaletteColors && originalPaletteColors.length > 0 ? originalPaletteColors : undefined)
     : (processedPaletteColors && processedPaletteColors.length > 0 ? processedPaletteColors : undefined);
   const paletteViewerExternal = paletteViewerColors?.map(({ r, g, b }) => ({ r, g, b }));
-  const handlePaletteViewerUpdate = useCallback((colors: Color[]) => {
+  const handlePaletteViewerUpdate = useCallback((colors: Color[], meta?: any) => {
     try {
       const key = (colors || []).map(c => `${c.r},${c.g},${c.b}`).join('|');
       // dedupe repeated emissions across closures
@@ -847,7 +847,33 @@ export const ImagePreview = ({
     // decides how to apply them (and may rasterize/apply the palette and switch
     // the preview to processed). Blocking here when showOriginal is true caused
     // the observed race where the first application was ignored.
-    onPaletteUpdate?.(colors);
+    onPaletteUpdate?.(colors, meta);
+
+    // If the PaletteViewer supplied a single-color replace meta, and we
+    // currently have a processed raster, apply the exact replacement here
+    // as a safety-net in case the viewer couldn't update the raster itself.
+    try {
+      if (meta && meta.kind === 'replace' && processedImageData) {
+        const { oldColor, newColor } = meta;
+        const cloned = new ImageData(new Uint8ClampedArray(processedImageData.data), processedImageData.width, processedImageData.height);
+        const data = cloned.data;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i] === oldColor.r && data[i + 1] === oldColor.g && data[i + 2] === oldColor.b) {
+            data[i] = newColor.r;
+            data[i + 1] = newColor.g;
+            data[i + 2] = newColor.b;
+          }
+        }
+        try { onImageUpdate?.(cloned); } catch (e) { /* ignore */ }
+        // Ensure preview shows processed image
+        if (selectedPalette !== 'original') {
+          if (controlledShowOriginal === undefined) setShowOriginal(false);
+          try { onShowOriginalChange?.(false); } catch (e) { /* ignore */ }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
 
     // If the palette being edited is not the 'original' palette, ensure we show
     // the processed raster immediately so the user sees the effect of their edit.
