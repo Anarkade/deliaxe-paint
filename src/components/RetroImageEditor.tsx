@@ -106,7 +106,7 @@ async function extractPaletteFromFile(source: File | string, imgElement?: HTMLIm
         // tables per-frame -- prefer the global table when present but accept
         // the first frame-local table if that's all that's available.
         const { parseGIF, decompressFrames } = await import('gifuct-js');
-        const parsed = parseGIF(buf as ArrayBufferLike);
+  const parsed = parseGIF(buf as ArrayBuffer);
         const frames = decompressFrames(parsed, true) as any[];
 
         // Inspect parsed blocks for a gct or color table
@@ -155,7 +155,65 @@ async function extractPaletteFromFile(source: File | string, imgElement?: HTMLIm
         const buf = await getArrayBuffer();
         const bmpModule = await import('bmp-js');
         const decoded: any = bmpModule.decode(new Uint8Array(buf));
-        if (decoded && decoded.palette && decoded.palette.length) return toRgbArray(decoded.palette as any);
+        if (decoded && decoded.palette && decoded.palette.length) {
+          // eslint-disable-next-line no-console
+          console.debug('extractPaletteFromFile: BMP/ICO palette extracted (bmp-js)', { source: ext, entries: decoded.palette.length });
+          return toRgbArray(decoded.palette as any);
+        }
+
+        // If bmp-js didn't expose a palette for an ICO, attempt a lightweight
+        // manual ICO directory scan and BMP-in-ICO palette extraction. ICO
+        // entries may contain PNG images (skip those) or BMP infoheaders.
+        if (ext.includes('.ico')) {
+          try {
+            const bytes = new Uint8Array(buf);
+            const dv = new DataView(buf);
+            // Check for ICO header: reserved=0, type=1
+            if (dv.getUint16(0, true) === 0 && dv.getUint16(2, true) === 1) {
+              const count = dv.getUint16(4, true);
+              for (let idx = 0; idx < count; idx++) {
+                const dir = 6 + idx * 16;
+                const imgSize = dv.getUint32(dir + 8, true);
+                const imgOffset = dv.getUint32(dir + 12, true);
+                if (imgOffset + 4 > bytes.length) continue;
+                // PNG signature check
+                if (bytes[imgOffset] === 0x89 && bytes[imgOffset + 1] === 0x50 && bytes[imgOffset + 2] === 0x4E && bytes[imgOffset + 3] === 0x47) {
+                  continue; // PNG inside ICO - skip
+                }
+                // Attempt to read BITMAPINFOHEADER at imgOffset
+                if (imgOffset + 40 <= bytes.length) {
+                  const biSize = dv.getUint32(imgOffset, true);
+                  if (biSize >= 12 && imgOffset + biSize <= bytes.length) {
+                    const biBitCount = dv.getUint16(imgOffset + 14, true);
+                    const biClrUsed = dv.getUint32(imgOffset + 32, true);
+                    const paletteCount = biClrUsed || (biBitCount <= 8 ? (1 << biBitCount) : 0);
+                    const palStart = imgOffset + biSize;
+                    const palBytes = paletteCount * 4; // BMP palette entries are typically 4 bytes (B,G,R,Reserved)
+                    if (paletteCount > 0 && palStart + palBytes <= bytes.length) {
+                      const pal: { r: number; g: number; b: number }[] = [];
+                      for (let p = 0; p < paletteCount; p++) {
+                        const off = palStart + p * 4;
+                        const b = bytes[off];
+                        const g = bytes[off + 1];
+                        const r = bytes[off + 2];
+                        pal.push({ r, g, b });
+                      }
+                      if (pal.length > 0) {
+                        // eslint-disable-next-line no-console
+                        console.debug('extractPaletteFromFile: ICO manual parsed palette', { source: ext, entries: pal.length });
+                        return pal;
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          } catch (icoErr) {
+            // ignore ICO fallback errors
+            // eslint-disable-next-line no-console
+            console.debug('extractPaletteFromFile: ICO fallback parse failed', { source: ext, err: icoErr && (icoErr as Error).message });
+          }
+        }
       } catch (e) {
         // ignore and continue
       }
@@ -176,7 +234,11 @@ async function extractPaletteFromFile(source: File | string, imgElement?: HTMLIm
             for (let i = palStart; i < bytes.length; i += 3) {
               pal.push({ r: bytes[i], g: bytes[i + 1], b: bytes[i + 2] });
             }
-            if (pal.length > 0) return pal;
+            if (pal.length > 0) {
+              // eslint-disable-next-line no-console
+              console.debug('extractPaletteFromFile: PCX tail palette extracted', { source: ext, entries: pal.length });
+              return pal;
+            }
           }
         }
       } catch (e) {}
@@ -203,13 +265,29 @@ async function extractPaletteFromFile(source: File | string, imgElement?: HTMLIm
               const pal: { r: number; g: number; b: number }[] = [];
               for (let i = 0; i < colorMapLength; i++) {
                 const off = cmapOffset + i * entrySize;
-                // TGA palette entries are typically BGR
-                const b = bytes[off];
-                const g = bytes[off + 1] || 0;
-                const r = bytes[off + 2] || 0;
-                pal.push({ r, g, b });
+                // Handle common entry sizes: 1,2,3 bytes. For 2-byte (16-bit)
+                // entries interpret as 5-5-5 little-endian (common in TGA palettes)
+                if (entrySize === 2) {
+                  const lo = bytes[off] || 0;
+                  const hi = bytes[off + 1] || 0;
+                  const val = lo | (hi << 8);
+                  const r = ((val >> 10) & 0x1F) << 3;
+                  const g = ((val >> 5) & 0x1F) << 3;
+                  const b = (val & 0x1F) << 3;
+                  pal.push({ r, g, b });
+                } else {
+                  // TGA palette entries are typically BGR when 3 bytes
+                  const b = bytes[off] || 0;
+                  const g = bytes[off + 1] || 0;
+                  const r = bytes[off + 2] || 0;
+                  pal.push({ r, g, b });
+                }
               }
-              if (pal.length > 0) return pal;
+              if (pal.length > 0) {
+                // eslint-disable-next-line no-console
+                console.debug('extractPaletteFromFile: TGA colormap extracted', { source: ext, entries: pal.length, depth: colorMapDepth });
+                return pal;
+              }
             }
           }
         }
@@ -223,19 +301,28 @@ async function extractPaletteFromFile(source: File | string, imgElement?: HTMLIm
       try {
         const buf = await getArrayBuffer();
         const bytes = new Uint8Array(buf);
+        const dv = new DataView(buf);
         // Search for ASCII 'CMAP'
         for (let i = 0; i + 8 < bytes.length; i++) {
           if (bytes[i] === 0x43 && bytes[i + 1] === 0x4D && bytes[i + 2] === 0x41 && bytes[i + 3] === 0x50) {
             // next 4 bytes (i+4..i+7) are big-endian length
-            const len = (bytes[i + 4] << 24) | (bytes[i + 5] << 16) | (bytes[i + 6] << 8) | (bytes[i + 7]);
+            const len = dv.getUint32(i + 4, false); // big-endian
             const start = i + 8;
+            // Some IFF implementations pad chunk lengths to even boundaries
+            const paddedLen = len + (len % 2);
             if (start + len <= bytes.length) {
               const pal: { r: number; g: number; b: number }[] = [];
               for (let j = start; j + 2 < start + len; j += 3) {
                 pal.push({ r: bytes[j], g: bytes[j + 1], b: bytes[j + 2] });
               }
-              if (pal.length > 0) return pal;
+              if (pal.length > 0) {
+                // eslint-disable-next-line no-console
+                console.debug('extractPaletteFromFile: IFF CMAP extracted', { source: ext, entries: pal.length });
+                return pal;
+              }
             }
+            // Skip to next possible chunk (account for padding)
+            i = start + paddedLen - 1;
           }
         }
       } catch (e) {}
