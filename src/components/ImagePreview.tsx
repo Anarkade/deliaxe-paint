@@ -848,6 +848,20 @@ export const ImagePreview = ({
     // the preview to processed). Blocking here when showOriginal is true caused
     // the observed race where the first application was ignored.
     onPaletteUpdate?.(colors);
+
+    // If the palette being edited is not the 'original' palette, ensure we show
+    // the processed raster immediately so the user sees the effect of their edit.
+    // If the parent controls the preview, notify it; otherwise update local state.
+    try {
+      if (selectedPalette !== 'original') {
+        if (controlledShowOriginal === undefined) {
+          setShowOriginal(false);
+        }
+        try { onShowOriginalChange?.(false); } catch (e) { /* ignore */ }
+      }
+    } catch (e) {
+      // ignore
+    }
   }, [onPaletteUpdate]);
   // Compute zoom factor from preview slider (1.0 == 100%) to scale grid spacing
   const zoomFactor = zoom[0] / 100;
