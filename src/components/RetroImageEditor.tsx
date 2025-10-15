@@ -29,6 +29,117 @@ const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size
 const PROCESSING_DEBOUNCE_MS = 100; // Debounce time for image processing
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for color analysis (performance optimization)
 
+// Attempt to extract a palette from a source file or data URL.
+// Tries format-specific parsers (GIF, BMP) for exact table order, then
+// falls back to raster-sampling which preserves first-seen order.
+async function extractPaletteFromFile(source: File | string, imgElement?: HTMLImageElement) {
+  const toRgbArray = (arr: any) => {
+    const out: { r: number; g: number; b: number }[] = [];
+    if (!arr) return out;
+    // Accept flat arrays of numbers or arrays of [r,g,b]
+    if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'number') {
+      for (let i = 0; i + 2 < arr.length; i += 3) out.push({ r: arr[i], g: arr[i + 1], b: arr[i + 2] });
+      return out;
+    }
+    for (const e of arr) {
+      if (Array.isArray(e) && e.length >= 3) out.push({ r: e[0], g: e[1], b: e[2] });
+      else if (typeof e === 'number') {
+        // packed integer? skip
+      }
+    }
+    return out;
+  };
+
+  const getArrayBuffer = async () => {
+    if (typeof source === 'string') {
+      if (source.startsWith('data:')) {
+        const base64 = source.split(',')[1] || '';
+        const bin = atob(base64);
+        const buf = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+        return buf.buffer;
+      }
+      const res = await fetch(source);
+      return await res.arrayBuffer();
+    }
+    return await (source as File).arrayBuffer();
+  };
+
+  const ext = (typeof source === 'string' ? source.toLowerCase() : (source && (source as File).name?.toLowerCase())) || '';
+
+  // GIF exact extraction using gifuct-js (global color table)
+  try {
+    if (ext.includes('.gif') || (typeof source === 'string' && source.startsWith('data:image/gif'))) {
+      try {
+        const buf = await getArrayBuffer();
+        const { parseGIF, decompressFrames } = await import('gifuct-js');
+        const gif = parseGIF(buf);
+        const frames = decompressFrames(gif, true);
+        // try global color table from logical screen descriptor
+        const gct = (gif && gif.lsd && (gif.lsd.gct || gif.gct)) || (frames && frames[0] && (frames[0] as any).gct) || null;
+        if (gct && gct.length) return toRgbArray(gct as any);
+      } catch (e) {
+        // parser missing or failed -> continue to other extractors
+      }
+    }
+  } catch (e) {}
+
+  // BMP/ICO via bmp-js (palette present for 8-bit BMP/ICO)
+  try {
+    if (ext.includes('.bmp') || ext.includes('.ico')) {
+      try {
+        const buf = await getArrayBuffer();
+        const bmpModule = await import('bmp-js');
+        const decoded: any = bmpModule.decode(new Uint8Array(buf));
+        if (decoded && decoded.palette && decoded.palette.length) return toRgbArray(decoded.palette as any);
+      } catch (e) {
+        // ignore and continue
+      }
+    }
+  } catch (e) {}
+
+  // TGA / PCX / IFF attempts could be added here with similar dynamic imports
+
+  // Fallback: raster-sample the image and preserve first-seen order
+  try {
+    const canvas = document.createElement('canvas');
+    const img = imgElement || await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new Image();
+      i.crossOrigin = 'Anonymous';
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      if (typeof source === 'string') i.src = source;
+      else i.src = URL.createObjectURL(source as File);
+    });
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const seen = new Set<string>();
+    const palette: { r: number; g: number; b: number }[] = [];
+    const MAX_COLORS = 256;
+    const SAMPLE_INTERVAL = 4; // tune for perf/accuracy
+    for (let i = 0; i < data.length; i += 4 * SAMPLE_INTERVAL) {
+      const key = `${data[i]},${data[i + 1]},${data[i + 2]}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        palette.push({ r: data[i], g: data[i + 1], b: data[i + 2] });
+        if (palette.length >= MAX_COLORS) break;
+      }
+    }
+    if (palette.length > 0) return palette;
+  } catch (e) {
+    // final fallback
+  }
+
+  return null;
+}
+
 const FIXED_PALETTES: Record<string, number[][]> = {
   cga0: [
     [0, 0, 0],
@@ -603,28 +714,48 @@ export const RetroImageEditor = () => {
         }
       });
       
-      // Extract palette for indexed PNG
+      // Attempt to extract an ordered palette from the source file.
+      // Prefer PNG-specific extraction (exact PLTE) when possible, otherwise
+      // fall back to format-aware extractors (GIF/BMP via dynamic parsers)
+      // or a raster-sampling fallback which preserves first-seen order.
       const isPng = (typeof source === 'string' && (source.startsWith('data:image/png') || source.endsWith('.png'))) || (typeof source !== 'string' && source.name?.endsWith('.png'));
-      if (isPng) {
-        try {
-          // Use the named export from pngAnalyzer
-          const pngModule = await import('@/lib/pngAnalyzer');
-          const palette = await pngModule.extractPNGPalette(source as File | string);
-          if (palette && palette.length > 0) {
-            setIsOriginalPNG8Indexed(true);
-            setOriginalPaletteColors(palette as any);
-            writeOrderedPalette(palette as any, 'png-extract');
-          } else {
-            setIsOriginalPNG8Indexed(false);
-            setOriginalPaletteColors([]);
-            writeOrderedPalette([], 'png-extract-fallback');
+      try {
+        let extractedPalette: any[] | null = null;
+
+        if (isPng) {
+          try {
+            const pngModule = await import('@/lib/pngAnalyzer');
+            extractedPalette = await pngModule.extractPNGPalette(source as File | string);
+          } catch (e) {
+            // pngAnalyzer failed or not available; fall through to generic extractor
+            // console.debug('pngAnalyzer failed, falling back to generic extractor', e);
+            extractedPalette = null;
           }
-        } catch (e) {
-          console.error("Failed to analyze PNG for palette:", e);
+        }
+
+        if (!extractedPalette) {
+          try {
+            extractedPalette = await extractPaletteFromFile(source, img as HTMLImageElement);
+          } catch (err) {
+            // extraction failed; leave null and handle below
+            extractedPalette = null;
+          }
+        }
+
+        if (extractedPalette && extractedPalette.length > 0) {
+          setIsOriginalPNG8Indexed(true);
+          setOriginalPaletteColors(extractedPalette as any);
+          writeOrderedPalette(extractedPalette as any, isPng ? 'png-extract' : 'format-extract');
+        } else {
           setIsOriginalPNG8Indexed(false);
           setOriginalPaletteColors([]);
-          writeOrderedPalette([], 'no-palette');
+          writeOrderedPalette([], isPng ? 'png-extract-fallback' : 'no-palette');
         }
+      } catch (e) {
+        console.error('Palette extraction failed:', e);
+        setIsOriginalPNG8Indexed(false);
+        setOriginalPaletteColors([]);
+        writeOrderedPalette([], 'no-palette-exception');
       }
       
       // Performance check: Validate image size and provide recommendations
