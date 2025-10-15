@@ -117,15 +117,6 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               <Upload className="h-4 w-4" />
             </Button>
             <Button
-              variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
-              onClick={() => handleTabClick('palette-selector')}
-              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
-              disabled={!originalImage}
-              title={t('changePalette')}
-            >
-              <Palette className="h-4 w-4" />
-            </Button>
-            <Button
               variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('resolution')}
               className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
@@ -133,6 +124,15 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               title={t('changeResolution')}
             >
               <Proportions className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
+              onClick={() => handleTabClick('palette-selector')}
+              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+              disabled={!originalImage}
+              title={t('changePalette')}
+            >
+              <Palette className="h-4 w-4" />
             </Button>
             <Button
               variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
@@ -181,15 +181,6 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Upload className="h-4 w-4" />
           </Button>
           <Button
-            variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
-            onClick={() => handleTabClick('palette-selector')}
-            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
-            disabled={!originalImage}
-            title={t('changePalette')}
-          >
-            <Palette className="h-4 w-4" />
-          </Button>
-          <Button
             variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('resolution')}
             className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
@@ -197,6 +188,15 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             title={t('changeResolution')}
           >
             <Proportions className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
+            onClick={() => handleTabClick('palette-selector')}
+            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            disabled={!originalImage}
+            title={t('changePalette')}
+          >
+            <Palette className="h-4 w-4" />
           </Button>
           <Button
             variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}

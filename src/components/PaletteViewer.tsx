@@ -476,7 +476,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   })() : null;
 
   return (
-    <div className="relative space-y-4 p-4 border border-elegant-border bg-card/50 rounded-lg">
+    <div className="relative space-y-4 p-4 border border-elegant-border color-bg-highlight rounded-lg">
       <div className="space-y-4">
         <div className="w-full flex justify-center">
           <div

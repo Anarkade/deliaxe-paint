@@ -349,6 +349,15 @@ export const RetroImageEditor = () => {
   const [previewShowingOriginal, setPreviewShowingOriginal] = useState<boolean>(true);
   const previewToggleWasManualRef = useRef(false);
   const ignoreNextCloseRef = useRef(false);
+  // Ensure palette depth is set consistently whenever the selected palette
+  // or preview view changes. Mega Drive uses RGB 3-3-3; all other palettes
+  // should default to RGB 8-8-8 so the PaletteViewer renders correctly in
+  // the footer and other places that depend on per-view depth metadata.
+  useEffect(() => {
+    const depth = selectedPalette === 'megadrive' ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 };
+    setPaletteDepthOriginal(depth);
+    setPaletteDepthProcessed(depth);
+  }, [selectedPalette]);
   // When set, skip the immediate automated processing pass to avoid
   // overwriting intentional manual palette/image edits from the UI.
   // This flag is toggled by child components before calling onImageUpdate
