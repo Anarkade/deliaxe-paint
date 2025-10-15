@@ -488,6 +488,33 @@ const FIXED_PALETTES: Record<string, number[][]> = {
     [216, 216, 216],
     [255, 255, 255]
   ]
+  ,
+  // Game Gear: 32 colors, RGB 4-4-4 (values scaled from 4-bit to 8-bit)
+  gameGear: (() => {
+    const pal: number[][] = [];
+    // Game Gear palette is commonly a 4-4-4 RGB space — we generate a 32-entry
+    // palette (for example, 2 levels per channel yields 8, but Game Gear typical
+    // palettes vary; here we sample commonly used 32-color arrangement by taking
+    // 2^3 * 4 = 32 — we'll construct a useful spread by combining 4 levels per
+    // channel but limiting to 32 entries placed evenly.
+    const levels = [0, 85, 170, 255]; // 4 levels (approx 0..255)
+    for (let r = 0; r < 4; r++) {
+      for (let g = 0; g < 2; g++) {
+        for (let b = 0; b < 4; b++) {
+          if (pal.length >= 32) break;
+          pal.push([levels[r], levels[g], levels[b]]);
+        }
+        if (pal.length >= 32) break;
+      }
+      if (pal.length >= 32) break;
+    }
+    // If we don't have 32 entries yet, pad with grayscale
+    while (pal.length < 32) {
+      const v = Math.round((pal.length / 31) * 255);
+      pal.push([v, v, v]);
+    }
+    return pal;
+  })()
 };
 
 const rgbToXyz = (r: number, g: number, b: number) => {
@@ -658,7 +685,11 @@ export const RetroImageEditor = () => {
   // should default to RGB 8-8-8 so the PaletteViewer renders correctly in
   // the footer and other places that depend on per-view depth metadata.
   useEffect(() => {
-    const depth = selectedPalette === 'megadrive' ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 };
+    const depth = selectedPalette === 'megadrive'
+      ? { r: 3, g: 3, b: 3 }
+      : selectedPalette === 'gameGear'
+        ? { r: 4, g: 4, b: 4 }
+        : { r: 8, g: 8, b: 8 };
     setPaletteDepthOriginal(depth);
     setPaletteDepthProcessed(depth);
   }, [selectedPalette]);

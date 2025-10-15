@@ -34,6 +34,7 @@ export const ColorPaletteSelector = ({
     { value: 'gameboyBg', labelKey: 'gameBoyBg', colorsKey: 'gameBoyColors' },
     { value: 'gameboyRealistic', labelKey: 'gameBoyRealistic', colorsKey: 'gameBoyColors' },
     { value: 'megadrive', labelKey: 'megaDrive16', colorsKey: 'megaDrive16Colors' },
+  { value: 'gameGear', labelKey: 'gameGearPlatform', colorsKey: 'gameGear32Colors' },
     { value: 'nes', labelKey: 'nesPalette', colorsKey: 'nesColors' },
     { value: 'zxSpectrum', labelKey: 'zxSpectrumPalette', colorsKey: 'zxSpectrumColors' },
   ];
