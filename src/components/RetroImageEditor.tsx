@@ -1441,6 +1441,28 @@ export const RetroImageEditor = () => {
         }
       }
 
+      case 'masterSystem': {
+        try {
+          if (imageProcessor && typeof (imageProcessor as any).processMasterSystemImage === 'function') {
+            const msResult: any = await (imageProcessor as any).processMasterSystemImage(resultImageData, customColors, (progress: number) => setProcessingProgress(progress));
+            if (!manualPaletteOverrideRef.current) writeOrderedPalette(msResult.palette.map(({ r, g, b }: any) => ({ r, g, b })), 'applyPaletteConversion-master');
+            return msResult.imageData;
+          }
+          const { processMasterSystemImage } = await import('@/lib/colorQuantization');
+          const msFallback = processMasterSystemImage(resultImageData, customColors);
+          if (!manualPaletteOverrideRef.current) writeOrderedPalette(msFallback.palette.map(({ r, g, b }) => ({ r, g, b })), 'applyPaletteConversion-master-fallback');
+          return msFallback.imageData;
+        } catch (err) {
+          console.error('Master System processing error:', err);
+          const preset = FIXED_PALETTES['masterSystem'];
+          if (preset && preset.length > 0) {
+            applyFixedPalette(resultData, preset);
+            if (!manualPaletteOverrideRef.current) writeOrderedPalette(preset.map(([r, g, b]) => ({ r, g, b })), 'applyPaletteConversion-master-fixed');
+          }
+          return resultImageData;
+        }
+      }
+
       default: {
         const preset = FIXED_PALETTES[palette];
         if (preset && preset.length > 0) {

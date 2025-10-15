@@ -315,3 +315,60 @@ export const processGameGearImage = (imageData: ImageData, originalPalette?: Col
     palette: finalPalette
   };
 };
+
+/**
+ * Quantize a single 8-bit channel to `bits` and expand back to 8-bit using rounding.
+ */
+export const quantizeChannelToBits = (v: number, bits: number): number => {
+  const levels = (1 << bits) - 1;
+  const q = Math.round((v / 255) * levels);
+  return Math.round((q / levels) * 255);
+};
+
+/**
+ * Convert RGB color to RGB 2-2-2 format (Master System simulation)
+ */
+export const toRGB222 = (r: number, g: number, b: number): Color => {
+  return {
+    r: quantizeChannelToBits(r, 2),
+    g: quantizeChannelToBits(g, 2),
+    b: quantizeChannelToBits(b, 2)
+  };
+};
+
+/**
+ * Process image for Master System format (RGB 2-2-2, 16 colors):
+ * 1. Snap pixels to RGB 2-2-2 using rounding
+ * 2. Extract unique colors and quantize to 16 colors
+ * 3. Return processed image data and palette
+ */
+export const processMasterSystemImage = (imageData: ImageData, originalPalette?: Color[]): { imageData: ImageData; palette: Color[] } => {
+  const rgb222ImageData = new ImageData(new Uint8ClampedArray(imageData.data), imageData.width, imageData.height);
+  const data = rgb222ImageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      const c = toRGB222(data[i], data[i + 1], data[i + 2]);
+      data[i] = c.r;
+      data[i + 1] = c.g;
+      data[i + 2] = c.b;
+    }
+  }
+
+  let uniqueColors = extractColorsFromImageData(rgb222ImageData);
+
+  let finalPalette: Color[];
+  if (uniqueColors.length <= 16) {
+    finalPalette = uniqueColors;
+  } else {
+    finalPalette = medianCutQuantization(uniqueColors, 16);
+  }
+
+  finalPalette = finalPalette.map(color => toRGB222(color.r, color.g, color.b));
+
+  while (finalPalette.length < 16) finalPalette.push({ r: 0, g: 0, b: 0, count: 0 });
+  finalPalette = finalPalette.slice(0, 16);
+
+  const finalImageData = applyQuantizedPalette(rgb222ImageData, finalPalette);
+
+  return { imageData: finalImageData, palette: finalPalette };
+};
