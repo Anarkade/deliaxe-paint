@@ -71,12 +71,36 @@ async function extractPaletteFromFile(source: File | string, imgElement?: HTMLIm
   try {
     if (ext.includes('.gif') || (typeof source === 'string' && source.startsWith('data:image/gif'))) {
       try {
+        // Try a lightweight, robust direct parse of the GIF header + Logical
+        // Screen Descriptor to extract the Global Color Table (GCT) in file
+        // order. This avoids relying on 3rd-party parsers and works for most
+        // well-formed GIFs.
         const buf = await getArrayBuffer();
+        const bytes = new Uint8Array(buf);
+        // GIF header 'GIF87a' or 'GIF89a'
+        if (bytes.length >= 13 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
+          const packed = bytes[10];
+          const globalColorTableFlag = (packed & 0x80) !== 0;
+          if (globalColorTableFlag) {
+            const sizeFlag = packed & 0x07; // value N
+            const tableEntries = 2 ** (sizeFlag + 1);
+            const tableSize = 3 * tableEntries;
+            const tableStart = 13; // header (6) + LSD (7)
+            if (bytes.length >= tableStart + tableSize) {
+              const pal: { r: number; g: number; b: number }[] = [];
+              for (let i = tableStart; i < tableStart + tableSize; i += 3) {
+                pal.push({ r: bytes[i], g: bytes[i + 1], b: bytes[i + 2] });
+              }
+              if (pal.length > 0) return pal;
+            }
+          }
+        }
+
+        // Fallback to gifuct-js if the direct header parse didn't yield a GCT
         const { parseGIF, decompressFrames } = await import('gifuct-js');
-        const gif = parseGIF(buf);
-        const frames = decompressFrames(gif, true);
-        // try global color table from logical screen descriptor
-        const gct = (gif && gif.lsd && (gif.lsd.gct || gif.gct)) || (frames && frames[0] && (frames[0] as any).gct) || null;
+        const parsed = parseGIF(buf);
+        const frames = decompressFrames(parsed, true);
+        const gct = (parsed && (parsed.lsd && (parsed.lsd.gct || parsed.gct))) || (frames && frames[0] && (frames[0] as any).gct) || null;
         if (gct && gct.length) return toRgbArray(gct as any);
       } catch (e) {
         // parser missing or failed -> continue to other extractors
