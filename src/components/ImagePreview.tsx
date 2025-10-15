@@ -136,6 +136,8 @@ interface ImagePreviewProps {
   autoFitKey?: string;
   onZoomChange?: (zoom: number) => void;
   isVerticalLayout?: boolean; // Layout state for responsive handling
+  paletteDepthOriginal?: { r: number; g: number; b: number };
+  paletteDepthProcessed?: { r: number; g: number; b: number };
   // Optional: allow parent to force container styles (height/width constraints)
   containerStyle?: React.CSSProperties;
 }
@@ -157,6 +159,8 @@ export const ImagePreview = ({
   onShowOriginalChange,
   onImageUpdate,
   onRequestOpenCameraSelector,
+  paletteDepthOriginal,
+  paletteDepthProcessed,
   showTileGrid = false, 
   showFrameGrid = false, 
   tileWidth = 8, 
@@ -1128,6 +1132,7 @@ export const ImagePreview = ({
                           onSectionOpen?.();
                         }}
                         showOriginal={showOriginal}
+                        paletteDepth={showOriginal ? paletteDepthOriginal : paletteDepthProcessed}
                   />
                 </div>
               ) : null;

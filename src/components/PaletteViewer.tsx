@@ -29,7 +29,7 @@ interface PaletteViewerProps {
 
 // default palettes now live in src/lib/defaultPalettes.ts
 
-export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal }: PaletteViewerProps) => {
+export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal, paletteDepth }: PaletteViewerProps & { paletteDepth?: { r: number; g: number; b: number } }) => {
   const { t } = useTranslation();
   const lastSentPaletteRef = useRef<string | null>(null);
 
@@ -148,8 +148,9 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   }>({ open: false, index: null, depth: null });
 
   const openEditor = (index: number, currentPalette: PaletteType) => {
-    // Default 8-8-8, but megadrive uses 3-3-3 quantization for applying result
-    const depth = currentPalette === 'megadrive' ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 };
+    // Prefer an explicit paletteDepth prop (provided by parent for original/processed views),
+    // otherwise fall back to palette-specific defaults (megadrive -> 3-3-3, else 8-8-8).
+    const depth = paletteDepth ?? (currentPalette === 'megadrive' ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 });
 
     // First open the editor without position to measure its height
     setEditorState({ open: true, index, depth, position: undefined });
@@ -417,7 +418,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   
   // Prepare the detailed palette label with depth placeholders replaced
   const detailedCountLabel = paletteColors.length > 0 ? (() => {
-    const depth = editorState.depth || { r: 8, g: 8, b: 8 };
+    // Prefer explicit paletteDepth prop (passed from parent) over editorState.depth
+    const depth = paletteDepth || editorState.depth || { r: 8, g: 8, b: 8 };
     const bits = (depth.r || 0) + (depth.g || 0) + (depth.b || 0);
     return t('paletteWithDetailedCount')
       .replace('{count}', paletteColors.length.toString())

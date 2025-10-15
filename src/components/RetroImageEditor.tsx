@@ -338,6 +338,9 @@ export const RetroImageEditor = () => {
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
   const [selectedPalette, setSelectedPalette] = useState<PaletteType>('original');
+  // Optional explicit palette depth to inform children (e.g., PaletteViewer)
+  const [paletteDepthOriginal, setPaletteDepthOriginal] = useState<{ r: number; g: number; b: number }>({ r: 8, g: 8, b: 8 });
+  const [paletteDepthProcessed, setPaletteDepthProcessed] = useState<{ r: number; g: number; b: number }>({ r: 8, g: 8, b: 8 });
   // Restore resolution/scaling state that the selector will control
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('scale-to-fit-width');
@@ -1695,7 +1698,7 @@ export const RetroImageEditor = () => {
         {/* Main preview area - occupies middle row, right column */}
         <div className="row-start-2 col-start-2 col-end-3 m-0 p-0 relative" style={{ minWidth: 0 }} ref={rightColumnRef}>
           <div className="w-full m-0 p-0" style={{ width: '100%', minWidth: 0 }}>
-            <ImagePreview
+              <ImagePreview
               originalImage={originalImage}
               processedImageData={processedImageData}
               onDownload={downloadImage}
@@ -1739,6 +1742,8 @@ export const RetroImageEditor = () => {
                 previewToggleWasManualRef.current = true;
                 setPreviewShowingOriginal(false);
               }}
+              paletteDepthOriginal={paletteDepthOriginal}
+              paletteDepthProcessed={paletteDepthProcessed}
             />
 
             {/* Floating Content Sections - now constrained inside preview cell (absolute inset) */}
@@ -1797,6 +1802,15 @@ export const RetroImageEditor = () => {
                   selectedPalette={selectedPalette}
                   onPaletteChange={(palette) => {
                     setSelectedPalette(palette);
+                    // Update explicit per-view paletteDepth for known retro palettes
+                    // so the PaletteViewer can display an accurate detailedCountLabel.
+                    // For example, 'megadrive' uses RGB 3-3-3 quantization.
+                    const depth = palette === 'megadrive' ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 };
+                    if (previewShowingOriginal) {
+                      setPaletteDepthOriginal(depth);
+                    } else {
+                      setPaletteDepthProcessed(depth);
+                    }
                     if (palette !== 'original') {
                       try {
                         const defaults = getDefaultPalette(palette as string) || [];
