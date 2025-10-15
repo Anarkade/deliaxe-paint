@@ -98,45 +98,87 @@ async function extractPaletteFromFile(source: File | string, imgElement?: HTMLIm
     }
   } catch (e) {}
 
-  // TGA / PCX / IFF attempts could be added here with similar dynamic imports
-
-  // Fallback: raster-sample the image and preserve first-seen order
+  // PCX: palette at file tail for 8-bit PCX files: 0x0C marker + 768 bytes (256*3)
   try {
-    const canvas = document.createElement('canvas');
-    const img = imgElement || await new Promise<HTMLImageElement>((resolve, reject) => {
-      const i = new Image();
-      i.crossOrigin = 'Anonymous';
-      i.onload = () => resolve(i);
-      i.onerror = reject;
-      if (typeof source === 'string') i.src = source;
-      else i.src = URL.createObjectURL(source as File);
-    });
-
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return null;
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(img, 0, 0);
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    const seen = new Set<string>();
-    const palette: { r: number; g: number; b: number }[] = [];
-    const MAX_COLORS = 256;
-    const SAMPLE_INTERVAL = 4; // tune for perf/accuracy
-    for (let i = 0; i < data.length; i += 4 * SAMPLE_INTERVAL) {
-      const key = `${data[i]},${data[i + 1]},${data[i + 2]}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        palette.push({ r: data[i], g: data[i + 1], b: data[i + 2] });
-        if (palette.length >= MAX_COLORS) break;
-      }
+    if (ext.includes('.pcx')) {
+      try {
+        const buf = await getArrayBuffer();
+        const bytes = new Uint8Array(buf);
+        if (bytes.length >= 769) {
+          const marker = bytes[bytes.length - 769];
+          if (marker === 0x0C) {
+            const palStart = bytes.length - 768;
+            const pal: { r: number; g: number; b: number }[] = [];
+            for (let i = palStart; i < bytes.length; i += 3) {
+              pal.push({ r: bytes[i], g: bytes[i + 1], b: bytes[i + 2] });
+            }
+            if (pal.length > 0) return pal;
+          }
+        }
+      } catch (e) {}
     }
-    if (palette.length > 0) return palette;
-  } catch (e) {
-    // final fallback
-  }
+  } catch (e) {}
 
+  // TGA: color map specified in header when colormaptype === 1
+  try {
+    if (ext.includes('.tga')) {
+      try {
+        const buf = await getArrayBuffer();
+        const bytes = new Uint8Array(buf);
+        if (bytes.length >= 18) {
+          const idLength = bytes[0];
+          const colorMapType = bytes[1];
+          const colorMapOrigin = bytes[3] | (bytes[4] << 8);
+          const colorMapLength = bytes[5] | (bytes[6] << 8);
+          const colorMapDepth = bytes[7];
+          if (colorMapType === 1 && colorMapLength > 0) {
+            const entrySize = Math.max(1, Math.floor(colorMapDepth / 8));
+            const cmapOffset = 18 + idLength;
+            const expectedLen = colorMapLength * entrySize;
+            if (bytes.length >= cmapOffset + expectedLen) {
+              const pal: { r: number; g: number; b: number }[] = [];
+              for (let i = 0; i < colorMapLength; i++) {
+                const off = cmapOffset + i * entrySize;
+                // TGA palette entries are typically BGR
+                const b = bytes[off];
+                const g = bytes[off + 1] || 0;
+                const r = bytes[off + 2] || 0;
+                pal.push({ r, g, b });
+              }
+              if (pal.length > 0) return pal;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+  } catch (e) {}
+
+  // IFF/ILBM: search for 'CMAP' chunk and read its data (3-byte RGB triplets)
+  try {
+    if (ext.includes('.iff') || ext.includes('.lbm') || ext.includes('.ilbm')) {
+      try {
+        const buf = await getArrayBuffer();
+        const bytes = new Uint8Array(buf);
+        // Search for ASCII 'CMAP'
+        for (let i = 0; i + 8 < bytes.length; i++) {
+          if (bytes[i] === 0x43 && bytes[i + 1] === 0x4D && bytes[i + 2] === 0x41 && bytes[i + 3] === 0x50) {
+            // next 4 bytes (i+4..i+7) are big-endian length
+            const len = (bytes[i + 4] << 24) | (bytes[i + 5] << 16) | (bytes[i + 6] << 8) | (bytes[i + 7]);
+            const start = i + 8;
+            if (start + len <= bytes.length) {
+              const pal: { r: number; g: number; b: number }[] = [];
+              for (let j = start; j + 2 < start + len; j += 3) {
+                pal.push({ r: bytes[j], g: bytes[j + 1], b: bytes[j + 2] });
+              }
+              if (pal.length > 0) return pal;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+  } catch (e) {}
+
+  // No exact palette table found for known indexed formats. Treat as non-indexed.
   return null;
 }
 
