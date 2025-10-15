@@ -34,7 +34,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const { t } = useTranslation();
   const lastSentPaletteRef = useRef<string | null>(null);
 
-  // Responsive columns: show 16 columns normally. When viewport width <= 480px
+  // Responsive columns: show 16 columns normally. When viewport width <= 900px
   // switch to 8 columns and render each color block as 48x48 px.
   const [columns, setColumns] = useState<number>(16);
   const gridRef = useRef<HTMLDivElement | null>(null);
@@ -42,7 +42,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
   useEffect(() => {
     const updateColumns = () => {
-      const isSmall = window.innerWidth <= 480;
+      const isSmall = window.innerWidth <= 900;
       setColumns(isSmall ? 8 : 16);
     };
 
