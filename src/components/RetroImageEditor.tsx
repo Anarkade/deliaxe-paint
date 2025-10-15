@@ -1432,20 +1432,29 @@ export const RetroImageEditor = () => {
       // Prevent automatic reprocessing from overwriting the manual change
       suppressNextProcessRef.current = true;
       // Mark that the user manually edited the palette so automated
-      // processing doesn't overwrite it and start a short timeout to
-      // clear the override after the race window.
+      // processing doesn't overwrite it. Persist the manual override until
+      // the user explicitly selects a new palette or resets the editor.
       manualPaletteOverrideRef.current = true;
-      if (manualPaletteTimeoutRef.current) window.clearTimeout(manualPaletteTimeoutRef.current as any);
-      manualPaletteTimeoutRef.current = window.setTimeout(() => {
-        manualPaletteOverrideRef.current = false;
+      if (manualPaletteTimeoutRef.current) {
+        window.clearTimeout(manualPaletteTimeoutRef.current as any);
         manualPaletteTimeoutRef.current = null;
-      }, 400) as unknown as number;
+      }
 
       // If this update includes a 'replace' meta (single-color exact replace)
-      // then perform exact pixel replacement on the current processed raster
-      // if available to avoid nearest-neighbor remapping.
+      // then prefer the provided ImageData (meta.imageData) if present so the
+      // parent can atomically persist the edited raster. Otherwise perform
+      // exact pixel replacement on the current processed raster if available
+      // to avoid nearest-neighbor remapping.
       let newProcessed: ImageData | null = null;
-      if (meta && meta.kind === 'replace' && processedImageData) {
+      if (meta && meta.kind === 'replace') {
+        if (meta.imageData && meta.imageData instanceof ImageData) {
+          try {
+            // clone to avoid keeping references to caller-owned buffers
+            newProcessed = new ImageData(new Uint8ClampedArray((meta.imageData as ImageData).data), (meta.imageData as ImageData).width, (meta.imageData as ImageData).height);
+          } catch (e) {
+            newProcessed = null;
+          }
+        } else if (processedImageData) {
         try {
           const { oldColor, newColor } = meta;
           const cloned = new ImageData(new Uint8ClampedArray(processedImageData.data), processedImageData.width, processedImageData.height);
@@ -1462,6 +1471,7 @@ export const RetroImageEditor = () => {
           console.warn('Exact replace failed, falling back to applyPalette', e);
           newProcessed = null;
         }
+      }
       }
 
       if (!newProcessed && processedImageData) {

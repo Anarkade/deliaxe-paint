@@ -249,7 +249,15 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         // persist the ImageData before we emit the palette change metadata.
         try { onImageUpdate?.(cloned); } catch (e) { /* ignore */ }
         // Emit palette update with metadata describing the single-color replace
-        emitPaletteUpdate(newColors, { kind: 'replace', index: editorState.index, oldColor: { r: or, g: og, b: ob }, newColor: { r: nr, g: ng, b: nb } });
+        // Include the cloned ImageData in the meta to ensure the parent can
+        // atomically persist the edited raster even if events arrive out of order.
+        emitPaletteUpdate(newColors, {
+          kind: 'replace',
+          index: editorState.index,
+          oldColor: { r: or, g: og, b: ob },
+          newColor: { r: nr, g: ng, b: nb },
+          imageData: cloned
+        });
         // Close editor after notifications
         closeEditor();
         return;
