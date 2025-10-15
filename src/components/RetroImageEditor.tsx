@@ -359,6 +359,7 @@ export const RetroImageEditor = () => {
   // changes the palette selection or resets the editor.
   const manualPaletteOverrideRef = useRef<boolean>(false);
   const manualPaletteTimeoutRef = useRef<number | null>(null);
+  const lastManualProcessedRef = useRef<ImageData | null>(null);
 
   // Helper to update ordered palette with instrumentation and respect the
   // manual override flag. The `source` string helps trace where updates come from.
@@ -1039,6 +1040,12 @@ export const RetroImageEditor = () => {
 
 
   const processImage = useCallback(async () => {
+    // If the user has manually edited the palette/image, skip automated processing
+    // to avoid overwriting intentional manual edits. Manual edits must be cleared
+    // explicitly (for example when the user selects a new palette or resets).
+    if (manualPaletteOverrideRef.current) {
+      return;
+    }
     // If a suppression flag is set (due to a manual palette/image edit),
     // consume it and skip processing so we don't overwrite the user's manual
     // adjustments. This covers both debounced automatic runs and direct
@@ -1517,6 +1524,9 @@ export const RetroImageEditor = () => {
           // reprocessing.
             if (currentHash !== newHash) {
             setProcessedImageData(newProcessed);
+            // remember the last manual processed raster so toggling the
+            // preview back to processed restores the exact edited image.
+            lastManualProcessedRef.current = newProcessed;
             previewToggleWasManualRef.current = true;
             setPreviewShowingOriginal(false);
             saveToHistory({ imageData: newProcessed, palette: selectedPalette });
@@ -1529,6 +1539,7 @@ export const RetroImageEditor = () => {
           // If hashing fails for any reason, fall back to applying the update
           // to avoid losing the user's manual edit.
           setProcessedImageData(newProcessed);
+          lastManualProcessedRef.current = newProcessed;
           previewToggleWasManualRef.current = true;
           setPreviewShowingOriginal(false);
           saveToHistory({ imageData: newProcessed, palette: selectedPalette });
@@ -1543,6 +1554,26 @@ export const RetroImageEditor = () => {
       console.error('handlePaletteUpdateFromViewer error:', err);
     }
   }, [processedImageData, originalImage, imageProcessor, selectedPalette, saveToHistory]);
+
+  // When the preview toggles to the processed view and the user previously
+  // made a manual palette/image edit, restore the last manual processed
+  // raster to ensure the exact edited pixels are shown instead of running
+  // the automated processing pipeline which may re-quantize them.
+  useEffect(() => {
+    if (!previewShowingOriginal) {
+      if (manualPaletteOverrideRef.current && lastManualProcessedRef.current) {
+        try {
+          const src = lastManualProcessedRef.current;
+          const cloned = new ImageData(new Uint8ClampedArray(src.data), src.width, src.height);
+          // Prevent the scheduled processing run from overwriting this
+          suppressNextProcessRef.current = true;
+          setProcessedImageData(cloned);
+        } catch (e) {
+          // ignore restore failures and allow normal processing to proceed
+        }
+      }
+    }
+  }, [previewShowingOriginal]);
 
 
   const downloadImage = useCallback(() => {
@@ -1766,7 +1797,10 @@ export const RetroImageEditor = () => {
                     onImageUpdate={(img) => {
                 // Persist processed image updates coming from child components
                 // (for example PaletteViewer when a palette color is edited).
-                setProcessedImageData(img);
+                      setProcessedImageData(img);
+                      // Record as last manual processed image so toggling preview
+                      // back to processed will restore this exact raster.
+                      lastManualProcessedRef.current = img;
                 // Ensure preview shows processed image and mark toggle as manual so
                 // we don't auto-revert
                 previewToggleWasManualRef.current = true;
@@ -1832,6 +1866,11 @@ export const RetroImageEditor = () => {
                   selectedPalette={selectedPalette}
                   onPaletteChange={(palette) => {
                     setSelectedPalette(palette);
+                    // Selecting a new palette is an explicit user action that
+                    // clears any manual palette edits so automatic processing
+                    // may run again.
+                    manualPaletteOverrideRef.current = false;
+                    lastManualProcessedRef.current = null;
                     // Update explicit per-view paletteDepth for known retro palettes
                     // so the PaletteViewer can display an accurate detailedCountLabel.
                     // For example, 'megadrive' uses RGB 3-3-3 quantization.
