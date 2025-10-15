@@ -71,39 +71,79 @@ async function extractPaletteFromFile(source: File | string, imgElement?: HTMLIm
   try {
     if (ext.includes('.gif') || (typeof source === 'string' && source.startsWith('data:image/gif'))) {
       try {
-        // Try a lightweight, robust direct parse of the GIF header + Logical
-        // Screen Descriptor to extract the Global Color Table (GCT) in file
-        // order. This avoids relying on 3rd-party parsers and works for most
-        // well-formed GIFs.
         const buf = await getArrayBuffer();
         const bytes = new Uint8Array(buf);
-        // GIF header 'GIF87a' or 'GIF89a'
-        if (bytes.length >= 13 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
-          const packed = bytes[10];
-          const globalColorTableFlag = (packed & 0x80) !== 0;
-          if (globalColorTableFlag) {
-            const sizeFlag = packed & 0x07; // value N
-            const tableEntries = 2 ** (sizeFlag + 1);
-            const tableSize = 3 * tableEntries;
-            const tableStart = 13; // header (6) + LSD (7)
-            if (bytes.length >= tableStart + tableSize) {
-              const pal: { r: number; g: number; b: number }[] = [];
-              for (let i = tableStart; i < tableStart + tableSize; i += 3) {
-                pal.push({ r: bytes[i], g: bytes[i + 1], b: bytes[i + 2] });
+        // Quick header attempt: look for Global Color Table (GCT) in LSD
+        try {
+          if (bytes.length >= 13 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
+            const packed = bytes[10];
+            const globalColorTableFlag = (packed & 0x80) !== 0;
+            if (globalColorTableFlag) {
+              const sizeFlag = packed & 0x07; // value N
+              const tableEntries = 2 ** (sizeFlag + 1);
+              const tableSize = 3 * tableEntries;
+              const tableStart = 13; // header (6) + LSD (7)
+              if (bytes.length >= tableStart + tableSize) {
+                const pal: { r: number; g: number; b: number }[] = [];
+                for (let i = tableStart; i < tableStart + tableSize; i += 3) {
+                  pal.push({ r: bytes[i], g: bytes[i + 1], b: bytes[i + 2] });
+                }
+                if (pal.length > 0) {
+                  // console.debug for diagnosis
+                  // eslint-disable-next-line no-console
+                  console.debug('extractPaletteFromFile: GIF header GCT extracted', { source: ext, entries: pal.length });
+                  return pal;
+                }
               }
-              if (pal.length > 0) return pal;
             }
+          }
+        } catch (hdrErr) {
+          // ignore header parse errors and continue to robust parser
+        }
+
+        // Fallback to gifuct-js: parse and scan parsed blocks/frames for any
+        // color table (global or local). Some GIFs only have local color
+        // tables per-frame -- prefer the global table when present but accept
+        // the first frame-local table if that's all that's available.
+        const { parseGIF, decompressFrames } = await import('gifuct-js');
+        const parsed = parseGIF(buf as ArrayBufferLike);
+        const frames = decompressFrames(parsed, true) as any[];
+
+        // Inspect parsed blocks for a gct or color table
+        let found: any = null;
+        try {
+          if (Array.isArray(parsed)) {
+            for (const block of parsed as any[]) {
+              if (!block) continue;
+              if (block.gct && block.gct.length) { found = block.gct; break; }
+              if (block.colorTable && block.colorTable.length) { found = block.colorTable; break; }
+            }
+          }
+        } catch (scanErr) {
+          // ignore
+        }
+
+        // If none in parsed blocks, check frames for local color tables
+        if (!found && Array.isArray(frames) && frames.length > 0) {
+          for (const f of frames) {
+            if (!f) continue;
+            if ((f as any).colorTable && (f as any).colorTable.length) { found = (f as any).colorTable; break; }
+            if ((f as any).gct && (f as any).gct.length) { found = (f as any).gct; break; }
+            // some frames expose a palette property
+            if ((f as any).palette && (f as any).palette.length) { found = (f as any).palette; break; }
           }
         }
 
-        // Fallback to gifuct-js if the direct header parse didn't yield a GCT
-        const { parseGIF, decompressFrames } = await import('gifuct-js');
-        const parsed = parseGIF(buf);
-        const frames = decompressFrames(parsed, true);
-        const gct = (parsed && (parsed.lsd && (parsed.lsd.gct || parsed.gct))) || (frames && frames[0] && (frames[0] as any).gct) || null;
-        if (gct && gct.length) return toRgbArray(gct as any);
+        if (found && found.length) {
+          // console.debug for diagnosis
+          // eslint-disable-next-line no-console
+          console.debug('extractPaletteFromFile: GIF parsed color table found', { source: ext, entries: found.length });
+          return toRgbArray(found as any);
+        }
       } catch (e) {
         // parser missing or failed -> continue to other extractors
+        // eslint-disable-next-line no-console
+        console.debug('extractPaletteFromFile: GIF parser failed', { source: ext, err: (e && (e as Error).message) || e });
       }
     }
   } catch (e) {}

@@ -1153,8 +1153,10 @@ export const ImagePreview = ({
             {(() => {
               // Only show palette viewer when:
               // 1. selectedPalette is not 'original' (showing a retro palette), OR
-              // 2. selectedPalette is 'original' AND the image is PNG-8 indexed
-              const showPaletteViewer = selectedPalette !== 'original' || isIndexedPNG;
+              // 2. selectedPalette is 'original' AND we have an extracted ordered palette
+              //    (this covers PNG-8 and other indexed formats like GIF/BMP/PCX/TGA/IFF)
+              const hasExtractedPalette = Array.isArray(originalPaletteColors) && originalPaletteColors.length > 0;
+              const showPaletteViewer = selectedPalette !== 'original' || hasExtractedPalette;
               return showPaletteViewer && originalImage ? (
                 <div className="mt-4">
                   <PaletteViewer
