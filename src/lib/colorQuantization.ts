@@ -251,3 +251,67 @@ export const processMegaDriveImage = (imageData: ImageData, originalPalette?: Co
     palette: finalPalette
   };
 };
+
+/**
+ * Convert RGB color to RGB 4-4-4 format (Game Gear format)
+ */
+export const toRGB444 = (r: number, g: number, b: number): Color => {
+  const r4 = Math.round((r / 255) * 15);
+  const g4 = Math.round((g / 255) * 15);
+  const b4 = Math.round((b / 255) * 15);
+  return {
+    r: Math.round((r4 / 15) * 255),
+    g: Math.round((g4 / 15) * 255),
+    b: Math.round((b4 / 15) * 255)
+  };
+};
+
+/**
+ * Process image for Game Gear format:
+ * 1. Convert to RGB 4-4-4 format
+ * 2. Extract unique colors and quantize to 32 colors
+ * 3. Return processed image data and palette
+ */
+export const processGameGearImage = (imageData: ImageData, originalPalette?: Color[]): { imageData: ImageData; palette: Color[] } => {
+  const originalColors = extractColorsFromImageData(imageData);
+
+  const rgb444ImageData = new ImageData(
+    new Uint8ClampedArray(imageData.data),
+    imageData.width,
+    imageData.height
+  );
+
+  const data = rgb444ImageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      const c = toRGB444(data[i], data[i + 1], data[i + 2]);
+      data[i] = c.r;
+      data[i + 1] = c.g;
+      data[i + 2] = c.b;
+    }
+  }
+
+  let uniqueColors = extractColorsFromImageData(rgb444ImageData);
+
+  let finalPalette: Color[];
+  if (uniqueColors.length <= 32) {
+    finalPalette = uniqueColors;
+  } else {
+    finalPalette = medianCutQuantization(uniqueColors, 32);
+  }
+
+  finalPalette = finalPalette.map(color => toRGB444(color.r, color.g, color.b));
+
+  while (finalPalette.length < 32) {
+    finalPalette.push({ r: 0, g: 0, b: 0, count: 0 });
+  }
+
+  finalPalette = finalPalette.slice(0, 32);
+
+  const finalImageData = applyQuantizedPalette(rgb444ImageData, finalPalette);
+
+  return {
+    imageData: finalImageData,
+    palette: finalPalette
+  };
+};

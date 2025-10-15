@@ -1390,6 +1390,32 @@ export const RetroImageEditor = () => {
         }
       }
 
+      case 'gameGear': {
+        try {
+          // Prefer imageProcessor implementation if provided (keeps heavy work off main thread)
+          if (imageProcessor && typeof (imageProcessor as any).processGameGearImage === 'function') {
+            const ggResult: any = await (imageProcessor as any).processGameGearImage(resultImageData, customColors, (progress: number) => setProcessingProgress(progress));
+            if (!manualPaletteOverrideRef.current) writeOrderedPalette(ggResult.palette.map(({ r, g, b }: any) => ({ r, g, b })), 'applyPaletteConversion-gamegear');
+            return ggResult.imageData;
+          }
+          // Fallback to local synchronous implementation
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { processGameGearImage } = await import('@/lib/colorQuantization');
+          const ggFallback = processGameGearImage(resultImageData, customColors);
+          if (!manualPaletteOverrideRef.current) writeOrderedPalette(ggFallback.palette.map(({ r, g, b }) => ({ r, g, b })), 'applyPaletteConversion-gamegear-fallback');
+          return ggFallback.imageData;
+        } catch (err) {
+          console.error('Game Gear processing error:', err);
+          // If something fails, fall back to applying a fixed palette if available
+          const preset = FIXED_PALETTES['gameGear'];
+          if (preset && preset.length > 0) {
+            applyFixedPalette(resultData, preset);
+            if (!manualPaletteOverrideRef.current) writeOrderedPalette(preset.map(([r, g, b]) => ({ r, g, b })), 'applyPaletteConversion-gamegear-fixed');
+          }
+          return resultImageData;
+        }
+      }
+
       default: {
         const preset = FIXED_PALETTES[palette];
         if (preset && preset.length > 0) {
