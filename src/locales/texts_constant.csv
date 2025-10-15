@@ -25,6 +25,8 @@ languageNames.cs,Čeština
 megaDrivePalH40,Mega Drive PAL H40
 msxPlatform,MSX
 pspPlatform,PSP
+gameGearPlatform,Game Gear (sprites)
+masterSystemPlatform,Master System (sprites)
 msxHiRes,MSX 2
 gameBoyAdvance,Game Boy Advance
 amstradCpc,Amstrad CPC

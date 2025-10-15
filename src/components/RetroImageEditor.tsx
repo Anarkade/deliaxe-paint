@@ -515,6 +515,29 @@ const FIXED_PALETTES: Record<string, number[][]> = {
     }
     return pal;
   })()
+  ,
+  // Master System: 32 colors, RGB 2-2-2 (2 bits per channel -> 4 levels)
+  masterSystem: (() => {
+    const pal: number[][] = [];
+    const levels = [0, 85, 170, 255];
+    // Produce 16 sampled entries from the 4-level RGB grid (snap to 2-2-2 depth display)
+    for (let r = 0; r < 4; r++) {
+      for (let g = 0; g < 4; g++) {
+        for (let b = 0; b < 4; b++) {
+          if (pal.length >= 16) break;
+          pal.push([levels[r], levels[g], levels[b]]);
+        }
+        if (pal.length >= 16) break;
+      }
+      if (pal.length >= 16) break;
+    }
+    // Pad if needed (should not be necessary) with grays
+    while (pal.length < 16) {
+      const v = Math.round((pal.length / 15) * 255);
+      pal.push([v, v, v]);
+    }
+    return pal;
+  })()
 };
 
 const rgbToXyz = (r: number, g: number, b: number) => {
@@ -689,7 +712,9 @@ export const RetroImageEditor = () => {
       ? { r: 3, g: 3, b: 3 }
       : selectedPalette === 'gameGear'
         ? { r: 4, g: 4, b: 4 }
-        : { r: 8, g: 8, b: 8 };
+        : selectedPalette === 'masterSystem'
+          ? { r: 2, g: 2, b: 2 }
+          : { r: 8, g: 8, b: 8 };
     setPaletteDepthOriginal(depth);
     setPaletteDepthProcessed(depth);
   }, [selectedPalette]);
@@ -2264,7 +2289,10 @@ export const RetroImageEditor = () => {
                     // Update explicit per-view paletteDepth for known retro palettes
                     // so the PaletteViewer can display an accurate detailedCountLabel.
                     // For example, 'megadrive' uses RGB 3-3-3 quantization.
-                    const depth = palette === 'megadrive' ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 };
+                    const depth = palette === 'megadrive' ? { r: 3, g: 3, b: 3 }
+                      : palette === 'gameGear' ? { r: 4, g: 4, b: 4 }
+                      : palette === 'masterSystem' ? { r: 2, g: 2, b: 2 }
+                      : { r: 8, g: 8, b: 8 };
                     if (previewShowingOriginal) {
                       setPaletteDepthOriginal(depth);
                     } else {
