@@ -401,143 +401,151 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
             <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('loadImageDesc')}</p>
         </div>
         <div className="border-t border-elegant-border my-4" />
-        {/* Compact grid layout for primary upload options */}
-  {/* Responsive grid: up to 3 columns; last tile spans all columns at md breakpoint */}
-  <div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-4 divide-y md:divide-y-0 divide-elegant-border">
-    {/* Vertical separators (match ChangeGridSelector style) */}
-    <div className="hidden md:block absolute top-0 bottom-0 left-1/3 w-px bg-border" />
-    <div className="hidden md:block absolute top-0 bottom-0 left-2/3 w-px bg-border" />
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <div className="relative" style={{ width: '2.5rem', height: '2.5rem' }}>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                  title={t('noFileChosen')}
-                />
-                <Button
-                  variant="highlighted"
-                  size="sm"
-                  className="flex items-center justify-center h-10 w-10 p-0"
-                >
-                  <HardDriveUpload className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="text-left">
-                <div className="text-sm leading-tight">{t('uploadImage')}</div>
-                <div className="text-[10px] leading-tight text-muted-foreground">{t('chooseFile')}</div>
-              </div>
-            </div>
-          </div>
+        {/* Compact two-column layout that matches ChangeGridSelector separators */}
+        <div className="pt-4">
+          <div className="relative">
+            {/* Center vertical separator for md+ */}
+            <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-px bg-border" />
 
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={onLoadFromClipboard}
-                variant="highlighted"
-                size="sm"
-                className="flex items-center justify-center h-10 w-10 p-0"
-              >
-                <ClipboardPaste className="h-4 w-4" />
-              </Button>
-              <div className="text-left">
-                <div className="text-sm leading-tight">{t('loadFromClipboard')}</div>
-                <div className="text-[10px] leading-tight text-muted-foreground">{t('pasteFromClipboard')}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            {showCameraPreview && (
-              <div 
-                className="relative bg-black rounded-md w-full min-h-[200px] flex items-center justify-center"
-                style={{ maxHeight: 'calc(100vh - 120px)' }}
-              >
-                {!cameraError ? (
-                  <video
-                    ref={videoRef}
-                    className="absolute inset-0 w-full h-full object-contain"
-                    autoPlay
-                    muted
-                    playsInline
-                  />
-                ) : (
-                  <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
-                    <div className="text-center text-white p-4">
-                      <Camera className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                      <p className="text-xs">{cameraError}</p>
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Left column: Upload + Camera */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="relative" style={{ width: '2.5rem', height: '2.5rem' }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      title={t('noFileChosen')}
+                    />
+                    <Button
+                      variant="highlighted"
+                      size="sm"
+                      className="flex items-center justify-center h-10 w-10 p-0"
+                    >
+                      <HardDriveUpload className="h-4 w-4" />
+                    </Button>
                   </div>
-                )}
+                  <div className="text-left">
+                    <div className="text-sm leading-tight">{t('uploadImage')}</div>
+                    <div className="text-[10px] leading-tight text-muted-foreground">{t('chooseFile')}</div>
+                  </div>
+                </div>
 
-                {/* Camera controls positioned at top center */}
-                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10 pt-safe">
-                  {!cameraError && (
-                    <Button
-                      onClick={handleCameraCapture}
-                      variant="highlighted"
-                      size="sm"
-                      className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
+                {/* Single horizontal separator between top and bottom tiles in left column */}
+                <div className="border-t border-elegant-border my-2" />
+
+                <div>
+                  {showCameraPreview ? (
+                    <div
+                      className="relative bg-black rounded-md w-full min-h-[200px] flex items-center justify-center"
+                      style={{ maxHeight: 'calc(100vh - 120px)' }}
                     >
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  )}
+                      {!cameraError ? (
+                        <video
+                          ref={videoRef}
+                          className="absolute inset-0 w-full h-full object-contain"
+                          autoPlay
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
+                          <div className="text-center text-white p-4">
+                            <Camera className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                            <p className="text-xs">{cameraError}</p>
+                          </div>
+                        </div>
+                      )}
 
-                  {availableCameras.length > 1 && (
-                    <Button
-                      onClick={switchCamera}
-                      variant="highlighted"
-                      size="sm"
-                      className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
-                      title={getCameraDisplayName(availableCameras[currentCameraIndex], currentCameraIndex)}
-                    >
-                      <RotateCcw className="h-3 w-3" />
-                    </Button>
-                  )}
+                      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10 pt-safe">
+                        {!cameraError && (
+                          <Button
+                            onClick={handleCameraCapture}
+                            variant="highlighted"
+                            size="sm"
+                            className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
+                          >
+                            <Camera className="h-4 w-4" />
+                          </Button>
+                        )}
 
+                        {availableCameras.length > 1 && (
+                          <Button
+                            onClick={switchCamera}
+                            variant="highlighted"
+                            size="sm"
+                            className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
+                            title={getCameraDisplayName(availableCameras[currentCameraIndex], currentCameraIndex)}
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                          </Button>
+                        )}
+
+                        <Button
+                          onClick={stopCameraPreview}
+                          variant="highlighted"
+                          size="sm"
+                          className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <Button
+                        onClick={onCameraPreviewRequest || handleCameraPreviewRequest}
+                        variant="highlighted"
+                        size="sm"
+                        className="flex items-center justify-center h-10 w-10 p-0"
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                      <div className="text-left">
+                        <div className="text-sm leading-tight">{t('camera')}</div>
+                        <div className="text-[10px] leading-tight text-muted-foreground">{t('preview')}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right column: Clipboard + URL */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 justify-end md:justify-start">
                   <Button
-                    onClick={stopCameraPreview}
+                    onClick={onLoadFromClipboard}
                     variant="highlighted"
                     size="sm"
-                    className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
+                    className="flex items-center justify-center h-10 w-10 p-0"
                   >
-                    <X className="h-3 w-3" />
+                    <ClipboardPaste className="h-4 w-4" />
                   </Button>
+                  <div className="text-left">
+                    <div className="text-sm leading-tight">{t('loadFromClipboard')}</div>
+                    <div className="text-[10px] leading-tight text-muted-foreground">{t('pasteFromClipboard')}</div>
+                  </div>
+                </div>
+
+                {/* Single horizontal separator between clipboard and URL */}
+                <div className="border-t border-elegant-border my-2" />
+
+                <div className="md:pt-2">
+                  <label className="block text-xs font-medium text-foreground mb-1">
+                    <Link className="inline mr-1 h-3 w-3" />
+                    {t('fromUrl')}
+                  </label>
+                  <Input
+                    type="url"
+                    placeholder="https://..."
+                    onChange={handleUrlUpload}
+                    className="bg-console-bg border-pixel-grid h-9 text-sm"
+                  />
                 </div>
               </div>
-            )}
-
-            {!showCameraPreview && (
-              <div className="flex items-center gap-3">
-                <Button
-                  onClick={onCameraPreviewRequest || handleCameraPreviewRequest}
-                  variant="highlighted"
-                  size="sm"
-                  className="flex items-center justify-center h-10 w-10 p-0"
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
-                <div className="text-left">
-                  <div className="text-sm leading-tight">{t('camera')}</div>
-                  <div className="text-[10px] leading-tight text-muted-foreground">{t('preview')}</div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-2 md:col-span-3">
-            <label className="block text-xs font-medium text-foreground">
-              <Link className="inline mr-1 h-3 w-3" />
-              {t('fromUrl')}
-            </label>
-            <Input
-              type="url"
-              placeholder="https://..."
-              onChange={handleUrlUpload}
-              className="bg-console-bg border-pixel-grid h-9 text-sm"
-            />
+            </div>
           </div>
         </div>
       </div>
