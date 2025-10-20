@@ -407,7 +407,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
             {/* Center vertical separator for md+ */}
             <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-px bg-border" />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
               {/* Left column: Upload + Camera */}
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
