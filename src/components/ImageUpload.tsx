@@ -532,17 +532,16 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 {/* Single horizontal separator between clipboard and URL */}
                 <div className="border-t border-elegant-border my-2" />
 
-                <div className="md:pt-2">
-                  <label className="block text-xs font-medium text-foreground mb-1">
-                    <Link className="inline mr-1 h-3 w-3" />
-                    {t('fromUrl')}
-                  </label>
+                <div className="md:pt-2 flex items-center gap-3">
                   <Input
                     type="url"
                     placeholder="https://..."
                     onChange={handleUrlUpload}
-                    className="bg-console-bg border-pixel-grid h-9 text-sm"
+                    className="bg-console-bg border-pixel-grid h-10 text-sm flex-1"
                   />
+                  <div className="text-left">
+                    <div className="text-sm leading-tight">{t('fromUrl')}</div>
+                  </div>
                 </div>
               </div>
             </div>
