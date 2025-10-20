@@ -407,7 +407,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
             {/* Center vertical separator for md+ */}
             <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-px bg-border" />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-12">
               {/* Left column: Upload + Camera */}
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
@@ -434,7 +434,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 </div>
 
                 {/* Single horizontal separator between top and bottom tiles in left column */}
-                <div className="border-t border-elegant-border my-2" />
+                <div className="border-t border-elegant-border my-4" />
 
                 <div>
                   {showCameraPreview ? (
@@ -530,7 +530,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 </div>
 
                 {/* Single horizontal separator between clipboard and URL */}
-                <div className="border-t border-elegant-border my-2" />
+                <div className="border-t border-elegant-border my-4" />
 
                 <div className="md:pt-2 flex items-center gap-3">
                   <Input
