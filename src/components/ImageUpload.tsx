@@ -35,6 +35,24 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
   const [isDragOver, setIsDragOver] = useState(false);
   const [showCameraSelector, setShowCameraSelector] = useState(false);
 
+  // Responsive columns: exact breakpoints requested by UX
+  const [cols, setCols] = useState<number>(() => {
+    if (typeof window === 'undefined') return 3;
+    const w = window.innerWidth;
+    if (w < 800) return 1;
+    if (w < 1500) return 2;
+    return 3;
+  });
+
+  useEffect(() => {
+    const onResize = () => {
+      const w = window.innerWidth;
+      setCols(w < 800 ? 1 : w < 1500 ? 2 : 3);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -402,155 +420,143 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
         </div>
   <div className="border-t border-elegant-border my-3" />
         {/* Compact two-column layout that matches ChangeGridSelector separators */}
-        <div className="pt-4">
+  <div className="pt-4 mx-0 px-0">
           <div className="relative">
             {/* Replace center separator with per-row vertical separators: make grid explicit 2 rows x 2 cols (4 cells) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0">
-              {/* Row 1 - Left cell: Upload (has right border on md) */}
-              <div className="space-y-2 md:pr-4 md:border-r md:border-elegant-border">
-                <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0">
-                  <div className="flex items-center gap-3">
-                    <div className="relative" style={{ width: '2.5rem', height: '2.5rem' }}>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        title={t('noFileChosen')}
-                      />
-                      <Button
-                        variant="highlighted"
-                        size="sm"
-                        className="flex items-center justify-center h-10 w-10 p-0"
-                      >
-                        <HardDriveUpload className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="text-left">
-                      <div className="text-sm leading-tight">{t('uploadImage')}</div>
-                      <div className="text-[10px] leading-tight text-muted-foreground">{t('chooseFile')}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Row 1 - Right cell: Clipboard (no right border) */}
-              <div className="space-y-2 md:pl-4">
-                <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0">
-                  <div className="flex items-center gap-3 justify-end md:justify-start">
-                    <Button
-                      onClick={onLoadFromClipboard}
-                      variant="highlighted"
-                      size="sm"
-                      className="flex items-center justify-center h-10 w-10 p-0"
-                    >
-                      <ClipboardPaste className="h-4 w-4" />
-                    </Button>
-                    <div className="text-left">
-                      <div className="text-sm leading-tight">{t('loadFromClipboard')}</div>
-                      <div className="text-[10px] leading-tight text-muted-foreground">{t('pasteFromClipboard')}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Full-width horizontal separator between rows */}
-              <div className="col-span-1 sm:col-span-2 lg:col-span-3 border-t border-elegant-border my-3" />
-
-              {/* Row 2 - Left cell: Camera (has right border on md) */}
-              <div className="space-y-2 md:pr-4 md:border-r md:border-elegant-border">
-                <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0">
-                  {showCameraPreview ? (
-                    <div
-                      className="relative bg-black rounded-md w-full min-h-[200px] flex items-center justify-center"
-                      style={{ maxHeight: 'calc(100vh - 120px)' }}
-                    >
-                      {!cameraError ? (
-                        <video
-                          ref={videoRef}
-                          className="absolute inset-0 w-full h-full object-contain"
-                          autoPlay
-                          muted
-                          playsInline
-                        />
-                      ) : (
-                        <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
-                          <div className="text-center text-white p-4">
-                            <Camera className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                            <p className="text-xs">{cameraError}</p>
+            {
+              (() => {
+                const gap = '0.75rem';
+                const dividerIndex = cols === 3 ? 2 : 1; // after which item to put full-width divider
+                const cells = [
+                  // Upload
+                  (
+                    <div key="upload" className={`pr-0`}>
+                      <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0">
+                        <div className="flex items-center gap-3 justify-start">
+                          <div className="relative" style={{ width: '2.5rem', height: '2.5rem' }}>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileUpload}
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                              title={t('noFileChosen')}
+                            />
+                            <Button variant="highlighted" size="sm" className="flex items-center justify-center h-10 w-10 p-0">
+                              <HardDriveUpload className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <div className="text-left">
+                            <div className="text-sm leading-6">{t('uploadImage')}</div>
+                            <div className="text-[10px] leading-5 text-muted-foreground">{t('chooseFile')}</div>
                           </div>
                         </div>
-                      )}
-
-                      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10 pt-safe">
-                        {!cameraError && (
-                          <Button
-                            onClick={handleCameraCapture}
-                            variant="highlighted"
-                            size="sm"
-                            className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
-                          >
-                            <Camera className="h-4 w-4" />
-                          </Button>
-                        )}
-
-                        {availableCameras.length > 1 && (
-                          <Button
-                            onClick={switchCamera}
-                            variant="highlighted"
-                            size="sm"
-                            className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
-                            title={getCameraDisplayName(availableCameras[currentCameraIndex], currentCameraIndex)}
-                          >
-                            <RotateCcw className="h-3 w-3" />
-                          </Button>
-                        )}
-
-                        <Button
-                          onClick={stopCameraPreview}
-                          variant="highlighted"
-                          size="sm"
-                          className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0"
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
                       </div>
                     </div>
-                  ) : (
-                    <div className="flex items-center gap-3">
-                      <Button
-                        onClick={onCameraPreviewRequest || handleCameraPreviewRequest}
-                        variant="highlighted"
-                        size="sm"
-                        className="flex items-center justify-center h-10 w-10 p-0"
-                      >
-                        <Camera className="h-4 w-4" />
-                      </Button>
-                      <div className="text-left">
-                        <div className="text-sm leading-tight">{t('camera')}</div>
-                        <div className="text-[10px] leading-tight text-muted-foreground">{t('preview')}</div>
+                  ),
+                  // Clipboard
+                  (
+                    <div key="clipboard" className={`pr-0`}>
+                      <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0">
+                        <div className="flex items-center gap-3 justify-start">
+                          <Button onClick={onLoadFromClipboard} variant="highlighted" size="sm" className="flex items-center justify-center h-10 w-10 p-0">
+                            <ClipboardPaste className="h-4 w-4" />
+                          </Button>
+                          <div className="text-left">
+                            <div className="text-sm leading-6">{t('loadFromClipboard')}</div>
+                            <div className="text-[10px] leading-5 text-muted-foreground">{t('pasteFromClipboard')}</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
+                  ),
+                  // Camera
+                  (
+                    <div key="camera" className={`pr-0`}>
+                      <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0">
+                        {showCameraPreview ? (
+                          <div className="relative bg-black rounded-md w-full min-h-[200px] flex items-center justify-center" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+                            {!cameraError ? (
+                              <video ref={videoRef} className="absolute inset-0 w-full h-full object-contain" autoPlay muted playsInline />
+                            ) : (
+                              <div className="absolute inset-0 w-full h-full bg-black flex items-center justify-center">
+                                <div className="text-center text-white p-4">
+                                  <Camera className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                                  <p className="text-xs">{cameraError}</p>
+                                </div>
+                              </div>
+                            )}
 
-              {/* Row 2 - Right cell: URL (no right border) - span full row on lg */}
-              <div className="space-y-2 sm:pl-4 lg:col-span-3">
-                <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0 flex items-center gap-3">
-                  <Input
-                    type="url"
-                    placeholder="https://..."
-                    onChange={handleUrlUpload}
-                    className="bg-console-bg border-pixel-grid h-10 text-sm flex-1"
-                  />
-                  <div className="text-left">
-                    <div className="text-sm leading-tight">{t('fromUrl')}</div>
-                    <div className="text-[10px] leading-tight text-muted-foreground">{t('fromUrlDesc')}</div>
+                            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10 pt-safe">
+                              {!cameraError && (
+                                <Button onClick={handleCameraCapture} variant="highlighted" size="sm" className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0">
+                                  <Camera className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {availableCameras.length > 1 && (
+                                <Button onClick={switchCamera} variant="highlighted" size="sm" className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0" title={getCameraDisplayName(availableCameras[currentCameraIndex], currentCameraIndex)}>
+                                  <RotateCcw className="h-3 w-3" />
+                                </Button>
+                              )}
+                              <Button onClick={stopCameraPreview} variant="highlighted" size="sm" className="bg-white/90 text-black hover:bg-white border-2 border-white shadow-lg backdrop-blur-sm h-8 w-8 p-0">
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <Button onClick={onCameraPreviewRequest || handleCameraPreviewRequest} variant="highlighted" size="sm" className="flex items-center justify-center h-10 w-10 p-0">
+                              <Camera className="h-4 w-4" />
+                            </Button>
+                            <div className="text-left">
+                              <div className="text-sm leading-6">{t('camera')}</div>
+                              <div className="text-[10px] leading-5 text-muted-foreground">{t('preview')}</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ),
+                  // URL
+                  (
+                    <div key="url" className="pr-0">
+                      <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0 flex items-center gap-3">
+                        <Input type="url" placeholder="https://..." onChange={handleUrlUpload} className="bg-console-bg border-pixel-grid h-10 text-sm flex-1" />
+                        <div className="text-left">
+                          <div className="text-sm leading-6">{t('fromUrl')}</div>
+                          <div className="text-[10px] leading-5 text-muted-foreground">{t('fromUrlDesc')}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                ];
+
+                const elements: JSX.Element[] = [];
+                const insertAfter = cols === 3 ? 2 : cols === 2 ? 1 : 0;
+                for (let i = 0; i < cells.length; i++) {
+                  const cell = cells[i];
+                  const wrapperStyle: React.CSSProperties | undefined = (i === 3 && cols === 3) ? { gridColumn: '1 / -1' } : undefined;
+                  elements.push(
+                    <div key={`cell-${i}`} style={wrapperStyle} className="mx-0 px-0">
+                      {cell}
+                    </div>
+                  );
+                  // Insert dividers:
+                  // - single-column: divider after every cell except the last
+                  // - multi-column: keep one full-width divider after the computed insertAfter index
+                  if ((cols === 1 && i < cells.length - 1) || (cols !== 1 && i === insertAfter)) {
+                    elements.push(
+                      <div key={`divider-${i}`} style={{ gridColumn: '1 / -1' }} className="border-t border-elegant-border my-3" />
+                    );
+                  }
+                }
+
+                return (
+                  <div className="grid w-full mx-0 px-0" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`, gap }}>
+                    {elements}
                   </div>
-                </div>
-              </div>
-            </div>
+                );
+              })()
+            }
           </div>
         </div>
       </div>
