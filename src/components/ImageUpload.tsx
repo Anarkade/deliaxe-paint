@@ -403,7 +403,10 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
         <div className="border-t border-elegant-border my-4" />
         {/* Compact grid layout for primary upload options */}
   {/* Responsive grid: up to 3 columns; last tile spans all columns at md breakpoint */}
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-4 divide-y md:divide-y-0 md:divide-x divide-elegant-border">
+  <div className="relative grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 pt-4 divide-y md:divide-y-0 divide-elegant-border">
+    {/* Vertical separators (match ChangeGridSelector style) */}
+    <div className="hidden md:block absolute top-0 bottom-0 left-1/3 w-px bg-border" />
+    <div className="hidden md:block absolute top-0 bottom-0 left-2/3 w-px bg-border" />
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <div className="relative" style={{ width: '2.5rem', height: '2.5rem' }}>
