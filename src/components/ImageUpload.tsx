@@ -400,43 +400,66 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
           </h3>
             <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('loadImageDesc')}</p>
         </div>
-        <div className="border-t border-elegant-border my-4" />
+  <div className="border-t border-elegant-border my-3" />
         {/* Compact two-column layout that matches ChangeGridSelector separators */}
         <div className="pt-4">
           <div className="relative">
-            {/* Center vertical separator for md+ */}
-            <div className="hidden md:block absolute top-0 bottom-0 left-1/2 w-px bg-border" />
+            {/* Replace center separator with per-row vertical separators: make grid explicit 2 rows x 2 cols (4 cells) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-0">
+              {/* Row 1 - Left cell: Upload (has right border on md) */}
+              <div className="space-y-2 md:pr-4 md:border-r md:border-elegant-border">
+                <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0">
+                  <div className="flex items-center gap-3">
+                    <div className="relative" style={{ width: '2.5rem', height: '2.5rem' }}>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        title={t('noFileChosen')}
+                      />
+                      <Button
+                        variant="highlighted"
+                        size="sm"
+                        className="flex items-center justify-center h-10 w-10 p-0"
+                      >
+                        <HardDriveUpload className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="text-left">
+                      <div className="text-sm leading-tight">{t('uploadImage')}</div>
+                      <div className="text-[10px] leading-tight text-muted-foreground">{t('chooseFile')}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-12">
-              {/* Left column: Upload + Camera */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="relative" style={{ width: '2.5rem', height: '2.5rem' }}>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                      title={t('noFileChosen')}
-                    />
+              {/* Row 1 - Right cell: Clipboard (no right border) */}
+              <div className="space-y-2 md:pl-4">
+                <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0">
+                  <div className="flex items-center gap-3 justify-end md:justify-start">
                     <Button
+                      onClick={onLoadFromClipboard}
                       variant="highlighted"
                       size="sm"
                       className="flex items-center justify-center h-10 w-10 p-0"
                     >
-                      <HardDriveUpload className="h-4 w-4" />
+                      <ClipboardPaste className="h-4 w-4" />
                     </Button>
-                  </div>
-                  <div className="text-left">
-                    <div className="text-sm leading-tight">{t('uploadImage')}</div>
-                    <div className="text-[10px] leading-tight text-muted-foreground">{t('chooseFile')}</div>
+                    <div className="text-left">
+                      <div className="text-sm leading-tight">{t('loadFromClipboard')}</div>
+                      <div className="text-[10px] leading-tight text-muted-foreground">{t('pasteFromClipboard')}</div>
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                {/* Single horizontal separator between top and bottom tiles in left column */}
-                <div className="border-t border-elegant-border my-4" />
+              {/* Full-width horizontal separator between rows */}
+              <div className="col-span-1 md:col-span-2 border-t border-elegant-border my-3" />
 
-                <div>
+              {/* Row 2 - Left cell: Camera (has right border on md) */}
+              <div className="space-y-2 md:pr-4 md:border-r md:border-elegant-border">
+                <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0">
                   {showCameraPreview ? (
                     <div
                       className="relative bg-black rounded-md w-full min-h-[200px] flex items-center justify-center"
@@ -512,27 +535,9 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 </div>
               </div>
 
-              {/* Right column: Clipboard + URL */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-3 justify-end md:justify-start">
-                  <Button
-                    onClick={onLoadFromClipboard}
-                    variant="highlighted"
-                    size="sm"
-                    className="flex items-center justify-center h-10 w-10 p-0"
-                  >
-                    <ClipboardPaste className="h-4 w-4" />
-                  </Button>
-                  <div className="text-left">
-                    <div className="text-sm leading-tight">{t('loadFromClipboard')}</div>
-                    <div className="text-[10px] leading-tight text-muted-foreground">{t('pasteFromClipboard')}</div>
-                  </div>
-                </div>
-
-                {/* Single horizontal separator between clipboard and URL */}
-                <div className="border-t border-elegant-border my-4" />
-
-                <div className="md:pt-2 flex items-center gap-3">
+              {/* Row 2 - Right cell: URL (no right border) */}
+              <div className="space-y-2 md:pl-4">
+                <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0 flex items-center gap-3">
                   <Input
                     type="url"
                     placeholder="https://..."
