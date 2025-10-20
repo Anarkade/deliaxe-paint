@@ -402,7 +402,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
         </div>
         <div className="border-t border-elegant-border my-4" />
         {/* Compact grid layout for primary upload options */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Responsive grid: up to 3 columns; last tile spans all columns at md breakpoint */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 border-t border-elegant-border pt-4">
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <div className="relative" style={{ width: '2.5rem', height: '2.5rem' }}>
@@ -428,7 +429,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
             </div>
           </div>
 
-          <div className="space-y-2 border-l border-elegant-border pl-3">
+          <div className="space-y-2">
             <div className="flex items-center gap-3">
               <Button
                 onClick={onLoadFromClipboard}
@@ -444,10 +445,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Bottom row: URL input (left) and Camera (right) placed side-by-side */}
-        <div className="grid grid-cols-2 gap-3 border-t border-elegant-border pt-4">
           <div className="space-y-2">
             {showCameraPreview && (
               <div 
@@ -526,7 +524,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
             )}
           </div>
 
-          <div className="space-y-2 border-l border-elegant-border pl-3">
+          <div className="space-y-2 md:col-span-3">
             <label className="block text-xs font-medium text-foreground">
               <Link className="inline mr-1 h-3 w-3" />
               {t('fromUrl')}
