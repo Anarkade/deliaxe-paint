@@ -422,8 +422,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 </Button>
               </div>
               <div className="text-left">
-                <div className="text-[10px] leading-tight text-muted-foreground">{t('uploadImage')}</div>
-                <div className="text-sm leading-tight">{t('chooseFile')}</div>
+                <div className="text-sm leading-tight">{t('uploadImage')}</div>
+                <div className="text-[10px] leading-tight text-muted-foreground">{t('chooseFile')}</div>
               </div>
             </div>
           </div>
@@ -439,8 +439,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 <ClipboardPaste className="h-4 w-4" />
               </Button>
               <div className="text-left">
-                <div className="text-[10px] leading-tight text-muted-foreground">{t('loadFromClipboard')}</div>
-                <div className="text-sm leading-tight">{t('pasteFromClipboard')}</div>
+                <div className="text-sm leading-tight">{t('loadFromClipboard')}</div>
+                <div className="text-[10px] leading-tight text-muted-foreground">{t('pasteFromClipboard')}</div>
               </div>
             </div>
           </div>
@@ -532,8 +532,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                   <Eye className="h-4 w-4" />
                 </Button>
                 <div className="text-left">
-                  <div className="text-[10px] leading-tight text-muted-foreground">{t('camera')}</div>
-                  <div className="text-sm leading-tight">{t('preview')}</div>
+                  <div className="text-sm leading-tight">{t('camera')}</div>
+                  <div className="text-[10px] leading-tight text-muted-foreground">{t('preview')}</div>
                 </div>
               </div>
             )}
