@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState, useEffect } from 'react';
-import { Upload, Camera, Link, Eye, X, Clipboard, RotateCcw, HardDriveUpload, ClipboardPaste } from 'lucide-react';
+import { Upload, Camera, Link, X, Clipboard, RotateCcw, HardDriveUpload, ClipboardPaste } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -514,7 +514,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                   size="sm"
                   className="flex items-center justify-center h-10 w-10 p-0"
                 >
-                  <Eye className="h-4 w-4" />
+                  <Camera className="h-4 w-4" />
                 </Button>
                 <div className="text-left">
                   <div className="text-sm leading-tight">{t('camera')}</div>
