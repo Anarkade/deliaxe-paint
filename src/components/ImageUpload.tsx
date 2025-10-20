@@ -405,7 +405,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
         <div className="pt-4">
           <div className="relative">
             {/* Replace center separator with per-row vertical separators: make grid explicit 2 rows x 2 cols (4 cells) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-0 md:gap-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0">
               {/* Row 1 - Left cell: Upload (has right border on md) */}
               <div className="space-y-2 md:pr-4 md:border-r md:border-elegant-border">
                 <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0">
@@ -455,7 +455,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
               </div>
 
               {/* Full-width horizontal separator between rows */}
-              <div className="col-span-1 md:col-span-2 border-t border-elegant-border my-3" />
+              <div className="col-span-1 sm:col-span-2 lg:col-span-3 border-t border-elegant-border my-3" />
 
               {/* Row 2 - Left cell: Camera (has right border on md) */}
               <div className="space-y-2 md:pr-4 md:border-r md:border-elegant-border">
@@ -535,8 +535,8 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 </div>
               </div>
 
-              {/* Row 2 - Right cell: URL (no right border) */}
-              <div className="space-y-2 md:pl-4">
+              {/* Row 2 - Right cell: URL (no right border) - span full row on lg */}
+              <div className="space-y-2 sm:pl-4 lg:col-span-3">
                 <div className="pl-0 pr-0 py-0 md:pl-0 md:pr-0 md:py-0 flex items-center gap-3">
                   <Input
                     type="url"
@@ -546,6 +546,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                   />
                   <div className="text-left">
                     <div className="text-sm leading-tight">{t('fromUrl')}</div>
+                    <div className="text-[10px] leading-tight text-muted-foreground">{t('fromUrlDesc')}</div>
                   </div>
                 </div>
               </div>
