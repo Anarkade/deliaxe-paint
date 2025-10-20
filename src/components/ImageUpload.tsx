@@ -449,19 +449,6 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
         {/* Bottom row: URL input (left) and Camera (right) placed side-by-side */}
         <div className="grid grid-cols-2 gap-3 border-t border-elegant-border pt-4">
           <div className="space-y-2">
-            <label className="block text-xs font-medium text-foreground">
-              <Link className="inline mr-1 h-3 w-3" />
-              {t('fromUrl')}
-            </label>
-            <Input
-              type="url"
-              placeholder="https://..."
-              onChange={handleUrlUpload}
-              className="bg-console-bg border-pixel-grid h-9 text-sm"
-            />
-          </div>
-
-          <div className="space-y-2 border-l border-elegant-border pl-3">
             {showCameraPreview && (
               <div 
                 className="relative bg-black rounded-md w-full min-h-[200px] flex items-center justify-center"
@@ -537,6 +524,19 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="space-y-2 border-l border-elegant-border pl-3">
+            <label className="block text-xs font-medium text-foreground">
+              <Link className="inline mr-1 h-3 w-3" />
+              {t('fromUrl')}
+            </label>
+            <Input
+              type="url"
+              placeholder="https://..."
+              onChange={handleUrlUpload}
+              className="bg-console-bg border-pixel-grid h-9 text-sm"
+            />
           </div>
         </div>
       </div>
