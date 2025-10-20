@@ -404,39 +404,45 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
         {/* Compact grid layout for primary upload options */}
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
-            <label className="block text-xs font-medium text-foreground">
-              <Upload className="inline mr-2 h-3 w-3" />
-              {t('uploadImage')}
-            </label>
-            <div className="relative">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                title={t('noFileChosen')}
-              />
-              <Button variant="highlighted" size="sm" className="w-full text-xs whitespace-pre-wrap leading-tight">
-                <HardDriveUpload className="mr-1 h-3 w-3" />
-                {t('chooseFile')}
-              </Button>
+            <div className="flex items-center gap-3">
+              <div className="relative" style={{ width: '2.5rem', height: '2.5rem' }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  title={t('noFileChosen')}
+                />
+                <Button
+                  variant="highlighted"
+                  size="sm"
+                  className="flex items-center justify-center h-10 w-10 p-0"
+                >
+                  <HardDriveUpload className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="text-left">
+                <div className="text-[10px] leading-tight text-muted-foreground">{t('uploadImage')}</div>
+                <div className="text-sm leading-tight">{t('chooseFile')}</div>
+              </div>
             </div>
           </div>
-          
+
           <div className="space-y-2 border-l border-elegant-border pl-3">
-            <label className="block text-xs font-medium text-foreground">
-              <Clipboard className="inline mr-1 h-3 w-3" />
-              {t('loadFromClipboard')}
-            </label>
-            <Button 
-              onClick={onLoadFromClipboard}
-              variant="highlighted"
-              size="sm"
-              className="w-full text-xs whitespace-pre-wrap leading-tight"
-            >
-              <ClipboardPaste className="mr-1 h-3 w-3" />
-              {t('pasteFromClipboard')}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={onLoadFromClipboard}
+                variant="highlighted"
+                size="sm"
+                className="flex items-center justify-center h-10 w-10 p-0"
+              >
+                <ClipboardPaste className="h-4 w-4" />
+              </Button>
+              <div className="text-left">
+                <div className="text-[10px] leading-tight text-muted-foreground">{t('loadFromClipboard')}</div>
+                <div className="text-sm leading-tight">{t('pasteFromClipboard')}</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -456,11 +462,6 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
           </div>
 
           <div className="space-y-2 border-l border-elegant-border pl-3">
-            <label className="block text-xs font-medium text-foreground">
-              <Camera className="inline mr-1 h-3 w-3" />
-              {t('camera')}
-            </label>
-
             {showCameraPreview && (
               <div 
                 className="relative bg-black rounded-md w-full min-h-[200px] flex items-center justify-center"
@@ -521,15 +522,20 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
             )}
 
             {!showCameraPreview && (
-              <Button 
-                onClick={onCameraPreviewRequest || handleCameraPreviewRequest}
-                variant="highlighted"
-                size="sm"
-                className="w-full text-xs whitespace-pre-wrap leading-tight"
-              >
-                <Eye className="mr-1 h-3 w-3" />
-                {t('preview')}
-              </Button>
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={onCameraPreviewRequest || handleCameraPreviewRequest}
+                  variant="highlighted"
+                  size="sm"
+                  className="flex items-center justify-center h-10 w-10 p-0"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <div className="text-left">
+                  <div className="text-[10px] leading-tight text-muted-foreground">{t('camera')}</div>
+                  <div className="text-sm leading-tight">{t('preview')}</div>
+                </div>
+              </div>
             )}
           </div>
         </div>
