@@ -1559,20 +1559,23 @@ export const RetroImageEditor = () => {
 
       default: {
         const preset = FIXED_PALETTES[palette];
-          if (preset && preset.length > 0) {
-              // For fixed, canonical palettes (CGA, NES, GameBoy variants, C64, Spectrum, Amstrad)
-              // we must apply the palette exactly as defined by the preset. Do not
-              // merge with any pending converted palette: overwrite ordered palette
-              // with the canonical palette and remap pixels to the nearest colors.
-              const paletteToApply = paletteFromCustomOrDefault(preset);
-              applyFixedPalette(resultData, paletteToApply);
-              if (!manualPaletteOverrideRef.current) {
-                const resultPalette = toColorObjects(paletteToApply);
-                writeOrderedPalette(resultPalette, 'applyPaletteConversion-fixed');
-              }
-              // Clear any pending converted palette since it is not applicable here
-              pendingConvertedPaletteRef.current = null;
-            }
+        if (preset && preset.length > 0) {
+          // For fixed, canonical palettes (CGA, NES, GameBoy variants, C64, Spectrum, Amstrad)
+          // we must apply the palette exactly as defined by the preset. Always
+          // apply the canonical palette to the image raster and update the
+          // ordered palette to the preset regardless of whether the source
+          // image had an indexed palette or a customColors array was provided.
+          // This ensures selecting a canonical palette from the UI always
+          // remaps pixels to the canonical set.
+          const paletteToApply = preset; // ignore customColors for fixed palettes
+          applyFixedPalette(resultData, paletteToApply);
+          if (!manualPaletteOverrideRef.current) {
+            const resultPalette = toColorObjects(paletteToApply as number[][]);
+            writeOrderedPalette(resultPalette, 'applyPaletteConversion-fixed');
+          }
+          // Clear any pending converted palette since it is not applicable here
+          pendingConvertedPaletteRef.current = null;
+        }
         return resultImageData;
       }
     }
