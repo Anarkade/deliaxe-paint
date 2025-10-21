@@ -76,6 +76,7 @@ export type ResolutionType =
   | '480x272'
   | '512x212'
   | '320x256'
+  | '496x224'
   | '640x200'
   | '640x256';
 
@@ -155,6 +156,7 @@ export const ResolutionSelector = ({
     { value: '320x224', label: '320×224', desc: t('megaDriveNtscH40') },
     { value: '320x240', label: '320×240', desc: t('megaDrivePalH40') },
     { value: '320x256', label: '320×256', desc: t('amigaLowResPal') },
+  { value: '496x224', label: '496×224', desc: t('cpsWidescreen') },
     { value: '384x224', label: '384×224', desc: t('cpsArcade') },
     { value: '480x272', label: '480×272', desc: t('pspPlatform') },
     { value: '512x212', label: '512×212', desc: t('msxHiRes') },
