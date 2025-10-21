@@ -891,22 +891,26 @@ export const ImagePreview = ({
   }, [onPaletteUpdate]);
   // Compute zoom factor from preview slider (1.0 == 100%) to scale grid spacing
   const zoomFactor = zoom[0] / 100;
-  // Determine final rendered size of one image pixel in CSS pixels.
-  // Use the actual rendered canvas/client width so this accounts for browser zoom
-  // and any CSS scaling. Fallback to zoomFactor when canvas isn't available yet.
-  const pixelSize = (() => {
-    const c = canvasRef.current as HTMLCanvasElement | null;
-    if (c && c.width) {
-      // clientWidth is CSS pixels used to render the canvas on screen
-      return c.clientWidth / c.width;
-    }
-    return zoomFactor; // fallback
-  })();
+  // NOTE: pixelSize is derived from zoom/displayed dimensions so grids update
+  // immediately when the zoom slider changes. We compute it later once
+  // displayedWidth/currentDisplayedImage are available.
 
   // Compute wrapper size based on the image currently displayed (processed or original)
   const currentDisplayedImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
   const displayedWidth = currentDisplayedImage ? currentDisplayedImage.width * (zoom[0] / 100) : 0;
   const displayedHeight = currentDisplayedImage ? currentDisplayedImage.height * (zoom[0] / 100) : 0;
+
+  // Determine final rendered size of one image pixel in CSS pixels.
+  // Prefer an exact ratio using displayedWidth/current image width so that
+  // pixelSize updates synchronously with the zoom state (no DOM reflow wait).
+  const pixelSize = (() => {
+    const cur = currentDisplayedImage as { width?: number } | null;
+    if (cur && cur.width && cur.width > 0) {
+      return displayedWidth / cur.width;
+    }
+    // Fallback to zoomFactor when we don't have image dims yet
+    return zoomFactor;
+  })();
 
   return (
     <div 
