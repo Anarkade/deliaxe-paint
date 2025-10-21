@@ -39,42 +39,85 @@ const getLatestGitTag = () => {
 const generateVersionFile = () => {
   const version = getLatestGitTag();
 
-  // Try to fetch an authoritative time for Europe/Madrid from worldtimeapi.org
-  // Fallback to local system time if the network call fails.
+  // Try multiple public time APIs (prefer Europe/Madrid); fallback to local system time
   let buildDateUTC = new Date().toISOString();
   let buildDateLocal = '';
   let buildTzAbbr = '';
 
-  try {
-    // Prefer curl (widely available). If curl isn't available this will throw and fall back.
-    const raw = execSync('curl -s https://worldtimeapi.org/api/timezone/Europe/Madrid', { encoding: 'utf8' }).toString();
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      // parsed.utc_datetime is ISO UTC, parsed.datetime is local with offset, parsed.abbreviation is CET/CEST
-      if (parsed.utc_datetime) buildDateUTC = parsed.utc_datetime;
-      if (parsed.datetime) buildDateLocal = parsed.datetime;
-      if (parsed.abbreviation) buildTzAbbr = parsed.abbreviation;
-      console.log(`✅ Remote time fetched: ${buildDateUTC} (${buildTzAbbr})`);
-    }
-  } catch (err) {
+  const endpoints = [
+    { name: 'worldtimeapi', url: 'https://worldtimeapi.org/api/timezone/Europe/Madrid' },
+    { name: 'timeapi.io', url: 'https://timeapi.io/api/Time/current/zone?timeZone=Europe/Madrid' },
+    // worldclockapi returns UTC; we'll accept UTC and convert in the footer
+    { name: 'worldclockapi', url: 'http://worldclockapi.com/api/json/utc/now' }
+  ];
+
+  const tryParse = (raw: string, sourceName: string) => {
     try {
-      // On Windows without curl, try PowerShell Invoke-WebRequest
-      const psCmd = `powershell -Command "(Invoke-WebRequest -UseBasicParsing -Uri 'https://worldtimeapi.org/api/timezone/Europe/Madrid').Content"`;
-      const raw = execSync(psCmd, { encoding: 'utf8' }).toString();
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed.utc_datetime) buildDateUTC = parsed.utc_datetime;
-        if (parsed.datetime) buildDateLocal = parsed.datetime;
-        if (parsed.abbreviation) buildTzAbbr = parsed.abbreviation;
-        console.log(`✅ Remote time fetched via PowerShell: ${buildDateUTC} (${buildTzAbbr})`);
+      const parsed = JSON.parse(raw);
+      // worldtimeapi.org: utc_datetime, datetime, abbreviation
+      if (parsed.utc_datetime) {
+        buildDateUTC = parsed.utc_datetime;
       }
-    } catch (err2) {
-      // network fallback: use local time
-      console.warn('⚠️ Could not fetch remote time, falling back to local system time');
-      buildDateUTC = new Date().toISOString();
-      buildDateLocal = new Date().toString();
-      buildTzAbbr = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+      if (parsed.datetime) {
+        buildDateLocal = parsed.datetime;
+      }
+      if (parsed.abbreviation) {
+        buildTzAbbr = parsed.abbreviation;
+      }
+
+      // timeapi.io: dateTime is local, dateTime can be local, and utc is in "dateTime"? check fields
+      if (!buildDateUTC && parsed.utcDateTime) buildDateUTC = parsed.utcDateTime;
+      if (!buildDateLocal && parsed.dateTime) buildDateLocal = parsed.dateTime;
+      if (!buildTzAbbr && parsed.timeZone) buildTzAbbr = parsed.timeZone;
+
+      // worldclockapi: currentDateTime (local or UTC depending endpoint)
+      if (!buildDateLocal && parsed.currentDateTime) buildDateLocal = parsed.currentDateTime;
+
+      console.log(`✅ Remote time parsed from ${sourceName}`);
+      return true;
+    } catch (e) {
+      return false;
     }
+  };
+
+  const fetchUrl = (url: string) => {
+    try {
+      // prefer curl if present
+      const raw = execSync(`curl -s "${url}"`, { encoding: 'utf8' }).toString();
+      if (raw && raw.length > 0) return raw;
+    } catch (e) {
+      // try PowerShell Invoke-WebRequest on Windows
+      try {
+        const psCmd = `powershell -Command "(Invoke-WebRequest -UseBasicParsing -Uri '${url}').Content"`;
+        const raw = execSync(psCmd, { encoding: 'utf8' }).toString();
+        if (raw && raw.length > 0) return raw;
+      } catch (e2) {
+        // continue
+      }
+    }
+    return null;
+  };
+
+  let success = false;
+  for (const ep of endpoints) {
+    try {
+      const raw = fetchUrl(ep.url);
+      if (raw) {
+        if (tryParse(raw, ep.name)) {
+          success = true;
+          break;
+        }
+      }
+    } catch (e) {
+      // ignore and try next
+    }
+  }
+
+  if (!success) {
+    console.warn('⚠️ Could not fetch remote time from any source, falling back to local system time');
+    buildDateUTC = new Date().toISOString();
+    buildDateLocal = new Date().toString();
+    buildTzAbbr = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
   }
 
   const versionInfo = {
