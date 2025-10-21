@@ -418,7 +418,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
           </h3>
             <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('loadImageDesc')}</p>
         </div>
-  <div className="border-t border-elegant-border my-3" />
+  <div className="border-t border-elegant-border my-1.5" />
         {/* Compact two-column layout that matches ChangeGridSelector separators */}
   <div className="pt-4 mx-0 px-0">
           <div className="relative">
@@ -535,8 +535,10 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                 for (let i = 0; i < cells.length; i++) {
                   const cell = cells[i];
                   const wrapperStyle: React.CSSProperties | undefined = (i === 3 && cols === 3) ? { gridColumn: '1 / -1' } : undefined;
+                  // Apply the same background used by the Toolbar to each cell for visual consistency
+                  // and add 6px (p-1.5) padding all around
                   elements.push(
-                    <div key={`cell-${i}`} style={wrapperStyle} className="mx-0 px-0">
+                    <div key={`cell-${i}`} style={wrapperStyle} className="mx-0 p-3 color-bg-highlight rounded-md overflow-hidden">
                       {cell}
                     </div>
                   );
@@ -545,7 +547,7 @@ export const ImageUpload = ({ onImageLoad, onCameraPreviewRequest, hideSection, 
                   // - multi-column: keep one full-width divider after the computed insertAfter index
                   if ((cols === 1 && i < cells.length - 1) || (cols !== 1 && i === insertAfter)) {
                     elements.push(
-                      <div key={`divider-${i}`} style={{ gridColumn: '1 / -1' }} className="border-t border-elegant-border my-3" />
+                      <div key={`divider-${i}`} style={{ gridColumn: '1 / -1' }} className="border-t border-elegant-border my-1.5" />
                     );
                   }
                 }
