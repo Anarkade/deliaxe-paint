@@ -62,6 +62,8 @@ export type ResolutionType =
   | '160x144'
   | '160x192'
   | '160x200'
+  | '224x192'
+  | '240x160'
   | '256x192'
   | '256x212'
   | '256x224'
@@ -141,7 +143,8 @@ export const ResolutionSelector = ({
     { value: '128x160', label: '128×160', desc: t('sonyEricssonRes') },
     { value: '160x144', label: '160×144', desc: t('gameBoyRes') },
     { value: '160x192', label: '160×192', desc: t('atari2600res') },
-    { value: '176x200', label: '160×200', desc: t('amstradCpc0') },
+    { value: '176x200', label: '176×200', desc: t('amstradCpc0') },
+    { value: '224x192', label: '224×192', desc: t('nesSafeZone') },
     { value: '240x160', label: '240×160', desc: t('gameBoyAdvance') },
     { value: '256x192', label: '256×192', desc: t('msxZxSpectrum') },
     { value: '256x212', label: '256×212', desc: t('msxPlatform') },
