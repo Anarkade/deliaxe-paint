@@ -127,12 +127,22 @@ export async function analyzePNGFile(source: File | string): Promise<ImageFormat
       if (source.startsWith('data:image/png')) {
         arrayBuffer = arrayBufferFromDataURL(source);
       } else {
-        // For URLs, we can't analyze the raw file, return basic info
-        return { format: 'PNG', isIndexed: false };
+        // Attempt to fetch blob: or same-origin URLs (blob: URLs are fetchable
+        // in-browser). If fetch fails (CORS/remote URL), fall back to non-indexed.
+        try {
+          const resp = await fetch(source);
+          if (!resp.ok) return { format: 'PNG', isIndexed: false };
+          arrayBuffer = await resp.arrayBuffer();
+        } catch (err) {
+          return { format: 'PNG', isIndexed: false };
+        }
       }
     } else {
-      // Check if it's actually a PNG file
-      if (!source.type.includes('png')) {
+      // Check if it's actually a PNG file by MIME type or filename extension
+      const hasMime = typeof source.type === 'string' && source.type.length > 0;
+      const isPngByType = hasMime && source.type.includes('png');
+      const isPngByName = !!source.name && source.name.toLowerCase().endsWith('.png');
+      if (!isPngByType && !isPngByName) {
         return { format: source.type.split('/')[1]?.toUpperCase() || 'Unknown', isIndexed: false };
       }
       arrayBuffer = await arrayBufferFromFile(source);
@@ -219,7 +229,13 @@ export async function extractPNGPalette(source: File | string): Promise<{ r: num
       if (source.startsWith('data:image/png')) {
         arrayBuffer = arrayBufferFromDataURL(source);
       } else {
-        return null;
+        try {
+          const resp = await fetch(source);
+          if (!resp.ok) return null;
+          arrayBuffer = await resp.arrayBuffer();
+        } catch (err) {
+          return null;
+        }
       }
     } else {
       arrayBuffer = await arrayBufferFromFile(source);
