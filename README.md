@@ -56,6 +56,8 @@ Live demo: https://anarkade.github.io/deliaxe-paint/
 - Created `TODO_REPLACE_HARDCODED_COLORS.md` with search/replace guidance.
 - UI polish and fixes across several components (spacing, slider, resolution modal).
 - Fixed a runtime ReferenceError in `ResolutionSelector` (missing `Expand` icon import).
+ - Tweaked `ImageUpload` UI: left-aligned icon + label layout, per-row separators, and normalized per-cell padding.
+ - New target resolutions available in the Resolution selector: `224x192` (NES safe zone) and `496x224` (CPS widescreen).
 
 ## Quick start
 Prerequisites: Node.js 18+, npm

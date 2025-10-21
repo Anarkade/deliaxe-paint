@@ -25,6 +25,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed duplicated `className` issues in `ChangeGridSelector`.
 - Removed unused `lucide-react` icon imports and cleaned related code.
 
+## [0.0.31-import-image-ui-tweaked] - 2025-10-21
+
+### Added
+- Tweaked `ImageUpload` UI: left-aligned icon + label layout, per-row separators, and normalized per-cell padding.
+- Responsive grid breakpoints precisely set to: <800px → 1 column, 800–1499px → 2 columns, >=1500px → 3 columns.
+- Added target resolutions: `224x192` (translation key: `nesSafeZone`) and `496x224` (translation key: `cpsWidescreen`).
+
+### Changed
+- Reduced spacing scale and normalized typography in the upload/import UI for improved visual density.
+- Refactored `ImageUpload` rendering to use a programmatic `cells` array to ensure consistent full-width dividers across layouts.
+
+### Fixed
+- Minor translation and type-safety fixes related to the resolution selector and locale CSVs.
+
+
 ## [0.0.18-stable] - 2025-10-08
 
 ### Added

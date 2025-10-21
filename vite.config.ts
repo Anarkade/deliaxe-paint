@@ -38,10 +38,50 @@ const getLatestGitTag = () => {
 // Generate version file during build
 const generateVersionFile = () => {
   const version = getLatestGitTag();
-  const buildDate = new Date().toISOString(); // Always UTC
+
+  // Try to fetch an authoritative time for Europe/Madrid from worldtimeapi.org
+  // Fallback to local system time if the network call fails.
+  let buildDateUTC = new Date().toISOString();
+  let buildDateLocal = '';
+  let buildTzAbbr = '';
+
+  try {
+    // Prefer curl (widely available). If curl isn't available this will throw and fall back.
+    const raw = execSync('curl -s https://worldtimeapi.org/api/timezone/Europe/Madrid', { encoding: 'utf8' }).toString();
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // parsed.utc_datetime is ISO UTC, parsed.datetime is local with offset, parsed.abbreviation is CET/CEST
+      if (parsed.utc_datetime) buildDateUTC = parsed.utc_datetime;
+      if (parsed.datetime) buildDateLocal = parsed.datetime;
+      if (parsed.abbreviation) buildTzAbbr = parsed.abbreviation;
+      console.log(`✅ Remote time fetched: ${buildDateUTC} (${buildTzAbbr})`);
+    }
+  } catch (err) {
+    try {
+      // On Windows without curl, try PowerShell Invoke-WebRequest
+      const psCmd = `powershell -Command "(Invoke-WebRequest -UseBasicParsing -Uri 'https://worldtimeapi.org/api/timezone/Europe/Madrid').Content"`;
+      const raw = execSync(psCmd, { encoding: 'utf8' }).toString();
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed.utc_datetime) buildDateUTC = parsed.utc_datetime;
+        if (parsed.datetime) buildDateLocal = parsed.datetime;
+        if (parsed.abbreviation) buildTzAbbr = parsed.abbreviation;
+        console.log(`✅ Remote time fetched via PowerShell: ${buildDateUTC} (${buildTzAbbr})`);
+      }
+    } catch (err2) {
+      // network fallback: use local time
+      console.warn('⚠️ Could not fetch remote time, falling back to local system time');
+      buildDateUTC = new Date().toISOString();
+      buildDateLocal = new Date().toString();
+      buildTzAbbr = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    }
+  }
+
   const versionInfo = {
     version,
-    buildDate,
+    buildDate: buildDateUTC,
+    buildDateLocal,
+    buildTzAbbr,
     timestamp: Date.now()
   };
   
@@ -55,15 +95,15 @@ const generateVersionFile = () => {
   const versionPath = path.join(publicDir, 'version.json');
   fs.writeFileSync(versionPath, JSON.stringify(versionInfo, null, 2));
   console.log(`📝 Version file generated: ${versionPath}`);
-  console.log(`📦 Version: ${version}, Build Date: ${buildDate}`);
+  console.log(`📦 Version: ${version}, Build Date (UTC): ${versionInfo.buildDate}, Local: ${versionInfo.buildDateLocal} ${versionInfo.buildTzAbbr}`);
   
-  return { version, buildDate };
+  return { version, buildDate: buildDateUTC, buildDateLocal, buildTzAbbr };
 };
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Generate version file during build
-  const { version, buildDate } = generateVersionFile();
+  const { version, buildDate, buildDateLocal, buildTzAbbr } = generateVersionFile();
   
   return {
     // When using a custom domain, the base should be '/', so all assets are
@@ -71,8 +111,10 @@ export default defineConfig(({ mode }) => {
     base: '/',
     define: {
       // Inject the version and build date as environment variables at build time
-      'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
-      'import.meta.env.VITE_BUILD_DATE': JSON.stringify(buildDate),
+  'import.meta.env.VITE_APP_VERSION': JSON.stringify(version),
+  'import.meta.env.VITE_BUILD_DATE': JSON.stringify(buildDate),
+  'import.meta.env.VITE_BUILD_DATE_LOCAL': JSON.stringify(buildDateLocal),
+  'import.meta.env.VITE_BUILD_TZ_ABBR': JSON.stringify(buildTzAbbr),
     },
   server: {
     host: "::",
