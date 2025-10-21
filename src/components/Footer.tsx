@@ -14,7 +14,15 @@ export const Footer: React.FC<FooterProps> = () => {
   const formatBuildDate = (utcIsoString: string | undefined, localString?: string, tzAbbrHint?: string) => {
     if (!utcIsoString) return '';
     try {
-      const utcDate = new Date(utcIsoString);
+      // If the provided utcIsoString doesn't include a timezone designator
+      // (for example when the postbuild script wrote an ISO-like timestamp
+      // without a trailing 'Z' during some local builds), treat that value
+      // as a UTC instant by appending 'Z' before parsing. This ensures the
+      // subsequent Intl formatting into Europe/Madrid yields the correct
+      // CET/CEST local time instead of appearing as UTC.
+      const hasTzDesignator = /Z$|[+-]\d{2}:?\d{2}$/i.test(utcIsoString);
+      const parseIso = hasTzDesignator ? utcIsoString : `${utcIsoString}Z`;
+      const utcDate = new Date(parseIso);
 
       // Produce local Barcelona date/time using Intl with Europe/Madrid timezone
       const formatter = new Intl.DateTimeFormat('en-GB', {
@@ -74,11 +82,19 @@ export const Footer: React.FC<FooterProps> = () => {
     }
   };
 
+  // Prefer `buildDate` (UTC ISO) when available and format it into the
+  // Europe/Madrid timezone so both production and localhost builds display
+  // the same CET/CEST-localized time. Fall back to the explicit
+  // `buildDateLocal` string only when `buildDate` is missing.
+  const buildLabel = buildDate
+    ? formatBuildDate(buildDate, buildDateLocal, buildTzAbbr)
+    : (buildDateLocal ? `Build ${buildDateLocal} ${buildTzAbbr ?? ''}`.trim() : 'Build unknown');
+
   return (
     <footer className="border-t border-elegant-border bg-card flex-shrink-0 w-full">
       <div className="w-full px-[5px] py-[5px]">
         <p className="text-sm text-muted-foreground text-center">
-          ©2025 ANARKADE Barcelona - {buildDate ? formatBuildDate(buildDate, buildDateLocal, buildTzAbbr) : 'Build unknown'}
+          ©2025 ANARKADE Barcelona - {buildLabel}
         </p>
       </div>
     </footer>

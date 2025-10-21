@@ -116,8 +116,55 @@ const generateVersionFile = () => {
   if (!success) {
     console.warn('⚠️ Could not fetch remote time from any source, falling back to local system time');
     buildDateUTC = new Date().toISOString();
-    buildDateLocal = new Date().toString();
-    buildTzAbbr = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    // buildDateLocal: formatted in Europe/Madrid using Intl so we always
+    // produce a consistent local representation even on systems with wrong TZ
+    try {
+      const d = new Date(buildDateUTC);
+      const localFmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false, timeZoneName: 'short'
+      });
+      const parts = localFmt.formatToParts(d);
+      const get = (type: string) => parts.find(p => p.type === type)?.value ?? '';
+      const day = get('day'); const month = get('month'); const year = get('year');
+      const hour = get('hour'); const minute = get('minute');
+      buildDateLocal = `${day}/${month}/${year}, ${hour}:${minute}`;
+      buildTzAbbr = get('timeZoneName') || '';
+    } catch (e) {
+      buildDateLocal = new Date().toString();
+      buildTzAbbr = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    }
+  }
+
+  // Normalize the UTC build date (ensure ISO with Z) and compute a reliable
+  // localized Europe/Madrid string and abbreviation. This ensures that even
+  // when remote APIs return varying formats we write consistent values.
+  try {
+    const parsed = new Date(buildDateUTC);
+    if (isNaN(parsed.getTime())) {
+      // fallback to now
+      buildDateUTC = new Date().toISOString();
+    } else {
+      buildDateUTC = parsed.toISOString();
+    }
+  } catch (e) {
+    buildDateUTC = new Date().toISOString();
+  }
+
+  try {
+    const d = new Date(buildDateUTC);
+    const localFmt = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false, timeZoneName: 'short'
+    });
+    const parts = localFmt.formatToParts(d);
+    const get = (type: string) => parts.find(p => p.type === type)?.value ?? '';
+    const day = get('day'); const month = get('month'); const year = get('year');
+    const hour = get('hour'); const minute = get('minute');
+    buildDateLocal = `${day}/${month}/${year}, ${hour}:${minute}`;
+    buildTzAbbr = get('timeZoneName') || buildTzAbbr;
+  } catch (e) {
+    // leave previously computed buildDateLocal/buildTzAbbr if any
   }
 
   const versionInfo = {
