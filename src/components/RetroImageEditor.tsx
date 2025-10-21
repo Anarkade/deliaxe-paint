@@ -1560,20 +1560,19 @@ export const RetroImageEditor = () => {
       default: {
         const preset = FIXED_PALETTES[palette];
           if (preset && preset.length > 0) {
-          const paletteToApply = paletteFromCustomOrDefault(preset);
-          applyFixedPalette(resultData, paletteToApply);
-          if (!manualPaletteOverrideRef.current) {
-            const resultPalette = toColorObjects(paletteToApply);
-            const targetLen = resultPalette.length;
-            if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
-              const merged = mergePreservePalette(pendingConvertedPaletteRef.current, resultPalette, targetLen);
-              writeOrderedPalette(merged, 'applyPaletteConversion-fixed-merged');
+              // For fixed, canonical palettes (CGA, NES, GameBoy variants, C64, Spectrum, Amstrad)
+              // we must apply the palette exactly as defined by the preset. Do not
+              // merge with any pending converted palette: overwrite ordered palette
+              // with the canonical palette and remap pixels to the nearest colors.
+              const paletteToApply = paletteFromCustomOrDefault(preset);
+              applyFixedPalette(resultData, paletteToApply);
+              if (!manualPaletteOverrideRef.current) {
+                const resultPalette = toColorObjects(paletteToApply);
+                writeOrderedPalette(resultPalette, 'applyPaletteConversion-fixed');
+              }
+              // Clear any pending converted palette since it is not applicable here
               pendingConvertedPaletteRef.current = null;
-            } else {
-              writeOrderedPalette(resultPalette, 'applyPaletteConversion-fixed');
             }
-          }
-        }
         return resultImageData;
       }
     }
