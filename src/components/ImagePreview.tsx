@@ -935,7 +935,7 @@ export const ImagePreview = ({
                   />
                   <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
                 </div>
-                <Button onClick={() => { autoFitPermitRef.current = true; fitToWidth(true); }} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
+                <Button onClick={() => { autoFitPermitRef.current = true; setIntegerScaling(false); fitToWidth(true); }} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
                   <MoveHorizontal className="h-4 w-4" />
                 </Button>
                 <Button onClick={setZoomTo100} variant="highlighted" size="sm" title="100%" aria-label="Set zoom to 100%">
