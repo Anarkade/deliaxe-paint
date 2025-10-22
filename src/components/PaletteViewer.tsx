@@ -7,6 +7,8 @@ import { PaletteType } from './ColorPaletteSelector';
 import getDefaultPalette, { SimpleColor } from '@/lib/defaultPalettes';
 import { Eye, Palette, GripVertical, Lock } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { toast } from '@/hooks/use-toast';
+import { FIXED_KEYS } from '@/lib/fixedPalettes';
 // pngAnalyzer functions are imported dynamically where needed to keep bundle size small
 
 interface PaletteColor {
@@ -33,6 +35,8 @@ interface PaletteColor {
 export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal, paletteDepth }: PaletteViewerProps & { paletteDepth?: { r: number; g: number; b: number } }) => {
   const { t } = useTranslation();
   const lastSentPaletteRef = useRef<string | null>(null);
+
+  // Canonical fixed palettes — imported from shared `fixedPalettes` module.
 
   // Responsive columns: show 16 columns normally. When viewport width <= 900px
   // switch to 8 columns and render each color block as 48x48 px.
@@ -124,6 +128,18 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   }, [draggedIndex, paletteColors, onPaletteUpdate]);
 
   const selectNewColor = useCallback((index: number, currentPalette: PaletteType) => {
+    // If this is a canonical fixed palette, block edits and show a toast
+    // instead of opening the editor.
+    if (FIXED_KEYS.has(currentPalette)) {
+      setBlockedIndex(index);
+      if (blockedTimerRef.current) window.clearTimeout(blockedTimerRef.current);
+      blockedTimerRef.current = window.setTimeout(() => {
+        setBlockedIndex(null);
+        blockedTimerRef.current = null;
+      }, 1000) as unknown as number;
+      try { toast.info(t('dontModifyFixedPalette')); } catch (e) { /* ignore */ }
+      return;
+    }
     // If this is the 'original' palette and the preview is showing the original,
     // block editing and show a temporary lock overlay instead of opening the editor.
     if (currentPalette === 'original' && typeof showOriginal !== 'undefined' && showOriginal) {
@@ -539,7 +555,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                                 ...(columns === 8 && cellSize ? { width: `${cellSize}px`, height: `${cellSize}px` } : {})
                               }}
                             >
-                              {selectedPalette === 'original' && blockedIndex !== null && showOriginal && (
+                              {blockedIndex !== null && ((selectedPalette === 'original' && showOriginal) || FIXED_KEYS.has(selectedPalette)) && (
                                 <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                                   <Lock className="h-4 w-4 text-white" />
                                 </div>
