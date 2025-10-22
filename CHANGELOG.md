@@ -25,6 +25,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed duplicated `className` issues in `ChangeGridSelector`.
 - Removed unused `lucide-react` icon imports and cleaned related code.
 
+## [0.0.32-build-time-fixed] - 2025-10-22
+
+### Added
+- Added a small itch.io-friendly redirect page at `src/itchio/index.html` which provides a prominent "Open in new tab" button so users can open the app top-level and use camera/clipboard features.
+
+### Fixed
+- Normalize build-time generation: `public/version.json.buildDate` is now a canonical UTC ISO with trailing Z and `buildDateLocal` is formatted for `Europe/Madrid`. The footer correctly shows CET/CEST in both dev and production.
+- Palette handling: canonical fixed palettes (CGA / NES / GameBoy / C64 / ZXSpectrum / Amstrad) now force strict remapping of pixels to their preset colors; retro palettes that rely on ordered user palettes (Mega Drive / Game Gear / Master System) preserve and merge the previously-quantized ordered palette to avoid losing user-chosen color ordering.
+
+### Changed
+- Updated build scripts and `vite.config.ts` to produce normalized version metadata and improved fallback logic when querying remote time APIs.
+
+
 ## [0.0.31-import-image-ui-tweaked] - 2025-10-21
 
 ### Added

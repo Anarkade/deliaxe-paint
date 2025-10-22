@@ -59,6 +59,10 @@ Live demo: https://anarkade.github.io/deliaxe-paint/
  - Tweaked `ImageUpload` UI: left-aligned icon + label layout, per-row separators, and normalized per-cell padding.
  - New target resolutions available in the Resolution selector: `224x192` (NES safe zone) and `496x224` (CPS widescreen).
 
+### Latest
+- 2025-10-22: Build and footer time normalization (CEST/CET) and palette behavior fixes. The app now generates a normalized `public/version.json` (UTC buildDate + Europe/Madrid `buildDateLocal`) and the footer shows the correct local time in both dev and production.
+- 2025-10-22: Added an itch.io-friendly redirect page at `src/itchio/index.html` — when the app is embedded into itch.io we recommend users click "Open in new tab" to enable camera and clipboard features.
+
 ## Quick start
 Prerequisites: Node.js 18+, npm
 
