@@ -1,14 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface FooterProps {
   isVerticalLayout: boolean;
 }
 
 export const Footer: React.FC<FooterProps> = () => {
-  // Use environment variables injected at build time
+  // Use runtime version.json when available (preferred) to avoid showing
+  // stale build metadata from a cached JS bundle. Fall back to
+  // environment variables injected at build time.
+  const [runtimeVersion, setRuntimeVersion] = useState<{
+    version?: string;
+    buildDate?: string;
+    buildDateLocal?: string;
+    buildTzAbbr?: string;
+  } | null>(null);
+
+  // Use environment variables injected at build time as fallback
   const buildDate = import.meta.env.VITE_BUILD_DATE as string | undefined;
   const buildDateLocal = import.meta.env.VITE_BUILD_DATE_LOCAL as string | undefined;
   const buildTzAbbr = import.meta.env.VITE_BUILD_TZ_ABBR as string | undefined;
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/version.json', { cache: 'no-store' });
+        if (!res.ok) return;
+        const j = await res.json();
+        if (cancelled) return;
+        setRuntimeVersion(j);
+      } catch (e) {
+        // ignore
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Format build date in Barcelona timezone and produce CET/CEST label.
   const formatBuildDate = (utcIsoString: string | undefined, localString?: string, tzAbbrHint?: string) => {
@@ -86,9 +112,14 @@ export const Footer: React.FC<FooterProps> = () => {
   // Europe/Madrid timezone so both production and localhost builds display
   // the same CET/CEST-localized time. Fall back to the explicit
   // `buildDateLocal` string only when `buildDate` is missing.
-  const buildLabel = buildDate
-    ? formatBuildDate(buildDate, buildDateLocal, buildTzAbbr)
-    : (buildDateLocal ? `Build ${buildDateLocal} ${buildTzAbbr ?? ''}`.trim() : 'Build unknown');
+  // Prefer runtime-provided buildDate when available
+  const effectiveUtc = runtimeVersion?.buildDate ?? buildDate;
+  const effectiveLocal = runtimeVersion?.buildDateLocal ?? buildDateLocal;
+  const effectiveTz = runtimeVersion?.buildTzAbbr ?? buildTzAbbr;
+
+  const buildLabel = effectiveUtc
+    ? formatBuildDate(effectiveUtc, effectiveLocal, effectiveTz)
+    : (effectiveLocal ? `Build ${effectiveLocal} ${effectiveTz ?? ''}`.trim() : 'Build unknown');
 
   return (
     <footer className="border-t border-elegant-border bg-card flex-shrink-0 w-full">
