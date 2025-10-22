@@ -21,6 +21,32 @@
     <meta property="twitter:title" content="Deliaxe Paint - Retro Image Editor" />
     <meta property="twitter:description" content="A retro-style image editor for creating pixel art and vintage-style graphics with classic color palettes." />
     <meta property="twitter:image" content="https://anarkade.github.io/deliaxe-paint/logo.gif" />
+    
+    <!-- Version check: ensure clients pick up new builds even if index.html is cached -->
+    <script>
+      (function() {
+        try {
+          const check = async () => {
+            try {
+              const r = await fetch('/version.json', { cache: 'no-store' });
+              if (!r.ok) return;
+              const j = await r.json();
+              const remote = j.version || JSON.stringify(j);
+              const local = localStorage.getItem('app_version');
+              if (local && local !== remote) {
+                localStorage.setItem('app_version', remote);
+                window.location.reload();
+              } else {
+                localStorage.setItem('app_version', remote);
+              }
+            } catch (e) {
+              // ignore network errors
+            }
+          };
+          check();
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
