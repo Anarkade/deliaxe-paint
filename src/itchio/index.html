@@ -14,55 +14,21 @@
     a { color: #9cc7ff }
     p.small{color:#9aa3ad;font-size:13px}
   </style>
-  <!-- meta-refresh fallback (will redirect iframe) -->
-  <meta http-equiv="refresh" content="3;url=https://deliaxe-paint.anarka.de/" />
-  <script>
-    (function() {
-      const target = "https://deliaxe-paint.anarka.de/";
-
-      // 1) Try to navigate top (may be blocked cross-origin)
-      try {
-        if (window.top && window.top !== window && window.top.location) {
-          window.top.location.href = target;
-          return;
-        }
-      } catch (e) { /* blocked */ }
-
-      // 2) Try parent
-      try {
-        if (window.parent && window.parent !== window && window.parent.location) {
-          window.parent.location.href = target;
-          return;
-        }
-      } catch (e) { /* blocked */ }
-
-      // 3) Try replacing current location (will navigate iframe/page)
-      try {
-        window.location.replace(target);
-        return;
-      } catch (e) { /* ignore */ }
-
-      // If all programmatic attempts failed, leave UI for user to click buttons below.
-    })();
-  </script>
+  <!-- No automatic redirect. Show a clear button to open the app in a new tab. -->
 </head>
 <body>
   <div class="wrap" role="document">
     <div class="box" role="main" aria-live="polite">
-      <h1>Redirecting to Deliaxe Paint…</h1>
-      <p class="small">If this page is embedded in itch.io (an iframe), some browsers block automatic navigation of the top window. Use the buttons to open the site directly.</p>
+      <h1>Open Deliaxe Paint in a new tab</h1>
+      <p class="small">This project needs to run outside of itch.io because it optinally allows you to use the clipboard or camera, so needs to be open in a new tab.</p>
 
       <p style="margin-top:18px">
-        <!-- Open in new tab: the most reliable option inside itch.io -->
+        <!-- Primary action: open in new tab -->
         <a class="btn" href="https://deliaxe-paint.anarka.de/" target="_blank" rel="noopener noreferrer">Open in new tab</a>
-
-        <!-- Attempt to open the top window (works when allowed by the iframe/browser) -->
-        <a class="btn secondary" href="https://deliaxe-paint.anarka.de/" target="_top" rel="noopener">Open in this tab (top)</a>
       </p>
 
-      <p class="small" style="margin-top:14px">If nothing happens, copy and paste this URL into your browser:</p>
+      <p class="small" style="margin-top:14px">If the button doesn't work, copy and paste this URL into your browser's address bar:</p>
       <p><a href="https://deliaxe-paint.anarka.de/">https://deliaxe-paint.anarka.de/</a></p>
-      <p class="small">This page will try to redirect automatically; in some iframe environments only user interaction can open the top-level page.</p>
     </div>
   </div>
 </body>
