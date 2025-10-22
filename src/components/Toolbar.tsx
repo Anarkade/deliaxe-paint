@@ -166,16 +166,20 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     );
   }
   return (
-    <aside className="h-full w-12 flex flex-col border-r border-elegant-border z-50 color-bg-highlight">
-      <div className="flex flex-col items-center py-1 space-y-1 h-full">
-          <div className="flex flex-col items-center gap-1 flex-shrink-0 mb-3 pt-2">
-          <img src={logoGif} alt="Vintage Palette Studio" className="h-8 w-8" />
+  <aside className="h-full flex flex-col flex-shrink-0 box-border border-r border-elegant-border z-50 color-bg-highlight px-2 w-max">
+      <div className="flex flex-col items-center py-2 space-y-2 h-full">
+          <div className="flex flex-col items-center gap-2 flex-shrink-0 mb-3 pt-2">
+          <img
+            src={logoGif}
+            alt="Vintage Palette Studio"
+            className="h-8 w-8 flex-none block m-0 p-0 min-w-[32px] min-h-[32px] object-contain"
+          />
         </div>
-        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+        <div className="flex flex-col items-center gap-2 flex-shrink-0">
           <Button
             variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('load-image')}
-            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             title={t('loadImage')}
           >
             <Upload className="h-4 w-4" />
@@ -183,7 +187,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('resolution')}
-            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
             title={t('changeResolution')}
           >
@@ -192,7 +196,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('palette-selector')}
-            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
             title={t('changePalette')}
           >
@@ -201,7 +205,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('change-grids')}
-            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
             title={t('changeGrids')}
           >
@@ -210,7 +214,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('export-image')}
-            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
             title={t('exportImage')}
           >
@@ -219,7 +223,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('language') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('language')}
-            className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             title={t('changeLanguage')}
           >
             <Globe className="h-4 w-4" />

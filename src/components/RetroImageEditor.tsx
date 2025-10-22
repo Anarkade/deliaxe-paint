@@ -2005,8 +2005,9 @@ export const RetroImageEditor = () => {
     getLanguageName(a).localeCompare(getLanguageName(b))
   );
 
-  // Toolbar width used for layout/calculations (matches Toolbar w-12)
-  const toolbarWidth = '3rem';
+  // Toolbar width used for layout/calculations — use 'auto' so the grid column
+  // follows the toolbar's intrinsic width (the Toolbar uses w-max to size itself).
+  const toolbarWidth = 'auto';
   const headerRef = useRef<HTMLDivElement | null>(null);
   const [headerHeight, setHeaderHeight] = useState<number>(0);
   const rightColumnRef = useRef<HTMLDivElement | null>(null);
