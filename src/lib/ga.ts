@@ -1,7 +1,7 @@
 // Lightweight Google Analytics (GA4) helper
-// Uses provided Measurement ID or falls back to a hardcoded one.
-const FALLBACK_GA_ID = 'G-QK664QB6QQ';
-export const GA_MEASUREMENT_ID = (import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined) || FALLBACK_GA_ID;
+// Uses provided Measurement ID from Vite env variable VITE_GA_MEASUREMENT_ID.
+// No fallback: in production the variable must be provided via the CI secret.
+export const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
 
 declare global {
   interface Window { dataLayer?: any[]; gtag?: (...args: any[]) => void; }
@@ -9,7 +9,14 @@ declare global {
 
 export function initGA() {
   const id = GA_MEASUREMENT_ID;
-  if (!id) return;
+  if (!id) {
+    // In production we require the env var to be set; in dev do nothing.
+    if (import.meta.env.PROD) {
+      // eslint-disable-next-line no-console
+      console.error('VITE_GA_MEASUREMENT_ID is not set. GA will not be initialized in production.');
+    }
+    return;
+  }
 
   // If already initialized, skip
   if (window.gtag) return;
