@@ -2,6 +2,7 @@
 import App from './App.tsx'
 import './index.css'
 import { TranslationProvider } from '@/contexts/TranslationContext'
+import { initGA, sendPageview } from './lib/ga';
 
 import './App.css'
 
@@ -62,6 +63,17 @@ try {
       <App />
     </TranslationProvider>
   )
+  // Initialize Google Analytics (GA4)
+  try {
+    initGA();
+    // send initial pageview
+    sendPageview();
+    // SPA navigation: send pageviews on history changes
+    window.addEventListener('popstate', () => sendPageview());
+    window.addEventListener('hashchange', () => sendPageview());
+  } catch (e) {
+    console.warn('GA initialization failed', e);
+  }
 } catch (err) {
   console.error('Render error:', err)
 }
