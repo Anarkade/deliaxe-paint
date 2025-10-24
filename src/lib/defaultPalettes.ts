@@ -9,6 +9,22 @@ export const getDefaultPalette = (paletteType: string): SimpleColor[] => {
         { r: 139, g: 172, b: 15 },  // Light green
         { r: 155, g: 188, b: 15 }   // Lightest green
       ];
+    case 'gameboyBg':
+      // Game Boy (GB Studio backgrounds) palette
+      return [
+        { r: 7, g: 24, b: 33 },      // Darkest
+        { r: 48, g: 104, b: 80 },    // Dark
+        { r: 134, g: 192, b: 108 },  // Light
+        { r: 224, g: 248, b: 207 }   // Lightest
+      ];
+    case 'gameboyRealistic':
+      // Game Boy realistic green palette
+      return [
+        { r: 56, g: 72, b: 40 },     // Darkest
+        { r: 96, g: 112, b: 40 },    // Dark
+        { r: 160, g: 168, b: 48 },   // Light
+        { r: 208, g: 224, b: 64 }    // Lightest
+      ];
     case 'megadrive':
       return [
         { r: 0, g: 0, b: 0 },       // Black
