@@ -1122,14 +1122,17 @@ export const ImagePreview = ({
                     )}
                     <span className="text-foreground font-semibold">{t('original')}</span>
                     <span className="text-muted-foreground text-xs">{originalImage?.width}×{originalImage?.height}</span>
-                    <span className="text-muted-foreground text-xs">{originalFormat}</span>
-                    {originalImage && (
-                      <span className="text-muted-foreground text-xs">
-                        {t('zoomedDimensions')
-                          .replace('{width}', Math.round(originalImage.width * (zoom[0] / 100)).toString())
-                          .replace('{height}', Math.round(originalImage.height * (zoom[0] / 100)).toString())}
-                      </span>
+                    {originalFormat && (
+                      <span className="text-muted-foreground text-xs">{originalFormat}</span>
                     )}
+                    {originalImage && (() => {
+                      const text = t('zoomedDimensions')
+                        ?.replace('{width}', Math.round(originalImage.width * (zoom[0] / 100)).toString())
+                        ?.replace('{height}', Math.round(originalImage.height * (zoom[0] / 100)).toString());
+                      return text ? (
+                        <span className="text-muted-foreground text-xs">{text}</span>
+                      ) : null;
+                    })()}
                   </div>
                   {processedImageData && (
                     <div className="flex items-center gap-2">
@@ -1141,11 +1144,17 @@ export const ImagePreview = ({
                       )}
                       <span className="text-foreground font-semibold">{t('processed')}</span>
                       <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
-                      <span className="text-muted-foreground text-xs">
-                        {t('zoomedDimensions')
-                          .replace('{width}', Math.round(processedImageData.width * (zoom[0] / 100)).toString())
-                          .replace('{height}', Math.round(processedImageData.height * (zoom[0] / 100)).toString())}
-                      </span>
+                      {originalFormat && (
+                        <span className="text-muted-foreground text-xs">{originalFormat}</span>
+                      )}
+                      {(() => {
+                        const text = t('zoomedDimensions')
+                          ?.replace('{width}', Math.round(processedImageData.width * (zoom[0] / 100)).toString())
+                          ?.replace('{height}', Math.round(processedImageData.height * (zoom[0] / 100)).toString());
+                        return text ? (
+                          <span className="text-muted-foreground text-xs">{text}</span>
+                        ) : null;
+                      })()}
                     </div>
                   )}
                 </div>
