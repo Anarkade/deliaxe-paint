@@ -2262,70 +2262,92 @@ export const RetroImageEditor = () => {
                     }
                     if (palette !== 'original') {
                       try {
-                        const defaults = getDefaultPalette(palette as string) || [];
-                        if (defaults && defaults.length > 0) {
-                          // convert SimpleColor -> Color
-                          const casted = defaults.map(({ r, g, b }) => ({ r, g, b } as Color));
-                          writeOrderedPalette(casted, 'selectedPalette-default');
+                        // Determine whether this is a canonical FIXED palette. For fixed palettes
+                        // we keep the existing behavior (apply preset later in applyPaletteConversion).
+                        const isFixed = !!FIXED_PALETTES[(palette as keyof typeof FIXED_PALETTES)];
+
+                        // Helper: quantize Color to a given per-channel bit depth
+                        const qColor = (c: Color, bits: { r: number; g: number; b: number }): Color => ({
+                          r: quantizeChannelToBits(c.r, bits.r || 8),
+                          g: quantizeChannelToBits(c.g, bits.g || 8),
+                          b: quantizeChannelToBits(c.b, bits.b || 8)
+                        });
+
+                        // Map a non-fixed palette to its target length and depth
+                        const targetSpec = (() => {
+                          if (palette === 'megadrive') return { len: 16, bits: { r: 3, g: 3, b: 3 } };
+                          if (palette === 'masterSystem') return { len: 16, bits: { r: 2, g: 2, b: 2 } };
+                          if (palette === 'gameGear') return { len: 32, bits: { r: 4, g: 4, b: 4 } };
+                          // Fallback: preserve previous length and assume 8-8-8
+                          const prevLen = (orderedPaletteColors && orderedPaletteColors.length > 0)
+                            ? orderedPaletteColors.length
+                            : (originalPaletteColors && originalPaletteColors.length > 0 ? originalPaletteColors.length : 16);
+                          return { len: prevLen, bits: { r: depth.r || 8, g: depth.g || 8, b: depth.b || 8 } };
+                        })();
+
+                        if (isFixed) {
+                          // For fixed palettes, clear any pending conversion so the preset wins.
+                          pendingConvertedPaletteRef.current = null;
+                          // Optionally show the fixed preset in the UI immediately
+                          const preset = FIXED_PALETTES[(palette as keyof typeof FIXED_PALETTES)];
+                          if (preset && preset.length > 0) {
+                            writeOrderedPalette(preset.map(([r, g, b]) => ({ r, g, b } as Color)), 'selectedPalette-fixed-preset');
+                          }
                         } else {
-                          // No built-in defaults for this palette. Instead of clearing
-                          // the palette we preserve the existing ordered palette (if any)
-                          // by quantizing each previous color into the new palette depth
-                          // and keeping the same order/length (truncating or padding as
-                          // necessary). This prevents losing previously-used colors when
-                          // switching to a retro palette that doesn't ship with defaults.
-                          const prev = (orderedPaletteColors && orderedPaletteColors.length > 0)
-                            ? orderedPaletteColors
-                            : (originalPaletteColors && originalPaletteColors.length > 0 ? originalPaletteColors : []);
+                          // Non-fixed palette: preserve the original palette order (when available)
+                          // and adapt to the requested bit depth and target length.
+                          const base: Color[] = (originalPaletteColors && originalPaletteColors.length > 0)
+                            ? originalPaletteColors
+                            : (orderedPaletteColors && orderedPaletteColors.length > 0 ? orderedPaletteColors : []);
 
-                          if (prev.length === 0) {
-                              writeOrderedPalette([], 'undo-clear');
-                            } else {
-                            // Quantize each previous color to the new depth
-                            const bitsR = depth.r || 8;
-                            const bitsG = depth.g || 8;
-                            const bitsB = depth.b || 8;
-
-                            const quantized = prev.map(c => ({
-                              r: quantizeChannelToBits(c.r, bitsR),
-                              g: quantizeChannelToBits(c.g, bitsG),
-                              b: quantizeChannelToBits(c.b, bitsB)
-                            } as Color));
-
-                            // Remove duplicates while preserving order
-                            const seen = new Set<string>();
+                          if (base.length === 0) {
+                            // If we have nothing to preserve, fall back to defaults (if any)
+                            const defaults = getDefaultPalette(palette as string) || [];
+                            const casted = (defaults as any[]).map(({ r, g, b }) => qColor({ r, g, b } as Color, targetSpec.bits));
                             const unique: Color[] = [];
-                            for (const qc of quantized) {
-                              const key = `${qc.r},${qc.g},${qc.b}`;
-                              if (!seen.has(key)) {
-                                seen.add(key);
-                                unique.push(qc);
+                            const seen = new Set<string>();
+                            for (const c of casted) { const k = `${c.r},${c.g},${c.b}`; if (!seen.has(k)) { seen.add(k); unique.push(c); } }
+                            let final = unique.slice(0, targetSpec.len);
+                            while (final.length < targetSpec.len) final.push({ r: 0, g: 0, b: 0 } as Color);
+                            pendingConvertedPaletteRef.current = final;
+                            writeOrderedPalette(final, 'selectedPalette-converted-defaults');
+                          } else {
+                            // Quantize base (original/indexed) colors to the target depth preserving order
+                            const quantized = base.map(c => qColor(c, targetSpec.bits));
+                            const unique: Color[] = [];
+                            const seen = new Set<string>();
+                            for (const c of quantized) { const k = `${c.r},${c.g},${c.b}`; if (!seen.has(k)) { seen.add(k); unique.push(c); } }
+
+                            // If we need more entries, append from palette defaults (quantized), avoiding duplicates
+                            const need = Math.max(0, targetSpec.len - unique.length);
+                            let final = unique;
+                            if (need > 0) {
+                              const defaults = getDefaultPalette(palette as string) || [];
+                              if (defaults && defaults.length > 0) {
+                                for (const d of (defaults as any[])) {
+                                  const qd = qColor({ r: d.r, g: d.g, b: d.b } as Color, targetSpec.bits);
+                                  const k = `${qd.r},${qd.g},${qd.b}`;
+                                  if (!seen.has(k)) {
+                                    seen.add(k);
+                                    final.push(qd);
+                                    if (final.length >= targetSpec.len) break;
+                                  }
+                                }
                               }
                             }
+                            // Truncate or pad
+                            final = final.slice(0, targetSpec.len);
+                            while (final.length < targetSpec.len) final.push({ r: 0, g: 0, b: 0 } as Color);
 
-                            // Determine target length: for Mega Drive and Master System use 16,
-                            // for Game Gear use 32; otherwise preserve previous length.
-                            let targetLen = prev.length;
-                            if (palette === 'megadrive' || palette === 'masterSystem') targetLen = 16;
-                            else if (palette === 'gameGear') targetLen = 32;
-
-                            // Truncate or pad with black to match target length
-                            let final = unique.slice(0, targetLen);
-                            while (final.length < targetLen) final.push({ r: 0, g: 0, b: 0, count: 0 });
-
-                            // Instead of immediately writing the palette, store it so
-                            // applyPaletteConversion can merge it with the processing
-                            // result palette to avoid losing colors that were present
-                            // in the previous ordered palette but not selected by
-                            // the quantizer.
+                            // Store for merge in applyPaletteConversion and reflect in UI
                             pendingConvertedPaletteRef.current = final;
-                            // Also set ordered palette so UI reflects immediate change
-                            writeOrderedPalette(final, 'selectedPalette-converted');
+                            writeOrderedPalette(final, 'selectedPalette-converted-preserve-order');
                           }
                         }
                       } catch (e) {
-                        // In case of any failure, preserve previous behavior
-                        writeOrderedPalette([], 'undo-clear-error');
+                        // In case of any failure, preserve previous behavior by not altering ordered palette
+                        // and clearing any pending conversion
+                        pendingConvertedPaletteRef.current = null;
                       }
                     }
                     // Schedule processing using the scheduler to avoid stale closures
