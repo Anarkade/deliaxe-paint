@@ -912,6 +912,16 @@ export const ImagePreview = ({
     return zoomFactor;
   })();
 
+  // When the image is wider than the visible container, it is centered and
+  // horizontally clipped. Shift the grid overlays so their origin matches the
+  // true image origin rather than the viewport's left edge.
+  const containerVisibleWidth = containerWidthRef.current || 0;
+  const horizontalClipOffset = Math.max(0, (displayedWidth - containerVisibleWidth) / 2);
+  const tileCellWidthPx = (tileWidth || 0) * pixelSize;
+  const frameCellWidthPx = (frameWidth || 0) * pixelSize;
+  const tileBackgroundPosX = tileCellWidthPx > 0 ? -(horizontalClipOffset % tileCellWidthPx) : 0;
+  const frameBackgroundPosX = frameCellWidthPx > 0 ? -(horizontalClipOffset % frameCellWidthPx) : 0;
+
   return (
     <div 
       className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col"
@@ -995,6 +1005,8 @@ export const ImagePreview = ({
                   `,
                   // Background size should be original image pixels × zoom
                   backgroundSize: `${tileWidth * pixelSize}px ${tileHeight * pixelSize}px`,
+                  // Align grid with image origin when horizontally clipped
+                  backgroundPosition: `${tileBackgroundPosX}px 0px`,
                   borderRight: `${tileLineThickness}px solid ${tileGridColor}`,
                   borderBottom: `${tileLineThickness}px solid ${tileGridColor}`
                 }}
@@ -1010,6 +1022,7 @@ export const ImagePreview = ({
                     linear-gradient(to bottom, ${frameGridColor} ${frameLineThickness}px, transparent ${frameLineThickness}px)
                   `,
                   backgroundSize: `${frameWidth * pixelSize}px ${frameHeight * pixelSize}px`,
+                  backgroundPosition: `${frameBackgroundPosX}px 0px`,
                   borderRight: `${frameLineThickness}px solid ${frameGridColor}`,
                   borderBottom: `${frameLineThickness}px solid ${frameGridColor}`
                 }}
