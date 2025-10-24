@@ -498,6 +498,10 @@ export const RetroImageEditor = () => {
   const [previewShowingOriginal, setPreviewShowingOriginal] = useState<boolean>(true);
   const previewToggleWasManualRef = useRef(false);
   const ignoreNextCloseRef = useRef(false);
+  // Force the next processing run to use the ORIGINAL image as source.
+  // This is set when the user explicitly selects a new palette so we avoid
+  // applying the new palette on top of an already-processed raster.
+  const forceUseOriginalRef = useRef<boolean>(false);
   // Ensure palette depth is set consistently whenever the selected palette
   // or preview view changes. Mega Drive uses RGB 3-3-3; all other palettes
   // should default to RGB 8-8-8 so the PaletteViewer renders correctly in
@@ -1429,7 +1433,13 @@ export const RetroImageEditor = () => {
       // original image element. This prevents repeated transforms from
       // degrading an already-processed image when the user expects operations
       // to apply to the shown preview.
-      const useProcessedAsSource = !previewShowingOriginal && !!processedImageData;
+  // Allow a temporary override to force using the original image (set
+  // when the user selects a new palette). When true we ignore any
+  // available processed raster to avoid cascading transformations.
+  const useProcessedAsSource = !previewShowingOriginal && !!processedImageData && !forceUseOriginalRef.current;
+
+  // Consume the force flag so subsequent runs behave normally.
+  if (forceUseOriginalRef.current) forceUseOriginalRef.current = false;
 
       // Compute cache/hash key from the chosen source
       const imageHash = useProcessedAsSource
@@ -1734,7 +1744,10 @@ export const RetroImageEditor = () => {
       const paletteKey = orderedPaletteColors && orderedPaletteColors.length > 0
         ? JSON.stringify(orderedPaletteColors)
         : '';
-      return `${srcHash}|${selectedPalette}|${selectedResolution}|${scalingMode}|${paletteKey}|${previewShowingOriginal}`;
+      // Include the forceUseOriginal flag in the key so a run explicitly
+      // forced to use the original image is considered distinct by the
+      // scheduler (avoids skipping work when src hashes match).
+      return `${srcHash}|${selectedPalette}|${selectedResolution}|${scalingMode}|${paletteKey}|${previewShowingOriginal}|forceOrig=${forceUseOriginalRef.current}`;
     } catch (e) {
       return `${Date.now()}`; // fallback to something unique on error
     }
@@ -2231,6 +2244,10 @@ export const RetroImageEditor = () => {
                     // may run again.
                     manualPaletteOverrideRef.current = false;
                     lastManualProcessedRef.current = null;
+                    // Ensure the next processing run uses the ORIGINAL raster
+                    // as the source. This prevents cascading palette applications
+                    // when the user switches palettes quickly.
+                    forceUseOriginalRef.current = true;
                     // Update explicit per-view paletteDepth for known retro palettes
                     // so the PaletteViewer can display an accurate detailedCountLabel.
                     // For example, 'megadrive' uses RGB 3-3-3 quantization.
