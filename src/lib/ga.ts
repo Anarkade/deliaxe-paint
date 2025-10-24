@@ -49,6 +49,56 @@ export function initGA() {
   }
   window.gtag = gtag as any;
 
+  // Extra debug instrumentation: trace outbound GA beacons when debug is on.
+  if (DEBUG_GA) {
+    try {
+      const GA_HOST_FRAG = 'google-analytics.com/g/collect';
+      const GA_HOST_FRAG_REGION = 'region1.google-analytics.com/g/collect';
+      const seen = new WeakSet();
+      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        const origBeacon = navigator.sendBeacon.bind(navigator);
+        // @ts-expect-error - runtime monkeypatch for debugging only
+        navigator.sendBeacon = (url: string | URL, data?: BodyInit) => {
+          const u = String(url);
+          if (u.includes(GA_HOST_FRAG) || u.includes(GA_HOST_FRAG_REGION)) {
+            console.debug('[ga][dbg] sendBeacon ->', u, data ? '(payload present)' : '');
+          }
+          return origBeacon(url as any, data as any);
+        };
+      }
+      const origFetch = window.fetch?.bind(window);
+      if (origFetch) {
+        window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+          const u = typeof input === 'string' ? input : (input instanceof URL ? input.toString() : (input as Request).url);
+          if (u && (u.includes(GA_HOST_FRAG) || u.includes(GA_HOST_FRAG_REGION))) {
+            console.debug('[ga][dbg] fetch ->', u, init?.mode);
+          }
+          return origFetch(input as any, init);
+        } as any;
+      }
+      const OrigImage = (window as any).Image;
+      if (OrigImage) {
+        // @ts-expect-error - debug wrapper
+        (window as any).Image = function(w?: number, h?: number) {
+          const img = new OrigImage(w, h);
+          try {
+            Object.defineProperty(img, 'src', {
+              set(v: string) {
+                if (v.includes(GA_HOST_FRAG) || v.includes(GA_HOST_FRAG_REGION)) {
+                  console.debug('[ga][dbg] image src ->', v);
+                }
+                // @ts-expect-error - assign
+                img.setAttribute('src', v);
+              },
+              get() { return img.getAttribute('src'); }
+            });
+          } catch {}
+          return img;
+        };
+      }
+    } catch {}
+  }
+
   // Consent defaults (analytics allowed). This should run before any config.
   window.gtag('consent', 'default', CONSENT_DEFAULT);
 
