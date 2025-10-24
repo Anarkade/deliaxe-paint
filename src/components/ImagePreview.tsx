@@ -1121,17 +1121,24 @@ export const ImagePreview = ({
                       <EyeOff className="h-4 w-4 text-muted-foreground" />
                     )}
                     <span className="text-foreground font-semibold">{t('original')}</span>
+                    {/* Base resolution */}
                     <span className="text-muted-foreground text-xs">{originalImage?.width}×{originalImage?.height}</span>
-                    {originalFormat && (
-                      <span className="text-muted-foreground text-xs">{originalFormat}</span>
-                    )}
+                    {/* Original image type (e.g., PNG-8, JPG) — show only if non-empty and not literally 'undefined' */}
+                    {(() => {
+                      const fmt = originalFormat;
+                      return typeof fmt === 'string' && fmt.trim() && fmt.trim().toLowerCase() !== 'undefined'
+                        ? <span className="text-muted-foreground text-xs">{fmt}</span>
+                        : null;
+                    })()}
+                    {/* Zoom-applied resolution for Original */}
                     {originalImage && (() => {
-                      const text = t('zoomedDimensions')
-                        ?.replace('{width}', Math.round(originalImage.width * (zoom[0] / 100)).toString())
-                        ?.replace('{height}', Math.round(originalImage.height * (zoom[0] / 100)).toString());
-                      return text ? (
-                        <span className="text-muted-foreground text-xs">{text}</span>
-                      ) : null;
+                      const zw = Math.round(originalImage.width * (zoom[0] / 100));
+                      const zh = Math.round(originalImage.height * (zoom[0] / 100));
+                      const tmpl = t('zoomedDimensions');
+                      const safe = (typeof tmpl === 'string' && tmpl.includes('{width}') && tmpl.includes('{height}'))
+                        ? tmpl.replace('{width}', String(zw)).replace('{height}', String(zh))
+                        : `${zw}×${zh}`;
+                      return <span className="text-muted-foreground text-xs">{safe}</span>;
                     })()}
                   </div>
                   {processedImageData && (
@@ -1143,17 +1150,17 @@ export const ImagePreview = ({
                         <EyeOff className="h-4 w-4 text-muted-foreground" />
                       )}
                       <span className="text-foreground font-semibold">{t('processed')}</span>
+                      {/* Base resolution for Processed */}
                       <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
-                      {originalFormat && (
-                        <span className="text-muted-foreground text-xs">{originalFormat}</span>
-                      )}
+                      {/* Zoom-applied resolution for Processed (no type shown here) */}
                       {(() => {
-                        const text = t('zoomedDimensions')
-                          ?.replace('{width}', Math.round(processedImageData.width * (zoom[0] / 100)).toString())
-                          ?.replace('{height}', Math.round(processedImageData.height * (zoom[0] / 100)).toString());
-                        return text ? (
-                          <span className="text-muted-foreground text-xs">{text}</span>
-                        ) : null;
+                        const zw = Math.round(processedImageData.width * (zoom[0] / 100));
+                        const zh = Math.round(processedImageData.height * (zoom[0] / 100));
+                        const tmpl = t('zoomedDimensions');
+                        const safe = (typeof tmpl === 'string' && tmpl.includes('{width}') && tmpl.includes('{height}'))
+                          ? tmpl.replace('{width}', String(zw)).replace('{height}', String(zh))
+                          : `${zw}×${zh}`;
+                        return <span className="text-muted-foreground text-xs">{safe}</span>;
                       })()}
                     </div>
                   )}
