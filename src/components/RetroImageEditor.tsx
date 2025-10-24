@@ -2348,16 +2348,17 @@ export const RetroImageEditor = () => {
                 <ResolutionSelector
                   onClose={() => setActiveTab(null)}
                   onApplyResolution={(r) => {
+                    // Force the next processing run to use the ORIGINAL image
+                    // as the source to avoid cumulative degradation when changing
+                    // resolution repeatedly.
+                    forceUseOriginalRef.current = true;
                     setSelectedResolution(r);
-                    setTimeout(() => {
-                      try { scheduleProcessImage(); } catch (e) { /* ignore */ }
-                    }, PROCESSING_DEBOUNCE_MS + 10);
                   }}
                   onChangeScalingMode={(m) => {
+                    // Same rationale as above: resolution/scaling changes should
+                    // be applied relative to the ORIGINAL raster.
+                    forceUseOriginalRef.current = true;
                     setScalingMode(m);
-                    setTimeout(() => {
-                      try { scheduleProcessImage(); } catch (e) { /* ignore */ }
-                    }, PROCESSING_DEBOUNCE_MS + 10);
                   }}
                   // Pass `undefined` when opening the selector so it defaults to the
                   // 'original' radio option on mount. The selector will call
