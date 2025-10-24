@@ -1167,6 +1167,26 @@ export const RetroImageEditor = () => {
       return fallback;
     };
 
+    // Helper to map pixels to 4 Game Boy shades based on perceived brightness
+    // using the same thresholds as the 'gameboy' palette. This is shared so
+    // 'gameboyBg' behaves identically but with its own 4 colors.
+    const applyGbBrightnessMapping = (data: Uint8ClampedArray, colors4: number[][]) => {
+      const pickShade = (r: number, g: number, b: number) => {
+        const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
+        const brightnessPercent = (pixelBrightness / 255) * 100;
+        if (brightnessPercent <= 24) return colors4[0];
+        if (brightnessPercent <= 49) return colors4[1];
+        if (brightnessPercent <= 74) return colors4[2];
+        return colors4[3];
+      };
+      for (let i = 0; i < data.length; i += 4) {
+        const chosen = pickShade(data[i], data[i + 1], data[i + 2]);
+        data[i] = chosen[0];
+        data[i + 1] = chosen[1];
+        data[i + 2] = chosen[2];
+      }
+    };
+
     switch (palette) {
       case 'original': {
         if (customColors && customColors.length > 0) {
@@ -1185,21 +1205,7 @@ export const RetroImageEditor = () => {
           [101, 255, 0]
         ]);
 
-        const findClosestGBColor = (r: number, g: number, b: number) => {
-          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
-          const brightnessPercent = (pixelBrightness / 255) * 100;
-          if (brightnessPercent <= 24) return gbColors[0];
-          if (brightnessPercent <= 49) return gbColors[1];
-          if (brightnessPercent <= 74) return gbColors[2];
-          return gbColors[3];
-        };
-
-        for (let i = 0; i < resultData.length; i += 4) {
-          const closest = findClosestGBColor(resultData[i], resultData[i + 1], resultData[i + 2]);
-          resultData[i] = closest[0];
-          resultData[i + 1] = closest[1];
-          resultData[i + 2] = closest[2];
-        }
+        applyGbBrightnessMapping(resultData, gbColors);
 
   if (!manualPaletteOverrideRef.current) writeOrderedPalette(toColorObjects(gbColors), 'applyPaletteConversion-gb');
         return resultImageData;
@@ -1213,21 +1219,9 @@ export const RetroImageEditor = () => {
           [224, 248, 207]
         ]);
 
-        const findClosestGBBgColor = (r: number, g: number, b: number) => {
-          const pixelBrightness = 0.299 * r + 0.587 * g + 0.114 * b;
-          const brightnessPercent = (pixelBrightness / 255) * 100;
-          if (brightnessPercent <= 24) return gbBgColors[0];
-          if (brightnessPercent <= 49) return gbBgColors[1];
-          if (brightnessPercent <= 74) return gbBgColors[2];
-          return gbBgColors[3];
-        };
-
-        for (let i = 0; i < resultData.length; i += 4) {
-          const closest = findClosestGBBgColor(resultData[i], resultData[i + 1], resultData[i + 2]);
-          resultData[i] = closest[0];
-          resultData[i + 1] = closest[1];
-          resultData[i + 2] = closest[2];
-        }
+        // Apply the exact same brightness-based mapping as 'gameboy',
+        // only using the Game Boy BG 4-color set.
+        applyGbBrightnessMapping(resultData, gbBgColors);
 
   if (!manualPaletteOverrideRef.current) writeOrderedPalette(toColorObjects(gbBgColors), 'applyPaletteConversion-gbBg');
         return resultImageData;
