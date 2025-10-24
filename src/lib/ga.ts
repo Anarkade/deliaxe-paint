@@ -8,6 +8,8 @@ export const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID as strin
 // network behaviour; it's safe to leave in production as it's opt-in.
 const DEBUG_GA = (typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('debugga') === '1' || window.localStorage?.getItem('debugga') === '1')) || import.meta.env.VITE_GA_DEBUG === '1';
 
+export function isGADebugEnabled() { return !!DEBUG_GA; }
+
 // Minimal consent defaults: allow analytics storage only. Ad-related storage
 // remains denied by default. Note: you may need a CMP in EEA; this default is
 // only to ensure GA can operate when no CMP is present. Adjust per policy.
@@ -68,13 +70,13 @@ export function initGA() {
       }
       const origFetch = window.fetch?.bind(window);
       if (origFetch) {
-        window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        window.fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
           const u = typeof input === 'string' ? input : (input instanceof URL ? input.toString() : (input as Request).url);
           if (u && (u.includes(GA_HOST_FRAG) || u.includes(GA_HOST_FRAG_REGION))) {
             console.debug('[ga][dbg] fetch ->', u, init?.mode);
           }
           return origFetch(input as any, init);
-        } as any;
+        }) as any;
       }
       const OrigImage = (window as any).Image;
       if (OrigImage) {
