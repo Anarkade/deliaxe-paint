@@ -2220,6 +2220,12 @@ export const RetroImageEditor = () => {
                   selectedPalette={selectedPalette}
                   onPaletteChange={(palette) => {
                     setSelectedPalette(palette);
+                    // Force using the ORIGINAL image and ORIGINAL palette as the
+                    // source for the next processing pass, and show ORIGINAL in UI.
+                    // This ensures both ImagePreview and PaletteViewer reflect
+                    // the original source while computing the new processed image/palette.
+                    previewToggleWasManualRef.current = true;
+                    setPreviewShowingOriginal(true);
                     // Selecting a new palette is an explicit user action that
                     // clears any manual palette edits so automatic processing
                     // may run again.
