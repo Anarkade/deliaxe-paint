@@ -1229,6 +1229,25 @@ export const RetroImageEditor = () => {
         return resultImageData;
       }
 
+      case 'gameboyRealistic': {
+        const gbRealColors = paletteFromCustomOrDefault([
+          [56, 72, 40],
+          [96, 112, 40],
+          [160, 168, 48],
+          [208, 224, 64]
+        ]);
+
+        // Use the exact same brightness-based mapping thresholds as other GB palettes
+        applyGbBrightnessMapping(resultData, gbRealColors);
+
+        if (!manualPaletteOverrideRef.current) {
+          writeOrderedPalette(toColorObjects(gbRealColors), 'applyPaletteConversion-gbRealistic');
+        }
+        // Align with fixed palette behavior
+        pendingConvertedPaletteRef.current = null;
+        return resultImageData;
+      }
+
       case 'megadrive': {
         try {
           const megaDriveResult = await imageProcessor.processMegaDriveImage(
