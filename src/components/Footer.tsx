@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import GADebugPanel from '@/components/GADebugPanel';
 
 interface FooterProps {
   isVerticalLayout: boolean;
@@ -129,7 +128,7 @@ export const Footer: React.FC<FooterProps> = () => {
           ©2025 ANARKADE Barcelona - {buildLabel}
         </p>
       </div>
-      <GADebugPanel />
+      {/* GADebugPanel removed: GA tracking remains implemented in `src/lib/ga.ts` */}
     </footer>
   );
 };
