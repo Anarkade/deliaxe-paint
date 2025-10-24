@@ -1134,11 +1134,9 @@ export const ImagePreview = ({
                     {originalImage && (() => {
                       const zw = Math.round(originalImage.width * (zoom[0] / 100));
                       const zh = Math.round(originalImage.height * (zoom[0] / 100));
-                      const tmpl = t('zoomedDimensions');
-                      const safe = (typeof tmpl === 'string' && tmpl.includes('{width}') && tmpl.includes('{height}'))
-                        ? tmpl.replace('{width}', String(zw)).replace('{height}', String(zh))
-                        : `${zw}×${zh}`;
-                      return <span className="text-muted-foreground text-xs">{safe}</span>;
+                      const tmpl = String(t('zoomedDimensions'));
+                      const text = tmpl.replace('{width}', String(zw)).replace('{height}', String(zh));
+                      return <span className="text-muted-foreground text-xs">{text}</span>;
                     })()}
                   </div>
                   {processedImageData && (
@@ -1156,11 +1154,9 @@ export const ImagePreview = ({
                       {(() => {
                         const zw = Math.round(processedImageData.width * (zoom[0] / 100));
                         const zh = Math.round(processedImageData.height * (zoom[0] / 100));
-                        const tmpl = t('zoomedDimensions');
-                        const safe = (typeof tmpl === 'string' && tmpl.includes('{width}') && tmpl.includes('{height}'))
-                          ? tmpl.replace('{width}', String(zw)).replace('{height}', String(zh))
-                          : `${zw}×${zh}`;
-                        return <span className="text-muted-foreground text-xs">{safe}</span>;
+                        const tmpl = String(t('zoomedDimensions'));
+                        const text = tmpl.replace('{width}', String(zw)).replace('{height}', String(zh));
+                        return <span className="text-muted-foreground text-xs">{text}</span>;
                       })()}
                     </div>
                   )}
