@@ -402,7 +402,7 @@ export const ImagePreview = ({
           let localized = '';
           if (isIndexed) {
             const key = isPNG8 ? 'png8IndexedFormat' : 'png24IndexedFormat';
-            localized = t(key).replace('{count}', String(info.paletteSize ?? 0));
+            localized = t(key);//.replace('{count}', String(info.paletteSize ?? 0));
           } else {
             if (info.format.includes('PNG-24 RGB')) localized = t('png24RgbFormat');
             else localized = info.format; // Fallback for other formats
