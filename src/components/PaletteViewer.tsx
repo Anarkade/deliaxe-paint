@@ -494,6 +494,9 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       .replace('{depthBits}', String(bits));
   })() : null;
 
+  // Detect whether the selected palette is one of the fixed, non-editable palettes
+  const isFixedPalette = (!!selectedPalette && FIXED_KEYS.has(selectedPalette as any));
+
   return (
     <div className="relative space-y-4 p-4 border border-elegant-border color-bg-highlight rounded-lg">
       <div className="space-y-4">
@@ -596,12 +599,16 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           <label className="block text-m font-bold text-foreground py-1 mb-0.5">
             <span className="flex items-center">
               {paletteColors.length > 0 && <Palette className="mr-2 h-4 w-4" />}
-              {paletteColors.length > 0 ? detailedCountLabel : null}
+              {paletteColors.length > 0 ? (
+                isFixedPalette
+                  ? t('fixedColorsPaletteCount').replace('{count}', paletteColors.length.toString())
+                  : detailedCountLabel
+              ) : null}
             </span>
           </label>
           {paletteColors.length > 0 && (
             <div className="text-xs text-muted-foreground text-left">
-              <p>{t('clickToChangeColor')}</p>
+              <p>{isFixedPalette ? t('dontModifyFixedPalette') : t('clickToChangeColor')}</p>
             </div>
           )}
         </div>
