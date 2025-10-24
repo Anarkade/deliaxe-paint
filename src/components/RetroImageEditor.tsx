@@ -2221,11 +2221,11 @@ export const RetroImageEditor = () => {
                   onPaletteChange={(palette) => {
                     setSelectedPalette(palette);
                     // Force using the ORIGINAL image and ORIGINAL palette as the
-                    // source for the next processing pass, and show ORIGINAL in UI.
-                    // This ensures both ImagePreview and PaletteViewer reflect
-                    // the original source while computing the new processed image/palette.
+                    // source for the next processing pass, but show the
+                    // processed preview/palette in the UI (opposite of previous behavior).
+                    // We still mark the toggle as manual to avoid auto-reverting.
                     previewToggleWasManualRef.current = true;
-                    setPreviewShowingOriginal(true);
+                    setPreviewShowingOriginal(false);
                     // Selecting a new palette is an explicit user action that
                     // clears any manual palette edits so automatic processing
                     // may run again.
