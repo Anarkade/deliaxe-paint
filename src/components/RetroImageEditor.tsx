@@ -1219,11 +1219,13 @@ export const RetroImageEditor = () => {
           [224, 248, 207]
         ]);
 
-        // Apply the exact same brightness-based mapping as 'gameboy',
-        // only using the Game Boy BG 4-color set.
-        applyGbBrightnessMapping(resultData, gbBgColors);
+    // Apply the exact same brightness-based mapping as 'gameboy',
+    // only using the Game Boy BG 4-color set.
+    applyGbBrightnessMapping(resultData, gbBgColors);
 
   if (!manualPaletteOverrideRef.current) writeOrderedPalette(toColorObjects(gbBgColors), 'applyPaletteConversion-gbBg');
+    // Align with other fixed palette paths: clear any pending converted palette
+    pendingConvertedPaletteRef.current = null;
         return resultImageData;
       }
 

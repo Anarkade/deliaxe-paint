@@ -392,17 +392,19 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       
       setIsOriginalPNG(false);
 
-      // For retro palettes, use the default or processed palette
+      // For retro palettes, show the default palette in the viewer but
+      // DO NOT emit onPaletteUpdate here. Emitting at selection time was
+      // treated as a manual edit by the parent (triggering manual override)
+      // and could bypass the proper processing path, especially for
+      // Game Boy variants on indexed images.
       if (selectedPalette !== 'original') {
         const defaultPalette = getDefaultPalette(selectedPalette);
         if (defaultPalette && defaultPalette.length > 0) {
           setPaletteColors(defaultPalette);
-          emitPaletteUpdate(defaultPalette);
+          // Record the last-sent value so genuine user edits still emit later
+          try { lastSentPaletteRef.current = (defaultPalette || []).map((c: any) => `${c.r},${c.g},${c.b}`).join('|'); } catch (e) { /* ignore */ }
         } else {
           // No built-in default: do not emit placeholder black colors.
-          // Leave the viewer empty and allow the parent to provide a
-          // palette (or to initialize defaults). Emitting black placeholders
-          // caused incorrect first-run processing on RGB images.
           setPaletteColors([]);
           try { lastSentPaletteRef.current = ''; } catch (e) { /* ignore */ }
         }
@@ -450,10 +452,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         return;
       }
 
-      // Priority 3: Use default retro palettes
-      const defaultPalette = getDefaultPalette(selectedPalette);
-      setPaletteColors(defaultPalette);
-      emitPaletteUpdate(defaultPalette);
+  // Priority 3: Use default retro palettes (non-original) — do not emit here
+  // to avoid flagging a manual override on selection.
+  const defaultPalette = getDefaultPalette(selectedPalette);
+  setPaletteColors(defaultPalette);
+  try { lastSentPaletteRef.current = (defaultPalette || []).map((c: any) => `${c.r},${c.g},${c.b}`).join('|'); } catch (e) { /* ignore */ }
     };
 
     extractColors();
