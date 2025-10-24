@@ -62,6 +62,17 @@ export function initGA() {
   const s = document.createElement('script');
   s.async = true;
   s.src = `https://www.googletagmanager.com/gtag/js?id=${id}`;
+  // For robustness: once the library actually loads, re-issue a config so
+  // we guarantee the first automatic page_view even if the pre-queued
+  // commands were missed by any edge case. This is idempotent.
+  s.addEventListener('load', () => {
+    try {
+      const cfg: Record<string, any> = { anonymize_ip: true };
+      if (DEBUG_GA) cfg.debug_mode = true;
+      if (DEBUG_GA) console.debug('[ga] gtag.js loaded – reconfiguring');
+      window.gtag?.('config', id, cfg);
+    } catch {}
+  });
   document.head.appendChild(s);
 
   if (DEBUG_GA) console.debug('[ga] initialized', { id, consent: CONSENT_DEFAULT });
@@ -71,7 +82,15 @@ export function sendPageview(path?: string) {
   const id = GA_MEASUREMENT_ID;
   if (!id || !window.gtag) return;
   try {
-    const payload: Record<string, any> = { page_path: path ?? window.location.pathname + window.location.search };
+    // GA4 expects page_location/page_title; page_path is a UA-era field and
+    // may be ignored. Provide both for safety.
+    const page_location = (path ? `${window.location.origin}${path}` : window.location.href);
+    const payload: Record<string, any> = {
+      page_location,
+      page_title: document.title,
+      // page_path retained for compatibility, though GA4 uses page_location
+      page_path: path ?? (window.location.pathname + window.location.search),
+    };
     if (DEBUG_GA) payload.debug_mode = true;
     if (DEBUG_GA) console.debug('[ga] sendPageview', payload);
     window.gtag('event', 'page_view', payload);
