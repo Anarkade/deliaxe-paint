@@ -45,9 +45,14 @@ export function initGA() {
   // conditions where the library loads before we create the queue. This is the
   // pattern recommended by Google.
   window.dataLayer = window.dataLayer || [];
-  function gtag(...args: any[]) {
+  // Important: mimic Google's snippet exactly and push the special
+  // `arguments` object rather than a spread array. Some versions of
+  // gtag/gtm expect the array-like `IArguments` shape.
+  function gtag(this: any) {
+    // eslint-disable-next-line prefer-rest-params
+    const args = arguments as IArguments;
     window.dataLayer!.push(args);
-    if (DEBUG_GA) console.debug('[ga] gtag push', args);
+    if (DEBUG_GA) try { console.debug('[ga] gtag push', Array.from(args as unknown as any[])); } catch { console.debug('[ga] gtag push', args); }
   }
   window.gtag = gtag as any;
 
