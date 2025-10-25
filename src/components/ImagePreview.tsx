@@ -1142,7 +1142,7 @@ export const ImagePreview = ({
               className="text-sm font-mono"
             >
               {/* Left column: palette info (moved from PaletteViewer) */}
-              <div className="px-4 text-right">
+              <div className="text-right">
                 {paletteCountForInfo > 0 && (
                   <div className="leading-tight inline-block text-right">
                     {detailedPaletteLabel && (
