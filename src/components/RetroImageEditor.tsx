@@ -502,20 +502,19 @@ export const RetroImageEditor = () => {
   // This is set when the user explicitly selects a new palette so we avoid
   // applying the new palette on top of an already-processed raster.
   const forceUseOriginalRef = useRef<boolean>(false);
-  // Ensure palette depth is set consistently whenever the selected palette
-  // or preview view changes. Mega Drive uses RGB 3-3-3; all other palettes
-  // should default to RGB 8-8-8 so the PaletteViewer renders correctly in
-  // the footer and other places that depend on per-view depth metadata.
+  // Depth metadata for the palettes shown in the UI:
+  // - ORIGINAL palette should remain 8-8-8 (do not mutate or relabel it)
+  // - PROCESSED palette reflects the selected target palette depth
   useEffect(() => {
-    const depth = selectedPalette === 'megadrive'
+    const processedDepth = selectedPalette === 'megadrive'
       ? { r: 3, g: 3, b: 3 }
       : selectedPalette === 'gameGear'
         ? { r: 4, g: 4, b: 4 }
         : selectedPalette === 'masterSystem'
           ? { r: 2, g: 2, b: 2 }
           : { r: 8, g: 8, b: 8 };
-    setPaletteDepthOriginal(depth);
-    setPaletteDepthProcessed(depth);
+    setPaletteDepthOriginal({ r: 8, g: 8, b: 8 });
+    setPaletteDepthProcessed(processedDepth);
   }, [selectedPalette]);
   // When set, skip the immediate automated processing pass to avoid
   // overwriting intentional manual palette/image edits from the UI.
@@ -1254,6 +1253,21 @@ export const RetroImageEditor = () => {
 
       case 'megadrive': {
         try {
+          // If we have a preserved-order palette (from switching from original indexed),
+          // apply it directly without recalculating/merging. This becomes the processed palette.
+          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
+            const preserved = pendingConvertedPaletteRef.current.slice();
+            const applied = await imageProcessor.applyPalette(resultImageData, preserved as any, (progress: number) => setProcessingProgress(progress));
+            if (!manualPaletteOverrideRef.current) {
+              writeOrderedPalette(preserved, 'applyPaletteConversion-mega-preserved');
+            }
+            pendingConvertedPaletteRef.current = null;
+            // Prevent any subsequent automatic processing pass from overwriting
+            // the preserved-order palette; this fulfills the strict requirement
+            // to keep order/count exactly as in the original palette.
+            manualPaletteOverrideRef.current = true;
+            return applied;
+          }
           const megaDriveResult = await imageProcessor.processMegaDriveImage(
             resultImageData,
             customColors,
@@ -1272,16 +1286,23 @@ export const RetroImageEditor = () => {
           return megaDriveResult.imageData;
         } catch (error) {
           console.error('Mega Drive processing error:', error);
+          // If worker path fails and we still have a preserved palette, use it directly
+          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
+            try {
+              const preserved = pendingConvertedPaletteRef.current.slice();
+              const applied = await imageProcessor.applyPalette(resultImageData, preserved as any);
+              if (!manualPaletteOverrideRef.current) {
+                writeOrderedPalette(preserved, 'applyPaletteConversion-mega-preserved-fallback');
+              }
+              pendingConvertedPaletteRef.current = null;
+              manualPaletteOverrideRef.current = true;
+              return applied;
+            } catch (e2) { /* continue to library fallback */ }
+          }
           const fallback = processMegaDriveImage(resultImageData, customColors);
           if (!manualPaletteOverrideRef.current) {
             const resultPalette = fallback.palette.map(({ r, g, b }) => ({ r, g, b }));
-            if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
-              const merged = mergePreservePalette(pendingConvertedPaletteRef.current, resultPalette, 16);
-              writeOrderedPalette(merged, 'applyPaletteConversion-mega-fallback-merged');
-              pendingConvertedPaletteRef.current = null;
-            } else {
-              writeOrderedPalette(resultPalette, 'applyPaletteConversion-mega-fallback');
-            }
+            writeOrderedPalette(resultPalette, 'applyPaletteConversion-mega-fallback');
           }
           return fallback.imageData;
         }
@@ -1290,33 +1311,43 @@ export const RetroImageEditor = () => {
       case 'gameGear': {
         try {
           // Prefer imageProcessor implementation if provided (keeps heavy work off main thread)
+          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
+            const preserved = pendingConvertedPaletteRef.current.slice();
+            const applied = await imageProcessor.applyPalette(resultImageData, preserved as any, (progress: number) => setProcessingProgress(progress));
+            if (!manualPaletteOverrideRef.current) {
+              writeOrderedPalette(preserved, 'applyPaletteConversion-gamegear-preserved');
+            }
+            pendingConvertedPaletteRef.current = null;
+            manualPaletteOverrideRef.current = true;
+            return applied;
+          }
           if (imageProcessor && typeof (imageProcessor as any).processGameGearImage === 'function') {
             const ggResult: any = await (imageProcessor as any).processGameGearImage(resultImageData, customColors, (progress: number) => setProcessingProgress(progress));
             if (!manualPaletteOverrideRef.current) {
               const resultPalette = ggResult.palette.map(({ r, g, b }: any) => ({ r, g, b }));
-              if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
-                const merged = mergePreservePalette(pendingConvertedPaletteRef.current, resultPalette, 32);
-                writeOrderedPalette(merged, 'applyPaletteConversion-gamegear-merged');
-                pendingConvertedPaletteRef.current = null;
-              } else {
-                writeOrderedPalette(resultPalette, 'applyPaletteConversion-gamegear');
-              }
+              writeOrderedPalette(resultPalette, 'applyPaletteConversion-gamegear');
             }
             return ggResult.imageData;
           }
           // Fallback to local synchronous implementation
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const { processGameGearImage } = await import('@/lib/colorQuantization');
+          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
+            try {
+              const preserved = pendingConvertedPaletteRef.current.slice();
+              const applied = await imageProcessor.applyPalette(resultImageData, preserved as any);
+              if (!manualPaletteOverrideRef.current) {
+                writeOrderedPalette(preserved, 'applyPaletteConversion-gamegear-preserved-fallback');
+              }
+              pendingConvertedPaletteRef.current = null;
+              manualPaletteOverrideRef.current = true;
+              return applied;
+            } catch (e2) { /* continue to library fallback */ }
+          }
           const ggFallback = processGameGearImage(resultImageData, customColors);
           if (!manualPaletteOverrideRef.current) {
             const resultPalette = ggFallback.palette.map(({ r, g, b }) => ({ r, g, b }));
-            if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
-              const merged = mergePreservePalette(pendingConvertedPaletteRef.current, resultPalette, 32);
-              writeOrderedPalette(merged, 'applyPaletteConversion-gamegear-fallback-merged');
-              pendingConvertedPaletteRef.current = null;
-            } else {
-              writeOrderedPalette(resultPalette, 'applyPaletteConversion-gamegear-fallback');
-            }
+            writeOrderedPalette(resultPalette, 'applyPaletteConversion-gamegear-fallback');
           }
           return ggFallback.imageData;
         } catch (err) {
@@ -1333,31 +1364,41 @@ export const RetroImageEditor = () => {
 
       case 'masterSystem': {
         try {
+          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
+            const preserved = pendingConvertedPaletteRef.current.slice();
+            const applied = await imageProcessor.applyPalette(resultImageData, preserved as any, (progress: number) => setProcessingProgress(progress));
+            if (!manualPaletteOverrideRef.current) {
+              writeOrderedPalette(preserved, 'applyPaletteConversion-master-preserved');
+            }
+            pendingConvertedPaletteRef.current = null;
+            manualPaletteOverrideRef.current = true;
+            return applied;
+          }
           if (imageProcessor && typeof (imageProcessor as any).processMasterSystemImage === 'function') {
             const msResult: any = await (imageProcessor as any).processMasterSystemImage(resultImageData, customColors, (progress: number) => setProcessingProgress(progress));
             if (!manualPaletteOverrideRef.current) {
               const resultPalette = msResult.palette.map(({ r, g, b }: any) => ({ r, g, b }));
-              if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
-                const merged = mergePreservePalette(pendingConvertedPaletteRef.current, resultPalette, 16);
-                writeOrderedPalette(merged, 'applyPaletteConversion-master-merged');
-                pendingConvertedPaletteRef.current = null;
-              } else {
-                writeOrderedPalette(resultPalette, 'applyPaletteConversion-master');
-              }
+              writeOrderedPalette(resultPalette, 'applyPaletteConversion-master');
             }
             return msResult.imageData;
           }
           const { processMasterSystemImage } = await import('@/lib/colorQuantization');
+          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
+            try {
+              const preserved = pendingConvertedPaletteRef.current.slice();
+              const applied = await imageProcessor.applyPalette(resultImageData, preserved as any);
+              if (!manualPaletteOverrideRef.current) {
+                writeOrderedPalette(preserved, 'applyPaletteConversion-master-preserved-fallback');
+              }
+              pendingConvertedPaletteRef.current = null;
+              manualPaletteOverrideRef.current = true;
+              return applied;
+            } catch (e2) { /* continue to library fallback */ }
+          }
           const msFallback = processMasterSystemImage(resultImageData, customColors);
           if (!manualPaletteOverrideRef.current) {
             const resultPalette = msFallback.palette.map(({ r, g, b }) => ({ r, g, b }));
-            if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
-              const merged = mergePreservePalette(pendingConvertedPaletteRef.current, resultPalette, 16);
-              writeOrderedPalette(merged, 'applyPaletteConversion-master-fallback-merged');
-              pendingConvertedPaletteRef.current = null;
-            } else {
-              writeOrderedPalette(resultPalette, 'applyPaletteConversion-master-fallback');
-            }
+            writeOrderedPalette(resultPalette, 'applyPaletteConversion-master-fallback');
           }
           return msFallback.imageData;
         } catch (err) {
@@ -2255,99 +2296,73 @@ export const RetroImageEditor = () => {
                       : palette === 'gameGear' ? { r: 4, g: 4, b: 4 }
                       : palette === 'masterSystem' ? { r: 2, g: 2, b: 2 }
                       : { r: 8, g: 8, b: 8 };
-                    if (previewShowingOriginal) {
-                      setPaletteDepthOriginal(depth);
-                    } else {
-                      setPaletteDepthProcessed(depth);
-                    }
+                    // Do not change ORIGINAL palette depth; only update PROCESSED
+                    setPaletteDepthProcessed(depth);
                     if (palette !== 'original') {
                       try {
-                        // Determine whether this is a canonical FIXED palette. For fixed palettes
-                        // we keep the existing behavior (apply preset later in applyPaletteConversion).
-                        const isFixed = !!FIXED_PALETTES[(palette as keyof typeof FIXED_PALETTES)];
-
-                        // Helper: quantize Color to a given per-channel bit depth
-                        const qColor = (c: Color, bits: { r: number; g: number; b: number }): Color => ({
-                          r: quantizeChannelToBits(c.r, bits.r || 8),
-                          g: quantizeChannelToBits(c.g, bits.g || 8),
-                          b: quantizeChannelToBits(c.b, bits.b || 8)
-                        });
-
-                        // Map a non-fixed palette to its target length and depth
-                        const targetSpec = (() => {
-                          if (palette === 'megadrive') return { len: 16, bits: { r: 3, g: 3, b: 3 } };
-                          if (palette === 'masterSystem') return { len: 16, bits: { r: 2, g: 2, b: 2 } };
-                          if (palette === 'gameGear') return { len: 32, bits: { r: 4, g: 4, b: 4 } };
-                          // Fallback: preserve previous length and assume 8-8-8
-                          const prevLen = (orderedPaletteColors && orderedPaletteColors.length > 0)
-                            ? orderedPaletteColors.length
-                            : (originalPaletteColors && originalPaletteColors.length > 0 ? originalPaletteColors.length : 16);
-                          return { len: prevLen, bits: { r: depth.r || 8, g: depth.g || 8, b: depth.b || 8 } };
-                        })();
-
-                        if (isFixed) {
-                          // For fixed palettes, clear any pending conversion so the preset wins.
-                          pendingConvertedPaletteRef.current = null;
-                          // Optionally show the fixed preset in the UI immediately
-                          const preset = FIXED_PALETTES[(palette as keyof typeof FIXED_PALETTES)];
-                          if (preset && preset.length > 0) {
-                            writeOrderedPalette(preset.map(([r, g, b]) => ({ r, g, b } as Color)), 'selectedPalette-fixed-preset');
-                          }
+                        // Special case required by app: when switching FROM an indexed "original"
+                        // palette TO a non-fixed retro palette (MD/MS/GG), do NOT recalc or reorder
+                        // based on image usage. Instead, take the original indexed palette, keep
+                        // exact order and count, and quantize each entry to the target depth. Use
+                        // that palette both for processing and as the processed palette in the UI.
+                        const isRetroFreePalette = (palette === 'megadrive' || palette === 'masterSystem' || palette === 'gameGear');
+                        if (isRetroFreePalette && isOriginalPNG8Indexed && originalPaletteColors.length > 0) {
+                          const bitsR = depth.r || 8;
+                          const bitsG = depth.g || 8;
+                          const bitsB = depth.b || 8;
+                          // Quantize each original entry preserving order
+                          const quantizedExact = originalPaletteColors.map((c) => ({
+                            r: quantizeChannelToBits(c.r, bitsR),
+                            g: quantizeChannelToBits(c.g, bitsG),
+                            b: quantizeChannelToBits(c.b, bitsB)
+                          } as Color));
+                          // Ensure processed palette matches target size for selected palette
+                          let targetLen = quantizedExact.length;
+                          if (palette === 'megadrive' || palette === 'masterSystem') targetLen = 16;
+                          else if (palette === 'gameGear') targetLen = 32;
+                          let final = quantizedExact.slice(0, targetLen);
+                          while (final.length < targetLen) final.push({ r: 0, g: 0, b: 0 } as Color);
+                          // No dedupe and no reorder beyond truncation/padding
+                          pendingConvertedPaletteRef.current = final;
+                          writeOrderedPalette(final, 'selectedPalette-preserve-order-pad');
                         } else {
-                          // Non-fixed palette: preserve the original palette order (when available)
-                          // and adapt to the requested bit depth and target length.
-                          const base: Color[] = (originalPaletteColors && originalPaletteColors.length > 0)
-                            ? originalPaletteColors
-                            : (orderedPaletteColors && orderedPaletteColors.length > 0 ? orderedPaletteColors : []);
-
-                          if (base.length === 0) {
-                            // If we have nothing to preserve, fall back to defaults (if any)
-                            const defaults = getDefaultPalette(palette as string) || [];
-                            const casted = (defaults as any[]).map(({ r, g, b }) => qColor({ r, g, b } as Color, targetSpec.bits));
-                            const unique: Color[] = [];
-                            const seen = new Set<string>();
-                            for (const c of casted) { const k = `${c.r},${c.g},${c.b}`; if (!seen.has(k)) { seen.add(k); unique.push(c); } }
-                            let final = unique.slice(0, targetSpec.len);
-                            while (final.length < targetSpec.len) final.push({ r: 0, g: 0, b: 0 } as Color);
-                            pendingConvertedPaletteRef.current = final;
-                            writeOrderedPalette(final, 'selectedPalette-converted-defaults');
+                          const defaults = getDefaultPalette(palette as string) || [];
+                          if (defaults && defaults.length > 0) {
+                            // convert SimpleColor -> Color
+                            const casted = defaults.map(({ r, g, b }) => ({ r, g, b } as Color));
+                            pendingConvertedPaletteRef.current = null;
+                            writeOrderedPalette(casted, 'selectedPalette-default');
                           } else {
-                            // Quantize base (original/indexed) colors to the target depth preserving order
-                            const quantized = base.map(c => qColor(c, targetSpec.bits));
-                            const unique: Color[] = [];
-                            const seen = new Set<string>();
-                            for (const c of quantized) { const k = `${c.r},${c.g},${c.b}`; if (!seen.has(k)) { seen.add(k); unique.push(c); } }
-
-                            // If we need more entries, append from palette defaults (quantized), avoiding duplicates
-                            const need = Math.max(0, targetSpec.len - unique.length);
-                            let final = unique;
-                            if (need > 0) {
-                              const defaults = getDefaultPalette(palette as string) || [];
-                              if (defaults && defaults.length > 0) {
-                                for (const d of (defaults as any[])) {
-                                  const qd = qColor({ r: d.r, g: d.g, b: d.b } as Color, targetSpec.bits);
-                                  const k = `${qd.r},${qd.g},${qd.b}`;
-                                  if (!seen.has(k)) {
-                                    seen.add(k);
-                                    final.push(qd);
-                                    if (final.length >= targetSpec.len) break;
-                                  }
-                                }
-                              }
+                            // Fallback: quantize previously ordered or original palette to the new depth,
+                            // preserving order; do NOT dedupe. Adjust length to target by pad/truncate.
+                            const prev = (orderedPaletteColors && orderedPaletteColors.length > 0)
+                              ? orderedPaletteColors
+                              : (originalPaletteColors && originalPaletteColors.length > 0 ? originalPaletteColors : []);
+                            if (prev.length === 0) {
+                              pendingConvertedPaletteRef.current = null;
+                              writeOrderedPalette([], 'undo-clear');
+                            } else {
+                              const bitsR2 = depth.r || 8;
+                              const bitsG2 = depth.g || 8;
+                              const bitsB2 = depth.b || 8;
+                              const quantizedPrev = prev.map(c => ({
+                                r: quantizeChannelToBits(c.r, bitsR2),
+                                g: quantizeChannelToBits(c.g, bitsG2),
+                                b: quantizeChannelToBits(c.b, bitsB2)
+                              } as Color));
+                              let targetLen = quantizedPrev.length;
+                              if (palette === 'megadrive' || palette === 'masterSystem') targetLen = 16;
+                              else if (palette === 'gameGear') targetLen = 32;
+                              let final = quantizedPrev.slice(0, targetLen);
+                              while (final.length < targetLen) final.push({ r: 0, g: 0, b: 0 } as Color);
+                              pendingConvertedPaletteRef.current = final;
+                              writeOrderedPalette(final, 'selectedPalette-quantized-prev-pad');
                             }
-                            // Truncate or pad
-                            final = final.slice(0, targetSpec.len);
-                            while (final.length < targetSpec.len) final.push({ r: 0, g: 0, b: 0 } as Color);
-
-                            // Store for merge in applyPaletteConversion and reflect in UI
-                            pendingConvertedPaletteRef.current = final;
-                            writeOrderedPalette(final, 'selectedPalette-converted-preserve-order');
                           }
                         }
                       } catch (e) {
-                        // In case of any failure, preserve previous behavior by not altering ordered palette
-                        // and clearing any pending conversion
-                        pendingConvertedPaletteRef.current = null;
+                        // In case of any failure, preserve previous behavior
+                        writeOrderedPalette([], 'undo-clear-error');
                       }
                     }
                     // Schedule processing using the scheduler to avoid stale closures

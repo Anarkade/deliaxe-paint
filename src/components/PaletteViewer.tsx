@@ -1,6 +1,6 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import { useImageProcessor } from '@/hooks/useImageProcessor';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import ColorEditor from './ColorEditor';
 import { type Color } from '@/lib/colorQuantization';
 import { PaletteType } from './ColorPaletteSelector';
@@ -106,6 +106,13 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const [blockedIndex, setBlockedIndex] = useState<number | null>(null);
   const blockedTimerRef = useRef<number | null>(null);
   const imageProcessor = useImageProcessor();
+
+  // External palette handling: if provided, it is the source of truth.
+  const hasExternalPalette = Array.isArray(externalPalette) && externalPalette.length > 0;
+  const externalPaletteKey = useMemo(
+    () => (hasExternalPalette ? (externalPalette || []).map(c => `${c.r},${c.g},${c.b}`).join('|') : ''),
+    [hasExternalPalette, externalPalette]
+  );
 
   const handleDragStart = useCallback((index: number) => {
     setDraggedIndex(index);
@@ -362,17 +369,21 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     }
   }, [imageData, originalImageSource, paletteColors.length, onPaletteUpdate]);
 
-  // Extract unique colors from the current image data and update when it changes
+  // Keep palette in sync with external palette when present
   useEffect(() => {
+    if (hasExternalPalette) {
+      // Use external palette verbatim (preserve order/count). Do NOT emit.
+      const mapped = (externalPalette || []).map(c => ({ r: c.r, g: c.g, b: c.b }));
+      setPaletteColors(mapped);
+      try { lastSentPaletteRef.current = (mapped || []).map((c: any) => `${c.r},${c.g},${c.b}`).join('|'); } catch (e) { /* ignore */ }
+    }
+  }, [hasExternalPalette, externalPaletteKey]);
+
+  // Extract unique colors or initialize defaults when no external palette
+  useEffect(() => {
+    if (hasExternalPalette) return; // external palette is authoritative
     const extractColors = async () => {
-      // If external palette is provided (from processing), use it but DO NOT re-emit
-      // to avoid creating a feedback loop. Mark the last sent canonical value
-      // so future user edits still emit normally.
-      if (externalPalette && externalPalette.length > 0) {
-        setPaletteColors(externalPalette);
-        try { lastSentPaletteRef.current = (externalPalette || []).map((c: any) => `${c.r},${c.g},${c.b}`).join('|'); } catch (e) { /* ignore */ }
-        return;
-      }
+      // No external palette: proceed with extraction/initialization
 
       // First try to extract from PNG PLTE chunk if it's an indexed PNG
       if (originalImageSource && selectedPalette === 'original') {
@@ -445,13 +456,6 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   return;
       }
 
-      // Priority 2: Use external palette for non-original selections
-      if (externalPalette && externalPalette.length > 0) {
-        setPaletteColors(externalPalette);
-        emitPaletteUpdate(externalPalette);
-        return;
-      }
-
   // Priority 3: Use default retro palettes (non-original) — do not emit here
   // to avoid flagging a manual override on selection.
   const defaultPalette = getDefaultPalette(selectedPalette);
@@ -460,7 +464,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     };
 
     extractColors();
-  }, [imageData, selectedPalette, originalImageSource, onPaletteUpdate, externalPalette]);
+  }, [imageData, selectedPalette, originalImageSource, onPaletteUpdate, hasExternalPalette]);
 
   const applyPaletteToImage = useCallback(async () => {
     if (!imageData || paletteColors.length === 0) return;
