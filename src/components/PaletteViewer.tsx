@@ -645,12 +645,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="right" className="font-mono text-xs text-muted-foreground text-left">
+                          <div>{t('paletteColorPosition').replace('{count}', String(index))}</div>
                           <div className="font-semibold text-foreground">{hexColor}</div>
                           <div>R {color.r}</div>
                           <div>G {color.g}</div>
                           <div>B {color.b}</div>
                           <div>A {alpha}%</div>
-                          <div>{t('paletteColorPosition').replace('{count}', String(index))}</div>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
