@@ -37,17 +37,23 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const lastSentPaletteRef = useRef<string | null>(null);
 
   // Canonical fixed palettes — imported from shared `fixedPalettes` module.
+  // Palette colors state must be declared before any effects that read its length
+  const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() =>
+    // initialize with known defaults for the selected palette (may be empty)
+    (getDefaultPalette(selectedPalette) as PaletteColor[])
+  );
 
   // Columns behavior:
   // - Default mode: responsive (16 or 8)
-  // - Toolbar mode: fixed to 2 columns to align with toolbar button grid
+  // - Toolbar mode: 2 columns for <=16 colors, 4 columns for >16 colors
   const [columns, setColumns] = useState<number>(toolbarMode ? 2 : 16);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [cellSize, setCellSize] = useState<number | null>(null);
 
   useEffect(() => {
     if (toolbarMode) {
-      setColumns(2);
+      // In toolbar, use 2 cols up to 16 colors, 4 cols above that threshold
+      setColumns((paletteColors?.length || 0) > 16 ? 4 : 2);
       return; // no listeners needed in toolbar mode
     }
     const updateColumns = () => {
@@ -58,7 +64,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     updateColumns();
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
-  }, []);
+  }, [toolbarMode, paletteColors?.length]);
 
   // Calculate cell size so exactly `columns` blocks fit in the grid width.
   useEffect(() => {
@@ -68,9 +74,9 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         setCellSize(null);
         return;
       }
-      // In toolbar mode, force fixed 32px cells to match toolbar button size
+      // In toolbar mode, use 32px cells up to 16 colors; 16px cells above that
       if (toolbarMode) {
-        setCellSize(32);
+        setCellSize((paletteColors?.length || 0) > 16 ? 16 : 32);
         return;
       }
       const gridW = gridEl.clientWidth;
@@ -90,7 +96,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       ro.disconnect();
       window.removeEventListener('resize', updateCellSize);
     };
-  }, [columns, toolbarMode]);
+  }, [columns, toolbarMode, paletteColors?.length]);
 
   const emitPaletteUpdate = useCallback((colors: any, meta?: any) => {
     try {
@@ -107,10 +113,6 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       onPaletteUpdate?.(colors as Color[], meta);
     }
   }, [onPaletteUpdate]);
-  const [paletteColors, setPaletteColors] = useState<PaletteColor[]>(() =>
-    // initialize with known defaults for the selected palette (may be empty)
-    (getDefaultPalette(selectedPalette) as PaletteColor[])
-  );
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isOriginalPNG, setIsOriginalPNG] = useState<boolean>(false);
   const [blockedIndex, setBlockedIndex] = useState<number | null>(null);
@@ -594,7 +596,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       <div className={toolbarMode ? "" : "space-y-4"}>
         <div className="w-full flex justify-center">
           <div
-            className={"grid " + (toolbarMode ? "gap-1" : "gap-2") + " w-full"}
+            className={"grid " + (toolbarMode ? ((paletteColors?.length || 0) > 16 ? "gap-0.5" : "gap-1") : "gap-2") + " w-full"}
             ref={gridRef}
             style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
           >
