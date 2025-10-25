@@ -1191,8 +1191,8 @@ export const ImagePreview = ({
               </div>
             </div>
 
-            {/* Palette Viewer - only show when needed */}
-            {(() => {
+            {/* Palette Viewer - only show when needed (hidden when toolbar is vertical, since it's integrated there) */}
+            {(!isVerticalLayout) && (() => {
               // Only show palette viewer when:
               // 1. selectedPalette is not 'original' (showing a retro palette), OR
               // 2. selectedPalette is 'original' AND we have an extracted ordered palette

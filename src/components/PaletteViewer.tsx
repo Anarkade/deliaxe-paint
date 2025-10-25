@@ -32,19 +32,24 @@ interface PaletteColor {
 
 // default palettes now live in src/lib/defaultPalettes.ts
 
-export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal, paletteDepth }: PaletteViewerProps & { paletteDepth?: { r: number; g: number; b: number } }) => {
+export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal, paletteDepth, toolbarMode }: PaletteViewerProps & { paletteDepth?: { r: number; g: number; b: number }, toolbarMode?: boolean }) => {
   const { t } = useTranslation();
   const lastSentPaletteRef = useRef<string | null>(null);
 
   // Canonical fixed palettes — imported from shared `fixedPalettes` module.
 
-  // Responsive columns: show 16 columns normally. When viewport width <= 900px
-  // switch to 8 columns and render each color block as 48x48 px.
-  const [columns, setColumns] = useState<number>(16);
+  // Columns behavior:
+  // - Default mode: responsive (16 or 8)
+  // - Toolbar mode: fixed to 2 columns to align with toolbar button grid
+  const [columns, setColumns] = useState<number>(toolbarMode ? 2 : 16);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [cellSize, setCellSize] = useState<number | null>(null);
 
   useEffect(() => {
+    if (toolbarMode) {
+      setColumns(2);
+      return; // no listeners needed in toolbar mode
+    }
     const updateColumns = () => {
       const isSmall = window.innerWidth <= 900;
       setColumns(isSmall ? 8 : 16);
@@ -61,6 +66,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       const gridEl = gridRef.current;
       if (!gridEl) {
         setCellSize(null);
+        return;
+      }
+      // In toolbar mode, force fixed 32px cells to match toolbar button size
+      if (toolbarMode) {
+        setCellSize(32);
         return;
       }
       const gridW = gridEl.clientWidth;
@@ -80,7 +90,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       ro.disconnect();
       window.removeEventListener('resize', updateCellSize);
     };
-  }, [columns]);
+  }, [columns, toolbarMode]);
 
   const emitPaletteUpdate = useCallback((colors: any, meta?: any) => {
     try {
@@ -247,7 +257,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     // Use setTimeout to calculate position after editor is rendered
     setTimeout(() => {
       const selectedElement = document.querySelector(`[data-palette-index="${index}"]`) as HTMLElement;
-      const paletteContainer = selectedElement?.closest('.relative.space-y-4') as HTMLElement;
+      // Be robust across modes: look for our explicit root, then fall back
+      const paletteContainer = (selectedElement?.closest('.palette-viewer-root') as HTMLElement) || (gridRef.current?.parentElement as HTMLElement);
       const editorElement = document.querySelector('[role="dialog"][aria-label="Color editor"]') as HTMLElement;
       
       let position: { x: number; y: number } | undefined;
@@ -567,8 +578,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const isFixedPalette = (!!selectedPalette && FIXED_KEYS.has(selectedPalette as any));
 
   return (
-    <div className="relative space-y-4 p-4 border border-elegant-border color-bg-highlight rounded-lg">
-      <div className="space-y-4">
+    <div className={(toolbarMode ? "relative p-0 m-0 min-w-0" : "relative space-y-4 p-4 border border-elegant-border color-bg-highlight rounded-lg") + " palette-viewer-root"}>
+      <div className={toolbarMode ? "" : "space-y-4"}>
         <div className="w-full flex justify-center">
           <div
             className="grid gap-2 w-full"
@@ -614,7 +625,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                   }}
                   onClick={() => selectNewColor(index, selectedPalette)}
                   data-palette-index={index}
-                  className="relative group cursor-pointer border border-elegant-border rounded-lg p-0.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"
+                  className={toolbarMode ? "relative group cursor-pointer border border-elegant-border rounded p-0 transition-all touch-manipulation" : "relative group cursor-pointer border border-elegant-border rounded-lg p-0.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"}
                 >
                   <div className="w-full">
                     {/* Tooltip: wrap the color block and grip icon so hovering the whole area shows details */}
@@ -623,11 +634,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                         <TooltipTrigger asChild>
                           <div className="relative">
                             <div
-                              className="w-full aspect-square border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"
+                              className={toolbarMode ? "border border-elegant-border rounded cursor-pointer transition-all" : "w-full aspect-square border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"}
                               style={{
                                 backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                                 opacity: color.transparent ? 0.5 : 1,
-                                ...(columns === 8 && cellSize ? { width: `${cellSize}px`, height: `${cellSize}px` } : {})
+                                ...(toolbarMode ? { width: `${cellSize || 32}px`, height: `${cellSize || 32}px` } : (columns === 8 && cellSize ? { width: `${cellSize}px`, height: `${cellSize}px` } : {}))
                               }}
                             >
                               {blockedIndex !== null && ((selectedPalette === 'original' && showOriginal) || FIXED_KEYS.has(selectedPalette)) && (
@@ -641,7 +652,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                                 </div>
                               )}
                             </div>
-                            <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            {!toolbarMode && <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />}
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="right" className="font-mono text-xs text-muted-foreground text-left">
@@ -657,27 +668,61 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                 </div>
               );
             })}
+            {toolbarMode && (
+              <div className="col-span-2 text-left mt-1 justify-self-stretch min-w-0 max-w-full w-full overflow-hidden break-words whitespace-normal leading-tight">
+                {paletteColors.length > 0 && (
+                  <>
+                    <label className="block text-[0.80rem] font-semibold text-foreground mb-0.5">
+                      <span>
+                        {/** Show palette count/detail similar to default viewer */}
+                        {(() => {
+                          const isFixedPalette = (!!selectedPalette && FIXED_KEYS.has(selectedPalette as any));
+                          const depth = paletteDepth || { r: 8, g: 8, b: 8 };
+                          const bits = (depth.r || 0) + (depth.g || 0) + (depth.b || 0);
+                          const label = isFixedPalette
+                            ? t('fixedColorsPaletteCount').replace('{count}', paletteColors.length.toString())
+                            : t('paletteWithDetailedCount')
+                                .replace('{count}', paletteColors.length.toString())
+                                .replace('{depthR}', String(depth.r))
+                                .replace('{depthG}', String(depth.g))
+                                .replace('{depthB}', String(depth.b))
+                                .replace('{depthBits}', String(bits));
+                          return <span>{label}</span>;
+                        })()}
+                      </span>
+                    </label>
+                    <div className="text-[0.70rem] text-muted-foreground">
+                      {(() => {
+                        const isFixedPalette = (!!selectedPalette && FIXED_KEYS.has(selectedPalette as any));
+                        return isFixedPalette ? t('dontModifyFixedPalette') : (!showOriginal ? t('clickToChangeColor') : null);
+                      })()}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
             </div>
           </div>
         </div>
-
-        <div className="space-y-4">
-          <label className="block text-m font-bold text-foreground py-1 mb-0.5">
-            <span className="flex items-center">
-              {paletteColors.length > 0 && <Palette className="mr-2 h-4 w-4" />}
-              {paletteColors.length > 0 ? (
-                isFixedPalette
-                  ? t('fixedColorsPaletteCount').replace('{count}', paletteColors.length.toString())
-                  : detailedCountLabel
-              ) : null}
-            </span>
-          </label>
-          {paletteColors.length > 0 && (
-            <div className="text-xs text-muted-foreground text-left">
-              <p>{isFixedPalette ? t('dontModifyFixedPalette') : (!showOriginal ? t('clickToChangeColor') : null)}</p>
-            </div>
-          )}
-        </div>
+        {!toolbarMode && (
+          <div className="space-y-4">
+            <label className="block text-m font-bold text-foreground py-1 mb-0.5">
+              <span className="flex items-center">
+                {paletteColors.length > 0 && <Palette className="mr-2 h-4 w-4" />}
+                {paletteColors.length > 0 ? (
+                  isFixedPalette
+                    ? t('fixedColorsPaletteCount').replace('{count}', paletteColors.length.toString())
+                    : detailedCountLabel
+                ) : null}
+              </span>
+            </label>
+            {paletteColors.length > 0 && (
+              <div className="text-xs text-muted-foreground text-left">
+                <p>{isFixedPalette ? t('dontModifyFixedPalette') : (!showOriginal ? t('clickToChangeColor') : null)}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {editorState.open && editorState.index !== null && (
           <ColorEditor

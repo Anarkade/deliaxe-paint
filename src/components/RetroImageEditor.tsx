@@ -2144,6 +2144,22 @@ export const RetroImageEditor = () => {
               loadFromClipboard={loadFromClipboard}
               toast={toast}
               t={t}
+              selectedPalette={selectedPalette}
+              processedImageData={processedImageData}
+              originalImageSource={originalImageSource}
+              originalPaletteColors={originalPaletteColors}
+              processedPaletteColors={orderedPaletteColors}
+              onToolbarPaletteUpdate={(colors, meta) => handlePaletteUpdateFromViewer(colors, meta)}
+              onToolbarImageUpdate={(img) => {
+                // mirror ImagePreview onImageUpdate behavior
+                setProcessedImageData(img);
+                lastManualProcessedRef.current = img;
+                previewToggleWasManualRef.current = true;
+                setPreviewShowingOriginal(false);
+              }}
+              showOriginalPreview={previewShowingOriginal}
+              paletteDepthOriginal={paletteDepthOriginal}
+              paletteDepthProcessed={paletteDepthProcessed}
             />
           )}
         </div>
@@ -2160,6 +2176,21 @@ export const RetroImageEditor = () => {
               loadFromClipboard={loadFromClipboard}
               toast={toast}
               t={t}
+              selectedPalette={selectedPalette}
+              processedImageData={processedImageData}
+              originalImageSource={originalImageSource}
+              originalPaletteColors={originalPaletteColors}
+              processedPaletteColors={orderedPaletteColors}
+              onToolbarPaletteUpdate={(colors, meta) => handlePaletteUpdateFromViewer(colors, meta)}
+              onToolbarImageUpdate={(img) => {
+                setProcessedImageData(img);
+                lastManualProcessedRef.current = img;
+                previewToggleWasManualRef.current = true;
+                setPreviewShowingOriginal(false);
+              }}
+              showOriginalPreview={previewShowingOriginal}
+              paletteDepthOriginal={paletteDepthOriginal}
+              paletteDepthProcessed={paletteDepthProcessed}
             />
           )}
         </div>
