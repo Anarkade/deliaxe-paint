@@ -647,7 +647,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                             <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent side="right" className="font-mono text-xs text-muted-foreground">
+                        <TooltipContent side="right" className="font-mono text-xs text-muted-foreground text-left">
                           <div className="font-semibold text-foreground">{hexColor}</div>
                           <div>R {color.r}</div>
                           <div>G {color.g}</div>
