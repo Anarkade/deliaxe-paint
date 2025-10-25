@@ -974,7 +974,7 @@ export const ImagePreview = ({
             .replace('{depthBits}', String((effectiveDepth.r || 0) + (effectiveDepth.g || 0) + (effectiveDepth.b || 0))))
     : null;
   const helperPaletteText = paletteCountForInfo > 0
-    ? (isFixedPalette ? t('dontModifyFixedPalette') : (!showOriginal ? t('clickToChangeColor') : null))
+    ? (isFixedPalette ? t('dontModifyFixedPalette') : (showOriginal ? t('dontModifyOriginalPalette'): t('clickToChangeColor')))
     : null;
 
   return (
