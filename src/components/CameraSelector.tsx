@@ -43,6 +43,7 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
   // Use a more conservative approach for mobile devices
   useEffect(() => {
     let mounted = true;
+    let markMissingTimer: number | null = null;
 
     const probe = async (deviceId: string) => {
       if (resolutions[deviceId]) return; // already probed
@@ -104,8 +105,24 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
         setTimeout(() => probe(cam.deviceId), index * 100); // Stagger probes
       }
     });
+    // After a short grace period (stagger time + safety margin), mark any camera
+    // that still doesn't have a resolution as explicitly "not available" (empty string)
+    // so the UI can display the localized "not available" text and disable buttons.
+    const grace = Math.max(500, availableCameras.length * 150 + 300);
+    markMissingTimer = window.setTimeout(() => {
+      if (!mounted) return;
+      setResolutions(prev => {
+        const next = { ...prev };
+        availableCameras.forEach(cam => {
+          if (next[cam.deviceId] === undefined || next[cam.deviceId] === null) {
+            next[cam.deviceId] = '';
+          }
+        });
+        return next;
+      });
+    }, grace) as unknown as number;
 
-    return () => { mounted = false; };
+    return () => { mounted = false; if (markMissingTimer) window.clearTimeout(markMissingTimer); };
   }, [availableCameras, resolutions]);
 
   // Generate user-friendly camera names with fallback for unnamed devices
@@ -196,13 +213,20 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
                     setLoadingCamera(null);
                   }
                 }}
-                disabled={loadingCamera === camera.deviceId}
+                disabled={loadingCamera === camera.deviceId || resolutions[camera.deviceId] === ''}
                 variant="highlighted"
                 className="w-full justify-start text-left"
               >
                 <Camera className="mr-2 h-4 w-4" />
                 {getCameraDisplayName(camera, index)}
-                {resolutions[camera.deviceId] ? ` (${resolutions[camera.deviceId]})` : ''}
+                {(() => {
+                  const res = resolutions[camera.deviceId];
+                  // If probing produced an explicit empty string, show localized 'not available' and disable
+                  if (res === '') {
+                    return ` (${t('notAvailable')})`;
+                  }
+                  return res ? ` (${res})` : '';
+                })()}
                 {loadingCamera === camera.deviceId && ' ...'}
               </Button>
             ))}
