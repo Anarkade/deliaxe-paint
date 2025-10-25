@@ -1131,8 +1131,29 @@ export const ImagePreview = ({
   <div className="py-4 space-y-4" ref={footerRef}>
         {(originalImage || hasProcessedImage) ? (
           <>
-            {/* Two-column layout: left = text (unchanged content), right = toggle button */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', alignItems: 'center', width: '100%' }} className="text-sm font-mono">
+            {/* Footer layout: left = palette info (right-aligned), middle = toggle button, right = original/processed info */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: hasProcessedImage ? '1fr auto 1fr' : '1fr 1fr',
+                alignItems: 'center',
+                width: '100%'
+              }}
+              className="text-sm font-mono"
+            >
+              {/* Left column: palette info (moved from PaletteViewer) */}
+              <div className="px-4 text-right">
+                {paletteCountForInfo > 0 && (
+                  <div className="leading-tight inline-block text-right">
+                    {detailedPaletteLabel && (
+                      <div className="text-[0.80rem] font-semibold text-foreground">{detailedPaletteLabel}</div>
+                    )}
+                    {helperPaletteText && (
+                      <div className="text-[0.70rem] text-muted-foreground">{helperPaletteText}</div>
+                    )}
+                  </div>
+                )}
+              </div>
               {hasProcessedImage && (
                 <div style={{ textAlign: 'left' }} className="px-4">
                   {/* first column (was right): red toggle button, now aligned left */}
@@ -1178,6 +1199,7 @@ export const ImagePreview = ({
                   </Button>
                 </div>
               )}
+              {/* Right column: original/processed info (unchanged) */}
               <div style={{ display: 'block' }}>
                 {/* second column (was left): text/info block */}
                 <div>
@@ -1228,17 +1250,7 @@ export const ImagePreview = ({
                       })()}
                     </div>
                   )}
-                  {/* Palette info moved from PaletteViewer: show below toggle footer */}
-                  {paletteCountForInfo > 0 && (
-                    <div className="mt-1 leading-tight">
-                      {detailedPaletteLabel && (
-                        <div className="text-[0.80rem] font-semibold text-foreground">{detailedPaletteLabel}</div>
-                      )}
-                      {helperPaletteText && (
-                        <div className="text-[0.70rem] text-muted-foreground">{helperPaletteText}</div>
-                      )}
-                    </div>
-                  )}
+                  {/* Palette info moved to left column */}
                 </div>
               </div>
             </div>
