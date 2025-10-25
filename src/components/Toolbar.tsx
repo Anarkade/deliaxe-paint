@@ -111,54 +111,54 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Button
               variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('load-image')}
-              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+              className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               title={t('loadImage')}
             >
-              <Upload className="h-4 w-4" />
+                <Upload className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
               variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('resolution')}
-              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+              className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
               title={t('changeResolution')}
             >
-              <Proportions className="h-4 w-4" />
+                <Proportions className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
               variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('palette-selector')}
-              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+              className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
               title={t('changePalette')}
             >
-              <Palette className="h-4 w-4" />
+                <Palette className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
               variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('change-grids')}
-              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+              className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
               title={t('changeGrids')}
             >
-              <Grid3X3 className="h-4 w-4" />
+                <Grid3X3 className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
               variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('export-image')}
-              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+              className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
               title={t('exportImage')}
             >
-              <Download className="h-4 w-4" />
+                <Download className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
               variant={getButtonVariant('language') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('language')}
-              className="flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+              className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               title={t('changeLanguage')}
             >
-              <Globe className="h-4 w-4" />
+                <Globe className="h-4 w-4 m-0 p-0" />
             </Button>
           </div>
         </div>
@@ -183,58 +183,58 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('load-image')}
-            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             title={t('loadImage')}
           >
-            <Upload className="h-4 w-4" />
+            <Upload className="h-4 w-4 m-0 p-0" />
           </Button>
           <Button
             variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('export-image')}
-            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
             title={t('exportImage')}
           >
-            <Download className="h-4 w-4" />
+            <Download className="h-4 w-4 m-0 p-0" />
           </Button>
 
           {/* Row 3: Resolution (left) / Palette (right) */}
           <Button
             variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('resolution')}
-            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
             title={t('changeResolution')}
           >
-            <Proportions className="h-4 w-4" />
+            <Proportions className="h-4 w-4 m-0 p-0" />
           </Button>
           <Button
             variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('palette-selector')}
-            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
             title={t('changePalette')}
           >
-            <Palette className="h-4 w-4" />
+            <Palette className="h-4 w-4 m-0 p-0" />
           </Button>
 
           {/* Row 4: Change grids (left) / Language (right) */}
           <Button
             variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('change-grids')}
-            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
             title={t('changeGrids')}
           >
-            <Grid3X3 className="h-4 w-4" />
+            <Grid3X3 className="h-4 w-4 m-0 p-0" />
           </Button>
           <Button
             variant={getButtonVariant('language') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('language')}
-            className="flex-none flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             title={t('changeLanguage')}
           >
-            <Globe className="h-4 w-4" />
+            <Globe className="h-4 w-4 m-0 p-0" />
           </Button>
         </div>
         {/* Bottom spacer to match previous layout breathing room */}
