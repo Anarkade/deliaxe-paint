@@ -650,7 +650,6 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                           <div>R {color.r}</div>
                           <div>G {color.g}</div>
                           <div>B {color.b}</div>
-                          <div>A {alpha}%</div>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

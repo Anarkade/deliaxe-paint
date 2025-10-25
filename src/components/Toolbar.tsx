@@ -167,15 +167,19 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   }
   return (
   <aside className="h-full flex flex-col flex-shrink-0 box-border border-r border-elegant-border z-50 color-bg-highlight px-2 w-max">
-      <div className="flex flex-col items-center py-2 space-y-2 h-full">
-          <div className="flex flex-col items-center gap-2 flex-shrink-0 mb-3 pt-2">
-          <img
-            src={logoGif}
-            alt="Vintage Palette Studio"
-            className="h-8 w-8 flex-none block m-0 p-0 min-w-[32px] min-h-[32px] object-contain"
-          />
-        </div>
-        <div className="flex flex-col items-center gap-2 flex-shrink-0">
+      <div className="py-2 h-full">
+        {/* Two-column grid with equal horizontal/vertical spacing (gap-2) */}
+        <div className="grid grid-cols-2 gap-2 justify-items-center items-center">
+          {/* Row 1: App icon spanning 2 columns, centered horizontally and vertically */}
+          <div className="col-span-2 flex items-center justify-center mb-1 pt-2">
+            <img
+              src={logoGif}
+              alt="Vintage Palette Studio"
+              className="h-8 w-8 flex-none block m-0 p-0 min-w-[32px] min-h-[32px] object-contain"
+            />
+          </div>
+
+          {/* Row 2: Import (left) / Export (right) */}
           <Button
             variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('load-image')}
@@ -184,6 +188,17 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           >
             <Upload className="h-4 w-4" />
           </Button>
+          <Button
+            variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
+            onClick={() => handleTabClick('export-image')}
+            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            disabled={!originalImage}
+            title={t('exportImage')}
+          >
+            <Download className="h-4 w-4" />
+          </Button>
+
+          {/* Row 3: Resolution (left) / Palette (right) */}
           <Button
             variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('resolution')}
@@ -202,6 +217,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           >
             <Palette className="h-4 w-4" />
           </Button>
+
+          {/* Row 4: Change grids (left) / Language (right) */}
           <Button
             variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('change-grids')}
@@ -212,15 +229,6 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Grid3X3 className="h-4 w-4" />
           </Button>
           <Button
-            variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
-            onClick={() => handleTabClick('export-image')}
-            className="flex-none flex items-center justify-center h-10 w-10 min-w-[40px] min-h-[40px] p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
-            disabled={!originalImage}
-            title={t('exportImage')}
-          >
-            <Download className="h-4 w-4" />
-          </Button>
-          <Button
             variant={getButtonVariant('language') as import('./ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('language')}
             className="flex-none flex items-center justify-center h-10 w-10 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
@@ -229,7 +237,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Globe className="h-4 w-4" />
           </Button>
         </div>
-        <div className="mt-auto pb-4 flex-shrink-0"></div>
+        {/* Bottom spacer to match previous layout breathing room */}
+        <div className="mt-2 pb-2"></div>
       </div>
     </aside>
   );
