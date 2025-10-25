@@ -973,8 +973,10 @@ export const ImagePreview = ({
             .replace('{depthB}', String(effectiveDepth.b))
             .replace('{depthBits}', String((effectiveDepth.r || 0) + (effectiveDepth.g || 0) + (effectiveDepth.b || 0))))
     : null;
+  // Helper line: when viewing Original, always show original-specific message.
+  // Otherwise, if palette is fixed, show fixed-specific message; else show edit/drag hint.
   const helperPaletteText = paletteCountForInfo > 0
-    ? (isFixedPalette ? t('dontModifyFixedPalette') : (showOriginal ? t('dontModifyOriginalPalette'): t('clickToChangeColor')))
+    ? (showOriginal ? t('dontModifyOriginalPalette') : (isFixedPalette ? t('dontModifyFixedPalette') : t('clickToChangeColor')))
     : null;
 
   return (
