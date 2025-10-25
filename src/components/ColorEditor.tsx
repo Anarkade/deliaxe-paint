@@ -13,6 +13,7 @@ interface ColorEditorProps {
   position?: { x: number; y: number };
   width?: number;
   suppressInitialCenter?: boolean;
+  positioning?: 'absolute' | 'fixed';
 }
 
 // Helpers: HSL <-> RGB
@@ -59,7 +60,7 @@ function quantizeChannel(value: number, bits: number) {
   return Math.round((quant / steps) * 255);
 }
 
-export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, position, width, suppressInitialCenter }) => {
+export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 8, g: 8, b: 8 }, onAccept, onCancel, position, width, suppressInitialCenter, positioning = 'absolute' }) => {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   // Default to the desired displayed canvas size (256px width) so the editor
@@ -282,10 +283,17 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
       // that parent to avoid jumps when switching from a centered transform
       // to absolute left/top values.
       const rect = root.getBoundingClientRect();
-      const op = root.offsetParent as Element | null;
-      const opRect = op ? op.getBoundingClientRect() : { left: 0, top: 0 } as DOMRect;
-      const startX = Math.round(rect.left - (opRect.left || 0));
-      const startY = Math.round(rect.top - (opRect.top || 0));
+      let startX = 0; let startY = 0;
+      if (positioning === 'fixed') {
+        // For fixed positioning, left/top are relative to the viewport directly
+        startX = Math.round(rect.left);
+        startY = Math.round(rect.top);
+      } else {
+        const op = root.offsetParent as Element | null;
+        const opRect = op ? op.getBoundingClientRect() : { left: 0, top: 0 } as DOMRect;
+        startX = Math.round(rect.left - (opRect.left || 0));
+        startY = Math.round(rect.top - (opRect.top || 0));
+      }
       dragStartRef.current = { mouseX: startMouseX, mouseY: startMouseY, startX, startY };
 
       const onMouseMove = (mv: MouseEvent) => {
@@ -403,7 +411,7 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   const editor = (
       <div
       ref={rootRef}
-      className="absolute z-50"
+      className={(positioning === 'fixed' ? 'fixed' : 'absolute') + ' z-50'}
       style={(() => {
         // If caller requests to suppress the initial centered render, keep the
         // editor mounted and measurable but invisible (opacity:0, no pointer

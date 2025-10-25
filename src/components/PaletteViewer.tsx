@@ -244,6 +244,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     depth: { r: number; g: number; b: number } | null;
     position?: { x: number; y: number };
     width?: number;
+    fixed?: boolean;
   }>({ open: false, index: null, depth: null });
 
   const openEditor = (index: number, currentPalette: PaletteType) => {
@@ -251,62 +252,73 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     // otherwise fall back to palette-specific defaults (megadrive -> 3-3-3, else 8-8-8).
     const depth = paletteDepth ?? (currentPalette === 'megadrive' ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 });
 
-    // First open the editor without position to measure its height
-    setEditorState({ open: true, index, depth, position: undefined });
+  // First open the editor without position to measure its height
+  setEditorState({ open: true, index, depth, position: undefined, fixed: toolbarMode ? true : undefined });
 
     // Use setTimeout to calculate position after editor is rendered
     setTimeout(() => {
-      const selectedElement = document.querySelector(`[data-palette-index="${index}"]`) as HTMLElement;
-      // Be robust across modes: look for our explicit root, then fall back
-      const paletteContainer = (selectedElement?.closest('.palette-viewer-root') as HTMLElement) || (gridRef.current?.parentElement as HTMLElement);
-      const editorElement = document.querySelector('[role="dialog"][aria-label="Color editor"]') as HTMLElement;
+  const selectedElement = document.querySelector(`[data-palette-index="${index}"]`) as HTMLElement;
+  // Be robust across modes: look for our explicit root, then fall back
+  const paletteContainer = (selectedElement?.closest('.palette-viewer-root') as HTMLElement) || (gridRef.current?.parentElement as HTMLElement);
+  const editorElement = document.querySelector('[role="dialog"][aria-label="Color editor"]') as HTMLElement;
       
       let position: { x: number; y: number } | undefined;
       
-      if (selectedElement && paletteContainer && editorElement) {
+      if (selectedElement && editorElement) {
         const selectedRect = selectedElement.getBoundingClientRect();
-        const containerRect = paletteContainer.getBoundingClientRect();
         const editorRect = editorElement.getBoundingClientRect();
-        
-        // Find all palette color blocks to determine boundaries
-        const allColorBlocks = Array.from(paletteContainer.querySelectorAll('[data-palette-index]')) as HTMLElement[];
-        const colorBlockRects = allColorBlocks.map(block => block.getBoundingClientRect());
-        
-        // Find leftmost and rightmost boundaries
-        const leftMost = Math.min(...colorBlockRects.map(rect => rect.left));
-        const rightMost = Math.max(...colorBlockRects.map(rect => rect.right));
-        
-  const editorWidth = editorRect.width || 340;
-  const editorHeight = editorRect.height; // Real measured height
-        
-        // Position relative to container (not viewport)
-        const relativeSelectedLeft = selectedRect.left - containerRect.left;
-        const relativeSelectedTop = selectedRect.top - containerRect.top;
-        const relativeSelectedWidth = selectedRect.width;
-        
-        const relativeLeftMost = leftMost - containerRect.left;
-        const relativeRightMost = rightMost - containerRect.left;
-        
-  // Center horizontally on the selected color block
-  let x = relativeSelectedLeft + (relativeSelectedWidth / 2) - (editorWidth / 2);
 
-  // Constrain to palette boundaries
-  const minX = relativeLeftMost;
-  const maxX = relativeRightMost - editorWidth;
+        const editorWidth = editorRect.width || 340;
+        const editorHeight = editorRect.height || 320;
 
-  // If the editor is wider than the palette area, shrink it to fit
-  const availableWidth = relativeRightMost - relativeLeftMost;
-  const effectiveWidth = Math.max(100, Math.min(editorWidth, availableWidth));
+        if (toolbarMode) {
+          // Place to the right of the swatch, vertically centered; use viewport (fixed) coords
+          const margin = 8; // 8px gap
+          let x = Math.round(selectedRect.right + margin);
+          let y = Math.round(selectedRect.top + (selectedRect.height / 2) - (editorHeight / 2));
 
-  x = Math.max(minX, Math.min(maxX, x));
-        
-        // Position above the selected color block with extra margin to ensure it doesn't overlap
-        const y = relativeSelectedTop - editorHeight - 20; // 20px extra margin
-        
-        position = { x: Math.round(x), y: Math.round(y) };
+          // Clamp within viewport with small margins
+          const vw = window.innerWidth || document.documentElement.clientWidth;
+          const vh = window.innerHeight || document.documentElement.clientHeight;
 
-        // Update position and width (so the editor can shrink if it doesn't fit)
-        setEditorState({ open: true, index, depth, position, width: Math.round(effectiveWidth) });
+          // If it overflows to the right, try to place it on the left side of the swatch
+          if (x + editorWidth + margin > vw) {
+            x = Math.max(margin, Math.round(selectedRect.left - editorWidth - margin));
+          }
+
+          // Vertical clamping
+          const minY = margin;
+          const maxY = vh - editorHeight - margin;
+          y = Math.max(minY, Math.min(maxY, y));
+
+          position = { x, y };
+          setEditorState({ open: true, index, depth, position, width: Math.round(editorWidth), fixed: true });
+        } else if (paletteContainer) {
+          // Existing behavior: compute relative to the palette viewer container
+          const containerRect = paletteContainer.getBoundingClientRect();
+
+          // Find all palette color blocks to determine boundaries
+          const allColorBlocks = Array.from(paletteContainer.querySelectorAll('[data-palette-index]')) as HTMLElement[];
+          const colorBlockRects = allColorBlocks.map(block => block.getBoundingClientRect());
+          const leftMost = Math.min(...colorBlockRects.map(rect => rect.left));
+          const rightMost = Math.max(...colorBlockRects.map(rect => rect.right));
+
+          const relativeSelectedLeft = selectedRect.left - containerRect.left;
+          const relativeSelectedTop = selectedRect.top - containerRect.top;
+          const relativeSelectedWidth = selectedRect.width;
+          const relativeLeftMost = leftMost - containerRect.left;
+          const relativeRightMost = rightMost - containerRect.left;
+
+          let x = relativeSelectedLeft + (relativeSelectedWidth / 2) - (editorWidth / 2);
+          const minX = relativeLeftMost;
+          const maxX = relativeRightMost - editorWidth;
+          const availableWidth = relativeRightMost - relativeLeftMost;
+          const effectiveWidth = Math.max(100, Math.min(editorWidth, availableWidth));
+          x = Math.max(minX, Math.min(maxX, x));
+          const y = relativeSelectedTop - editorHeight - 20;
+          position = { x: Math.round(x), y: Math.round(y) };
+          setEditorState({ open: true, index, depth, position, width: Math.round(effectiveWidth) });
+        }
       }
     }, 10); // Small delay to ensure editor is rendered
   };
@@ -582,7 +594,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       <div className={toolbarMode ? "" : "space-y-4"}>
         <div className="w-full flex justify-center">
           <div
-            className="grid gap-2 w-full"
+            className={"grid " + (toolbarMode ? "gap-1" : "gap-2") + " w-full"}
             ref={gridRef}
             style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
           >
@@ -733,6 +745,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             position={editorState.position}
             width={editorState.width}
             suppressInitialCenter={true}
+            positioning={editorState.fixed ? 'fixed' : 'absolute'}
           />
         )}
     </div>
