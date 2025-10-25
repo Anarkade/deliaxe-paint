@@ -115,6 +115,18 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   );
 
   const handleDragStart = useCallback((index: number) => {
+    // Prevent starting a drag on locked palettes (fixed palettes or original image)
+    if (FIXED_KEYS.has(selectedPalette as any) || (selectedPalette === 'original' && showOriginal)) {
+      setBlockedIndex(index);
+      if (blockedTimerRef.current) window.clearTimeout(blockedTimerRef.current);
+      blockedTimerRef.current = window.setTimeout(() => {
+        setBlockedIndex(null);
+        blockedTimerRef.current = null;
+      }, 1000) as unknown as number;
+      try { toast.info(t('dontModifyFixedPalette')); } catch (e) { /* ignore */ }
+      return;
+    }
+
     setDraggedIndex(index);
   }, []);
 
@@ -124,13 +136,27 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
   const handleDrop = useCallback((targetIndex: number) => {
     if (draggedIndex === null) return;
-    
+
+    // Block dropping into a locked palette (fixed or original when showing original)
+    if (FIXED_KEYS.has(selectedPalette as any) || (selectedPalette === 'original' && showOriginal)) {
+      // show temporary lock + toast
+      setBlockedIndex(targetIndex);
+      if (blockedTimerRef.current) window.clearTimeout(blockedTimerRef.current);
+      blockedTimerRef.current = window.setTimeout(() => {
+        setBlockedIndex(null);
+        blockedTimerRef.current = null;
+      }, 1000) as unknown as number;
+      try { toast.info(t('dontModifyFixedPalette')); } catch (e) { /* ignore */ }
+      setDraggedIndex(null);
+      return;
+    }
+
     const newColors = [...paletteColors];
     const [draggedColor] = newColors.splice(draggedIndex, 1);
     newColors.splice(targetIndex, 0, draggedColor);
-    
+
     setPaletteColors(newColors);
-  emitPaletteUpdate(newColors);
+    emitPaletteUpdate(newColors);
     setDraggedIndex(null);
   }, [draggedIndex, paletteColors, onPaletteUpdate]);
 
