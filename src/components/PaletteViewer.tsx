@@ -697,63 +697,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                 </div>
               );
             })}
-            {toolbarMode && (
-              <div
-                className={(columns === 8 ? "col-span-8" : (columns === 4 ? "col-span-4" : "col-span-2")) + " text-left mt-1 justify-self-stretch min-w-0 max-w-full w-full overflow-hidden break-words whitespace-normal leading-tight"}
-              >
-                {paletteColors.length > 0 && (
-                  <>
-                    <label className="block text-[0.80rem] font-semibold text-foreground mb-0.5">
-                      <span>
-                        {/** Show palette count/detail similar to default viewer */}
-                        {(() => {
-                          const isFixedPalette = (!!selectedPalette && FIXED_KEYS.has(selectedPalette as any));
-                          const depth = paletteDepth || { r: 8, g: 8, b: 8 };
-                          const bits = (depth.r || 0) + (depth.g || 0) + (depth.b || 0);
-                          const label = isFixedPalette
-                            ? t('fixedColorsPaletteCount').replace('{count}', paletteColors.length.toString())
-                            : t('paletteWithDetailedCount')
-                                .replace('{count}', paletteColors.length.toString())
-                                .replace('{depthR}', String(depth.r))
-                                .replace('{depthG}', String(depth.g))
-                                .replace('{depthB}', String(depth.b))
-                                .replace('{depthBits}', String(bits));
-                          return <span>{label}</span>;
-                        })()}
-                      </span>
-                    </label>
-                    <div className="text-[0.70rem] text-muted-foreground">
-                      {(() => {
-                        const isFixedPalette = (!!selectedPalette && FIXED_KEYS.has(selectedPalette as any));
-                        return isFixedPalette ? t('dontModifyFixedPalette') : (!showOriginal ? t('clickToChangeColor') : null);
-                      })()}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+            {/* Footer texts moved to ImagePreview footer; omit toolbar-mode info cell */}
             </div>
           </div>
         </div>
-        {!toolbarMode && (
-          <div className="space-y-4">
-            <label className="block text-m font-bold text-foreground py-1 mb-0.5">
-              <span className="flex items-center">
-                {paletteColors.length > 0 && <Palette className="mr-2 h-4 w-4" />}
-                {paletteColors.length > 0 ? (
-                  isFixedPalette
-                    ? t('fixedColorsPaletteCount').replace('{count}', paletteColors.length.toString())
-                    : detailedCountLabel
-                ) : null}
-              </span>
-            </label>
-            {paletteColors.length > 0 && (
-              <div className="text-xs text-muted-foreground text-left">
-                <p>{isFixedPalette ? t('dontModifyFixedPalette') : (!showOriginal ? t('clickToChangeColor') : null)}</p>
-              </div>
-            )}
-          </div>
-        )}
+        {/* Footer texts moved to ImagePreview footer; omit inline viewer info block */}
 
         {editorState.open && editorState.index !== null && (
           <ColorEditor

@@ -10,6 +10,8 @@ import type { ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { PaletteViewer } from './PaletteViewer';
 import { PaletteType } from './ColorPaletteSelector';
 import { Color } from '@/lib/colorQuantization';
+import getDefaultPalette from '@/lib/defaultPalettes';
+import { FIXED_KEYS } from '@/lib/fixedPalettes';
 
 // Performance constants for image analysis and rendering
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for performance
@@ -936,6 +938,45 @@ export const ImagePreview = ({
   const originalLabelClass = showOriginal ? 'text-foreground font-semibold' : 'text-muted-foreground';
   const processedLabelClass = !showOriginal ? 'text-foreground font-semibold' : 'text-muted-foreground';
 
+  // Palette info texts (moved from PaletteViewer): compute count/labels here
+  const isFixedPalette = (!!selectedPalette && FIXED_KEYS.has(selectedPalette as any));
+  const effectiveDepth = (() => {
+    const d = showOriginal ? paletteDepthOriginal : paletteDepthProcessed;
+    if (d) return d;
+    // Fallbacks by palette type
+    if (selectedPalette === 'megadrive') return { r: 3, g: 3, b: 3 } as const;
+    return { r: 8, g: 8, b: 8 } as const;
+  })();
+
+  const paletteColorsForInfo: { r: number; g: number; b: number }[] | undefined = (() => {
+    // Prefer externally provided palettes when available
+    const external = showOriginal ? originalPaletteColors : processedPaletteColors;
+    if (external && external.length > 0) return external as any;
+    // For retro (non-'original') palettes, fall back to default palette to show count
+    if (selectedPalette && selectedPalette !== 'original') {
+      try {
+        const def = getDefaultPalette(selectedPalette as any) as any[] | undefined;
+        if (Array.isArray(def) && def.length > 0) return def as any;
+      } catch { /* ignore */ }
+    }
+    return undefined;
+  })();
+
+  const paletteCountForInfo = paletteColorsForInfo?.length || 0;
+  const detailedPaletteLabel = paletteCountForInfo > 0
+    ? (isFixedPalette
+        ? t('fixedColorsPaletteCount').replace('{count}', String(paletteCountForInfo))
+        : t('paletteWithDetailedCount')
+            .replace('{count}', String(paletteCountForInfo))
+            .replace('{depthR}', String(effectiveDepth.r))
+            .replace('{depthG}', String(effectiveDepth.g))
+            .replace('{depthB}', String(effectiveDepth.b))
+            .replace('{depthBits}', String((effectiveDepth.r || 0) + (effectiveDepth.g || 0) + (effectiveDepth.b || 0))))
+    : null;
+  const helperPaletteText = paletteCountForInfo > 0
+    ? (isFixedPalette ? t('dontModifyFixedPalette') : (!showOriginal ? t('clickToChangeColor') : null))
+    : null;
+
   return (
     <div 
       className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col"
@@ -1185,6 +1226,17 @@ export const ImagePreview = ({
                         const text = tmpl.replace('{width}', String(zw)).replace('{height}', String(zh));
                         return <span className="text-muted-foreground text-xs">{text}</span>;
                       })()}
+                    </div>
+                  )}
+                  {/* Palette info moved from PaletteViewer: show below toggle footer */}
+                  {paletteCountForInfo > 0 && (
+                    <div className="mt-1 leading-tight">
+                      {detailedPaletteLabel && (
+                        <div className="text-[0.80rem] font-semibold text-foreground">{detailedPaletteLabel}</div>
+                      )}
+                      {helperPaletteText && (
+                        <div className="text-[0.70rem] text-muted-foreground">{helperPaletteText}</div>
+                      )}
                     </div>
                   )}
                 </div>
