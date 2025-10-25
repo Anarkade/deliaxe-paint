@@ -639,7 +639,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                   }}
                   onClick={() => selectNewColor(index, selectedPalette)}
                   data-palette-index={index}
-                  className={toolbarMode ? "relative group cursor-pointer border border-elegant-border rounded p-0 transition-all touch-manipulation" : "relative group cursor-pointer border border-elegant-border rounded-lg p-0.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"}
+                  className={toolbarMode ? "relative group cursor-pointer rounded p-0 transition-all touch-manipulation" : "relative group cursor-pointer border border-elegant-border rounded-lg p-0.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"}
                 >
                   <div className="w-full">
                     {/* Tooltip: wrap the color block and grip icon so hovering the whole area shows details */}
@@ -683,7 +683,9 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
               );
             })}
             {toolbarMode && (
-              <div className="col-span-2 text-left mt-1 justify-self-stretch min-w-0 max-w-full w-full overflow-hidden break-words whitespace-normal leading-tight">
+              <div
+                className={(columns === 4 ? "col-span-4" : "col-span-2") + " text-left mt-1 justify-self-stretch min-w-0 max-w-full w-full overflow-hidden break-words whitespace-normal leading-tight"}
+              >
                 {paletteColors.length > 0 && (
                   <>
                     <label className="block text-[0.80rem] font-semibold text-foreground mb-0.5">
