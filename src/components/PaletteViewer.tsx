@@ -52,8 +52,10 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
   useEffect(() => {
     if (toolbarMode) {
-      // In toolbar, use 2 cols up to 16 colors, 4 cols above that threshold
-      setColumns((paletteColors?.length || 0) > 16 ? 4 : 2);
+      // Toolbar rules: <=16 -> 2 cols, 17..64 -> 4 cols, >64 -> 8 cols
+      const count = (paletteColors?.length || 0);
+      const cols = count > 64 ? 8 : (count > 16 ? 4 : 2);
+      setColumns(cols);
       return; // no listeners needed in toolbar mode
     }
     const updateColumns = () => {
@@ -74,9 +76,14 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         setCellSize(null);
         return;
       }
-      // In toolbar mode, use 32px cells up to 16 colors; 16px cells above that
+      // In toolbar mode:
+      // - <=16 colors: 2 cols, cell 32px
+      // - 17..64 colors: 4 cols, cell 16px
+      // - >64 colors: 8 cols, cell 8px (half of 4-col size)
       if (toolbarMode) {
-        setCellSize((paletteColors?.length || 0) > 16 ? 16 : 32);
+        const count = (paletteColors?.length || 0);
+        const size = count > 64 ? 8 : (count > 16 ? 16 : 32);
+        setCellSize(size);
         return;
       }
       const gridW = gridEl.clientWidth;
@@ -596,7 +603,15 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       <div className={toolbarMode ? "" : "space-y-4"}>
         <div className="w-full flex justify-center">
           <div
-            className={"grid " + (toolbarMode ? ((paletteColors?.length || 0) > 16 ? "gap-0.5" : "gap-1") : "gap-2") + " w-full"}
+            className={
+              "grid " + (
+                toolbarMode
+                  ? ((paletteColors?.length || 0) > 64
+                      ? "gap-px"     // 1px gap when 8 cols
+                      : ((paletteColors?.length || 0) > 16 ? "gap-0.5" : "gap-1"))
+                  : "gap-2"
+              ) + " w-full"
+            }
             ref={gridRef}
             style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
           >
@@ -684,7 +699,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             })}
             {toolbarMode && (
               <div
-                className={(columns === 4 ? "col-span-4" : "col-span-2") + " text-left mt-1 justify-self-stretch min-w-0 max-w-full w-full overflow-hidden break-words whitespace-normal leading-tight"}
+                className={(columns === 8 ? "col-span-8" : (columns === 4 ? "col-span-4" : "col-span-2")) + " text-left mt-1 justify-self-stretch min-w-0 max-w-full w-full overflow-hidden break-words whitespace-normal leading-tight"}
               >
                 {paletteColors.length > 0 && (
                   <>
