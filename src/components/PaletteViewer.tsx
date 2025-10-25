@@ -640,9 +640,6 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                                   <div className="w-3 h-3 bg-white rounded-full opacity-75" />
                                 </div>
                               )}
-                              <span className="absolute bottom-0.5 left-0.5 inline-block text-left text-xs font-mono bg-black/70 text-white px-1 rounded">
-                                {index}
-                              </span>
                             </div>
                             <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
@@ -653,6 +650,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                           <div>G {color.g}</div>
                           <div>B {color.b}</div>
                           <div>A {alpha}%</div>
+                          <div>{t('paletteColorPosition').replace('{count}', String(index))}</div>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
