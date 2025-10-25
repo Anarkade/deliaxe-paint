@@ -39,24 +39,22 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
   }, [getAvailableCameras]);
 
   // Probe each camera to obtain a resolution string like "640x480".
-  // We probe only once per device and store the result in `resolutions`.
-  // Use a more conservative approach for mobile devices
+  // Strategy: initialize all known cameras to the explicit empty sentinel ('') so
+  // the UI shows the localized "not available" and buttons are disabled.
+  // Then probe each device; when a real resolution is found we overwrite the
+  // sentinel and the UI will enable that device and show its resolution.
   useEffect(() => {
     let mounted = true;
-    let markMissingTimer: number | null = null;
 
     const probe = async (deviceId: string) => {
-      if (resolutions[deviceId]) return; // already probed
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } });
         try {
-          // Prefer track settings if available
           const track = stream.getVideoTracks()[0];
           const settings = track.getSettings?.();
           let width = settings?.width;
           let height = settings?.height;
 
-          // Fallback to video element metadata if settings not available
           if (!width || !height) {
             const video = document.createElement('video');
             video.style.position = 'fixed';
@@ -76,7 +74,6 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
                 resolve();
               };
               video.addEventListener('loadedmetadata', onLoaded);
-              // safety timeout - reduced for mobile
               setTimeout(() => resolve(), 300);
             });
             try { document.body.removeChild(video); } catch {}
@@ -86,44 +83,33 @@ export const CameraSelector = ({ onSelect, onClose }: CameraSelectorProps) => {
             if (width && height) {
               setResolutions(prev => ({ ...prev, [deviceId]: `${Math.round(width)}x${Math.round(height)}` }));
             } else {
+              // keep the explicit empty sentinel if we couldn't determine size
               setResolutions(prev => ({ ...prev, [deviceId]: '' }));
             }
           }
         } finally {
-          // stop tracks
           stream.getTracks().forEach(t => t.stop());
         }
       } catch (err) {
-        // Permission denied or other error; store empty to avoid retry storms
         if (mounted) setResolutions(prev => ({ ...prev, [deviceId]: '' }));
       }
     };
 
-    // Only probe cameras that haven't been probed yet, with a small delay between probes
-    availableCameras.forEach((cam, index) => {
-      if (!resolutions[cam.deviceId]) {
-        setTimeout(() => probe(cam.deviceId), index * 100); // Stagger probes
-      }
+    // Initialize all known cameras to the empty sentinel so they appear as
+    // (Not available) and disabled until a probe updates them.
+    setResolutions(prev => {
+      const next: Record<string, string> = { ...prev };
+      availableCameras.forEach(cam => { next[cam.deviceId] = ''; });
+      return next;
     });
-    // After a short grace period (stagger time + safety margin), mark any camera
-    // that still doesn't have a resolution as explicitly "not available" (empty string)
-    // so the UI can display the localized "not available" text and disable buttons.
-    const grace = Math.max(500, availableCameras.length * 150 + 300);
-    markMissingTimer = window.setTimeout(() => {
-      if (!mounted) return;
-      setResolutions(prev => {
-        const next = { ...prev };
-        availableCameras.forEach(cam => {
-          if (next[cam.deviceId] === undefined || next[cam.deviceId] === null) {
-            next[cam.deviceId] = '';
-          }
-        });
-        return next;
-      });
-    }, grace) as unknown as number;
 
-    return () => { mounted = false; if (markMissingTimer) window.clearTimeout(markMissingTimer); };
-  }, [availableCameras, resolutions]);
+    // Stagger probes to avoid hammering the system; overwrite sentinel when ready
+    availableCameras.forEach((cam, index) => {
+      setTimeout(() => { if (mounted) probe(cam.deviceId); }, index * 100);
+    });
+
+    return () => { mounted = false; };
+  }, [availableCameras]);
 
   // Generate user-friendly camera names with fallback for unnamed devices
   const getCameraDisplayName = (camera: MediaDeviceInfo, index: number) => {
