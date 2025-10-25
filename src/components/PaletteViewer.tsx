@@ -613,7 +613,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           </label>
           {paletteColors.length > 0 && (
             <div className="text-xs text-muted-foreground text-left">
-              <p>{isFixedPalette ? t('dontModifyFixedPalette') : t('clickToChangeColor')}</p>
+              <p>{isFixedPalette ? t('dontModifyFixedPalette') : (!showOriginal ? t('clickToChangeColor') : null)}</p>
             </div>
           )}
         </div>
