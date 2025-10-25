@@ -719,8 +719,18 @@ export const ImagePreview = ({
     expectingProcessedChange.current = false;
     setIntegerScaling(checked);
     if (checked) {
-      const roundedZoom = Math.round(zoom[0] / 100) * 100;
-      const applied = Math.max(100, roundedZoom);
+      // Snap both stored zooms to nearest 100% (integer scaling) so that
+      // switching between Original/Processed preserves integer-scaled values.
+      const curOrig = mostRecentZoomOriginal.current || 100;
+      const curProc = mostRecentZoomProcessed.current || 100;
+      const appliedOrig = Math.max(100, Math.round(curOrig / 100) * 100);
+      const appliedProc = Math.max(100, Math.round(curProc / 100) * 100);
+      // Update stored recent zooms for both views
+      mostRecentZoomOriginal.current = appliedOrig;
+      mostRecentZoomProcessed.current = appliedProc;
+
+      // Apply the appropriate zoom to the currently visible preview
+      const applied = showOriginal ? appliedOrig : appliedProc;
       setZoom([applied]);
       setSliderValue([applied]);
       onZoomChange?.(applied);
