@@ -1147,7 +1147,7 @@ export const ImagePreview = ({
                   <div className="inline-block text-right">
                     {detailedPaletteLabel && (
                       <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
-                        <span>{detailedPaletteLabel}</span>
+                        <span className="uppercase">{detailedPaletteLabel}</span>
                       </div>
                     )}
                     {helperPaletteText && (
