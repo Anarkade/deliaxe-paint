@@ -116,19 +116,36 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
   const handleDragStart = useCallback((index: number) => {
     // Prevent starting a drag on locked palettes (fixed palettes or original image)
-    if (FIXED_KEYS.has(selectedPalette as any) || (selectedPalette === 'original' && showOriginal)) {
+    const isFixed = FIXED_KEYS.has(selectedPalette as any);
+    const isOriginalPalette = selectedPalette === 'original';
+
+    if (isFixed || (isOriginalPalette && showOriginal)) {
       setBlockedIndex(index);
       if (blockedTimerRef.current) window.clearTimeout(blockedTimerRef.current);
       blockedTimerRef.current = window.setTimeout(() => {
         setBlockedIndex(null);
         blockedTimerRef.current = null;
       }, 1000) as unknown as number;
-      try { toast.info(t('dontModifyFixedPalette')); } catch (e) { /* ignore */ }
+
+      // Toast rules:
+      // - If interacting with the original palette while viewing the original -> show dontModifyOriginalPalette
+      // - If interacting with a fixed palette while viewing the processed image -> show dontModifyFixedPalette
+      // - Otherwise do not show a toast
+      try {
+        if (showOriginal) {
+          // When viewing the original image, always inform to modify the processed palette instead
+          toast.info(t('dontModifyOriginalPalette'));
+        } else if (isFixed && !showOriginal) {
+          // When viewing the processed image, only fixed palettes are blocked
+          toast.info(t('dontModifyFixedPalette'));
+        }
+      } catch (e) { /* ignore */ }
+
       return;
     }
 
     setDraggedIndex(index);
-  }, []);
+  }, [selectedPalette, showOriginal, t]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -137,16 +154,28 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const handleDrop = useCallback((targetIndex: number) => {
     if (draggedIndex === null) return;
 
-    // Block dropping into a locked palette (fixed or original when showing original)
-    if (FIXED_KEYS.has(selectedPalette as any) || (selectedPalette === 'original' && showOriginal)) {
-      // show temporary lock + toast
+    const isFixed = FIXED_KEYS.has(selectedPalette as any);
+    const isOriginalPalette = selectedPalette === 'original';
+
+    // Block dropping into a locked palette with toast rules as requested
+    if (isFixed || (isOriginalPalette && showOriginal)) {
       setBlockedIndex(targetIndex);
       if (blockedTimerRef.current) window.clearTimeout(blockedTimerRef.current);
       blockedTimerRef.current = window.setTimeout(() => {
         setBlockedIndex(null);
         blockedTimerRef.current = null;
       }, 1000) as unknown as number;
-      try { toast.info(t('dontModifyFixedPalette')); } catch (e) { /* ignore */ }
+
+      try {
+        if (showOriginal) {
+          // Viewing original -> always show original-specific toast
+          toast.info(t('dontModifyOriginalPalette'));
+        } else if (isFixed && !showOriginal) {
+          // Viewing processed and target is fixed -> show fixed-specific toast
+          toast.info(t('dontModifyFixedPalette'));
+        }
+      } catch (e) { /* ignore */ }
+
       setDraggedIndex(null);
       return;
     }
@@ -158,11 +187,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     setPaletteColors(newColors);
     emitPaletteUpdate(newColors);
     setDraggedIndex(null);
-  }, [draggedIndex, paletteColors, onPaletteUpdate]);
+  }, [draggedIndex, paletteColors, onPaletteUpdate, selectedPalette, showOriginal, t]);
 
   const selectNewColor = useCallback((index: number, currentPalette: PaletteType) => {
-    // If this is a canonical fixed palette, block edits and show a toast
-    // instead of opening the editor.
+    // If this is a canonical fixed palette, block edits.
+    // Show toast only when viewing the processed image (showOriginal === false).
     if (FIXED_KEYS.has(currentPalette)) {
       setBlockedIndex(index);
       if (blockedTimerRef.current) window.clearTimeout(blockedTimerRef.current);
@@ -170,11 +199,20 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         setBlockedIndex(null);
         blockedTimerRef.current = null;
       }, 1000) as unknown as number;
-      try { toast.info(t('dontModifyFixedPalette')); } catch (e) { /* ignore */ }
+      try {
+        // If viewing original, inform to modify processed palette instead
+        if (showOriginal) {
+          toast.info(t('dontModifyOriginalPalette'));
+        } else {
+          // Viewing processed: fixed palettes are blocked and show fixed-specific toast
+          toast.info(t('dontModifyFixedPalette'));
+        }
+      } catch (e) { /* ignore */ }
       return;
     }
+
     // If this is the 'original' palette and the preview is showing the original,
-    // block editing and show a temporary lock overlay instead of opening the editor.
+    // block editing and show a temporary lock overlay and the original-specific toast.
     if (currentPalette === 'original' && typeof showOriginal !== 'undefined' && showOriginal) {
       setBlockedIndex(index);
       if (blockedTimerRef.current) window.clearTimeout(blockedTimerRef.current);
