@@ -63,6 +63,8 @@ Live demo: https://anarkade.github.io/deliaxe-paint/
 - 2025-10-22: Build and footer time normalization (CEST/CET) and palette behavior fixes. The app now generates a normalized `public/version.json` (UTC buildDate + Europe/Madrid `buildDateLocal`) and the footer shows the correct local time in both dev and production.
 - 2025-10-22: Added an itch.io-friendly redirect page at `src/itchio/index.html` — when the app is embedded into itch.io we recommend users click "Open in new tab" to enable camera and clipboard features.
 
+- 2025-10-25: v0.0.40 — Introduced a new vertical two-column toolbar layout, standardized toolbar button sizes and padding, and fixed a height mismatch on the language selector button. (See release: https://github.com/Anarkade/deliaxe-paint/releases/tag/v0.0.40-first-doble-column-toolbar)
+
 ## Quick start
 Prerequisites: Node.js 18+, npm
 

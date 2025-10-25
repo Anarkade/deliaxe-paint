@@ -27,6 +27,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.32-build-time-fixed] - 2025-10-22
 
+## [v0.0.40-first-doble-column-toolbar] - 2025-10-25
+
+### Added
+- Vertical toolbar: new two-column layout for vertical mode (logo spans two columns; buttons arranged in left/right pairs per row).
+
+### Changed
+- Standardized toolbar button sizing and spacing: buttons set to uniform dimensions (h-8 w-8) with reduced internal padding and icons zeroed margins/padding.
+
+### Fixed
+- Fixed inconsistent height on the bottom-right language button by enforcing min width/min height so it matches its row partner.
+- Created and pushed tag `v0.0.40-first-doble-column-toolbar`.
+
+
 ### Added
 - Added a small itch.io-friendly redirect page at `src/itchio/index.html` which provides a prominent "Open in new tab" button so users can open the app top-level and use camera/clipboard features.
 
