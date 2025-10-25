@@ -1144,12 +1144,16 @@ export const ImagePreview = ({
               {/* Left column: palette info (moved from PaletteViewer) */}
               <div className="text-right">
                 {paletteCountForInfo > 0 && (
-                  <div className="leading-tight inline-block text-right">
+                  <div className="inline-block text-right">
                     {detailedPaletteLabel && (
-                      <div className="text-[0.80rem] font-semibold text-foreground">{detailedPaletteLabel}</div>
+                      <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
+                        <span>{detailedPaletteLabel}</span>
+                      </div>
                     )}
                     {helperPaletteText && (
-                      <div className="text-[0.70rem] text-muted-foreground">{helperPaletteText}</div>
+                      <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
+                        <span>{helperPaletteText}</span>
+                      </div>
                     )}
                   </div>
                 )}
