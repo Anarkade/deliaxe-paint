@@ -922,6 +922,10 @@ export const ImagePreview = ({
   const tileBackgroundPosX = tileCellWidthPx > 0 ? -(horizontalClipOffset % tileCellWidthPx) : 0;
   const frameBackgroundPosX = frameCellWidthPx > 0 ? -(horizontalClipOffset % frameCellWidthPx) : 0;
 
+  // Footer label classes: highlight only the currently-selected preview (Original vs Processed)
+  const originalLabelClass = showOriginal ? 'text-foreground font-semibold' : 'text-muted-foreground';
+  const processedLabelClass = !showOriginal ? 'text-foreground font-semibold' : 'text-muted-foreground';
+
   return (
     <div 
       className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col"
@@ -1133,7 +1137,7 @@ export const ImagePreview = ({
                     ) : (
                       <EyeOff className="h-4 w-4 text-muted-foreground" />
                     )}
-                    <span className="text-foreground font-semibold">{t('original')}</span>
+                    <span className={originalLabelClass}>{t('original')}</span>
                     {/* Base resolution */}
                     <span className="text-muted-foreground text-xs">{originalImage?.width}×{originalImage?.height}</span>
                     {/* Original image type (e.g., PNG-8, JPG) — show only if non-empty and not literally 'undefined' */}
@@ -1160,7 +1164,7 @@ export const ImagePreview = ({
                       ) : (
                         <EyeOff className="h-4 w-4 text-muted-foreground" />
                       )}
-                      <span className="text-foreground font-semibold">{t('processed')}</span>
+                      <span className={processedLabelClass}>{t('processed')}</span>
                       {/* Base resolution for Processed */}
                       <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
                       {/* Zoom-applied resolution for Processed (no type shown here) */}
