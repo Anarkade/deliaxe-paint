@@ -156,6 +156,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         setBlockedIndex(null);
         blockedTimerRef.current = null;
       }, 1000) as unknown as number;
+      try { toast.info(t('dontModifyOriginalPalette')); } catch (e) { /* ignore */ }
       return;
     }
 
