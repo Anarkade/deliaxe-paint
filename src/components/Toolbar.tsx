@@ -25,7 +25,7 @@ export interface ToolbarProps {
   paletteDepthOriginal?: { r: number; g: number; b: number };
   paletteDepthProcessed?: { r: number; g: number; b: number };
 }
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 // Build the logo URL from Vite's BASE_URL so it resolves correctly on GitHub Pages
 const logoGif = `${import.meta.env.BASE_URL}logo.gif`;
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,22 @@ import { PaletteViewer } from './PaletteViewer';
 
 
 export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, zoomPercent = 100, onZoomPercentChange, onFitToWidthRequest, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed }: ToolbarProps) => {
+  // Local input state to allow free typing (even invalid) and validate live
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [zoomInput, setZoomInput] = useState<string>(
+    Number.isFinite(zoomPercent) ? `${Math.round(zoomPercent)}%` : '100%'
+  );
+  const [zoomValid, setZoomValid] = useState<boolean>(true);
+
+  // Sync local text with external zoom when not focused (avoid fighting typing)
+  useEffect(() => {
+    const el = inputRef.current as HTMLElement | null;
+    const isFocused = el ? document.activeElement === el : false;
+    if (!isFocused) {
+      setZoomInput(Number.isFinite(zoomPercent) ? `${Math.round(zoomPercent)}%` : '100%');
+      setZoomValid(true);
+    }
+  }, [zoomPercent]);
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
@@ -285,18 +301,40 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               </TooltipProvider>
               <div className="relative w-full px-0 mx-0">
                 <Input
+                  ref={inputRef}
                   type="text"
                   inputMode="numeric"
-                  value={Number.isFinite(zoomPercent) ? `${Math.round(zoomPercent)}%` : '100%'}
+                  value={zoomInput}
                   onChange={(e) => {
-                    const raw = String((e.target as HTMLInputElement).value || '');
-                    // Extract digits only
-                    const digits = raw.replace(/[^0-9]/g, '');
-                    const num = digits.length ? Number(digits) : NaN;
-                    const clamped = Number.isFinite(num) ? Math.max(1, Math.min(100000, num)) : 100;
-                    onZoomPercentChange?.(clamped);
+                    const raw = String((e.target as HTMLInputElement).value ?? '');
+                    setZoomInput(raw);
+                    // Strict validation: only digits with optional trailing % (no other chars)
+                    const trimmed = raw.trim();
+                    const m = trimmed.match(/^([0-9]{1,6})%?$/);
+                    if (!m) {
+                      setZoomValid(false);
+                      return;
+                    }
+                    const num = Number(m[1]);
+                    if (Number.isFinite(num) && num >= 1 && num <= 100000) {
+                      setZoomValid(true);
+                      onZoomPercentChange?.(num);
+                    } else {
+                      setZoomValid(false);
+                    }
                   }}
-                  className="h-4 w-full px-0 text-[8px] text-center no-number-spin m-0 leading-none"
+                  onBlur={() => {
+                    // If invalid, keep the typed value and the red border until a valid value is entered
+                    if (zoomValid) {
+                      // Normalize to NNN%
+                      const digits = (zoomInput || '').replace(/[^0-9]/g, '');
+                      const num = Math.max(1, Math.min(100000, Number(digits || '100')));
+                      setZoomInput(`${num}%`);
+                    }
+                  }}
+                  className={("h-4 w-full px-0 text-[8px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
+                    (zoomValid ? "border-transparent border-opacity-0" : "border-red-500 border-opacity-100") +
+                    " focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus:outline-none")}
                   title={t('zoom')}
                 />
               </div>
