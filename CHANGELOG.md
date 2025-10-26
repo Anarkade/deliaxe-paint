@@ -25,6 +25,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed duplicated `className` issues in `ChangeGridSelector`.
 - Removed unused `lucide-react` icon imports and cleaned related code.
 
+## [v0.0.41-image-preview-tweaked] - 2025-10-25
+
+### Added
+- ImagePreview footer now includes palette information on the left side: top line shows palette type and depth/count; bottom line shows helper text.
+
+### Changed
+- Moved the two informational lines from PaletteViewer to the ImagePreview footer to avoid duplication and centralize status messaging.
+- Footer layout reworked into a 3-column grid: left = palette info (right-aligned), middle = Original/Processed toggle button, right = original/processed resolution block. Typography and spacing matched between left and right blocks. The top palette info line is uppercase.
+- PaletteViewer toolbar grid rules refined: palettes use 2 columns for ≤16 colors, 4 columns for 17–64 colors, and 8 columns for >64 colors, with corresponding swatch sizes and gaps. Implemented with static Tailwind classes (no dynamic class names) to avoid purge issues.
+- Ensured original palette remains intact; only the processed palette is subject to change (original is never modified).
+
+### Fixed
+- Helper text precedence in the footer: when viewing Original, show the "dontModifyOriginalPalette" hint even if the current palette is fixed; when viewing Processed and palette is fixed, show "dontModifyFixedPalette"; otherwise show "clickToChangeColor".
+- Removed redundant bottom info lines from PaletteViewer in both toolbar and non-toolbar modes (now shown solely in ImagePreview footer).
+- Created and pushed tag `v0.0.41-image-preview-tweaked`.
+
 ## [0.0.32-build-time-fixed] - 2025-10-22
 
 ## [v0.0.40-first-doble-column-toolbar] - 2025-10-25

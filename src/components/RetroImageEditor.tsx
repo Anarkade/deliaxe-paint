@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { LoadImage } from './LoadImage';
 import { CameraSelector } from './CameraSelector';
 import { ColorPaletteSelector, PaletteType } from './ColorPaletteSelector';
-import { ImagePreview } from './ImagePreview';
+import { ImagePreview, type ImagePreviewHandle } from './ImagePreview';
 import { ExportImage } from './ExportImage';
 import { LanguageSelector } from './LanguageSelector';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -630,6 +630,7 @@ export const RetroImageEditor = () => {
   const [historyIndex, setHistoryIndex] = useState(-1);
   
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imagePreviewRef = useRef<ImagePreviewHandle | null>(null);
   
   // Performance monitoring hooks
   const imageProcessor = useImageProcessor();
@@ -2144,6 +2145,11 @@ export const RetroImageEditor = () => {
               loadFromClipboard={loadFromClipboard}
               toast={toast}
               t={t}
+              zoomPercent={currentZoom}
+              onZoomPercentChange={(z) => setCurrentZoom(z)}
+              onFitToWidthRequest={() => {
+                try { imagePreviewRef.current?.fitToWidthButtonAction(); } catch (e) { /* ignore */ }
+              }}
               selectedPalette={selectedPalette}
               processedImageData={processedImageData}
               originalImageSource={originalImageSource}
@@ -2176,6 +2182,11 @@ export const RetroImageEditor = () => {
               loadFromClipboard={loadFromClipboard}
               toast={toast}
               t={t}
+              zoomPercent={currentZoom}
+              onZoomPercentChange={(z) => setCurrentZoom(z)}
+              onFitToWidthRequest={() => {
+                try { imagePreviewRef.current?.fitToWidthButtonAction(); } catch (e) { /* ignore */ }
+              }}
               selectedPalette={selectedPalette}
               processedImageData={processedImageData}
               originalImageSource={originalImageSource}
@@ -2199,6 +2210,7 @@ export const RetroImageEditor = () => {
         <div className="row-start-2 col-start-2 col-end-3 m-0 p-0 relative" style={{ minWidth: 0 }} ref={rightColumnRef}>
           <div className="w-full m-0 p-0" style={{ width: '100%', minWidth: 0 }}>
               <ImagePreview
+              ref={imagePreviewRef}
               originalImage={originalImage}
               processedImageData={processedImageData}
               onDownload={downloadImage}
@@ -2227,6 +2239,7 @@ export const RetroImageEditor = () => {
               frameLineThickness={frameLineThickness}
               autoFitKey={autoFitKey}
               onZoomChange={handlePreviewZoomChange}
+              controlledZoom={currentZoom}
               isVerticalLayout={isVerticalLayout}
               onShowOriginalChange={(show) => {
                         previewToggleWasManualRef.current = true;

@@ -60,6 +60,7 @@ Live demo: https://anarkade.github.io/deliaxe-paint/
  - New target resolutions available in the Resolution selector: `224x192` (NES safe zone) and `496x224` (CPS widescreen).
 
 ### Latest
+- 2025-10-25: v0.0.41 — Moved palette info lines from PaletteViewer to the ImagePreview footer and reworked the footer into a 3-column grid (left palette info, center Original/Processed toggle, right resolution block). Matched typography/spacing, uppercased the palette info title, refined toolbar palette grid to 2/4/8 columns with Tailwind-safe classes, and fixed helper-text precedence when toggling Original vs Processed. (See release: https://github.com/Anarkade/deliaxe-paint/releases/tag/v0.0.41-image-preview-tweaked)
 - 2025-10-22: Build and footer time normalization (CEST/CET) and palette behavior fixes. The app now generates a normalized `public/version.json` (UTC buildDate + Europe/Madrid `buildDateLocal`) and the footer shows the correct local time in both dev and production.
 - 2025-10-22: Added an itch.io-friendly redirect page at `src/itchio/index.html` — when the app is embedded into itch.io we recommend users click "Open in new tab" to enable camera and clipboard features.
 

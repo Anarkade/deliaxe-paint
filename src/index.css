@@ -150,6 +150,16 @@ All colors MUST be HSL.
   .text-xl {
     margin-bottom: 1rem;
   }
+  /* Hide number input spinners when applying .no-number-spin */
+  .no-number-spin::-webkit-outer-spin-button,
+  .no-number-spin::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .no-number-spin {
+    appearance: textfield; /* Standard */
+    -moz-appearance: textfield; /* Firefox */
+  }
   /* Semantic color helper classes (project-wide) */
   /* Background colors */
   .color-bg-highlight {

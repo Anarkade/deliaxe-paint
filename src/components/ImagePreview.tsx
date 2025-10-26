@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -17,7 +17,7 @@ import { FIXED_KEYS } from '@/lib/fixedPalettes';
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for performance
 const RESIZE_DEBOUNCE_MS = 100; // Debounce resize calculations
 const FIT_DEBOUNCE_MS = 250; // Minimum interval between fitToWidth executions
-const ZOOM_BOUNDS = { min: 10, max: 2000 }; // Zoom limits for performance
+const ZOOM_BOUNDS = { min: 1, max: 100000 }; // Updated zoom limits per request
 
 // Performance-optimized image format analysis with pixel sampling
 const analyzeImageFormat = (image: HTMLImageElement, t: (key: string) => string): Promise<string> => {
@@ -124,6 +124,7 @@ interface ImagePreviewProps {
   onSectionOpen?: () => void; // New callback for section opening
   onShowOriginalChange?: (showOriginal: boolean) => void; // Notify parent when preview toggles between original/processed
   controlledShowOriginal?: boolean; // Optional controlled prop to force which image is shown
+  controlledZoom?: number; // Optional controlled zoom (percent) to sync with external UI
   onRequestOpenCameraSelector?: () => void;
   showTileGrid?: boolean;
   showFrameGrid?: boolean;
@@ -143,8 +144,11 @@ interface ImagePreviewProps {
   // Optional: allow parent to force container styles (height/width constraints)
   containerStyle?: React.CSSProperties;
 }
+export type ImagePreviewHandle = {
+  fitToWidthButtonAction: () => void;
+};
 
-export const ImagePreview = ({ 
+export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({ 
   originalImage, 
   processedImageData, 
   onDownload, 
@@ -177,8 +181,9 @@ export const ImagePreview = ({
   onZoomChange,
   isVerticalLayout,
   containerStyle,
-  controlledShowOriginal
-}: ImagePreviewProps) => {
+  controlledShowOriginal,
+  controlledZoom
+}: ImagePreviewProps, ref) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -232,6 +237,40 @@ export const ImagePreview = ({
   // Default to 100% so initial view uses 100% unless changed by user/fit
   const mostRecentZoomOriginal = useRef<number>(100);
   const mostRecentZoomProcessed = useRef<number>(100);
+
+  // (moved) useImperativeHandle is defined after fitToWidth to avoid TDZ issues
+
+  // Sync external controlled zoom with internal zoom state
+  useEffect(() => {
+    if (typeof controlledZoom === 'number' && Number.isFinite(controlledZoom)) {
+      const clamped = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, Math.round(controlledZoom)));
+      if (zoom[0] !== clamped) {
+        // Programmatic change: suppress auto-fit briefly to avoid loops
+        programmaticZoomChange.current = true;
+        if (suppressAutoFitTimeoutRef.current) window.clearTimeout(suppressAutoFitTimeoutRef.current);
+        suppressAutoFitRef.current = true;
+        suppressAutoFitTimeoutRef.current = window.setTimeout(() => {
+          suppressAutoFitRef.current = false;
+          suppressAutoFitTimeoutRef.current = null;
+        }, 700) as unknown as number;
+
+        setZoom([clamped]);
+        setSliderValue([clamped]);
+        // Do not call onZoomChange here to avoid feedback loop; parent is source of truth
+        if (showOriginal) mostRecentZoomOriginal.current = clamped;
+        else mostRecentZoomProcessed.current = clamped;
+
+        // Recalculate height based on new zoom
+        if (originalImage && containerWidth > 0) {
+          const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
+          const displayHeight = currentImage.height * (clamped / 100);
+          const minHeight = 150;
+          const calculatedHeight = Math.max(minHeight, displayHeight);
+          setPreviewHeight(Math.ceil(calculatedHeight));
+        }
+      }
+    }
+  }, [controlledZoom, zoom, originalImage, processedImageData, containerWidth, showOriginal]);
 
   // Get available cameras
   useEffect(() => {
@@ -520,7 +559,7 @@ export const ImagePreview = ({
       if (originalImage && cw > 0) {
       const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
       const fitZoom = Math.floor((cw / currentImage.width) * 100);
-  const newZoom = Math.max(1, Math.min(2000, fitZoom));
+  const newZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, fitZoom));
   programmaticZoomChange.current = true;
   setZoom([newZoom]);
   setSliderValue([newZoom]);
@@ -557,6 +596,19 @@ export const ImagePreview = ({
     window.addEventListener('cameraPreviewReady', handler as EventListener);
     return () => window.removeEventListener('cameraPreviewReady', handler as EventListener);
   }, [fitToWidth]);
+
+  // Expose imperative action for external callers (e.g., Toolbar fit-to-width icon)
+  useImperativeHandle(ref, () => ({
+    fitToWidthButtonAction: () => {
+      try {
+        autoFitPermitRef.current = true;
+        setIntegerScaling(false);
+        fitToWidth(true);
+      } catch (e) {
+        // ignore
+      }
+    }
+  }), [fitToWidth]);
 
   // Set zoom to exactly 100%
   const setZoomTo100 = useCallback(() => {
@@ -647,6 +699,84 @@ export const ImagePreview = ({
       }, 700) as unknown as number;
     }, 300);
   }, [integerScaling, onZoomChange, originalImage, containerWidth, showOriginal, processedImageData]);
+
+  // ALT-zoom global handling: when ALT is pressed, the mouse wheel controls zoom
+  // and browser scrolling is disabled; releasing ALT restores normal scrolling.
+  const altDownRef = useRef(false);
+  const previousOverflowRef = useRef<string | null>(null);
+
+  // Track ALT key state and toggle page scroll lock
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Alt') {
+        if (!altDownRef.current) {
+          altDownRef.current = true;
+          try {
+            // Lock page scroll while ALT is held
+            previousOverflowRef.current = document.body.style.overflow ?? '';
+            document.body.style.overflow = 'hidden';
+          } catch {
+            // ignore DOM access errors
+          }
+        }
+      }
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Alt') {
+        altDownRef.current = false;
+        try {
+          // Restore previous overflow scroll behavior
+          if (previousOverflowRef.current !== null) {
+            document.body.style.overflow = previousOverflowRef.current;
+            previousOverflowRef.current = null;
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      // Safety: ensure overflow restored on unmount
+      try {
+        if (previousOverflowRef.current !== null) {
+          document.body.style.overflow = previousOverflowRef.current;
+          previousOverflowRef.current = null;
+        }
+      } catch {
+        // ignore
+      }
+    };
+  }, []);
+
+  // Global wheel listener: when ALT is held, prevent scroll and apply zoom delta
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      if (!altDownRef.current) return; // allow normal scrolling
+      // If focused or targeting editable inputs, preserve native behavior
+      const active = (document.activeElement as HTMLElement | null);
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+      const tgt = e.target as HTMLElement | null;
+      try {
+        if (tgt && typeof (tgt as any).closest === 'function' && tgt.closest('input,textarea,[contenteditable="true"]')) return;
+      } catch { /* ignore */ }
+
+      // Prevent page scroll; use zoom instead
+      e.preventDefault();
+      if (!originalImage) return;
+      const delta = e.deltaY < 0 ? 10 : -10;
+      const current = Array.isArray(zoom) && typeof zoom[0] === 'number' ? zoom[0] : 100;
+      const newZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, Math.round(current + delta)));
+      handleZoomChange([newZoom]);
+    };
+    window.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      window.removeEventListener('wheel', onWheel as EventListener);
+    };
+  }, [originalImage, zoom, handleZoomChange]);
 
   // Cleanup suppression timeout on unmount
   useEffect(() => {
@@ -984,9 +1114,9 @@ export const ImagePreview = ({
       className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col"
       data-image-preview-container
     >
-      {/* Header (only shown when there's an image loaded and camera preview is not active) */}
-    {!showCameraPreview && originalImage && (
-  <div className="flex flex-wrap items-center gap-2 text-sm p-4" ref={headerRef}>
+      {/* Header (only shown when there's an image loaded, camera preview is not active, and toolbar is not at the left) */}
+    {!showCameraPreview && originalImage && !isVerticalLayout && (
+  <div className="flex flex-wrap items-center gap-2 text-sm px-4 pt-4 pb-0" ref={headerRef}>
             {/* Left group: zoom label + controls. This may wrap to its own line */}
             <div ref={leftControlsRef} className={leftWrapToSecondLine ? 'w-full flex flex-wrap items-center gap-2' : 'flex items-center gap-2'}>
               <span className="font-bold uppercase flex items-center gap-2">
@@ -1031,6 +1161,7 @@ export const ImagePreview = ({
       (setCameraAspectRatio writes containerEl.style.aspectRatio). For images use the
       calculated previewHeight so fit-to-width keeps working. */}
   <div
+    className="my-4"
     ref={containerRef}
     style={
       showCameraPreview
@@ -1130,7 +1261,7 @@ export const ImagePreview = ({
       </div>
 
   {/* Footer (render only when we have an original or processed image) */}
-  <div className="py-4 space-y-4" ref={footerRef}>
+  <div className="pt-0 pb-4 space-y-4" ref={footerRef}>
         {(originalImage || hasProcessedImage) ? (
           <>
             {/* Footer layout: left = palette info (right-aligned), middle = toggle button, right = original/processed info */}
@@ -1296,4 +1427,4 @@ export const ImagePreview = ({
       </div>
     </div>
   );
-};
+});

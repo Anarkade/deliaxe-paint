@@ -8,6 +8,11 @@ export interface ToolbarProps {
   loadFromClipboard: () => void;
   toast: any;
   t: (key: string) => string;
+  // Zoom sync with ImagePreview
+  zoomPercent?: number;
+  onZoomPercentChange?: (zoom: number) => void;
+  // Trigger actions in ImagePreview
+  onFitToWidthRequest?: () => void;
   // Palette viewer integration (for vertical toolbar mode)
   selectedPalette?: import('./ColorPaletteSelector').PaletteType;
   processedImageData?: ImageData | null;
@@ -24,12 +29,13 @@ import { useEffect, useMemo } from 'react';
 // Build the logo URL from Vite's BASE_URL so it resolves correctly on GitHub Pages
 const logoGif = `${import.meta.env.BASE_URL}logo.gif`;
 import { Button } from '@/components/ui/button';
-import { Upload, Palette, Proportions, Grid3X3, Download, Globe } from 'lucide-react';
+import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { PaletteViewer } from './PaletteViewer';
 
 
-export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed }: ToolbarProps) => {
+export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, zoomPercent = 100, onZoomPercentChange, onFitToWidthRequest, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed }: ToolbarProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
@@ -84,13 +90,21 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           event.preventDefault();
           setActiveTab('language');
           break;
+        case '+':
+        case '=': // some keyboards send '=' without shift for the + key
+          event.preventDefault();
+          onZoomPercentChange?.(Math.min(100000, (Number.isFinite(zoomPercent) ? Math.round(zoomPercent) : 100) + 10));
+          break;
+        case '-':
+          event.preventDefault();
+          onZoomPercentChange?.(Math.max(1, (Number.isFinite(zoomPercent) ? Math.round(zoomPercent) : 100) - 10));
         default:
           break;
       }
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [originalImage, t, loadFromClipboard, setActiveTab, toast]);
+  }, [originalImage, t, loadFromClipboard, setActiveTab, toast, zoomPercent, onZoomPercentChange]);
 
   const getButtonVariant = (tabId: string) => {
     if (tabId === 'language') return 'highlighted';
@@ -249,8 +263,48 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Globe className="h-4 w-4 m-0 p-0" />
           </Button>
 
+          {/* Row 5: Zoom control (spans 2 columns) - render only when an image is loaded */}
+          {originalImage ? (
+            <div className="col-span-2 w-full min-w-0 flex items-center gap-1 mt-1 mb-1 px-0 mx-0 justify-self-stretch">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <ScanSearch
+                        className="h-4 w-4 m-0 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                        role="button"
+                        aria-label={t('fitToWidth')}
+                        onClick={() => { onFitToWidthRequest?.(); }}
+                      />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <span>{t('fitToWidth')}</span>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <div className="relative w-full px-0 mx-0">
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  value={Number.isFinite(zoomPercent) ? `${Math.round(zoomPercent)}%` : '100%'}
+                  onChange={(e) => {
+                    const raw = String((e.target as HTMLInputElement).value || '');
+                    // Extract digits only
+                    const digits = raw.replace(/[^0-9]/g, '');
+                    const num = digits.length ? Number(digits) : NaN;
+                    const clamped = Number.isFinite(num) ? Math.max(1, Math.min(100000, num)) : 100;
+                    onZoomPercentChange?.(clamped);
+                  }}
+                  className="h-4 w-full px-0 text-[8px] text-center no-number-spin m-0 leading-none"
+                  title={t('zoom')}
+                />
+              </div>
+            </div>
+          ) : null}
+
           {/* Palette viewer integrated at the bottom of the toolbar (spans 2 columns) */}
-          <div className="col-span-2 w-full min-w-0">
+          <div className="col-span-2 w-full min-w-0 justify-self-stretch">
             {(() => {
               const externalPalette = (showOriginalPreview ? originalPaletteColors : processedPaletteColors) || [];
               const hasPalette = Array.isArray(externalPalette) && externalPalette.length > 0;
