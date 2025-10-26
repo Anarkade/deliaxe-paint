@@ -1109,6 +1109,18 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     ? (showOriginal ? t('dontModifyOriginalPalette') : (isFixedPalette ? t('dontModifyFixedPalette') : t('clickToChangeColor')))
     : null;
 
+  // Special case: when showing the Original image and it is NOT indexed (RGB),
+  // the left info block should still display two lines: a label explaining the
+  // image is non-indexed and the standard "don't modify original palette" hint.
+  const showNonIndexedOriginal = !!originalImage && showOriginal && !isIndexedPNG;
+  // Special case: when showing the Processed image but it has no indexed palette
+  // (i.e., RGB without palette), display only the top label and leave the
+  // bottom line empty to match the requested layout.
+  const showNonIndexedProcessed = !showOriginal
+    && !!(processedImageData || originalImage)
+    && (!processedPaletteColors || processedPaletteColors.length === 0)
+    && (selectedPalette === 'original');
+
   return (
     <div 
       className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col"
@@ -1276,7 +1288,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
             >
               {/* Left column: palette info (moved from PaletteViewer) */}
               <div className="text-right">
-                {paletteCountForInfo > 0 && (
+                {paletteCountForInfo > 0 ? (
                   <div className="inline-block text-right">
                     {detailedPaletteLabel && (
                       <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
@@ -1289,7 +1301,25 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                       </div>
                     )}
                   </div>
-                )}
+                ) : showNonIndexedOriginal ? (
+                  <div className="inline-block text-right">
+                    <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
+                      <span className="uppercase">{t('paletteNonIndexed')}</span>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
+                      <span>{t('dontModifyOriginalPalette')}</span>
+                    </div>
+                  </div>
+                ) : showNonIndexedProcessed ? (
+                  <div className="inline-block text-right">
+                    <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
+                      <span className="uppercase">{t('paletteNonIndexed')}</span>
+                    </div>
+                    <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
+                      <span>&nbsp;</span>
+                    </div>
+                  </div>
+                ) : null}
               </div>
               {hasProcessedImage && (
                 <div style={{ textAlign: 'left' }} className="px-4">

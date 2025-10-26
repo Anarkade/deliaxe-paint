@@ -2113,9 +2113,12 @@ export const RetroImageEditor = () => {
         width: '100%',
         height: '100%',
         overflow: 'auto',
-        // Reserve stable gutter for scrollbars so content on the right isn't covered
-        // by the vertical scrollbar when it appears
-        scrollbarGutter: 'stable'
+        // Note: Avoid reserving a persistent scrollbar gutter so the
+        // non-toolbar area can truly use the full viewport width without
+        // leaving a blank strip on the right when there's no scrollbar.
+        // If layout shift becomes a concern when vertical scrollbars appear,
+        // consider applying `scrollbar-gutter: stable;` conditionally via a
+        // CSS class only when overflow actually occurs.
       }}
     >
       {/* Two-column grid fixed to the viewport: left column reserved for vertical toolbar (or 0 when not used), right column holds header, preview and footer */}
