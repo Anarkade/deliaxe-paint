@@ -144,11 +144,79 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     return (
   // height set to 1.5x the button height (h-10 -> 2.5rem * 1.5 = 3.75rem)
   // Add horizontal padding equal to gap-2 so logo and buttons sit inset from edges
-  <header className="border-b border-elegant-border w-full flex-shrink-0 m-0 px-2 py-0 h-[3.75rem] flex items-center color-bg-highlight">
+  <>
+      <header className="border-b border-elegant-border w-full flex-shrink-0 m-0 px-2 py-0 h-[3.75rem] flex items-center color-bg-highlight">
         <div className="w-full max-w-none flex items-center justify-between m-0 p-0 h-full">
-            <div className="flex items-center h-full m-0 p-0">
+          {/* Left: App icon */}
+          <div className="flex items-center h-full m-0 p-0">
             <img src={logoGif} alt="Vintage Palette Studio" className="h-8 w-8 m-0 p-0 block" />
           </div>
+
+          {/* Center: Zoom cell (copied from vertical toolbar), centered horizontally and vertically */}
+          <div className="flex-1 h-full flex items-center justify-center">
+            {originalImage ? (
+              <div className="flex items-center gap-2 justify-center">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span>
+                        <ScanSearch
+                          className="h-4 w-4 m-0 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                          role="button"
+                          aria-label={t('fitToWidth')}
+                          onClick={() => { onFitToWidthRequest?.(); }}
+                        />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <span>{t('fitToWidth')}</span>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <div className="relative px-0 mx-0">
+                  <Input
+                    ref={inputRef}
+                    type="text"
+                    inputMode="numeric"
+                    value={zoomInput}
+                    onChange={(e) => {
+                      const raw = String((e.target as HTMLInputElement).value ?? '');
+                      setZoomInput(raw);
+                      // Strict validation: only digits with optional trailing % (no other chars)
+                      const trimmed = raw.trim();
+                      const m = trimmed.match(/^([0-9]{1,6})%?$/);
+                      if (!m) {
+                        setZoomValid(false);
+                        return;
+                      }
+                      const num = Number(m[1]);
+                      if (Number.isFinite(num) && num >= 1 && num <= 100000) {
+                        setZoomValid(true);
+                        onZoomPercentChange?.(num);
+                      } else {
+                        setZoomValid(false);
+                      }
+                    }}
+                    onBlur={() => {
+                      // If invalid, keep the typed value and the red border until a valid value is entered
+                      if (zoomValid) {
+                        // Normalize to NNN%
+                        const digits = (zoomInput || '').replace(/[^0-9]/g, '');
+                        const num = Math.max(1, Math.min(100000, Number(digits || '100')));
+                        setZoomInput(`${num}%`);
+                      }
+                    }}
+                    className={("h-6 w-[24ch] px-2 text-[12px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
+                      (zoomValid ? "border-transparent border-opacity-0" : "border-red-500 border-opacity-100") +
+                      " focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus:outline-none")}
+                    title={t('zoom')}
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {/* Right: main toolbar buttons */}
           <div className="flex items-center gap-2 flex-shrink-0 m-0 p-0 h-full">
             <Button
               variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
@@ -205,6 +273,29 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           </div>
         </div>
       </header>
+
+      {/* Bottom: Palette viewer integrated beneath horizontal toolbar (keep same layout as when it was in ImagePreview footer) */}
+      {(() => {
+        const externalPalette = (showOriginalPreview ? originalPaletteColors : processedPaletteColors) || [];
+        const hasPalette = Array.isArray(externalPalette) && externalPalette.length > 0;
+        const shouldShow = selectedPalette !== 'original' || hasPalette;
+        return shouldShow ? (
+          <div className="px-2 py-2 color-bg-highlight w-full overflow-x-hidden">
+            <PaletteViewer
+              selectedPalette={selectedPalette as unknown as string}
+              imageData={processedImageData}
+              onPaletteUpdate={(cols, meta) => onToolbarPaletteUpdate?.(cols as any, meta)}
+              originalImageSource={originalImageSource || undefined}
+              externalPalette={externalPalette as any}
+              onImageUpdate={(img) => onToolbarImageUpdate?.(img)}
+              showOriginal={showOriginalPreview}
+              paletteDepth={showOriginalPreview ? paletteDepthOriginal : paletteDepthProcessed}
+              toolbarRowsMode
+            />
+          </div>
+        ) : null;
+      })()}
+    </>
     );
   }
   return (

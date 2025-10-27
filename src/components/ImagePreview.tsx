@@ -1126,8 +1126,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col"
       data-image-preview-container
     >
-      {/* Header (only shown when there's an image loaded, camera preview is not active, and toolbar is not at the left) */}
-    {!showCameraPreview && originalImage && !isVerticalLayout && (
+      {/* Header: hidden in both layouts per requirement */}
+    {false && !showCameraPreview && originalImage && (
   <div className="flex flex-wrap items-center gap-2 text-sm px-4 pt-4 pb-0" ref={headerRef}>
             {/* Left group: zoom label + controls. This may wrap to its own line */}
             <div ref={leftControlsRef} className={leftWrapToSecondLine ? 'w-full flex flex-wrap items-center gap-2' : 'flex items-center gap-2'}>
@@ -1276,118 +1276,104 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   <div className="pt-0 pb-4 space-y-4" ref={footerRef}>
         {(originalImage || hasProcessedImage) ? (
           <>
-            {/* Footer layout: left = palette info (right-aligned), middle = toggle button, right = original/processed info */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: hasProcessedImage ? '1fr auto 1fr' : '1fr 1fr',
-                alignItems: 'center',
-                width: '100%'
-              }}
-              className="text-sm font-mono"
-            >
-              {/* Left column: palette info (moved from PaletteViewer) */}
-              <div className="text-right">
-                {paletteCountForInfo > 0 ? (
-                  <div className="inline-block text-right">
-                    {detailedPaletteLabel && (
+            {/* Footer layout adapts to toolbar position: stacked and centered when toolbar is top */}
+            {isVerticalLayout ? (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: hasProcessedImage ? '1fr auto 1fr' : '1fr 1fr',
+                  alignItems: 'center',
+                  width: '100%'
+                }}
+                className="text-sm font-mono"
+              >
+                {/* Left column: palette info */}
+                <div className="text-right">
+                  {paletteCountForInfo > 0 ? (
+                    <div className="inline-block text-right">
+                      {detailedPaletteLabel && (
+                        <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
+                          <span className="uppercase">{detailedPaletteLabel}</span>
+                        </div>
+                      )}
+                      {helperPaletteText && (
+                        <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
+                          <span>{helperPaletteText}</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : showNonIndexedOriginal ? (
+                    <div className="inline-block text-right">
                       <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
-                        <span className="uppercase">{detailedPaletteLabel}</span>
+                        <span className="uppercase">{t('paletteNonIndexed')}</span>
                       </div>
-                    )}
-                    {helperPaletteText && (
                       <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
-                        <span>{helperPaletteText}</span>
+                        <span>{t('dontModifyOriginalPalette')}</span>
                       </div>
-                    )}
-                  </div>
-                ) : showNonIndexedOriginal ? (
-                  <div className="inline-block text-right">
-                    <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
-                      <span className="uppercase">{t('paletteNonIndexed')}</span>
                     </div>
-                    <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
-                      <span>{t('dontModifyOriginalPalette')}</span>
+                  ) : showNonIndexedProcessed ? (
+                    <div className="inline-block text-right">
+                      <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
+                        <span className="uppercase">{t('paletteNonIndexed')}</span>
+                      </div>
+                      <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
+                        <span>&nbsp;</span>
+                      </div>
                     </div>
-                  </div>
-                ) : showNonIndexedProcessed ? (
-                  <div className="inline-block text-right">
-                    <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
-                      <span className="uppercase">{t('paletteNonIndexed')}</span>
-                    </div>
-                    <div className="flex items-center justify-end gap-2 text-muted-foreground text-xs">
-                      <span>&nbsp;</span>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-              {hasProcessedImage && (
-                <div style={{ textAlign: 'left' }} className="px-4">
-                  {/* first column (was right): red toggle button, now aligned left */}
-                    <Button
-                    onClick={() => {
-                      const next = !showOriginal;
-                      // If parent controls the value, notify it; otherwise update local state
-                      if (controlledShowOriginal !== undefined) {
-                        try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
-                      } else {
-                        setShowOriginal(next);
-                        try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
-                      }
-
-                      // Restore the most-recent zoom for the view being switched to
-                      try {
-                        const restoreZoom = next ? mostRecentZoomOriginal.current : mostRecentZoomProcessed.current;
-                        // Apply restored zoom to state and notify
-                        setZoom([restoreZoom]);
-                        setSliderValue([restoreZoom]);
-                        onZoomChange?.(restoreZoom);
-
-                        // Recalculate preview height based on restored zoom
-                        const currentImage = next ? originalImage : (processedImageData || originalImage);
-                        if (currentImage) {
-                          const displayHeight = currentImage.height * (restoreZoom / 100);
-                          const minHeight = 150;
-                          const calculatedHeight = Math.max(minHeight, displayHeight);
-                          setPreviewHeight(Math.ceil(calculatedHeight));
-                        }
-                      } catch (e) {
-                        // ignore
-                      }
-                      try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
-                    }}
-                    variant="highlighted"
-                    size="sm"
-                    className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
-                    title={t('switchPreview')}
-                    aria-label={t('switchPreview')}
-                  >
-                    <RefreshCcw className="h-4 w-4 text-white" />
-                  </Button>
+                  ) : null}
                 </div>
-              )}
-              {/* Right column: original/processed info (unchanged) */}
-              <div style={{ display: 'block' }}>
-                {/* second column (was left): text/info block */}
-                <div>
+                {hasProcessedImage && (
+                  <div style={{ textAlign: 'left' }} className="px-4">
+                    <Button
+                      onClick={() => {
+                        const next = !showOriginal;
+                        if (controlledShowOriginal !== undefined) {
+                          try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
+                        } else {
+                          setShowOriginal(next);
+                          try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
+                        }
+                        try {
+                          const restoreZoom = next ? mostRecentZoomOriginal.current : mostRecentZoomProcessed.current;
+                          setZoom([restoreZoom]);
+                          setSliderValue([restoreZoom]);
+                          onZoomChange?.(restoreZoom);
+                          const currentImage = next ? originalImage : (processedImageData || originalImage);
+                          if (currentImage) {
+                            const displayHeight = currentImage.height * (restoreZoom / 100);
+                            const minHeight = 150;
+                            const calculatedHeight = Math.max(minHeight, displayHeight);
+                            setPreviewHeight(Math.ceil(calculatedHeight));
+                          }
+                        } catch (e) {}
+                        try { onShowOriginalChange?.(next); } catch (e) {}
+                      }}
+                      variant="highlighted"
+                      size="sm"
+                      className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+                      title={t('switchPreview')}
+                      aria-label={t('switchPreview')}
+                    >
+                      <RefreshCcw className="h-4 w-4 text-white" />
+                    </Button>
+                  </div>
+                )}
+                {/* Right column: original/processed info */}
+                <div style={{ display: 'block' }}>
                   <div className="flex items-center gap-2">
-                    {/* Icon indicates whether Original is currently shown in preview */}
                     {showOriginal ? (
                       <Eye className="h-4 w-4 text-foreground" />
                     ) : (
                       <EyeOff className="h-4 w-4 text-muted-foreground" />
                     )}
                     <span className={originalLabelClass}>{t('original')}</span>
-                    {/* Base resolution */}
                     <span className="text-muted-foreground text-xs">{originalImage?.width}×{originalImage?.height}</span>
-                    {/* Original image type (e.g., PNG-8, JPG) — show only if non-empty and not literally 'undefined' */}
                     {(() => {
                       const fmt = originalFormat;
                       return typeof fmt === 'string' && fmt.trim() && fmt.trim().toLowerCase() !== 'undefined'
                         ? <span className="text-muted-foreground text-xs">{fmt}</span>
                         : null;
                     })()}
-                    {/* Zoom-applied resolution for Original */}
                     {originalImage && (() => {
                       const zw = Math.round(originalImage.width * (zoom[0] / 100));
                       const zh = Math.round(originalImage.height * (zoom[0] / 100));
@@ -1398,16 +1384,13 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                   </div>
                   {processedImageData && (
                     <div className="flex items-center gap-2">
-                      {/* Icon indicates whether Processed is currently shown in preview */}
                       {!showOriginal ? (
                         <Eye className="h-4 w-4 text-foreground" />
                       ) : (
                         <EyeOff className="h-4 w-4 text-muted-foreground" />
                       )}
                       <span className={processedLabelClass}>{t('processed')}</span>
-                      {/* Base resolution for Processed */}
                       <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
-                      {/* Zoom-applied resolution for Processed (no type shown here) */}
                       {(() => {
                         const zw = Math.round(processedImageData.width * (zoom[0] / 100));
                         const zh = Math.round(processedImageData.height * (zoom[0] / 100));
@@ -1417,41 +1400,115 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                       })()}
                     </div>
                   )}
-                  {/* Palette info moved to left column */}
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="w-full text-center font-mono text-sm space-y-1 px-2">
+                {/* Center the two palette info lines */}
+                {paletteCountForInfo > 0 ? (
+                  <>
+                    {detailedPaletteLabel && (
+                      <div className="text-muted-foreground text-xs uppercase">{detailedPaletteLabel}</div>
+                    )}
+                    {helperPaletteText && (
+                      <div className="text-muted-foreground text-xs">{helperPaletteText}</div>
+                    )}
+                  </>
+                ) : showNonIndexedOriginal ? (
+                  <>
+                    <div className="text-muted-foreground text-xs uppercase">{t('paletteNonIndexed')}</div>
+                    <div className="text-muted-foreground text-xs">{t('dontModifyOriginalPalette')}</div>
+                  </>
+                ) : showNonIndexedProcessed ? (
+                  <>
+                    <div className="text-muted-foreground text-xs uppercase">{t('paletteNonIndexed')}</div>
+                    <div className="text-muted-foreground text-xs">&nbsp;</div>
+                  </>
+                ) : null}
 
-            {/* Palette Viewer - only show when needed (hidden when toolbar is vertical, since it's integrated there) */}
-            {(!isVerticalLayout) && (() => {
-              // Only show palette viewer when:
-              // 1. selectedPalette is not 'original' (showing a retro palette), OR
-              // 2. selectedPalette is 'original' AND we have an extracted ordered palette
-              //    (this covers PNG-8 and other indexed formats like GIF/BMP/PCX/TGA/IFF)
-              const hasExtractedPalette = Array.isArray(originalPaletteColors) && originalPaletteColors.length > 0;
-              const showPaletteViewer = selectedPalette !== 'original' || hasExtractedPalette;
-              return showPaletteViewer && originalImage ? (
-                <div className="mt-4">
-                  <PaletteViewer
-                    selectedPalette={paletteViewerSelectedPalette}
-                        imageData={processedImageData}
-                        onPaletteUpdate={handlePaletteViewerUpdate}
-                    originalImageSource={originalImageSource}
-                    externalPalette={paletteViewerExternal}
-                        onImageUpdate={(img) => {
-                          // When the palette viewer provides an updated processed image,
-                          // forward it to parent and ensure the preview switches to processed.
-                          try { onShowOriginalChange?.(false); } catch (e) { /* ignore */ }
-                          try { onImageUpdate?.(img); } catch (e) { /* ignore */ }
-                          // Notify any section-open callbacks if present
-                          onSectionOpen?.();
-                        }}
-                        showOriginal={showOriginal}
-                        paletteDepth={showOriginal ? paletteDepthOriginal : paletteDepthProcessed}
-                  />
+                {/* Centered toggle button */}
+                {hasProcessedImage && (
+                  <div className="w-full flex items-center justify-center py-1">
+                    <Button
+                      onClick={() => {
+                        const next = !showOriginal;
+                        if (controlledShowOriginal !== undefined) {
+                          try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
+                        } else {
+                          setShowOriginal(next);
+                          try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
+                        }
+                        try {
+                          const restoreZoom = next ? mostRecentZoomOriginal.current : mostRecentZoomProcessed.current;
+                          setZoom([restoreZoom]);
+                          setSliderValue([restoreZoom]);
+                          onZoomChange?.(restoreZoom);
+                          const currentImage = next ? originalImage : (processedImageData || originalImage);
+                          if (currentImage) {
+                            const displayHeight = currentImage.height * (restoreZoom / 100);
+                            const minHeight = 150;
+                            const calculatedHeight = Math.max(minHeight, displayHeight);
+                            setPreviewHeight(Math.ceil(calculatedHeight));
+                          }
+                        } catch (e) {}
+                        try { onShowOriginalChange?.(next); } catch (e) {}
+                      }}
+                      variant="highlighted"
+                      size="sm"
+                      className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+                      title={t('switchPreview')}
+                      aria-label={t('switchPreview')}
+                    >
+                      <RefreshCcw className="h-4 w-4 text-white" />
+                    </Button>
+                  </div>
+                )}
+
+                {/* Two image info lines centered */}
+                <div className="flex items-center justify-center gap-2">
+                  {showOriginal ? (
+                    <Eye className="h-4 w-4 text-foreground" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <span className={originalLabelClass}>{t('original')}</span>
+                  <span className="text-muted-foreground text-xs">{originalImage?.width}×{originalImage?.height}</span>
+                  {(() => {
+                    const fmt = originalFormat;
+                    return typeof fmt === 'string' && fmt.trim() && fmt.trim().toLowerCase() !== 'undefined'
+                      ? <span className="text-muted-foreground text-xs">{fmt}</span>
+                      : null;
+                  })()}
+                  {originalImage && (() => {
+                    const zw = Math.round(originalImage.width * (zoom[0] / 100));
+                    const zh = Math.round(originalImage.height * (zoom[0] / 100));
+                    const tmpl = String(t('zoomedDimensions'));
+                    const text = tmpl.replace('{width}', String(zw)).replace('{height}', String(zh));
+                    return <span className="text-muted-foreground text-xs">{text}</span>;
+                  })()}
                 </div>
-              ) : null;
-            })()}
+                {processedImageData && (
+                  <div className="flex items-center justify-center gap-2">
+                    {!showOriginal ? (
+                      <Eye className="h-4 w-4 text-foreground" />
+                    ) : (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    )}
+                    <span className={processedLabelClass}>{t('processed')}</span>
+                    <span className="text-muted-foreground text-xs">{processedImageData.width}×{processedImageData.height}</span>
+                    {(() => {
+                      const zw = Math.round(processedImageData.width * (zoom[0] / 100));
+                      const zh = Math.round(processedImageData.height * (zoom[0] / 100));
+                      const tmpl = String(t('zoomedDimensions'));
+                      const text = tmpl.replace('{width}', String(zw)).replace('{height}', String(zh));
+                      return <span className="text-muted-foreground text-xs">{text}</span>;
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Palette Viewer moved to Toolbar. Do not render here. */}
           </>
         ) : null}
       </div>

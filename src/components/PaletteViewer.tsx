@@ -32,7 +32,7 @@ interface PaletteColor {
 
 // default palettes now live in src/lib/defaultPalettes.ts
 
-export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal, paletteDepth, toolbarMode }: PaletteViewerProps & { paletteDepth?: { r: number; g: number; b: number }, toolbarMode?: boolean }) => {
+export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal, paletteDepth, toolbarMode, toolbarRowsMode }: PaletteViewerProps & { paletteDepth?: { r: number; g: number; b: number }, toolbarMode?: boolean, toolbarRowsMode?: boolean }) => {
   const { t } = useTranslation();
   const lastSentPaletteRef = useRef<string | null>(null);
 
@@ -43,20 +43,29 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     (getDefaultPalette(selectedPalette) as PaletteColor[])
   );
 
-  // Columns behavior:
-  // - Default mode: responsive (16 or 8)
-  // - Toolbar mode: 2 columns for <=16 colors, 4 columns for >16 colors
+  // Columns/Rows behavior:
+  // - Default mode: responsive (16 or 8) columns
+  // - Toolbar columns mode: 2/4/8 columns (<=16, 17..64, >64)
+  // - Toolbar rows mode: 2/4/8 rows (<=16, 17..64, >64) with grid auto-flow by column
   const [columns, setColumns] = useState<number>(toolbarMode ? 2 : 16);
+  const [rows, setRows] = useState<number>(toolbarRowsMode ? 2 : 0);
   const gridRef = useRef<HTMLDivElement | null>(null);
   const [cellSize, setCellSize] = useState<number | null>(null);
 
   useEffect(() => {
     if (toolbarMode) {
-      // Toolbar rules: <=16 -> 2 cols, 17..64 -> 4 cols, >64 -> 8 cols
+      // Toolbar columns: <=16 -> 2 cols, 17..64 -> 4 cols, >64 -> 8 cols
       const count = (paletteColors?.length || 0);
       const cols = count > 64 ? 8 : (count > 16 ? 4 : 2);
       setColumns(cols);
       return; // no listeners needed in toolbar mode
+    }
+    if (toolbarRowsMode) {
+      // Toolbar rows: <=16 -> 2 rows, 17..64 -> 4 rows, >64 -> 8 rows
+      const count = (paletteColors?.length || 0);
+      const r = count > 64 ? 8 : (count > 16 ? 4 : 2);
+      setRows(r);
+      return; // no listeners needed in toolbar rows mode
     }
     const updateColumns = () => {
       const isSmall = window.innerWidth <= 900;
@@ -66,9 +75,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     updateColumns();
     window.addEventListener('resize', updateColumns);
     return () => window.removeEventListener('resize', updateColumns);
-  }, [toolbarMode, paletteColors?.length]);
+  }, [toolbarMode, toolbarRowsMode, paletteColors?.length]);
 
-  // Calculate cell size so exactly `columns` blocks fit in the grid width.
+  // Calculate cell size to fit width nicely:
+  // - toolbarRowsMode: compute size from container width, target rows, and gaps
+  // - toolbarMode: fixed sizes (32/16/8)
+  // - default: compute to fit columns
   useEffect(() => {
     const updateCellSize = () => {
       const gridEl = gridRef.current;
@@ -76,7 +88,15 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         setCellSize(null);
         return;
       }
-      // In toolbar mode:
+      // Toolbar rows mode: choose rows 2/4/8 and fit columns to container width
+      if (toolbarRowsMode) {
+        // Let CSS compute column widths to exactly fit the container by using
+        // grid-auto-columns: 1fr and setting swatches to width:100%.
+        // No explicit cellSize is required for width in this mode; height is fixed.
+        setCellSize(null);
+        return;
+      }
+      // In toolbar columns mode:
       // - <=16 colors: 2 cols, cell 32px
       // - 17..64 colors: 4 cols, cell 16px
       // - >64 colors: 8 cols, cell 8px (half of 4-col size)
@@ -103,7 +123,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
       ro.disconnect();
       window.removeEventListener('resize', updateCellSize);
     };
-  }, [columns, toolbarMode, paletteColors?.length]);
+  }, [columns, rows, toolbarMode, toolbarRowsMode, paletteColors?.length]);
 
   const emitPaletteUpdate = useCallback((colors: any, meta?: any) => {
     try {
@@ -599,13 +619,13 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const isFixedPalette = (!!selectedPalette && FIXED_KEYS.has(selectedPalette as any));
 
   return (
-    <div className={(toolbarMode ? "relative p-0 m-0 min-w-0" : "relative space-y-4 p-4 border border-elegant-border color-bg-highlight rounded-lg") + " palette-viewer-root"}>
+    <div className={((toolbarMode || toolbarRowsMode) ? "relative p-0 m-0 min-w-0" : "relative space-y-4 p-4 border border-elegant-border color-bg-highlight rounded-lg") + " palette-viewer-root"}>
       <div className={toolbarMode ? "" : "space-y-4"}>
         <div className="w-full flex justify-center">
           <div
             className={
               "grid " + (
-                toolbarMode
+                (toolbarMode || toolbarRowsMode)
                   ? ((paletteColors?.length || 0) > 64
                       ? "gap-px"     // 1px gap when 8 cols
                       : ((paletteColors?.length || 0) > 16 ? "gap-0.5" : "gap-1"))
@@ -613,7 +633,15 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
               ) + " w-full"
             }
             ref={gridRef}
-            style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
+            style={
+              toolbarRowsMode
+                ? {
+                    gridAutoFlow: 'column',
+                    gridAutoColumns: '1fr',
+                    gridTemplateRows: `repeat(${rows || 2}, 32px)`
+                  }
+                : { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }
+            }
           >
             {paletteColors.map((color, index) => {
               const hexColor = `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`.toUpperCase();
@@ -663,11 +691,17 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                         <TooltipTrigger asChild>
                           <div className="relative">
                             <div
-                              className={toolbarMode ? "border border-elegant-border rounded cursor-pointer transition-all" : "w-full aspect-square border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"}
+                              className={(toolbarMode || toolbarRowsMode) ? "border border-elegant-border rounded cursor-pointer transition-all" : "w-full aspect-square border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"}
                               style={{
                                 backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                                 opacity: color.transparent ? 0.5 : 1,
-                                ...(toolbarMode ? { width: `${cellSize || 32}px`, height: `${cellSize || 32}px` } : (columns === 8 && cellSize ? { width: `${cellSize}px`, height: `${cellSize}px` } : {}))
+                                ...(
+                                  toolbarRowsMode
+                                    ? { width: `100%`, height: `32px` }
+                                    : (toolbarMode
+                                        ? { width: `${cellSize || 32}px`, height: `${cellSize || 32}px` }
+                                        : (columns === 8 && cellSize ? { width: `${cellSize}px`, height: `${cellSize}px` } : {}))
+                                )
                               }}
                             >
                               {blockedIndex !== null && ((selectedPalette === 'original' && showOriginal) || FIXED_KEYS.has(selectedPalette)) && (
@@ -681,7 +715,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                                 </div>
                               )}
                             </div>
-                            {!toolbarMode && <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />}
+                            {!(toolbarMode || toolbarRowsMode) && <GripVertical className="absolute -top-1 -right-1 h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />}
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="right" className="font-mono text-xs text-muted-foreground text-left">
