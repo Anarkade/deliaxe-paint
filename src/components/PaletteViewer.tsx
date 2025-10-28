@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/t
 import { toast } from '@/hooks/use-toast';
 import { FIXED_KEYS } from '@/lib/fixedPalettes';
 // pngAnalyzer functions are imported dynamically where needed to keep bundle size small
+// pngAnalyzer functions are imported dynamically where needed to keep bundle size small
 
 interface PaletteColor {
   r: number;
@@ -88,18 +89,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         setCellSize(null);
         return;
       }
-      // Toolbar rows mode: choose rows 2/4/8 and fit columns to container width
       if (toolbarRowsMode) {
-        // Let CSS compute column widths to exactly fit the container by using
-        // grid-auto-columns: 1fr and setting swatches to width:100%.
-        // No explicit cellSize is required for width in this mode; height is fixed.
+        // In rows mode, width is auto (1fr columns) and height fixed; no explicit cell size
         setCellSize(null);
         return;
       }
-      // In toolbar columns mode:
-      // - <=16 colors: 2 cols, cell 32px
-      // - 17..64 colors: 4 cols, cell 16px
-      // - >64 colors: 8 cols, cell 8px (half of 4-col size)
       if (toolbarMode) {
         const count = (paletteColors?.length || 0);
         const size = count > 64 ? 8 : (count > 16 ? 16 : 32);
@@ -107,11 +101,9 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         return;
       }
       const gridW = gridEl.clientWidth;
-      // Tailwind gap-2 => 0.5rem => typically 8px at 16px root
-      const gapPx = 8;
+      const gapPx = 8; // Tailwind gap-2 => 8px at root 16px
       const available = Math.max(0, gridW - gapPx * (columns - 1));
       const size = Math.floor(available / columns);
-      // Ensure a sensible minimum
       setCellSize(size > 24 ? size : 24);
     };
 
@@ -127,19 +119,16 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
   const emitPaletteUpdate = useCallback((colors: any, meta?: any) => {
     try {
-      // Serialize canonically using only r,g,b triplets to avoid unstable
-      // JSON string differences (extra properties or key ordering) which
-      // can cause spurious re-emissions.
       const arr = (colors || []).map((c: any) => `${c.r},${c.g},${c.b}`);
       const serialized = arr.join('|');
       if (lastSentPaletteRef.current === serialized) return;
       lastSentPaletteRef.current = serialized;
       onPaletteUpdate?.(colors as Color[], meta);
     } catch (err) {
-      // Fallback to direct call if serialization fails for some reason
       onPaletteUpdate?.(colors as Color[], meta);
     }
   }, [onPaletteUpdate]);
+
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isOriginalPNG, setIsOriginalPNG] = useState<boolean>(false);
   const [blockedIndex, setBlockedIndex] = useState<number | null>(null);
@@ -618,6 +607,20 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   // Detect whether the selected palette is one of the fixed, non-editable palettes
   const isFixedPalette = (!!selectedPalette && FIXED_KEYS.has(selectedPalette as any));
 
+  // Compute palette block padding: aim for even, crisp edges (avoid subpixel values)
+  const paletteBlockPadding = (() => {
+    if (toolbarRowsMode) {
+      // Top toolbar rows mode uses a 2px vertical gap; use 1px padding all around
+      return 1;
+    }
+    if (toolbarMode) {
+      const cols = columns || 2;
+      // Use integer pixels to avoid uneven rendering; 2 cols => 2px, 4/8 cols => 1px
+      return cols >= 4 ? 1 : 2;
+    }
+    return 0;
+  })();
+
   return (
     <div className={((toolbarMode || toolbarRowsMode) ? "relative p-0 m-0 min-w-0" : "relative space-y-4 p-4 border border-elegant-border color-bg-highlight rounded-lg") + " palette-viewer-root"}>
       <div className={toolbarMode ? "" : "space-y-4"}>
@@ -628,17 +631,16 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                 // Build grid gap classes with per-axis control when in toolbarRowsMode (top toolbar)
                 if (toolbarRowsMode) {
                   const r = rows || 2;
-                  // Baseline horizontal gap for 2 rows; 4 rows = half; 8 rows = quarter
+                  // Horizontal gap scales by rows; vertical gap is halved and set via style
                   const gapX = r >= 8 ? 'gap-x-px' : (r >= 4 ? 'gap-x-0.5' : 'gap-x-1');
-                  const gapY = 'gap-y-1'; // Keep vertical spacing at the baseline
+                  const gapY = 'gap-y-0.5';
                   return `grid ${gapX} ${gapY} w-full`;
                 }
-                // In toolbar columns mode (vertical toolbar), keep existing overall gap scaling
+                // In toolbar columns mode (vertical toolbar), per-axis: vertical gap is set via style
                 if (toolbarMode) {
-                  const cls = ((paletteColors?.length || 0) > 64
-                    ? 'gap-px'
-                    : ((paletteColors?.length || 0) > 16 ? 'gap-0.5' : 'gap-1'));
-                  return `grid ${cls} w-full`;
+                  const cols = columns || 2;
+                  const gapX = cols >= 8 ? 'gap-x-px' : (cols >= 4 ? 'gap-x-0.5' : 'gap-x-1');
+                  return `grid ${gapX} w-full`;
                 }
                 // Default viewer mode
                 return 'grid gap-2 w-full';
@@ -650,9 +652,26 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                 ? {
                     gridAutoFlow: 'column',
                     gridAutoColumns: '1fr',
-                    gridTemplateRows: `repeat(${rows || 2}, 32px)`
+                    gridTemplateRows: `repeat(${rows || 2}, 32px)`,
+                    // Gray background only for the palette block in toolbars
+                    backgroundColor: '#808080',
+                    rowGap: '2px', // halved vertical gap in rows mode
+                    padding: `${paletteBlockPadding}px`,
+                    boxSizing: 'border-box',
+                    overflow: 'hidden'
                   }
-                : { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }
+                : (toolbarMode
+                    ? {
+                        gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+                        backgroundColor: '#808080',
+                        // 2 cols => 2px, 4 cols => 1px, 8 cols => 0.5px
+                        rowGap: `${(columns || 2) >= 8 ? 0.5 : ((columns || 2) >= 4 ? 1 : 2)}px`,
+                        padding: `${paletteBlockPadding}px`,
+                        boxSizing: 'border-box',
+                        overflow: 'hidden'
+                      }
+                    : { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }
+                  )
             }
           >
             {paletteColors.map((color, index) => {
@@ -694,7 +713,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                   }}
                   onClick={() => selectNewColor(index, selectedPalette)}
                   data-palette-index={index}
-                  className={toolbarMode ? "relative group cursor-pointer rounded p-0 transition-all touch-manipulation" : "relative group cursor-pointer border border-elegant-border rounded-lg p-0.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"}
+                  className={(toolbarMode || toolbarRowsMode) ? "relative group cursor-pointer rounded p-0 transition-all touch-manipulation" : "relative group cursor-pointer border border-elegant-border rounded-lg p-0.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"}
                 >
                   <div className="w-full">
                     {/* Tooltip: wrap the color block and grip icon so hovering the whole area shows details */}
@@ -703,7 +722,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                         <TooltipTrigger asChild>
                           <div className="relative">
                             <div
-                              className={(toolbarMode || toolbarRowsMode) ? "border border-elegant-border rounded cursor-pointer transition-all" : "w-full aspect-square border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"}
+                              className={(toolbarMode || toolbarRowsMode) ? "rounded cursor-pointer transition-all" : "w-full aspect-square border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"}
                               style={{
                                 backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                                 opacity: color.transparent ? 0.5 : 1,
@@ -711,7 +730,7 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                                   toolbarRowsMode
                                     ? { width: `100%`, height: `32px` }
                                     : (toolbarMode
-                                        ? { width: `${cellSize || 32}px`, height: `${cellSize || 32}px` }
+                                        ? { width: `100%`, height: `${cellSize || 32}px` }
                                         : (columns === 8 && cellSize ? { width: `${cellSize}px`, height: `${cellSize}px` } : {}))
                                 )
                               }}
