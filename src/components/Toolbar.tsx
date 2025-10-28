@@ -147,10 +147,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   <>
       <header className="border-b border-elegant-border w-full flex-shrink-0 m-0 px-2 py-0 h-[3.75rem] flex items-center color-bg-highlight">
         <div className="w-full max-w-none flex items-center justify-between m-0 p-0 h-full">
-          {/* Left: App icon */}
-          <div className="flex items-center h-full m-0 p-0">
-            <img src={logoGif} alt="Vintage Palette Studio" className="h-8 w-8 m-0 p-0 block" />
-          </div>
+          {/* Left: App icon - hidden in horizontal toolbar (reserve space to keep layout centered) */}
+          <div className="w-8 h-full m-0 p-0" aria-hidden="true" />
 
           {/* Center: Zoom cell (copied from vertical toolbar), centered horizontally and vertically */}
           <div className="flex-1 h-full flex items-center justify-center">
