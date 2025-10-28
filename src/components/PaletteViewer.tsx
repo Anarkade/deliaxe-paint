@@ -624,13 +624,25 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         <div className="w-full flex justify-center">
           <div
             className={
-              "grid " + (
-                (toolbarMode || toolbarRowsMode)
-                  ? ((paletteColors?.length || 0) > 64
-                      ? "gap-px"     // 1px gap when 8 cols
-                      : ((paletteColors?.length || 0) > 16 ? "gap-0.5" : "gap-1"))
-                  : "gap-2"
-              ) + " w-full"
+              (() => {
+                // Build grid gap classes with per-axis control when in toolbarRowsMode (top toolbar)
+                if (toolbarRowsMode) {
+                  const r = rows || 2;
+                  // Baseline horizontal gap for 2 rows; 4 rows = half; 8 rows = quarter
+                  const gapX = r >= 8 ? 'gap-x-px' : (r >= 4 ? 'gap-x-0.5' : 'gap-x-1');
+                  const gapY = 'gap-y-1'; // Keep vertical spacing at the baseline
+                  return `grid ${gapX} ${gapY} w-full`;
+                }
+                // In toolbar columns mode (vertical toolbar), keep existing overall gap scaling
+                if (toolbarMode) {
+                  const cls = ((paletteColors?.length || 0) > 64
+                    ? 'gap-px'
+                    : ((paletteColors?.length || 0) > 16 ? 'gap-0.5' : 'gap-1'));
+                  return `grid ${cls} w-full`;
+                }
+                // Default viewer mode
+                return 'grid gap-2 w-full';
+              })()
             }
             ref={gridRef}
             style={
