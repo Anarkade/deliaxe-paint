@@ -36,7 +36,9 @@ zxSpectrumPalette,ZX Spectrum
 nokia3510ires,Nokia 1100, Nokia 3510i
 pico8res,Nokia 3100, Pico-8
 sonyEricssonRes,Sony Ericsson W200, Vitel TSM30
-atari2600res,Atari 2600 (NTSC)
+atari2600res,Atari 2600 NTSC
+atari2600pal,Atari 2600 PAL
+neoGeoPocket,Neo Geo Pocket
 gameBoyRes,Game Boy, Game Gear
 msxZxSpectrum,MSX, Master System, ZX Spectrum
 neoGeoCd,Neo·Geo CD
@@ -46,4 +48,5 @@ amigaHiResPal,Commodore Amiga Hi-Res PAL
 cpsArcade,Capcom CP System, CP System II, CP System III (4:3), CPS Changer 
 cpsWidescreen,Capcom CP System III (16:9)
 vgaAmiga,VGA, Commodore Amiga ECS
+snesPalPce,SNES PAL, TurboGrafx-16/PC-Engine
 png24RgbFormat,PNG-24 RGB

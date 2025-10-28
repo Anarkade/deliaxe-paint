@@ -60,25 +60,29 @@ export type ResolutionType =
   | '128x128'
   | '128x160'
   | '160x144'
+  | '160x152'
   | '160x192'
+  | '160x224'
   | '160x200'
   | '224x192'
   | '240x160'
   | '256x192'
   | '256x212'
   | '256x224'
+  | '256x239'
   | '256x240'
   | '304x224'
   | '320x200'
   | '320x224'
   | '320x240'
+  | '320x256'
   | '384x224'
   | '480x272'
-  | '512x212'
-  | '320x256'
   | '496x224'
+  | '512x212'
   | '640x200'
-  | '640x256';
+  | '640x256'
+  | '640x480';
 
 export type AlignmentMode = 'top-left' | 'top-center' | 'top-right' | 'middle-left' | 'middle-center' | 'middle-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
 export type ScalingMode = 'stretch' | 'scale-to-fit-width' | 'dont-scale';
@@ -143,22 +147,25 @@ export const ResolutionSelector = ({
     { value: '128x128', label: '128×128', desc: t('pico8res') },
     { value: '128x160', label: '128×160', desc: t('sonyEricssonRes') },
     { value: '160x144', label: '160×144', desc: t('gameBoyRes') },
+    { value: '160x152', label: '160×152', desc: t('neoGeoPocket') },
     { value: '160x192', label: '160×192', desc: t('atari2600res') },
-    { value: '176x200', label: '176×200', desc: t('amstradCpc0') },
+    { value: '160x224', label: '160×224', desc: t('atari2600pal') },
+    { value: '160x200', label: '160×200', desc: t('amstradCpc0') },
     { value: '224x192', label: '224×192', desc: t('nesSafeZone') },
     { value: '240x160', label: '240×160', desc: t('gameBoyAdvance') },
     { value: '256x192', label: '256×192', desc: t('msxZxSpectrum') },
     { value: '256x212', label: '256×212', desc: t('msxPlatform') },
     { value: '256x224', label: '256×224', desc: t('megaDriveNtscH32') },
+    { value: '256x239', label: '256×239', desc: t('snesPalPce') },
     { value: '256x240', label: '256×240', desc: t('megaDrivePalH32') },
     { value: '304x224', label: '304×224', desc: t('neoGeoCd') },
     { value: '320x200', label: '320×200', desc: t('amstradCpc1') },
     { value: '320x224', label: '320×224', desc: t('megaDriveNtscH40') },
     { value: '320x240', label: '320×240', desc: t('megaDrivePalH40') },
     { value: '320x256', label: '320×256', desc: t('amigaLowResPal') },
-  { value: '496x224', label: '496×224', desc: t('cpsWidescreen') },
     { value: '384x224', label: '384×224', desc: t('cpsArcade') },
     { value: '480x272', label: '480×272', desc: t('pspPlatform') },
+    { value: '496x224', label: '496×224', desc: t('cpsWidescreen') },
     { value: '512x212', label: '512×212', desc: t('msxHiRes') },
     { value: '640x200', label: '640×200', desc: t('amstradCpc2') },
     { value: '640x256', label: '640×256', desc: t('amigaHiResPal') },
