@@ -206,7 +206,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                         setZoomInput(`${num}%`);
                       }
                     }}
-                    className={("h-6 w-[24ch] px-2 text-[12px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
+                    className={("h-6 w-[12ch] px-2 text-[12px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
                       (zoomValid ? "border-transparent border-opacity-0" : "border-red-500 border-opacity-100") +
                       " focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus:outline-none")}
                     title={t('zoom')}
