@@ -12,7 +12,7 @@ export interface ToolbarProps {
   zoomPercent?: number;
   onZoomPercentChange?: (zoom: number) => void;
   // Trigger actions in ImagePreview
-  onFitToWidthRequest?: () => void;
+  onFitToWindowRequest?: () => void;
   // Palette viewer integration (for vertical toolbar mode)
   selectedPalette?: import('./ColorPaletteSelector').PaletteType;
   processedImageData?: ImageData | null;
@@ -35,7 +35,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/t
 import { PaletteViewer } from './PaletteViewer';
 
 
-export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, zoomPercent = 100, onZoomPercentChange, onFitToWidthRequest, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed }: ToolbarProps) => {
+export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, zoomPercent = 100, onZoomPercentChange, onFitToWindowRequest, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed }: ToolbarProps) => {
   // Local input state to allow free typing (even invalid) and validate live
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [zoomInput, setZoomInput] = useState<string>(
@@ -157,17 +157,17 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span>
+                      <span className="h-8 w-8 flex items-center justify-center cursor-pointer">
                         <ScanSearch
-                          className="h-4 w-4 m-0 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                          className="h-4 w-4 m-0 p-0 text-muted-foreground hover:text-foreground"
                           role="button"
-                          aria-label={t('fitToWidth')}
-                          onClick={() => { onFitToWidthRequest?.(); }}
+                          aria-label={t('fitToWindow')}
+                          onClick={() => { onFitToWindowRequest?.(); }}
                         />
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="bottom">
-                      <span>{t('fitToWidth')}</span>
+                      <span>{t('fitToWindow')}</span>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -204,7 +204,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                         setZoomInput(`${num}%`);
                       }
                     }}
-                    className={("h-6 w-[12ch] px-2 text-[12px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
+                    className={("h-8 w-[12ch] px-2 text-[12px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
                       (zoomValid ? "border-transparent border-opacity-0" : "border-red-500 border-opacity-100") +
                       " focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus:outline-none")}
                     title={t('zoom')}
@@ -370,7 +370,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
 
           {/* Row 5: Zoom control (spans 2 columns) - render only when an image is loaded */}
           {originalImage ? (
-            <div className="col-span-2 w-full min-w-0 flex items-center gap-1 mt-1 mb-1 px-0 mx-0 justify-self-stretch">
+            <div className="col-span-2 w-full min-w-0 flex items-center gap-1 mt-2 mb-2 px-0 mx-0 justify-self-stretch">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -378,13 +378,13 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                       <ScanSearch
                         className="h-4 w-4 m-0 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
                         role="button"
-                        aria-label={t('fitToWidth')}
-                        onClick={() => { onFitToWidthRequest?.(); }}
+                        aria-label={t('fitToWindow')}
+                        onClick={() => { onFitToWindowRequest?.(); }}
                       />
                     </span>
                   </TooltipTrigger>
                   <TooltipContent side="right">
-                    <span>{t('fitToWidth')}</span>
+                    <span>{t('fitToWindow')}</span>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

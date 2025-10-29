@@ -16,7 +16,7 @@ import { FIXED_KEYS } from '@/lib/fixedPalettes';
 // Performance constants for image analysis and rendering
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for performance
 const RESIZE_DEBOUNCE_MS = 100; // Debounce resize calculations
-const FIT_DEBOUNCE_MS = 250; // Minimum interval between fitToWidth executions
+const FIT_DEBOUNCE_MS = 250; // Minimum interval between fitToWindow executions
 const ZOOM_BOUNDS = { min: 1, max: 100000 }; // Updated zoom limits per request
 
 // Performance-optimized image format analysis with pixel sampling
@@ -512,10 +512,10 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       ro.disconnect();
     };
   }, []);
-  // Fit to width function
+  // Fit to window function (max zoom that fits width and available height)
   const fitToWidth = useCallback((force = false) => {
-    // If caller requested a forced fit, require a one-time permit so only
-    // authorized flows (camera preview and manual button) can execute it.
+  // If caller requested a forced fit, require a one-time permit so only
+  // authorized flows (camera preview and manual button) can execute it.
     if (force) {
       if (!autoFitPermitRef.current) {
         return;
@@ -535,7 +535,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     }
     lastFitCallRef.current = now;
     isAutoFitting.current = true;
-    // TEMPORARY DIAGNOSTIC: capture call stack and print caller location and args
+  // Note: diagnostic stack logging removed for production
     try {
       const raw = (new Error()).stack || '';
       const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
@@ -558,8 +558,40 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     try {
       if (originalImage && cw > 0) {
       const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
-      const fitZoom = Math.floor((cw / currentImage.width) * 100);
-  const newZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, fitZoom));
+      // Width-constrained zoom (%): image should not exceed container width
+      const widthZoom = Math.floor((cw / currentImage.width) * 100);
+
+      // Height-constrained zoom (%): image height plus preview footer and site footer must fit viewport
+      // Measure ImagePreview footer height (inside this component)
+      const previewFooterH = (() => {
+        try {
+          const el = (footerRef.current as HTMLElement | null);
+          if (!el) return 0;
+          const rect = el.getBoundingClientRect();
+          // Use ceiling to avoid subpixel rounding causing overflow
+          return Math.ceil(rect.height);
+        } catch { return 0; }
+      })();
+      // Measure site footer height (<footer> element at page bottom)
+      const siteFooterH = (() => {
+        try {
+          const el = (document.querySelector('footer') as HTMLElement | null);
+          if (!el) return 0;
+          const rect = el.getBoundingClientRect();
+          return Math.ceil(rect.height);
+        } catch { return 0; }
+      })();
+      // Safety margin to account for internal paddings/margins between sections
+      const safetyMargin = 8; // px
+      const viewportH = (typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight || 0) : 0);
+      const availableForImageH = Math.max(0, viewportH - siteFooterH - previewFooterH - safetyMargin);
+      const heightZoom = currentImage.height > 0
+        ? Math.floor((availableForImageH / currentImage.height) * 100)
+        : ZOOM_BOUNDS.min;
+
+      // Choose the most restrictive zoom to ensure the whole view fits the window
+      const fitZoom = Math.min(widthZoom, heightZoom);
+      const newZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, fitZoom));
   programmaticZoomChange.current = true;
   setZoom([newZoom]);
   setSliderValue([newZoom]);
@@ -568,7 +600,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   if (showOriginal) mostRecentZoomOriginal.current = newZoom;
   else mostRecentZoomProcessed.current = newZoom;
       
-      // Calculate and set height based on fit-to-width zoom
+      // Calculate and set preview container height based on chosen zoom
       const displayHeight = currentImage.height * (newZoom / 100);
       const minHeight = 150;
       const calculatedHeight = Math.max(minHeight, displayHeight);
@@ -1144,7 +1176,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                   />
                   <label htmlFor="integer-scaling" className="text-sm">{t('integerScaling')}</label>
                 </div>
-                <Button onClick={() => { autoFitPermitRef.current = true; setIntegerScaling(false); fitToWidth(true); }} variant="highlighted" size="sm" title={t('fitToWidth')} aria-label={t('fitToWidth')}>
+                <Button onClick={() => { autoFitPermitRef.current = true; setIntegerScaling(false); fitToWidth(true); }} variant="highlighted" size="sm" title={t('fitToWindow')} aria-label={t('fitToWindow')}>
                   <MoveHorizontal className="h-4 w-4" />
                 </Button>
                 <Button onClick={setZoomTo100} variant="highlighted" size="sm" title="100%" aria-label="Set zoom to 100%">

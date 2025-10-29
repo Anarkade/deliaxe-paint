@@ -2150,7 +2150,7 @@ export const RetroImageEditor = () => {
               t={t}
               zoomPercent={currentZoom}
               onZoomPercentChange={(z) => setCurrentZoom(z)}
-              onFitToWidthRequest={() => {
+              onFitToWindowRequest={() => {
                 try { imagePreviewRef.current?.fitToWidthButtonAction(); } catch (e) { /* ignore */ }
               }}
               selectedPalette={selectedPalette}
@@ -2187,7 +2187,7 @@ export const RetroImageEditor = () => {
               t={t}
               zoomPercent={currentZoom}
               onZoomPercentChange={(z) => setCurrentZoom(z)}
-              onFitToWidthRequest={() => {
+              onFitToWindowRequest={() => {
                 try { imagePreviewRef.current?.fitToWidthButtonAction(); } catch (e) { /* ignore */ }
               }}
               selectedPalette={selectedPalette}
