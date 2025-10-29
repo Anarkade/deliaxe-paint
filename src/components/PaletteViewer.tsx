@@ -639,7 +639,10 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                 // In toolbar columns mode (vertical toolbar), per-axis: vertical gap is set via style
                 if (toolbarMode) {
                   const cols = columns || 2;
-                  const gapX = cols >= 8 ? 'gap-x-px' : (cols >= 4 ? 'gap-x-0.5' : 'gap-x-1');
+                  // Halve horizontal gap for the left (vertical) toolbar where possible.
+                  // Original mapping used gap-x-1 / gap-x-0.5 / gap-x-px; shifting
+                  // down one step halves the spacing (1 -> 0.5, 0.5 -> px).
+                  const gapX = cols >= 8 ? 'gap-x-px' : (cols >= 4 ? 'gap-x-px' : 'gap-x-0.5');
                   return `grid ${gapX} w-full`;
                 }
                 // Default viewer mode
@@ -657,6 +660,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                     backgroundColor: '#808080',
                     rowGap: '2px', // halved vertical gap in rows mode
                     padding: `${paletteBlockPadding}px`,
+                    // Match swatch corner radius exactly (absolute px) rather than
+                    // scaling with container size. Tailwind `rounded` equals 0.25rem
+                    // => typically 4px at 16px root. Use explicit pixels so all
+                    // corners match swatch rounding.
+                    borderRadius: '4px',
                     boxSizing: 'border-box',
                     overflow: 'hidden'
                   }
@@ -667,6 +675,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                         // 2 cols => 2px, 4 cols => 1px, 8 cols => 0.5px
                         rowGap: `${(columns || 2) >= 8 ? 0.5 : ((columns || 2) >= 4 ? 1 : 2)}px`,
                         padding: `${paletteBlockPadding}px`,
+                        // Keep swatch corners identical to the container (absolute px)
+                        borderRadius: '4px',
                         boxSizing: 'border-box',
                         overflow: 'hidden'
                       }
