@@ -557,55 +557,73 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     
     try {
       if (originalImage && cw > 0) {
-      const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
-      // Width-constrained zoom (%): image should not exceed container width
-      const widthZoom = Math.floor((cw / currentImage.width) * 100);
+        const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
+        // Width-constrained zoom (%): image should not exceed container width
+        const widthZoom = Math.floor((cw / currentImage.width) * 100);
 
-      // Height-constrained zoom (%): image height plus preview footer and site footer must fit viewport
-      // Measure ImagePreview footer height (inside this component)
-      const previewFooterH = (() => {
-        try {
-          const el = (footerRef.current as HTMLElement | null);
-          if (!el) return 0;
-          const rect = el.getBoundingClientRect();
-          // Use ceiling to avoid subpixel rounding causing overflow
-          return Math.ceil(rect.height);
-        } catch { return 0; }
-      })();
-      // Measure site footer height (<footer> element at page bottom)
-      const siteFooterH = (() => {
-        try {
-          const el = (document.querySelector('footer') as HTMLElement | null);
-          if (!el) return 0;
-          const rect = el.getBoundingClientRect();
-          return Math.ceil(rect.height);
-        } catch { return 0; }
-      })();
-      // Safety margin to account for internal paddings/margins between sections
-      const safetyMargin = 8; // px
-      const viewportH = (typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight || 0) : 0);
-      const availableForImageH = Math.max(0, viewportH - siteFooterH - previewFooterH - safetyMargin);
-      const heightZoom = currentImage.height > 0
-        ? Math.floor((availableForImageH / currentImage.height) * 100)
-        : ZOOM_BOUNDS.min;
+        // Height-constrained zoom (%): image height plus preview footer and site footer must fit viewport
+        // Measure ImagePreview footer height (inside this component)
+        const previewFooterH = (() => {
+          try {
+            const el = (footerRef.current as HTMLElement | null);
+            if (!el) return 0;
+            const rect = el.getBoundingClientRect();
+            // Use ceiling to avoid subpixel rounding causing overflow
+            return Math.ceil(rect.height);
+          } catch { return 0; }
+        })();
+        // Measure site footer height (<footer> element at page bottom)
+        const siteFooterH = (() => {
+          try {
+            const el = (document.querySelector('footer') as HTMLElement | null);
+            if (!el) return 0;
+            const rect = el.getBoundingClientRect();
+            return Math.ceil(rect.height);
+          } catch { return 0; }
+        })();
+        // Safety margin to account for internal paddings/margins between sections
+        const safetyMargin = 8; // px
+        const viewportH = (typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight || 0) : 0);
+        const availableForImageH = Math.max(0, viewportH - siteFooterH - previewFooterH - safetyMargin);
+        const heightZoom = currentImage.height > 0
+          ? Math.floor((availableForImageH / currentImage.height) * 100)
+          : ZOOM_BOUNDS.min;
 
-      // Choose the most restrictive zoom to ensure the whole view fits the window
-      const fitZoom = Math.min(widthZoom, heightZoom);
-      const newZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, fitZoom));
-  programmaticZoomChange.current = true;
-  setZoom([newZoom]);
-  setSliderValue([newZoom]);
-  onZoomChange?.(newZoom);
-  // store per-view recent zoom
-  if (showOriginal) mostRecentZoomOriginal.current = newZoom;
-  else mostRecentZoomProcessed.current = newZoom;
-      
-      // Calculate and set preview container height based on chosen zoom
-      const displayHeight = currentImage.height * (newZoom / 100);
-      const minHeight = 150;
-      const calculatedHeight = Math.max(minHeight, displayHeight);
-      setPreviewHeight(Math.ceil(calculatedHeight));
-    }
+        // Choose the most restrictive zoom to ensure the whole view fits the window
+        const fitZoom = Math.min(widthZoom, heightZoom);
+        const newZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, fitZoom));
+
+        // Also compute fitted zoom for the alternate image (original vs processed)
+        let altNewZoom: number | null = null;
+        const altImage = showOriginal
+          ? (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : null)
+          : originalImage;
+        if (altImage && altImage.width > 0 && altImage.height > 0) {
+          const altWidthZoom = Math.floor((cw / altImage.width) * 100);
+          const altHeightZoom = Math.floor((availableForImageH / altImage.height) * 100);
+          const altFitZoom = Math.min(altWidthZoom, altHeightZoom);
+          altNewZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, altFitZoom));
+        }
+
+        programmaticZoomChange.current = true;
+        setZoom([newZoom]);
+        setSliderValue([newZoom]);
+        onZoomChange?.(newZoom);
+        // Store both per-view recent zooms so toggling keeps each view fitted
+        if (showOriginal) {
+          mostRecentZoomOriginal.current = newZoom;
+          mostRecentZoomProcessed.current = (altNewZoom ?? newZoom);
+        } else {
+          mostRecentZoomProcessed.current = newZoom;
+          mostRecentZoomOriginal.current = (altNewZoom ?? newZoom);
+        }
+        
+        // Calculate and set preview container height based on chosen zoom
+        const displayHeight = currentImage.height * (newZoom / 100);
+        const minHeight = 150;
+        const calculatedHeight = Math.max(minHeight, displayHeight);
+        setPreviewHeight(Math.ceil(calculatedHeight));
+      }
     } finally {
       // Allow a short delay before clearing running flag to avoid immediate reentry
       setTimeout(() => {
