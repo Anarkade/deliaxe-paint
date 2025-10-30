@@ -108,7 +108,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
             </p>
           </div>
           <div className="border-t border-elegant-border my-4" />
-          <div className="flex gap-6">
+          <div className="flex flex-col md:flex-row gap-6">
             {/* Tile Grid Column */}
             <div className="flex-1">
               <div className="space-y-3">
@@ -118,7 +118,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
                 </div>
                 {showTileGrid && (
                   <div className="ml-6 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Top row: Width | Height */}
                       <div>
                         <label className="block text-xs text-muted-foreground text-left">{t('width')}</label>
@@ -171,8 +171,9 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
               </div>
             </div>
 
-            {/* Vertical separator */}
-            <div className="w-px bg-border" />
+            {/* Separators: horizontal on mobile, vertical on desktop */}
+            <div className="md:hidden h-px bg-border" />
+            <div className="hidden md:block w-px bg-border" />
 
             {/* Frame Grid Column */}
             <div className="flex-1">
@@ -183,7 +184,7 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
                 </div>
                 {showFrameGrid && (
                   <div className="ml-6 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Top row: Width | Height */}
                       <div>
                         <label className="block text-xs text-muted-foreground text-left">{t('width')}</label>
