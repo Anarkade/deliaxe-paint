@@ -2481,6 +2481,7 @@ export const RetroImageEditor = () => {
                   setFrameGridColor={setFrameGridColor}
                   frameLineThickness={frameLineThickness}
                   setFrameLineThickness={setFrameLineThickness}
+                  paletteDepthProcessed={paletteDepthProcessed}
                   onClose={() => setActiveTab(null)}
                 />
               </div>

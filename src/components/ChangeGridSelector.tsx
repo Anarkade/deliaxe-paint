@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Grid3X3, X } from 'lucide-react';
+import ColorEditor from './ColorEditor';
+import type { Color } from '@/lib/colorQuantization';
 
 interface ChangeGridSelectorProps {
   showTileGrid: boolean;
@@ -29,6 +31,8 @@ interface ChangeGridSelectorProps {
   setFrameLineThickness: (v: number) => void;
   // Removed t prop, use hook instead
   onClose: () => void;
+  // Depth to quantize colors in the editor (processed palette depth)
+  paletteDepthProcessed?: { r: number; g: number; b: number };
 }
 
 export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
@@ -53,8 +57,31 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
   frameLineThickness,
   setFrameLineThickness,
   onClose,
+  paletteDepthProcessed,
 }) => {
   const { t } = useTranslation();
+  const depth = useMemo(() => ({ r: 8, g: 8, b: 8, ...(paletteDepthProcessed || {}) }), [paletteDepthProcessed]) as { r: number; g: number; b: number };
+
+  // ColorEditor state
+  const [openColorEditor, setOpenColorEditor] = useState<null | { target: 'tile' | 'frame'; initial: Color }>(null);
+
+  const parseHex = (hex: string): Color => {
+    try {
+      const m = /^#?([0-9a-fA-F]{6})$/.exec(hex || '');
+      const val = m ? m[1] : '000000';
+      const r = parseInt(val.slice(0, 2), 16);
+      const g = parseInt(val.slice(2, 4), 16);
+      const b = parseInt(val.slice(4, 6), 16);
+      return { r, g, b } as Color;
+    } catch {
+      return { r: 0, g: 0, b: 0 } as Color;
+    }
+  };
+
+  const toHex = (c: Color): string => {
+    const h = (n: number) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0').toUpperCase();
+    return `#${h(c.r)}${h(c.g)}${h(c.b)}`;
+  };
   return (
     <Card
       className="absolute z-50 left-0 right-0 p-7 bg-card border-elegant-border rounded-xl"
@@ -129,11 +156,13 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
                       </div>
                       <div>
                         <label className="block text-xs text-muted-foreground text-left">{t('tileGridColor')}</label>
-                        <input
-                          type="color"
-                          value={tileGridColor}
-                          onChange={e => setTileGridColor(e.target.value)}
+                        <button
+                          type="button"
                           className="w-full h-8 border border-input rounded bg-background cursor-pointer"
+                          onClick={() => setOpenColorEditor({ target: 'tile', initial: parseHex(tileGridColor) })}
+                          aria-label={t('tileGridColor')}
+                          title={t('tileGridColor')}
+                          style={{ backgroundColor: tileGridColor }}
                         />
                       </div>
                     </div>
@@ -192,11 +221,13 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
                       </div>
                       <div>
                         <label className="block text-xs text-muted-foreground text-left">{t('frameGridColor')}</label>
-                        <input
-                          type="color"
-                          value={frameGridColor}
-                          onChange={e => setFrameGridColor(e.target.value)}
+                        <button
+                          type="button"
                           className="w-full h-8 border border-input rounded bg-background cursor-pointer"
+                          onClick={() => setOpenColorEditor({ target: 'frame', initial: parseHex(frameGridColor) })}
+                          aria-label={t('frameGridColor')}
+                          title={t('frameGridColor')}
+                          style={{ backgroundColor: frameGridColor }}
                         />
                       </div>
                     </div>
@@ -206,6 +237,23 @@ export const ChangeGridSelector: React.FC<ChangeGridSelectorProps> = ({
             </div>
           </div>
         </div>
+      {/* Inline ColorEditor modal, centered in window */}
+      {openColorEditor && (
+        <ColorEditor
+          initial={openColorEditor.initial}
+          depth={depth}
+          onAccept={(c) => {
+            const hex = toHex(c);
+            if (openColorEditor.target === 'tile') setTileGridColor(hex);
+            else setFrameGridColor(hex);
+            setOpenColorEditor(null);
+          }}
+          onCancel={() => setOpenColorEditor(null)}
+          positioning="fixed"
+          suppressInitialCenter={false}
+        />
+      )}
+
       </Card>
   );
 };
