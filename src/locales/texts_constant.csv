@@ -50,3 +50,7 @@ cpsWidescreen,Capcom CP System III (16:9)
 vgaAmiga,VGA, Commodore Amiga ECS
 snesPalPce,SNES PAL, TurboGrafx-16/PC-Engine
 png24RgbFormat,PNG-24 RGB
+ar32,3 : 2
+ar43,4 : 3
+ar4339,43 : 39
+ar9183,91 : 83
