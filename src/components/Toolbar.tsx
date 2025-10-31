@@ -70,12 +70,28 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           event.preventDefault();
           setActiveTab('load-image');
           break;
+        case 'a':
+          event.preventDefault();
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            setActiveTab('change-aspect-ratio');
+          }
+          break;
         case 'p':
           event.preventDefault();
           if (!originalImage) {
             toast.error(t('loadImageToStart'));
           } else {
             setActiveTab('palette-selector');
+          }
+          break;
+        case 'd':
+          event.preventDefault();
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            setActiveTab('display-simulation');
           }
           break;
         case 'r':
