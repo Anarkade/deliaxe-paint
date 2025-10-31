@@ -29,7 +29,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 // Build the logo URL from Vite's BASE_URL so it resolves correctly on GitHub Pages
 const logoGif = `${import.meta.env.BASE_URL}logo.gif`;
 import { Button } from '@/components/ui/button';
-import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch } from 'lucide-react';
+import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch, Ratio, Tv } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { PaletteViewer } from './PaletteViewer';
@@ -242,6 +242,25 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             >
                 <Palette className="h-4 w-4 m-0 p-0" />
             </Button>
+            {/* New placeholders: Change Aspect Ratio and Display Simulation */}
+            <Button
+              variant={getButtonVariant('change-aspect-ratio') as import('./ui/button').ButtonProps['variant']}
+              onClick={() => handleTabClick('change-aspect-ratio')}
+              className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+              disabled={!originalImage}
+              title={t('changeAspectRatio')}
+            >
+                <Ratio className="h-4 w-4 m-0 p-0" />
+            </Button>
+            <Button
+              variant={getButtonVariant('display-simulation') as import('./ui/button').ButtonProps['variant']}
+              onClick={() => handleTabClick('display-simulation')}
+              className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+              disabled={!originalImage}
+              title={t('changeDisplaySimulation')}
+            >
+                <Tv className="h-4 w-4 m-0 p-0" />
+            </Button>
             <Button
               variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('change-grids')}
@@ -347,6 +366,26 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             title={t('changePalette')}
           >
             <Palette className="h-4 w-4 m-0 p-0" />
+          </Button>
+
+          {/* New placeholders: Change Aspect Ratio and Display Simulation */}
+          <Button
+            variant={getButtonVariant('change-aspect-ratio') as import('./ui/button').ButtonProps['variant']}
+            onClick={() => handleTabClick('change-aspect-ratio')}
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            disabled={!originalImage}
+            title={t('changeAspectRatio')}
+          >
+            <Ratio className="h-4 w-4 m-0 p-0" />
+          </Button>
+          <Button
+            variant={getButtonVariant('display-simulation') as import('./ui/button').ButtonProps['variant']}
+            onClick={() => handleTabClick('display-simulation')}
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            disabled={!originalImage}
+            title={t('changeDisplaySimulation')}
+          >
+            <Tv className="h-4 w-4 m-0 p-0" />
           </Button>
 
           {/* Row 4: Change grids (left) / Language (right) */}
