@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 
 interface FooterProps {
   isVerticalLayout: boolean;
+  // When compact is true, render a minimal, toolbar-friendly block without a <footer> tag.
+  compact?: boolean;
 }
 
-export const Footer: React.FC<FooterProps> = () => {
+export const Footer: React.FC<FooterProps> = ({ compact = false }) => {
   // Use runtime version.json when available (preferred) to avoid showing
   // stale build metadata from a cached JS bundle. Fall back to
   // environment variables injected at build time.
@@ -121,6 +123,25 @@ export const Footer: React.FC<FooterProps> = () => {
     ? formatBuildDate(effectiveUtc, effectiveLocal, effectiveTz)
     : (effectiveLocal ? `Build ${effectiveLocal} ${effectiveTz ?? ''}`.trim() : 'Build unknown');
 
+  if (compact) {
+    // Compact toolbar version: avoid using a <footer> element so global queries
+    // like document.querySelector('footer') (used by ImagePreview sizing) do not
+    // treat this as the page footer. Keep it narrow and multiline.
+    return (
+      <div className="mt-2 pb-2 w-full">
+        <div className="mx-auto text-center text-[10px] leading-tight text-muted-foreground whitespace-pre-line max-w-[64px]">
+          <div className="h-px bg-elegant-border mb-1" />
+          <div>©2025</div>
+          <div>ANARKADE</div>
+          <div>Barcelona</div>
+          <div className="h-px bg-elegant-border my-1" />
+          <div>{buildLabel}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Full-width site footer (page bottom)
   return (
     <footer className="border-t border-elegant-border bg-card flex-shrink-0 w-full">
       <div className="w-full px-[5px] py-[5px]">

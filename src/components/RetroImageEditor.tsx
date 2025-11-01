@@ -7,7 +7,6 @@ import { ExportImage } from '@/components/tabMenus/ExportImage';
 import { ChangeLanguage } from '@/components/tabMenus/ChangeLanguage';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Toolbar } from '@/components/floatingMenus/Toolbar';
-import { Footer } from '@/components/floatingMenus/Footer';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
@@ -2519,10 +2518,7 @@ export const RetroImageEditor = () => {
           </div>
         </div>
 
-        {/* Footer in right column */}
-        <div className="row-start-3 col-start-2 col-end-3 m-0 p-0" style={{ minWidth: 0 }}>
-          <Footer isVerticalLayout={isVerticalLayout} />
-        </div>
+        {/* Footer moved inside the left toolbar (compact). No page footer here. */}
 
         
       </div>

@@ -33,6 +33,7 @@ import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch, Rat
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { PaletteViewer } from '@/components/floatingMenus/PaletteViewer';
+import { Footer } from '@/components/floatingMenus/Footer';
 
 
 export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, zoomPercent = 100, onZoomPercentChange, onFitToWindowRequest, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed }: ToolbarProps) => {
@@ -507,8 +508,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             })()}
           </div>
         </div>
-        {/* Bottom spacer to match previous layout breathing room */}
-        <div className="mt-2 pb-2"></div>
+        {/* Footer lives inside the toolbar (compact), ensuring the app has no separate page footer */}
+        <Footer isVerticalLayout={true} compact />
       </div>
     </aside>
   );
