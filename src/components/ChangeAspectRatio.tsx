@@ -17,6 +17,7 @@ export const ChangeAspectRatio = ({ onClose }: ChangeAspectRatioProps) => {
     { value: 'ar32', titleKey: 'ar32', descKey: 'ar32Desc' },
     { value: 'ar43', titleKey: 'ar43', descKey: 'ar43Desc' },
     { value: 'ar4339', titleKey: 'ar4339', descKey: 'ar4339Desc' },
+    { value: 'ar479455', titleKey: 'ar479455', descKey: 'neoGeoPocket' },
     { value: 'ar9183', titleKey: 'ar9183', descKey: 'ar9183Desc' },
   ];
 
