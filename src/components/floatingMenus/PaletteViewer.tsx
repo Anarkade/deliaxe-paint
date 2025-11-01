@@ -3,10 +3,10 @@ import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import ColorEditor from '@/components/floatingMenus/ColorEditor';
 import { type Color } from '@/lib/colorQuantization';
-import { PaletteType } from './tabMenus/ChangePalette';
+import { PaletteType } from '@/components/tabMenus/ChangePalette';
 import getDefaultPalette, { SimpleColor } from '@/lib/defaultPalettes';
 import { Eye, Palette, GripVertical, Lock } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/hooks/use-toast';
 import { FIXED_KEYS } from '@/lib/fixedPalettes';
 // pngAnalyzer functions are imported dynamically where needed to keep bundle size small
