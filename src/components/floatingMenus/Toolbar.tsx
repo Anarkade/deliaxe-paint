@@ -174,62 +174,65 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             {originalImage ? (
               <div className="flex flex-col items-center justify-center w-full">
                 <div className="h-px bg-elegant-border w-full mb-1" />
-                <div className="flex items-center gap-2 justify-center">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="h-8 w-8 flex items-center justify-center cursor-pointer">
-                        <ScanSearch
-                          className="h-4 w-4 m-0 p-0 text-muted-foreground hover:text-foreground"
-                          role="button"
-                          aria-label={t('fitToWindow')}
-                          onClick={() => { onFitToWindowRequest?.(); }}
-                        />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      <span>{t('fitToWindow')}</span>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <div className="relative px-0 mx-0">
-                  <Input
-                    ref={inputRef}
-                    type="text"
-                    inputMode="numeric"
-                    value={zoomInput}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      const raw = String((e.target as HTMLInputElement).value ?? '');
-                      setZoomInput(raw);
-                      // Strict validation: only digits with optional trailing % (no other chars)
-                      const trimmed = raw.trim();
-                      const m = trimmed.match(/^([0-9]{1,6})%?$/);
-                      if (!m) {
-                        setZoomValid(false);
-                        return;
-                      }
-                      const num = Number(m[1]);
-                      if (Number.isFinite(num) && num >= 1 && num <= 100000) {
-                        setZoomValid(true);
-                        onZoomPercentChange?.(num);
-                      } else {
-                        setZoomValid(false);
-                      }
-                    }}
-                    onBlur={() => {
-                      // If invalid, keep the typed value and the red border until a valid value is entered
-                      if (zoomValid) {
-                        // Normalize to NNN%
-                        const digits = (zoomInput || '').replace(/[^0-9]/g, '');
-                        const num = Math.max(1, Math.min(100000, Number(digits || '100')));
-                        setZoomInput(`${num}%`);
-                      }
-                    }}
-                    className={("h-8 w-[12ch] px-2 text-[12px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
-                      (zoomValid ? "border-transparent border-opacity-0" : "border-red-500 border-opacity-100") +
-                      " focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus:outline-none")}
-                    title={t('zoom')}
-                  />
+                <div className="flex items-center gap-2 justify-center w-full">
+                  <div className="flex items-center">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="h-8 w-8 flex items-center justify-center cursor-pointer">
+                            <ScanSearch
+                              className="h-4 w-4 m-0 p-0 text-muted-foreground hover:text-foreground"
+                              role="button"
+                              aria-label={t('fitToWindow')}
+                              onClick={() => { onFitToWindowRequest?.(); }}
+                            />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          <span>{t('fitToWindow')}</span>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="relative px-0 mx-0">
+                    <Input
+                      ref={inputRef}
+                      type="text"
+                      inputMode="numeric"
+                      value={zoomInput}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const raw = String((e.target as HTMLInputElement).value ?? '');
+                        setZoomInput(raw);
+                        // Strict validation: only digits with optional trailing % (no other chars)
+                        const trimmed = raw.trim();
+                        const m = trimmed.match(/^([0-9]{1,6})%?$/);
+                        if (!m) {
+                          setZoomValid(false);
+                          return;
+                        }
+                        const num = Number(m[1]);
+                        if (Number.isFinite(num) && num >= 1 && num <= 100000) {
+                          setZoomValid(true);
+                          onZoomPercentChange?.(num);
+                        } else {
+                          setZoomValid(false);
+                        }
+                      }}
+                      onBlur={() => {
+                        // If invalid, keep the typed value and the red border until a valid value is entered
+                        if (zoomValid) {
+                          // Normalize to NNN%
+                          const digits = (zoomInput || '').replace(/[^0-9]/g, '');
+                          const num = Math.max(1, Math.min(100000, Number(digits || '100')));
+                          setZoomInput(`${num}%`);
+                        }
+                      }}
+                      className={("h-8 w-[12ch] px-2 text-[12px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
+                        (zoomValid ? "border-transparent border-opacity-0" : "border-red-500 border-opacity-100") +
+                        " focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus:outline-none")}
+                      title={t('zoom')}
+                    />
+                  </div>
                 </div>
                 <div className="h-px bg-elegant-border w-full mt-1" />
               </div>
