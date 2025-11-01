@@ -14,7 +14,7 @@ export interface ToolbarProps {
   // Trigger actions in ImagePreview
   onFitToWindowRequest?: () => void;
   // Palette viewer integration (for vertical toolbar mode)
-  selectedPalette?: import('./ChangePalette').PaletteType;
+  selectedPalette?: import('./tabMenus/ChangePalette').PaletteType;
   processedImageData?: ImageData | null;
   originalImageSource?: File | string | null;
   originalPaletteColors?: import('@/lib/colorQuantization').Color[];

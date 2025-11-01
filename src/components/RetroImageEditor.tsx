@@ -1,10 +1,10 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { LoadImage } from './LoadImage';
-import { CameraSelector } from './CameraSelector';
-import { ChangePalette, PaletteType } from './ChangePalette';
+import { LoadImage } from './tabMenus/LoadImage';
+import { CameraSelector } from './tabMenus/CameraSelector';
+import { ChangePalette, PaletteType } from './tabMenus/ChangePalette';
 import { ImagePreview, type ImagePreviewHandle } from './ImagePreview';
-import { ExportImage } from './ExportImage';
-import { ChangeLanguage } from './changeLanguage';
+import { ExportImage } from './tabMenus/ExportImage';
+import { ChangeLanguage } from './tabMenus/ChangeLanguage';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Toolbar } from './Toolbar';
 import { Footer } from './Footer';
@@ -22,9 +22,9 @@ import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { useCanvasPool } from '@/utils/canvasPool';
 import { imageProcessingCache, hashImage, hashImageData } from '@/utils/imageCache';
-import { ChangeGridSelector } from './ChangeGridSelector';
-import { ChangeImageResolution, ResolutionType, CombinedScalingMode } from './ChangeImageResolution';
-import { ChangeDisplayAspectRatio } from './ChangeDisplayAspectRatio';
+import { ChangeGridSelector } from './tabMenus/ChangeGridSelector';
+import { ChangeImageResolution, ResolutionType, CombinedScalingMode } from './tabMenus/ChangeImageResolution';
+import { ChangeDisplayAspectRatio } from './tabMenus/ChangeDisplayAspectRatio';
 // Performance constants - Optimized for large image handling
 const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory issues
 const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size

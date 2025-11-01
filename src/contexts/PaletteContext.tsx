@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { processMegaDriveImage, Color } from '@/lib/colorQuantization';
-import { PaletteType } from '@/components/ChangePalette';
+import { PaletteType } from '@/components/tabMenus/ChangePalette';
 
 interface PaletteContextType {
   selectedPalette: PaletteType;

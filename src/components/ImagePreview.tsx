@@ -8,7 +8,7 @@ import { Download, Eye, EyeOff, RefreshCcw, ZoomIn, Camera, X, Maximize2, MoveHo
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ImageFormatInfo } from '@/lib/pngAnalyzer';
 import { PaletteViewer } from './PaletteViewer';
-import { PaletteType } from './ChangePalette';
+import { PaletteType } from './tabMenus/ChangePalette';
 import { Color } from '@/lib/colorQuantization';
 import getDefaultPalette from '@/lib/defaultPalettes';
 import { FIXED_KEYS } from '@/lib/fixedPalettes';

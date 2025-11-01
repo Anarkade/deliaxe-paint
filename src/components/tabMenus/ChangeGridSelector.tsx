@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Grid3X3, X } from 'lucide-react';
-import ColorEditor from './ColorEditor';
+import ColorEditor from '../ColorEditor';
 import type { Color } from '@/lib/colorQuantization';
 
 interface ChangeGridSelectorProps {
