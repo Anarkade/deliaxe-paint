@@ -143,6 +143,8 @@ interface ImagePreviewProps {
   paletteDepthProcessed?: { r: number; g: number; b: number };
   // Optional: allow parent to force container styles (height/width constraints)
   containerStyle?: React.CSSProperties;
+  // When showing the processed view, optionally stretch display to this target aspect ratio (width/height), without altering pixel data
+  processedAspectRatioOverride?: number | null;
 }
 export type ImagePreviewHandle = {
   fitToWidthButtonAction: () => void;
@@ -182,7 +184,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   isVerticalLayout,
   containerStyle,
   controlledShowOriginal,
-  controlledZoom
+  controlledZoom,
+  processedAspectRatioOverride
 }: ImagePreviewProps, ref) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -968,7 +971,17 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       if (originalImage) {
         const currentImage = showOriginal ? originalImage : (processedImageData || originalImage);
         const currentZoom = zoom[0] / 100;
-        const imageHeight = currentImage.height * currentZoom;
+        // Apply AR override only for processed view (non-destructive stretch)
+        let arScaleY = 1;
+        if (!showOriginal && processedImageData && typeof processedAspectRatioOverride === 'number' && processedAspectRatioOverride > 0) {
+          const origAR = processedImageData.width / processedImageData.height;
+          const targetAR = processedAspectRatioOverride;
+          if (targetAR < origAR) {
+            // Taller than original => stretch vertically
+            arScaleY = origAR / targetAR;
+          }
+        }
+        const imageHeight = currentImage.height * currentZoom * arScaleY;
         const minHeight = 150;
         const calculatedHeight = Math.max(minHeight, imageHeight);
         setPreviewHeight(Math.ceil(calculatedHeight));
@@ -1089,8 +1102,19 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
 
   // Compute wrapper size based on the image currently displayed (processed or original)
   const currentDisplayedImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
-  const displayedWidth = currentDisplayedImage ? currentDisplayedImage.width * (zoom[0] / 100) : 0;
-  const displayedHeight = currentDisplayedImage ? currentDisplayedImage.height * (zoom[0] / 100) : 0;
+  // Compute non-destructive AR stretch factors for processed view only
+  let arScaleX = 1, arScaleY = 1;
+  if (!showOriginal && processedImageData && typeof processedAspectRatioOverride === 'number' && processedAspectRatioOverride > 0) {
+    const origAR = processedImageData.width / processedImageData.height;
+    const targetAR = processedAspectRatioOverride;
+    if (targetAR > origAR) {
+      arScaleX = targetAR / origAR; // widen
+    } else if (targetAR < origAR) {
+      arScaleY = origAR / targetAR; // heighten
+    }
+  }
+  const displayedWidth = currentDisplayedImage ? currentDisplayedImage.width * (zoom[0] / 100) * arScaleX : 0;
+  const displayedHeight = currentDisplayedImage ? currentDisplayedImage.height * (zoom[0] / 100) * arScaleY : 0;
 
   // Determine final rendered size of one image pixel in CSS pixels.
   // Prefer an exact ratio using displayedWidth/current image width so that
