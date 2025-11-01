@@ -172,9 +172,9 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           {/* Center: Zoom cell (copied from vertical toolbar), centered horizontally and vertically */}
           <div className="flex-1 h-full flex items-center justify-center">
             {originalImage ? (
-              <div className="flex flex-col items-center justify-center w-full">
-                <div className="h-px bg-elegant-border w-full mb-1" />
-                <div className="flex items-center gap-2 justify-center w-full">
+              <div className="flex flex-col items-center justify-center w-full py-2">
+                <div className="h-px bg-elegant-border w-full mb-2" />
+                <div className="flex items-center gap-2 justify-center w-full py-0">
                   <div className="flex items-center">
                     <TooltipProvider>
                       <Tooltip>
@@ -234,7 +234,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                     />
                   </div>
                 </div>
-                <div className="h-px bg-elegant-border w-full mt-1" />
+                <div className="h-px bg-elegant-border w-full mt-2" />
               </div>
             ) : null}
           </div>
@@ -436,7 +436,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           {originalImage ? (
             <>
               <div className="col-span-2 w-full"><div className="h-px bg-elegant-border my-1" /></div>
-              <div className="col-span-2 w-full min-w-0 flex items-center gap-1 mt-2 mb-2 px-0 mx-0 justify-self-stretch">
+              <div className="col-span-2 w-full min-w-0 flex items-center gap-1 py-2 px-0 mx-0 justify-self-stretch">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
