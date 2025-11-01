@@ -88,7 +88,7 @@ export type AlignmentMode = 'top-left' | 'top-center' | 'top-right' | 'middle-le
 export type ScalingMode = 'stretch' | 'scale-to-fit-width' | 'dont-scale';
 export type CombinedScalingMode = ScalingMode | AlignmentMode;
 
-interface ResolutionSelectorProps {
+interface ChangeImageResolutionProps {
   onClose?: () => void;
   onApplyResolution?: (resolution: ResolutionType) => void;
   onChangeScalingMode?: (mode: CombinedScalingMode) => void;
@@ -97,12 +97,12 @@ interface ResolutionSelectorProps {
   selectedScalingMode?: CombinedScalingMode;
 }
 
-export const ResolutionSelector = ({
+export const ChangeImageResolution = ({
   onClose,
   onApplyResolution,
   onChangeScalingMode
     , selectedResolution: selectedResolutionProp, selectedScalingMode: selectedScalingModeProp
-}: ResolutionSelectorProps) => {
+}: ChangeImageResolutionProps) => {
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>(selectedResolutionProp ?? 'original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>(selectedScalingModeProp ?? 'scale-to-fit-width');
   // Keep a separate alignment value so we can enable/disable the alignment radios

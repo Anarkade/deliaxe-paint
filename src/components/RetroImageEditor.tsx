@@ -1,10 +1,10 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { LoadImage } from './LoadImage';
 import { CameraSelector } from './CameraSelector';
-import { ColorPaletteSelector, PaletteType } from './ChangePalette';
+import { ChangePalette, PaletteType } from './ChangePalette';
 import { ImagePreview, type ImagePreviewHandle } from './ImagePreview';
 import { ExportImage } from './ExportImage';
-import { LanguageSelector } from './changeLanguage';
+import { ChangeLanguage } from './changeLanguage';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Toolbar } from './Toolbar';
 import { Footer } from './Footer';
@@ -23,7 +23,7 @@ import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { useCanvasPool } from '@/utils/canvasPool';
 import { imageProcessingCache, hashImage, hashImageData } from '@/utils/imageCache';
 import { ChangeGridSelector } from './ChangeGridSelector';
-import { ResolutionSelector, ResolutionType, CombinedScalingMode } from './ChangeImageResolution';
+import { ChangeImageResolution, ResolutionType, CombinedScalingMode } from './ChangeImageResolution';
 import { ChangeDisplayAspectRatio } from './ChangeDisplayAspectRatio';
 // Performance constants - Optimized for large image handling
 const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory issues
@@ -2308,7 +2308,7 @@ export const RetroImageEditor = () => {
                 className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <LanguageSelector hideLabel={false} onClose={() => setActiveTab(null)} />
+                <ChangeLanguage hideLabel={false} onClose={() => setActiveTab(null)} />
               </div>
             )}
 
@@ -2318,7 +2318,7 @@ export const RetroImageEditor = () => {
                 className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <ColorPaletteSelector
+                <ChangePalette
                   selectedPalette={selectedPalette}
                   onPaletteChange={(palette) => {
                     setSelectedPalette(palette);
@@ -2440,7 +2440,7 @@ export const RetroImageEditor = () => {
                 className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-visible`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <ResolutionSelector
+                <ChangeImageResolution
                   onClose={() => setActiveTab(null)}
                   onApplyResolution={(r) => {
                     // Force the next processing run to use the ORIGINAL image

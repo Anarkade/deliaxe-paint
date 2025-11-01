@@ -9,17 +9,17 @@ import { extractColorsFromImageData } from '@/lib/colorQuantization';
 
 export type PaletteType = string;
 
-interface ColorPaletteSelectorProps {
+interface ChangePaletteProps {
   selectedPalette: string;
   onPaletteChange: (palette: string) => void;
   onClose?: () => void;
 }
 
-export const ColorPaletteSelector = ({
+export const ChangePalette = ({
   selectedPalette,
   onPaletteChange,
   onClose
-}: ColorPaletteSelectorProps) => {
+}: ChangePaletteProps) => {
   const { t } = useTranslation();
   const [originalPaletteColors, setOriginalPaletteColors] = useState<string[]>([]);
 

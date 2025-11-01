@@ -6,12 +6,12 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 
-interface LanguageSelectorProps {
+interface ChangeLanguageProps {
   hideLabel?: boolean;
   onClose?: () => void;
 }
 
-export const LanguageSelector = ({ hideLabel = false, onClose }: LanguageSelectorProps) => {
+export const ChangeLanguage = ({ hideLabel = false, onClose }: ChangeLanguageProps) => {
   const { currentLanguage, changeLanguage, languages, getLanguageName, t } = useTranslation();
 
   const languagesSafe = Array.isArray(languages) ? languages : [];

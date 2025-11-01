@@ -26,7 +26,7 @@ import translationsChangeGridsCsv from '../locales/translationsChangeGrids.csv?r
 import translationsChangeLanguageCsv from '../locales/translationsChangeLanguage.csv?raw'
 import translationsChangePaletteCsv from '../locales/translationsChangePalette.csv?raw'
 import translationsChangeDisplayAspectRatioCsv from '../locales/translationsChangeDisplayAspectRatio.csv?raw'
-import translationsChangeImageResolutionCsv from '../locales/translationsChangeImageResolution.cs?raw'
+import translationsChangeImageResolutionCsv from '../locales/translationsChangeImageResolution.csv?raw'
 import translationsExportImageCsv from '../locales/translationsExportImage.csv?raw'
 import translationsImagePreviewCsv from '../locales/translationsImagePreview.csv?raw'
 import translationsImportImageCsv from '../locales/translationsImportImage.csv?raw'
