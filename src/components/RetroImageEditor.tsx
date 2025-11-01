@@ -7,7 +7,7 @@ import { ExportImage } from '@/components/tabMenus/ExportImage';
 import { ChangeLanguage } from '@/components/tabMenus/ChangeLanguage';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Toolbar } from '@/components/floatingMenus/Toolbar';
-import { Footer } from '@/components/Footer';
+import { Footer } from '@/components/floatingMenus/Footer';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
