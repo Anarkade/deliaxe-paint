@@ -25,7 +25,7 @@ import translationsAppCsv from '../locales/translationsApp.csv?raw'
 import translationsChangeGridsCsv from '../locales/translationsChangeGrids.csv?raw'
 import translationsChangeLanguageCsv from '../locales/translationsChangeLanguage.csv?raw'
 import translationsChangePaletteCsv from '../locales/translationsChangePalette.csv?raw'
-import translationsChangeAspectRatioCsv from '../locales/translationsChangeAspectRatio.csv?raw'
+import translationsChangeDisplayAspectRatioCsv from '../locales/translationsChangeDisplayAspectRatio.csv?raw'
 import translationsChangeResolutionCsv from '../locales/translationsChangeResolution.csv?raw'
 import translationsExportImageCsv from '../locales/translationsExportImage.csv?raw'
 import translationsImagePreviewCsv from '../locales/translationsImagePreview.csv?raw'
@@ -146,7 +146,7 @@ const csvData = mergeParsedCsvObjects([
   parseTranslationsCsv(translationsChangeGridsCsv),
   parseTranslationsCsv(translationsChangeLanguageCsv),
   parseTranslationsCsv(translationsChangePaletteCsv),
-  parseTranslationsCsv(translationsChangeAspectRatioCsv),
+  parseTranslationsCsv(translationsChangeDisplayAspectRatioCsv),
   parseTranslationsCsv(translationsChangeResolutionCsv),
   parseTranslationsCsv(translationsExportImageCsv),
   parseTranslationsCsv(translationsImagePreviewCsv),

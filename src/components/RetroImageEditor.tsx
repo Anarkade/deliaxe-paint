@@ -24,7 +24,7 @@ import { useCanvasPool } from '@/utils/canvasPool';
 import { imageProcessingCache, hashImage, hashImageData } from '@/utils/imageCache';
 import { ChangeGridSelector } from './ChangeGridSelector';
 import { ResolutionSelector, ResolutionType, CombinedScalingMode } from './ResolutionSelector';
-import { ChangeAspectRatio } from './ChangeAspectRatio';
+import { ChangeDisplayAspectRatio } from './ChangeDisplayAspectRatio';
 // Performance constants - Optimized for large image handling
 const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory issues
 const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size
@@ -2430,7 +2430,7 @@ export const RetroImageEditor = () => {
                 className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <ChangeAspectRatio onClose={() => setActiveTab(null)} />
+                <ChangeDisplayAspectRatio onClose={() => setActiveTab(null)} />
               </div>
             )}
 
