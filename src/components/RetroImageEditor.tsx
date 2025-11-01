@@ -484,7 +484,6 @@ export const RetroImageEditor = () => {
   const [isOriginalPNG8Indexed, setIsOriginalPNG8Indexed] = useState(false);
   const [originalPaletteColors, setOriginalPaletteColors] = useState<Color[]>([]);
   const [orderedPaletteColors, setOrderedPaletteColors] = useState<Color[]>([]);
-  const [aspectRatioMode, setAspectRatioMode] = useState<'original' | 'ar32' | 'ar43' | 'ar4339' | 'ar479455' | 'ar9183'>('original');
   const { t, currentLanguage, changeLanguage, languages, getLanguageName } = useTranslation();
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
@@ -662,7 +661,6 @@ export const RetroImageEditor = () => {
     setSelectedResolution('original');
     setScalingMode('scale-to-fit-width');
     setAutoFitKey(undefined);
-  setAspectRatioMode('original');
 
     // Reset camera & preview state
     setShowCameraPreview(false);
@@ -773,11 +771,6 @@ export const RetroImageEditor = () => {
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
   }, [isVerticalLayout]);
-
-  // Reset aspect-ratio display mode whenever a new image source is loaded
-  useEffect(() => {
-    setAspectRatioMode('original');
-  }, [originalImageSource]);
 
 
 
@@ -2252,17 +2245,6 @@ export const RetroImageEditor = () => {
               onZoomChange={handlePreviewZoomChange}
               controlledZoom={currentZoom}
               isVerticalLayout={isVerticalLayout}
-              processedAspectRatioOverride={(function(){
-                switch (aspectRatioMode) {
-                  case 'ar32': return 3/2;
-                  case 'ar43': return 4/3;
-                  case 'ar4339': return 43/39;
-                  case 'ar479455': return 479/455;
-                  case 'ar9183': return 91/83;
-                  case 'original':
-                  default: return null;
-                }
-              })()}
               onShowOriginalChange={(show) => {
                         previewToggleWasManualRef.current = true;
                         setPreviewShowingOriginal(show);
@@ -2448,11 +2430,7 @@ export const RetroImageEditor = () => {
                 className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <ChangeAspectRatio
-                  value={aspectRatioMode}
-                  onChange={(v) => setAspectRatioMode(v)}
-                  onClose={() => setActiveTab(null)}
-                />
+                <ChangeAspectRatio onClose={() => setActiveTab(null)} />
               </div>
             )}
 

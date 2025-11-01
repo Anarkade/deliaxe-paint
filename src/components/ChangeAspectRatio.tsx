@@ -7,11 +7,9 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 interface ChangeAspectRatioProps {
   onClose?: () => void;
-  value: 'original' | 'ar32' | 'ar43' | 'ar4339' | 'ar479455' | 'ar9183';
-  onChange: (value: 'original' | 'ar32' | 'ar43' | 'ar4339' | 'ar479455' | 'ar9183') => void;
 }
 
-export const ChangeAspectRatio = ({ onClose, value, onChange }: ChangeAspectRatioProps) => {
+export const ChangeAspectRatio = ({ onClose }: ChangeAspectRatioProps) => {
   const { t } = useTranslation();
 
   const options = [
@@ -45,8 +43,8 @@ export const ChangeAspectRatio = ({ onClose, value, onChange }: ChangeAspectRati
           <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('ChangeAspectRatioDesc')}</p>
         </div>
         <div className="border-t border-elegant-border my-4" />
-  {/* Controlled radio group driving preview aspect ratio (non-destructive display stretch) */}
-  <RadioGroup value={value} onValueChange={onChange as any} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3 pt-5">
+        {/* Uncontrolled radio group. Placeholder: selection does nothing for now. */}
+        <RadioGroup defaultValue="original" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3 pt-5">
           {options.map((opt) => (
             <div key={opt.value} className="flex space-x-1 min-h-[2.5rem]">
               <RadioGroupItem value={opt.value} id={`ar-${opt.value}`} className="h-3 w-3 mt-1 flex-shrink-0" />
