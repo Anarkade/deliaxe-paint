@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-interface FooterProps {
+export interface FooterProps {
   isVerticalLayout: boolean;
   // When compact is true, render a minimal, toolbar-friendly block without a <footer> tag.
   compact?: boolean;

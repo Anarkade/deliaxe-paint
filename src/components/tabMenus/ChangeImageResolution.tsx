@@ -301,10 +301,9 @@ export const ChangeImageResolution = ({
 
             <RadioGroup
               value={selectedResolution}
-              onValueChange={(value) => {
-                const r = value as ResolutionType;
-                setSelectedResolution(r);
-                onApplyResolution?.(r);
+              onValueChange={(value: ResolutionType) => {
+                setSelectedResolution(value);
+                onApplyResolution?.(value);
               }}
               className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3"
             >
