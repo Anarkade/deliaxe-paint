@@ -1,7 +1,7 @@
 import { useTranslation } from '@/hooks/useTranslation';
 import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import ColorEditor from './ColorEditor';
+import ColorEditor from '@/components/floatingMenus/ColorEditor';
 import { type Color } from '@/lib/colorQuantization';
 import { PaletteType } from './tabMenus/ChangePalette';
 import getDefaultPalette, { SimpleColor } from '@/lib/defaultPalettes';

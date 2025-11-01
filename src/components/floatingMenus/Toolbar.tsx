@@ -14,7 +14,7 @@ export interface ToolbarProps {
   // Trigger actions in ImagePreview
   onFitToWindowRequest?: () => void;
   // Palette viewer integration (for vertical toolbar mode)
-  selectedPalette?: import('./tabMenus/ChangePalette').PaletteType;
+  selectedPalette?: import('@/components/tabMenus/ChangePalette').PaletteType;
   processedImageData?: ImageData | null;
   originalImageSource?: File | string | null;
   originalPaletteColors?: import('@/lib/colorQuantization').Color[];
@@ -31,8 +31,8 @@ const logoGif = `${import.meta.env.BASE_URL}logo.gif`;
 import { Button } from '@/components/ui/button';
 import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch, Ratio, Tv } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
-import { PaletteViewer } from './PaletteViewer';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { PaletteViewer } from '@/components/PaletteViewer';
 
 
 export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, zoomPercent = 100, onZoomPercentChange, onFitToWindowRequest, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed }: ToolbarProps) => {
@@ -233,7 +233,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           {/* Right: main toolbar buttons */}
           <div className="flex items-center gap-2 flex-shrink-0 m-0 p-0 h-full">
             <Button
-              variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
+              variant={getButtonVariant('load-image') as import('@/components/ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('load-image')}
               className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               title={t('loadImage')}
@@ -241,7 +241,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                 <Upload className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
-              variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
+              variant={getButtonVariant('resolution') as import('@/components/ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('resolution')}
               className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
@@ -250,7 +250,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                 <Proportions className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
-              variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
+              variant={getButtonVariant('palette-selector') as import('@/components/ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('palette-selector')}
               className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
@@ -260,7 +260,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             </Button>
             {/* New placeholders: Change Aspect Ratio and Display Simulation */}
             <Button
-              variant={getButtonVariant('change-aspect-ratio') as import('./ui/button').ButtonProps['variant']}
+              variant={getButtonVariant('change-aspect-ratio') as import('@/components/ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('change-aspect-ratio')}
               className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
@@ -269,7 +269,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                 <Ratio className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
-              variant={getButtonVariant('display-simulation') as import('./ui/button').ButtonProps['variant']}
+              variant={getButtonVariant('display-simulation') as import('@/components/ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('display-simulation')}
               className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
@@ -278,7 +278,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                 <Tv className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
-              variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
+              variant={getButtonVariant('change-grids') as import('@/components/ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('change-grids')}
               className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
@@ -287,7 +287,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                 <Grid3X3 className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
-              variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
+              variant={getButtonVariant('export-image') as import('@/components/ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('export-image')}
               className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               disabled={!originalImage}
@@ -296,7 +296,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                 <Download className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
-              variant={getButtonVariant('language') as import('./ui/button').ButtonProps['variant']}
+              variant={getButtonVariant('language') as import('@/components/ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('language')}
               className="flex items-center justify-center h-8 w-8 px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               title={t('changeLanguage')}
@@ -347,7 +347,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
 
           {/* Row 2: Import (left) / Export (right) */}
           <Button
-            variant={getButtonVariant('load-image') as import('./ui/button').ButtonProps['variant']}
+            variant={getButtonVariant('load-image') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('load-image')}
             className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             title={t('loadImage')}
@@ -355,7 +355,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Upload className="h-4 w-4 m-0 p-0" />
           </Button>
           <Button
-            variant={getButtonVariant('export-image') as import('./ui/button').ButtonProps['variant']}
+            variant={getButtonVariant('export-image') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('export-image')}
             className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
@@ -366,7 +366,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
 
           {/* Row 3: Resolution (left) / Palette (right) */}
           <Button
-            variant={getButtonVariant('resolution') as import('./ui/button').ButtonProps['variant']}
+            variant={getButtonVariant('resolution') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('resolution')}
             className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
@@ -375,7 +375,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Proportions className="h-4 w-4 m-0 p-0" />
           </Button>
           <Button
-            variant={getButtonVariant('palette-selector') as import('./ui/button').ButtonProps['variant']}
+            variant={getButtonVariant('palette-selector') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('palette-selector')}
             className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
@@ -386,7 +386,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
 
           {/* New placeholders: Change Aspect Ratio and Display Simulation */}
           <Button
-            variant={getButtonVariant('change-aspect-ratio') as import('./ui/button').ButtonProps['variant']}
+            variant={getButtonVariant('change-aspect-ratio') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('change-aspect-ratio')}
             className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
@@ -395,7 +395,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Ratio className="h-4 w-4 m-0 p-0" />
           </Button>
           <Button
-            variant={getButtonVariant('display-simulation') as import('./ui/button').ButtonProps['variant']}
+            variant={getButtonVariant('display-simulation') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('display-simulation')}
             className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
@@ -406,7 +406,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
 
           {/* Row 4: Change grids (left) / Language (right) */}
           <Button
-            variant={getButtonVariant('change-grids') as import('./ui/button').ButtonProps['variant']}
+            variant={getButtonVariant('change-grids') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('change-grids')}
             className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             disabled={!originalImage}
@@ -415,7 +415,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Grid3X3 className="h-4 w-4 m-0 p-0" />
           </Button>
           <Button
-            variant={getButtonVariant('language') as import('./ui/button').ButtonProps['variant']}
+            variant={getButtonVariant('language') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('language')}
             className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
             title={t('changeLanguage')}

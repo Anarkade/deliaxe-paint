@@ -6,7 +6,7 @@ import { ImagePreview, type ImagePreviewHandle } from './ImagePreview';
 import { ExportImage } from './tabMenus/ExportImage';
 import { ChangeLanguage } from './tabMenus/ChangeLanguage';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Toolbar } from './Toolbar';
+import { Toolbar } from './floatingMenus/Toolbar';
 import { Footer } from './Footer';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
