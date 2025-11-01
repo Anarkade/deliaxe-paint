@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Download, Eye, EyeOff, RefreshCcw, ZoomIn, Camera, X, Maximize2, MoveHorizontal } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { ImageFormatInfo } from '@/lib/pngAnalyzer';
-import { PaletteViewer } from './floatingMenus/PaletteViewer';
-import { PaletteType } from './tabMenus/ChangePalette';
+import { PaletteViewer } from '@/components/floatingMenus/PaletteViewer';
+import { PaletteType } from '@/components/tabMenus/ChangePalette';
 import { Color } from '@/lib/colorQuantization';
 import getDefaultPalette from '@/lib/defaultPalettes';
 import { FIXED_KEYS } from '@/lib/fixedPalettes';

@@ -1,18 +1,18 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { LoadImage } from './tabMenus/LoadImage';
-import { CameraSelector } from './tabMenus/CameraSelector';
-import { ChangePalette, PaletteType } from './tabMenus/ChangePalette';
-import { ImagePreview, type ImagePreviewHandle } from './ImagePreview';
-import { ExportImage } from './tabMenus/ExportImage';
-import { ChangeLanguage } from './tabMenus/ChangeLanguage';
+import { LoadImage } from '@/components/tabMenus/LoadImage';
+import { CameraSelector } from '@/components/tabMenus/CameraSelector';
+import { ChangePalette, PaletteType } from '@/components/tabMenus/ChangePalette';
+import { ImagePreview, type ImagePreviewHandle } from '@/components/ImagePreview';
+import { ExportImage } from '@/components/tabMenus/ExportImage';
+import { ChangeLanguage } from '@/components/tabMenus/ChangeLanguage';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Toolbar } from './floatingMenus/Toolbar';
-import { Footer } from './Footer';
+import { Toolbar } from '@/components/floatingMenus/Toolbar';
+import { Footer } from '@/components/Footer';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { Upload, Palette, Eye, Monitor, Download, Grid3X3, Globe, X, AlertTriangle } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import { processMegaDriveImage, Color, quantizeChannelToBits } from '@/lib/colorQuantization';
 import { getDefaultPalette } from '@/lib/defaultPalettes';
@@ -22,9 +22,9 @@ import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
 import { useCanvasPool } from '@/utils/canvasPool';
 import { imageProcessingCache, hashImage, hashImageData } from '@/utils/imageCache';
-import { ChangeGridSelector } from './tabMenus/ChangeGridSelector';
-import { ChangeImageResolution, ResolutionType, CombinedScalingMode } from './tabMenus/ChangeImageResolution';
-import { ChangeDisplayAspectRatio } from './tabMenus/ChangeDisplayAspectRatio';
+import { ChangeGridSelector } from '@/components/tabMenus/ChangeGridSelector';
+import { ChangeImageResolution, ResolutionType, CombinedScalingMode } from '@/components/tabMenus/ChangeImageResolution';
+import { ChangeDisplayAspectRatio } from '@/components/tabMenus/ChangeDisplayAspectRatio';
 // Performance constants - Optimized for large image handling
 const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory issues
 const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size

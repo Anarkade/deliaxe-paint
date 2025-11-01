@@ -6,7 +6,7 @@ import {
   useTranslation as _useTranslation,
   TranslationContextType,
   Language,
-} from './translationHelpers'
+} from '@/contexts/translationHelpers'
 
 interface TranslationProviderProps {
   children: ReactNode

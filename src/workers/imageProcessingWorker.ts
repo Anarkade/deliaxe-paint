@@ -1,7 +1,7 @@
 // Web Worker for CPU-intensive image processing operations
 // This offloads heavy computations from the main thread to prevent UI freezing
 
-import { extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette, toRGB333, Color } from '../lib/colorQuantization';
+import { extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette, toRGB333, Color } from '@/lib/colorQuantization';
 
 export type ProcessingMessageType =
   | 'PROCESS_IMAGE'

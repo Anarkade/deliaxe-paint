@@ -1,8 +1,8 @@
 ﻿import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
+import App from '@/App.tsx'
 import './index.css'
 import { TranslationProvider } from '@/contexts/TranslationContext'
-import { initGA, sendPageview } from './lib/ga';
+import { initGA, sendPageview } from '@/lib/ga';
 
 import './App.css'
 

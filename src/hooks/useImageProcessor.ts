@@ -1,7 +1,7 @@
 // Custom hook for optimized image processing with Web Workers
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { ProcessingMessage, ProcessingResponse } from '../workers/imageProcessingWorker';
-import type { Color } from '../lib/colorQuantization';
+import type { ProcessingMessage, ProcessingResponse } from '@/workers/imageProcessingWorker';
+import type { Color } from '@/lib/colorQuantization';
 
 interface ProcessingState {
   isProcessing: boolean;
