@@ -25,6 +25,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed duplicated `className` issues in `ChangeGridSelector`.
 - Removed unused `lucide-react` icon imports and cleaned related code.
 
+## [v0.0.43-toolbars-tweaked] - 2025-11-01
+
+### Changed
+- Canonized Toolbar and Footer under `src/components/floatingMenus/` only; removed duplicates/wrappers from `src/components/`.
+- Footer now renders in compact mode inside the left toolbar; the page-level footer was removed.
+- Toolbar uses local UI imports and strictly typed palette/image callbacks; logo path uses `import.meta.env.BASE_URL` for GitHub Pages compatibility.
+
+### Fixed
+- Resolved type issues and implicit-any warnings in `Toolbar` and `ChangeImageResolution`.
+- Editor/runtime env typings aligned by adding `vite/client` to `tsconfig.app.json` and augmenting `ImportMetaEnv` in `src/vite-env.d.ts`.
+- Cleared module-not-found errors after refactors by normalizing relative vs alias imports where appropriate.
+
+### Build
+- `public/version.json` is produced by the build and preferred at runtime for version/date display; footer now formats the UTC `buildDate` into Europe/Madrid time (CET/CEST) consistently.
+
 ## [v0.0.41-image-preview-tweaked] - 2025-10-25
 
 ### Added

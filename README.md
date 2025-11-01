@@ -1,3 +1,66 @@
+## Deliaxe Paint
+
+[Live demo](https://anarkade.github.io/deliaxe-paint/) • [Actions](https://github.com/Anarkade/deliaxe-paint/actions) • [Releases](https://github.com/Anarkade/deliaxe-paint/releases)
+
+Retro image editor focused on classic consoles/computers. Load an image, quantize to vintage palettes, preview on “retro displays”, and export.
+
+Current snapshot: v0.0.43-toolbars-tweaked (the app footer shows the runtime version via public/version.json).
+
+## Features
+- Import from file or clipboard; camera capture (when allowed)
+- Fast image processing in Web Workers
+- Fixed/quantized palettes (CGA, NES, Game Boy, Mega Drive, Amiga, …)
+- Export processed image
+- Responsive UI with keyboard shortcuts
+
+## Quick start
+Prereqs: Node.js 18+, npm
+
+1) Install
+- npm install
+
+2) Dev server
+- npm run dev
+
+3) Production build
+- npm run build
+
+Notes
+- The build writes public/version.json (version + timestamps). The footer prefers this file at runtime to avoid stale metadata from cached bundles.
+- import.meta.env.BASE_URL is used for logo paths so GitHub Pages works correctly.
+
+## Project structure
+- src/components/floatingMenus/ – canonical Toolbar (Toolbar.tsx) and Footer (Footer.tsx). The footer renders in compact mode inside the left toolbar; there’s no page-level footer.
+- src/components/tabMenus/ – the tabbed panels (resolution, palette, grids, language, etc.)
+- src/lib/ – color quantization, encoders, GA helpers, utils
+- src/workers/ – image processing and color analysis
+
+Invariant
+- There must be exactly one Toolbar.tsx and one Footer.tsx, under src/components/floatingMenus/. No duplicates or wrappers under src/components/.
+
+## Keyboard shortcuts
+- Ctrl/Cmd+V: Load image from clipboard
+- I: Load image
+- P: Palette selector
+- R: Change resolution
+- G: Change grids
+- E: Export image
+- L: Change language
+- +/-: Zoom in/out
+- Esc: Close current tab
+
+## Versioning and build metadata
+- Footer shows a Barcelona-localized (CET/CEST) build time using the UTC ISO buildDate from public/version.json. If that file isn’t found, it falls back to build-time envs: VITE_BUILD_DATE, VITE_BUILD_DATE_LOCAL, VITE_BUILD_TZ_ABBR.
+- Type safety: src/vite-env.d.ts augments ImportMetaEnv; tsconfig.app.json includes vite/client types.
+
+## Contributing
+PRs welcome. Keep Toolbar/Footer only in floatingMenus/. For palettes, prefer static Tailwind class names to avoid purge issues.
+
+## License
+© 2025 Anarkade — All rights reserved
+
+---
+Legacy README content (to be cleaned):
 # Deliaxe Paint# Deliaxe Paint# Deliaxe Paint# Welcome to your Lovable project
 
 
