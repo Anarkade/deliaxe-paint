@@ -35,20 +35,13 @@ export const ColorPaletteSelector = ({
     { value: 'gameboyRealistic', labelKey: 'gameBoyRealistic', colorsKey: 'gameBoyColors' },
     { value: 'megadrive', labelKey: 'megaDrive16', colorsKey: 'megaDrive16Colors' },
     { value: 'masterSystem', labelKey: 'masterSystemPlatform', colorsKey: 'masterSystem32Colors' },
-  { value: 'gameGear', labelKey: 'gameGearPlatform', colorsKey: 'gameGear32Colors' },
+    { value: 'gameGear', labelKey: 'gameGearPlatform', colorsKey: 'gameGear32Colors' },
     { value: 'nes', labelKey: 'nesPalette', colorsKey: 'nesColors' },
     { value: 'zxSpectrum', labelKey: 'zxSpectrumPalette', colorsKey: 'zxSpectrumColors' },
   ];
 
-  // Example: extract colors from image data (replace with actual image data source)
   useEffect(() => {
-    // Dummy imageData for demonstration
-    // Replace with actual imageData from props/context
-    // const imageData = ...;
-    // if (imageData) {
-    //   const colors = extractColorsFromImageData(imageData);
-    //   setOriginalPaletteColors(colors);
-    // }
+    // placeholder for potential image-based palette extraction
   }, []);
 
   return (

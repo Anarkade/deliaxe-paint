@@ -3,7 +3,7 @@ import { useImageProcessor } from '@/hooks/useImageProcessor';
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import ColorEditor from './ColorEditor';
 import { type Color } from '@/lib/colorQuantization';
-import { PaletteType } from './ColorPaletteSelector';
+import { PaletteType } from './ChangePalette';
 import getDefaultPalette, { SimpleColor } from '@/lib/defaultPalettes';
 import { Eye, Palette, GripVertical, Lock } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
