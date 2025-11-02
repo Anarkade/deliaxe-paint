@@ -290,27 +290,40 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         const editorHeight = editorRect.height || 320;
 
         if (toolbarMode) {
-          // Place to the right of the swatch, vertically centered; use viewport (fixed) coords
-          const margin = 8; // 8px gap
-          let x = Math.round(selectedRect.right + margin);
-          let y = Math.round(selectedRect.top + (selectedRect.height / 2) - (editorHeight / 2));
+          // Align editor so its left edge touches the toolbar's right edge and
+          // vertically center it to the toolbar's central block. Compute page
+          // coordinates (client + scroll) so the editor uses absolute
+          // positioning and moves together with the page scroll.
+          const toolbarEl = selectedElement.closest('aside') as HTMLElement | null;
+          const centerEl = toolbarEl ? (toolbarEl.querySelector('[data-toolbar-center]') as HTMLElement | null) : null;
+          const toolbarRect = toolbarEl ? toolbarEl.getBoundingClientRect() : selectedRect;
+          const centerRect = centerEl ? centerEl.getBoundingClientRect() : toolbarRect;
 
-          // Clamp within viewport with small margins
-          const vw = window.innerWidth || document.documentElement.clientWidth;
-          const vh = window.innerHeight || document.documentElement.clientHeight;
+          const scrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
+          const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
 
-          // If it overflows to the right, try to place it on the left side of the swatch
-          if (x + editorWidth + margin > vw) {
-            x = Math.max(margin, Math.round(selectedRect.left - editorWidth - margin));
+          const editorWidthPx = editorRect.width || 340;
+          const editorHeightPx = editorRect.height || 320;
+
+          // Left edge of editor should touch the toolbar right edge (document coords)
+          let x = Math.round(toolbarRect.right + scrollX);
+          // Vertically center editor to the toolbar center block (document coords)
+          let y = Math.round(centerRect.top + scrollY + (centerRect.height / 2) - (editorHeightPx / 2));
+
+          // Clamp to keep editor visible within viewport (with small margins)
+          const vw = (window.innerWidth || document.documentElement.clientWidth) + scrollX;
+          const margin = 8;
+          if (x + editorWidthPx > vw - margin) {
+            // If it would overflow to the right, place to the left of the toolbar
+            x = Math.max(margin, Math.round(toolbarRect.left + scrollX - editorWidthPx));
           }
-
-          // Vertical clamping
-          const minY = margin;
-          const maxY = vh - editorHeight - margin;
+          const minY = scrollY + margin;
+          const maxY = scrollY + (window.innerHeight || document.documentElement.clientHeight) - editorHeightPx - margin;
           y = Math.max(minY, Math.min(maxY, y));
 
-          position = { x, y };
-          setEditorState({ open: true, index, depth, position, width: Math.round(editorWidth), fixed: true });
+          position = { x: Math.round(x), y: Math.round(y) };
+          // Use absolute positioning (fixed: false) so editor scrolls with the page
+          setEditorState({ open: true, index, depth, position, width: Math.round(editorWidthPx), fixed: false });
         } else if (paletteContainer) {
           // Existing behavior: compute relative to the palette viewer container
           const containerRect = paletteContainer.getBoundingClientRect();

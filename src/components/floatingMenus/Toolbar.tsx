@@ -351,7 +351,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     </div>
 
   {/* Middle group: All main controls vertically centered */}
-  <div className="flex-1 flex flex-col justify-center">
+  <div data-toolbar-center="true" className="flex-1 flex flex-col justify-center">
       {/* Two-column grid with fixed 32px tracks so text below cannot widen the toolbar */}
       <div className="grid grid-cols-[32px_32px] gap-1 justify-items-center items-center">
           {/* Row 1: Import (left) / Export (right) */}
