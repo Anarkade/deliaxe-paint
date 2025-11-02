@@ -324,6 +324,25 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           position = { x: Math.round(x), y: Math.round(y) };
           // Use absolute positioning (fixed: false) so editor scrolls with the page
           setEditorState({ open: true, index, depth, position, width: Math.round(editorWidthPx), fixed: false });
+
+          // Re-measure after the editor had a chance to apply width-dependent layout
+          // (some internal elements may wrap and change height). If the measured
+          // height differs, update the Y coordinate so the editor stays vertically
+          // centered with the toolbar center block.
+          setTimeout(() => {
+            const re = document.querySelector('[role="dialog"][aria-label="Color editor"]') as HTMLElement | null;
+            if (!re) return;
+            const newRect = re.getBoundingClientRect();
+            const newEditorH = newRect.height || editorHeightPx;
+            const newY = Math.round(centerRect.top + scrollY + (centerRect.height / 2) - (newEditorH / 2));
+            const minY2 = scrollY + margin;
+            const maxY2 = scrollY + (window.innerHeight || document.documentElement.clientHeight) - newEditorH - margin;
+            const clampedY = Math.max(minY2, Math.min(maxY2, newY));
+            // Only update if different to avoid extra renders
+            if (Math.abs(clampedY - position.y) > 1) {
+              setEditorState(prev => ({ ...prev, position: { x: position.x, y: Math.round(clampedY) }, width: Math.round(newRect.width || editorWidthPx) }));
+            }
+          }, 20);
         } else if (paletteContainer) {
           // Existing behavior: compute relative to the palette viewer container
           const containerRect = paletteContainer.getBoundingClientRect();
