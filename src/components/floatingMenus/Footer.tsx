@@ -95,7 +95,7 @@ export const Footer: React.FC<FooterProps> = ({ compact = false }) => {
         if (up.includes('SUMMER')) barcelonaAbbr = 'CEST'; else barcelonaAbbr = 'CET';
       }
 
-      return `Build ${day}/${month}/${year}, ${hour}:${minute} ${barcelonaAbbr}`;
+  return `Build ${day}/${month}/${year} ${hour}:${minute} ${barcelonaAbbr}`;
     } catch (e) {
       // Fallback: use provided localString if available or UTC iso
       try {
@@ -128,15 +128,16 @@ export const Footer: React.FC<FooterProps> = ({ compact = false }) => {
     // like document.querySelector('footer') (used by ImagePreview sizing) do not
     // treat this as the page footer. Keep it narrow and multiline.
     return (
-      <div className="mt-2 pb-2 w-full">
-        <div className="mx-auto text-center text-[10px] leading-tight text-muted-foreground whitespace-pre-line max-w-[64px]">
-          <div className="h-px bg-elegant-border mb-1" />
+      <div className="m-0 p-0 w-full">
+  <div className="h-[2px] bg-elegant-border my-2 w-full" />
+        <div className="m-0 p-0 text-center text-[10px] leading-tight text-muted-foreground whitespace-pre-line max-w-[64px] mx-auto">
           <div>©2025</div>
           <div>ANARKADE</div>
           <div>Barcelona</div>
-          <div className="h-px bg-elegant-border my-1" />
+          <div className="mt-2" />
           <div>{buildLabel}</div>
         </div>
+  <div className="h-[2px] bg-elegant-border my-2 w-full" />
       </div>
     );
   }

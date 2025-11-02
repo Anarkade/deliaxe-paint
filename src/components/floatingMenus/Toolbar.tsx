@@ -172,9 +172,11 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           {/* Center: Zoom cell (copied from vertical toolbar), centered horizontally and vertically */}
           <div className="flex-1 h-full flex items-center justify-center">
             {originalImage ? (
-              <div className="flex flex-col items-center justify-center w-full py-1.5">
-                <div className="h-px bg-elegant-border w-full mb-1.5" />
-                <div className="flex items-center gap-2 justify-center w-full py-0">
+  <div className="flex flex-col items-center justify-center w-full py-0 my-0">
+                  <div className="h-[2px] bg-elegant-border my-2 w-full" />
+                <div className="h-[2px] bg-elegant-border my-2 w-full" />
+                <div className="h-[2px] bg-elegant-border my-2 w-full" />
+          <div className="flex items-center gap-2 justify-center w-full py-0 my-0">
                   <div className="flex items-center">
                     <TooltipProvider>
                       <Tooltip>
@@ -234,7 +236,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                     />
                   </div>
                 </div>
-                <div className="h-px bg-elegant-border w-full mt-1.5" />
+                <div className="h-[3px] bg-elegant-border my-1 w-full" />
               </div>
             ) : null}
           </div>
@@ -317,12 +319,12 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
       </header>
 
       {/* Bottom: Palette viewer integrated beneath horizontal toolbar (keep same layout as when it was in ImagePreview footer) */}
-      {(() => {
+          {(() => {
         const externalPalette = (showOriginalPreview ? originalPaletteColors : processedPaletteColors) || [];
         const hasPalette = Array.isArray(externalPalette) && externalPalette.length > 0;
         const shouldShow = selectedPalette !== 'original' || hasPalette;
         return shouldShow ? (
-          <div className="px-2 py-2 color-bg-highlight w-full overflow-x-hidden">
+          <div className="px-2 py-2 mb-1 color-bg-highlight w-full overflow-x-hidden">
             <PaletteViewer
               selectedPalette={selectedPalette as unknown as string}
               imageData={processedImageData}
@@ -435,8 +437,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           {/* Row 5: Zoom control (spans 2 columns) - render only when an image is loaded */}
           {originalImage ? (
             <>
-              <div className="col-span-2 w-full"><div className="h-px bg-elegant-border my-1" /></div>
-              <div className="col-span-2 w-full min-w-0 flex items-center gap-1 py-1.5 px-0 mx-0 justify-self-stretch">
+              <div className="col-span-2 w-full"><div className="h-[3px] bg-elegant-border my-1 w-full" /></div>
+              <div className="col-span-2 w-full min-w-0 flex items-center gap-1 py-0 my-0 px-0 mx-0 justify-self-stretch">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -494,12 +496,12 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                 />
               </div>
               </div>
-              <div className="col-span-2 w-full"><div className="h-px bg-elegant-border my-1" /></div>
+              <div className="col-span-2 w-full"><div className="h-[3px] bg-elegant-border my-1 w-full" /></div>
             </>
           ) : null}
 
           {/* Palette viewer integrated at the bottom of the toolbar (spans 2 columns) */}
-          <div className="col-span-2 w-full min-w-0 justify-self-stretch">
+          <div className="col-span-2 w-full min-w-0 justify-self-stretch mb-1">
             {(() => {
               const externalPalette = (showOriginalPreview ? originalPaletteColors : processedPaletteColors) || [];
               const hasPalette = Array.isArray(externalPalette) && externalPalette.length > 0;
