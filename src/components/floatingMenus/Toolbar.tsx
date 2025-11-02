@@ -348,7 +348,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   {/* Two-column grid with fixed 32px tracks so text below cannot widen the toolbar */}
   <div className="grid grid-cols-[32px_32px] gap-1 justify-items-center items-center">
           {/* Row 1: App icon spanning 2 columns, centered horizontally and vertically */}
-          <div className="col-span-2 flex items-center justify-center mb-1 pt-2">
+          <div className="col-span-2 flex items-center justify-center mb-1 pt-1">
             <img
               src={logoGif}
               alt="Vintage Palette Studio"
