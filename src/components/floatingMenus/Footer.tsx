@@ -145,7 +145,7 @@ export const Footer: React.FC<FooterProps> = ({ compact = false }) => {
           ©2025 ANARKADE Barcelona - {buildLabel}
         </p>
       </div>
-      {/* GADebugPanel removed: GA tracking remains implemented in `src/lib/ga.ts` */}
+  {/* Google Analytics instrumentation remains implemented in `src/lib/ga.ts`. */}
     </footer>
   );
 };

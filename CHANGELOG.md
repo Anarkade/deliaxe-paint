@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed duplicated `className` issues in `ChangeGridSelector`.
 - Removed unused `lucide-react` icon imports and cleaned related code.
 
+### Removed
+- Removed `GADebugPanel` component (debug-only UI). Google Analytics implementation remains in `src/lib/ga.ts`.
+
 ## [v0.0.43-toolbars-tweaked] - 2025-11-01
 
 ### Changed
