@@ -155,3 +155,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 2025-10-22..2025-10-25: Toolbar layout and UI polish (vertical toolbar, spacing, buttons sizing).
 
 For full history see git tags and releases.
+
+## Releases (newest first)
+
+The project tags releases with git tags. Below is a newest-first snapshot of recent tags (use `git tag --sort=-taggerdate` for a live list):
+
+- v0.0.44-ui-tweaked — 2025-11-02
+- v0.0.43-toolbars-tweaked — 2025-10-29
+- v0.0.42-new-zoom — 2025-10-26
+- v0.0.41-image-preview-tweaked — 2025-10-26
+- v0.0.40-first-doble-column-toolbar — 2025-10-25
+- v0.0.39-select-camera-tweaked — 2025-10-25
+- v0.0.38-image-preview-tweaked — 2025-10-25
+- v0.0.37-preview-image-footer-tweaked — 2025-10-25
+- v0.0.36-palette-change-now-from-original — 2025-10-24
+- v0.0.35-gameboy-palettes-fixed — 2025-10-24
+- v0.0.34-Google-Analytics-implemented — 2025-10-24
+- v0.0.33-integer-scaling-tweaked — 2025-10-22
+- v0.0.32-build-time-fixed — 2025-10-21
+- v0.0.31-import-image-ui-tweaked — 2025-10-21
+- v0.0.30-added-sms-and-gg — 2025-10-15
+- v0.0.29-new-indexed-palette-types-supported — 2025-10-15
+- v0.0.28-color-editor-v3 — 2025-10-15
+- v0.0.27-palette-viewer-tweaks — 2025-10-14
+- v0.0.26-color-editor-v2 — 2025-10-12
+- v0.0.25-color-editor-v1 — 2025-10-12
+- v.0.0.23-ui-tweaks — 2025-10-09
+- v0.0.22-color-palette-sortable — 2025-10-09
+- v0.0.21-test — 2025-10-09
+- v0.0.20-image-preview-fixes — 2025-10-08
+- v0.0.10-menus-ui-teaked
+- v0.0.9-change-res-fixed — 2025-10-03
+- v0.0.8-image-preview-header-fixed — 2025-10-03
+- v0.0.7-import-image-and-toolbar-fixed — 2025-10-03
+- v0.0.6-toolbar-tweaked — 2025-10-02
+- v0.0.5-grids-improved — 2025-10-02
+- v0.0.4-grids-fixed — 2025-10-02
+- v0.0.3-camera-preview-fixed — 2025-10-01
+- v0.0.2-texts-cleaned — 2025-10-01
+- v0.0.1-website-revived — 2025-10-01
+
+If you prefer machine-readable output, run:
+
+```powershell
+git tag --sort=-taggerdate --format="%(refname:short) %(taggerdate:iso8601)" refs/tags
+```
+
+This will list tags newest-first with their tagger dates.
