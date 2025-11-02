@@ -298,6 +298,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           const centerEl = toolbarEl ? (toolbarEl.querySelector('[data-toolbar-center]') as HTMLElement | null) : null;
           const toolbarRect = toolbarEl ? toolbarEl.getBoundingClientRect() : selectedRect;
           const centerRect = centerEl ? centerEl.getBoundingClientRect() : toolbarRect;
+          // Alignment reference: the WHOLE toolbar, not only the center block
+          const alignRect = toolbarRect;
 
           const editorWidthPx = editorRect.width || 340;
           const editorHeightPx = editorRect.height || 320;
@@ -312,8 +314,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
           // Left edge local: toolbar right (viewport) minus container left (viewport)
           let localX = Math.round(toolbarRect.right - containerRect.left);
-          // Vertical center local: centerRect.top - containerRect.top + half-height - half-editor
-          let localY = Math.round(centerRect.top - containerRect.top + (centerRect.height / 2) - (editorHeightPx / 2));
+          // Vertical center local: align to the toolbar's center, not only the middle block
+          let localY = Math.round((alignRect.top - containerRect.top) + (alignRect.height / 2) - (editorHeightPx / 2));
 
           // Clamp within container viewport area to keep it visible
           const margin = 8;
@@ -322,23 +324,30 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
             // Try to place to the left of the toolbar inside the same container
             localX = Math.max(margin, Math.round(toolbarRect.left - containerRect.left - editorWidthPx));
           }
-          const minY = Math.round(Math.max(0, containerRect.top - containerRect.top + margin));
-          const maxY = Math.round((window.innerHeight || document.documentElement.clientHeight) - editorHeightPx - margin);
+          // Clamp using viewport bounds transformed to container-local coords
+          const viewportTop = (window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0);
+          const viewportH = (window.innerHeight || document.documentElement.clientHeight);
+          const minY = Math.round(viewportTop - containerRect.top + margin);
+          const maxY = Math.round(viewportTop - containerRect.top + viewportH - editorHeightPx - margin);
           localY = Math.max(minY, Math.min(maxY, localY));
 
           position = { x: Math.round(localX), y: Math.round(localY) };
           // Use absolute positioning (fixed: false) so editor scrolls with the page
           setEditorState({ open: true, index, depth, position, width: Math.round(editorWidthPx), fixed: false });
 
-          // Re-measure after the editor had a chance to apply width-dependent layout
-          // and adjust local Y if the height changes.
+          // Re-measure after layout and adjust local Y if the height changes,
+          // keeping alignment to the toolbar's vertical center.
           setTimeout(() => {
             const re = document.querySelector('[role="dialog"][aria-label="Color editor"]') as HTMLElement | null;
             if (!re || !containerEl) return;
             const newRect = re.getBoundingClientRect();
             const newEditorH = newRect.height || editorHeightPx;
-            const newLocalY = Math.round(centerRect.top - containerRect.top + (centerRect.height / 2) - (newEditorH / 2));
-            const clampedY = Math.max(minY, Math.min(maxY, newLocalY));
+            const vpTop = (window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0);
+            const vpH = (window.innerHeight || document.documentElement.clientHeight);
+            const minY2 = Math.round(vpTop - containerRect.top + margin);
+            const maxY2 = Math.round(vpTop - containerRect.top + vpH - newEditorH - margin);
+            const newLocalY = Math.round((alignRect.top - containerRect.top) + (alignRect.height / 2) - (newEditorH / 2));
+            const clampedY = Math.max(minY2, Math.min(maxY2, newLocalY));
             if (Math.abs(clampedY - position.y) > 1) {
               setEditorState(prev => ({ ...prev, position: { x: position.x, y: Math.round(clampedY) }, width: Math.round(newRect.width || editorWidthPx) }));
             }
