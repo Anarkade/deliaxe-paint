@@ -207,6 +207,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   const [sliderFullWidth, setSliderFullWidth] = useState(false);
   const [leftWrapToSecondLine, setLeftWrapToSecondLine] = useState(false);
   const footerRef = useRef<HTMLDivElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [originalFormat, setOriginalFormat] = useState<string>('');
   const [processedFormat, setProcessedFormat] = useState<string>('');
   const [isIndexedPNG, setIsIndexedPNG] = useState<boolean>(false);
@@ -561,7 +562,9 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         // Width-constrained zoom (%): image should not exceed container width
         const widthZoom = Math.floor((cw / currentImage.width) * 100);
 
-        // Height-constrained zoom (%): image height plus preview footer and site footer must fit viewport
+        // Height-constrained zoom (%): image height plus ImagePreview's own footer must fit viewport.
+        // Note: The global site Footer has been moved inside the left toolbar (compact),
+        // so it MUST NOT be subtracted here anymore.
         // Measure ImagePreview footer height (inside this component)
         const previewFooterH = (() => {
           try {
@@ -572,19 +575,38 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
             return Math.ceil(rect.height);
           } catch { return 0; }
         })();
-        // Measure site footer height (<footer> element at page bottom)
-        const siteFooterH = (() => {
+        // Account for vertical paddings/margins around the preview area (top/bottom)
+        const extraVerticalSpacing = (() => {
           try {
-            const el = (document.querySelector('footer') as HTMLElement | null);
-            if (!el) return 0;
-            const rect = el.getBoundingClientRect();
-            return Math.ceil(rect.height);
+            let sum = 0;
+            const root = rootRef.current as HTMLElement | null;
+            if (root) {
+              const cs = window.getComputedStyle(root);
+              sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+              sum += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+            }
+            const cont = containerRef.current as HTMLElement | null;
+            if (cont) {
+              const cs = window.getComputedStyle(cont);
+              sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+              // container uses no padding by default; if it exists, include it
+              sum += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+            }
+            const footer = footerRef.current as HTMLElement | null;
+            if (footer) {
+              const cs = window.getComputedStyle(footer);
+              // Height is already counted separately (previewFooterH),
+              // but include possible footer margins here.
+              sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+            }
+            return Math.ceil(sum);
           } catch { return 0; }
         })();
-        // Safety margin to account for internal paddings/margins between sections
-        const safetyMargin = 8; // px
+
+  // Safety margin: 0 so the fitted image reaches the viewport edge without leaving a gap
+  const safetyMargin = 0; // px
         const viewportH = (typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight || 0) : 0);
-        const availableForImageH = Math.max(0, viewportH - siteFooterH - previewFooterH - safetyMargin);
+        const availableForImageH = Math.max(0, viewportH - previewFooterH - extraVerticalSpacing - safetyMargin);
         const heightZoom = currentImage.height > 0
           ? Math.floor((availableForImageH / currentImage.height) * 100)
           : ZOOM_BOUNDS.min;
@@ -1175,6 +1197,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     <div 
       className="bg-card rounded-xl border border-elegant-border p-0 m-0 w-full h-full min-w-0 flex flex-col"
       data-image-preview-container
+      ref={rootRef}
     >
       {/* Header: hidden in both layouts per requirement */}
     {false && !showCameraPreview && originalImage && (
