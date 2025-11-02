@@ -344,19 +344,20 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   }
   return (
   <aside className="flex flex-col flex-shrink-0 box-border border-r border-elegant-border z-50 color-bg-highlight px-2 w-max min-h-screen">
-    <div className="py-2">
-  {/* Two-column grid with fixed 32px tracks so text below cannot widen the toolbar */}
-  <div className="grid grid-cols-[32px_32px] gap-1 justify-items-center items-center">
-          {/* Row 1: App icon spanning 2 columns, centered horizontally and vertically */}
-          <div className="col-span-2 flex items-center justify-center mb-1 pt-1">
-            <img
-              src={logoGif}
-              alt="Vintage Palette Studio"
-              className="h-8 w-8 flex-none block m-0 p-0 min-w-[32px] min-h-[32px] object-contain"
-            />
-          </div>
+    {/* Top group: App icon pinned to the very top */}
+    <div className="pt-2 flex items-start justify-center">
+      <img
+        src={logoGif}
+        alt="Vintage Palette Studio"
+        className="h-8 w-8 flex-none block m-0 p-0 min-w-[32px] min-h-[32px] object-contain"
+      />
+    </div>
 
-          {/* Row 2: Import (left) / Export (right) */}
+    {/* Middle group: All main controls vertically centered */}
+    <div className="flex-1 flex flex-col justify-center py-2">
+      {/* Two-column grid with fixed 32px tracks so text below cannot widen the toolbar */}
+      <div className="grid grid-cols-[32px_32px] gap-1 justify-items-center items-center">
+          {/* Row 1: Import (left) / Export (right) */}
           <Button
             variant={getButtonVariant('load-image') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('load-image')}
@@ -375,7 +376,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Download className="h-4 w-4 m-0 p-0" />
           </Button>
 
-          {/* Row 3: Resolution (left) / Palette (right) */}
+          {/* Row 2: Resolution (left) / Palette (right) */}
           <Button
             variant={getButtonVariant('resolution') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('resolution')}
@@ -395,7 +396,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Palette className="h-4 w-4 m-0 p-0" />
           </Button>
 
-          {/* New placeholders: Change Aspect Ratio and Display Simulation */}
+          {/* Row 3: Change Aspect Ratio (left) / Display Simulation (right) */}
           <Button
             variant={getButtonVariant('change-aspect-ratio') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('change-aspect-ratio')}
@@ -500,7 +501,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             </>
           ) : null}
 
-          {/* Palette viewer integrated at the bottom of the toolbar (spans 2 columns) */}
+          {/* Palette viewer integrated below the zoom (spans 2 columns) */}
           <div className="col-span-2 w-full min-w-0 justify-self-stretch mb-1">
             {(() => {
               const externalPalette = (showOriginalPreview ? originalPaletteColors : processedPaletteColors) || [];
@@ -521,10 +522,14 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               ) : null;
             })()}
           </div>
-        </div>
-        {/* Footer lives inside the toolbar (compact), ensuring the app has no separate page footer */}
-        <Footer isVerticalLayout={true} compact />
       </div>
+    </div>
+
+    {/* Bottom group: Footer pinned to bottom */}
+    <div className="mt-auto">
+      {/* Footer lives inside the toolbar (compact), ensuring the app has no separate page footer */}
+      <Footer isVerticalLayout={true} compact />
+    </div>
     </aside>
   );
 }
