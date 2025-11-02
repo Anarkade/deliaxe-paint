@@ -34,216 +34,101 @@ Notes
     - Note: `PaletteViewer` was consolidated under `src/components/floatingMenus/PaletteViewer.tsx`; any previous duplicate under `src/components/` has been removed and imports updated.
 - src/components/tabMenus/ – the tabbed panels (resolution, palette, grids, language, etc.)
 - src/lib/ – color quantization, encoders, GA helpers, utils
-- src/workers/ – image processing and color analysis
-
-Invariant
-- There must be exactly one Toolbar.tsx and one Footer.tsx, under src/components/floatingMenus/. No duplicates or wrappers under src/components/.
-
-## Keyboard shortcuts
-- Ctrl/Cmd+V: Load image from clipboard
-- I: Load image
-- P: Palette selector
-- R: Change resolution
-- G: Change grids
-- E: Export image
-- L: Change language
-- +/-: Zoom in/out
-- Esc: Close current tab
-
-## Versioning and build metadata
-- Footer shows a Barcelona-localized (CET/CEST) build time using the UTC ISO buildDate from public/version.json. If that file isn’t found, it falls back to build-time envs: VITE_BUILD_DATE, VITE_BUILD_DATE_LOCAL, VITE_BUILD_TZ_ABBR.
-- Type safety: src/vite-env.d.ts augments ImportMetaEnv; tsconfig.app.json includes vite/client types.
-
-## Contributing
-PRs welcome. Keep Toolbar/Footer only in floatingMenus/. For palettes, prefer static Tailwind class names to avoid purge issues.
-
-## License
-© 2025 Anarkade — All rights reserved
-
----
-Legacy README content (to be cleaned):
-# Deliaxe Paint# Deliaxe Paint# Deliaxe Paint# Welcome to your Lovable project
-
-
-
-[![Deploy to GitHub Pages](https://github.com/Anarkade/deliaxe-paint/workflows/Build%20and%20deploy%20to%20GitHub%20Pages/badge.svg)](https://github.com/Anarkade/deliaxe-paint/actions)
-
-[![Version](https://img.shields.io/badge/version-v0.0.20-blue.svg)](https://github.com/Anarkade/deliaxe-paint/releases)
-
-[![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](https://anarkade.github.io/deliaxe-paint/)[![Deploy to GitHub Pages](https://github.com/Anarkade/deliaxe-paint/workflows/Build%20and%20deploy%20to%20GitHub%20Pages/badge.svg)](https://github.com/Anarkade/deliaxe-paint/actions)
-
-
-
-**A retro image processing web application with vintage color palettes and effects**[![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](https://anarkade.github.io/deliaxe-paint/)
-
-
-
-*Last updated: 2025-10-09***A retro image processing web application with vintage color palettes and effects**## Project info
-
-
-
-## 🌐 Live Demo**A retro image processing web application with vintage color palettes and effects**
-
-
-
-**GitHub Pages**: https://anarkade.github.io/deliaxe-paint/
-
-
-
-**Production**: https://deliaxe-paint.anarka.de## 🌐 Live Demo
-
-
-
 <!--
-  Cleaned README for Deliaxe Paint
-  Contains project summary, features, quick start and recent changes.
+    Clean, consolidated README for Deliaxe Paint
+    - Removes legacy/duplicated sections
+    - Documents current project structure and quick-start steps
+    - Links to CHANGELOG for release history
 -->
 
 # Deliaxe Paint
 
-[![Version](https://img.shields.io/badge/version-v.0.0.23-ui--tweaks-blue.svg)](https://github.com/Anarkade/deliaxe-paint/releases/tag/v.0.0.23-ui-tweaks)
-[![Live Demo](https://img.shields.io/badge/demo-live-green.svg)](https://anarkade.github.io/deliaxe-paint/)
+[Live demo](https://anarkade.github.io/deliaxe-paint/) • [Actions](https://github.com/Anarkade/deliaxe-paint/actions) • [Releases](https://github.com/Anarkade/deliaxe-paint/releases)
 
-Deliaxe Paint is a retro image processing web application that applies vintage color palettes and effects to images.
+Deliaxe Paint is a retro image processing web application focused on classic consoles and computers. Load an image, quantize it to vintage palettes, preview on simulated retro displays, and export the result.
 
-Live demo: https://anarkade.github.io/deliaxe-paint/
+Current snapshot: see `public/version.json` (the app footer displays runtime build metadata).
 
 ## Features
-- Image upload and processing via web workers
-- Retro color palettes (Game Boy, Mega Drive, Amiga...)
-- Camera integration for capturing photos
-- Export processed images in multiple formats
-- Responsive UI with accessible controls
 
-## Recent changes
-- Added semantic color CSS classes and started replacing hardcoded hex colors.
-- Created `TODO_REPLACE_HARDCODED_COLORS.md` with search/replace guidance.
-- UI polish and fixes across several components (spacing, slider, resolution modal).
-- Fixed a runtime ReferenceError in `ResolutionSelector` (missing `Expand` icon import).
- - Tweaked `ImageUpload` UI: left-aligned icon + label layout, per-row separators, and normalized per-cell padding.
- - New target resolutions available in the Resolution selector: `224x192` (NES safe zone) and `496x224` (CPS widescreen).
-
-### Latest
-- 2025-10-25: v0.0.41 — Moved palette info lines from PaletteViewer to the ImagePreview footer and reworked the footer into a 3-column grid (left palette info, center Original/Processed toggle, right resolution block). Matched typography/spacing, uppercased the palette info title, refined toolbar palette grid to 2/4/8 columns with Tailwind-safe classes, and fixed helper-text precedence when toggling Original vs Processed. (See release: https://github.com/Anarkade/deliaxe-paint/releases/tag/v0.0.41-image-preview-tweaked)
-- 2025-10-22: Build and footer time normalization (CEST/CET) and palette behavior fixes. The app now generates a normalized `public/version.json` (UTC buildDate + Europe/Madrid `buildDateLocal`) and the footer shows the correct local time in both dev and production.
-- 2025-10-22: Added an itch.io-friendly redirect page at `src/itchio/index.html` — when the app is embedded into itch.io we recommend users click "Open in new tab" to enable camera and clipboard features.
-
-- 2025-10-25: v0.0.40 — Introduced a new vertical two-column toolbar layout, standardized toolbar button sizes and padding, and fixed a height mismatch on the language selector button. (See release: https://github.com/Anarkade/deliaxe-paint/releases/tag/v0.0.40-first-doble-column-toolbar)
+- Import from file or clipboard; camera capture when available
+- Fast image processing using Web Workers
+- Retro/Fixed palettes (NES, Game Boy, Mega Drive, Amiga, CGA, etc.)
+- Export processed images (PNG, indexed formats)
+- Responsive UI with keyboard shortcuts and accessible controls
 
 ## Quick start
-Prerequisites: Node.js 18+, npm
 
-1. Clone
+Requirements: Node.js 18+ and npm
 
-```bash
-git clone https://github.com/Anarkade/deliaxe-paint.git
-cd deliaxe-paint
-```
+1. Install
 
-2. Install
-
-```bash
+```powershell
 npm install
 ```
 
-3. Run dev server
+2. Run dev server
 
-```bash
+```powershell
 npm run dev
 ```
 
-4. Build for production
+3. Build for production
 
-```bash
+```powershell
 npm run build
 ```
 
+Notes
+
+- The build writes `public/version.json` containing runtime version and timestamps; the app's footer prefers that file at runtime.
+- `import.meta.env.BASE_URL` is used to resolve `logo.gif` for GitHub Pages deployments.
+
+## Project structure (high level)
+
+- `src/components/floatingMenus/` — canonical UI chrome: `Toolbar.tsx`, `Footer.tsx`, `PaletteViewer.tsx`, `ColorEditor.tsx`, etc.
+- `src/components/tabMenus/` — tabbed panels (resolution, palette selector, export, etc.)
+- `src/lib/` — core utilities (color quantization, encoders, defaults)
+- `src/hooks/` — reusable React hooks
+- `src/workers/` — Web Workers for CPU-intensive image processing
+
+Invariant
+
+- Keep a single canonical implementation of shared UI components in `src/components/floatingMenus/` (Toolbar, Footer, PaletteViewer). Avoid duplicate wrappers in `src/components/`.
+
+## Keyboard shortcuts
+
+- Ctrl/Cmd+V — Load image from clipboard
+- I — Open image loader
+- P — Open palette selector
+- R — Open resolution selector
+- G — Toggle grid options
+- E — Export image
+- L — Change UI language
+- +/- — Zoom in/out
+- Esc — Close the current panel
+
 ## Development notes
-- The build generates `public/version.json` with tag and build date used in the footer.
-- CI updates `CHANGELOG.md` and `README.md` automatically based on commits and tags.
-- Use `TODO_REPLACE_HARDCODED_COLORS.md` to continue replacing inline hex colors by semantic classes or Tailwind theme tokens.
+
+- Type safety: `tsconfig.app.json` includes `vite/client` types and `src/vite-env.d.ts` augments `ImportMetaEnv` used at build-time.
+- The CI pipeline updates `CHANGELOG.md` and `README.md` from commit history and release tags; we keep release notes in `CHANGELOG.md` (see below).
 
 ## Contributing
-Prefer feature branches for larger work. Small fixes can be pushed to `main` if desired.
+
+- Open issues for bugs and feature requests.
+- Use feature branches for large changes. Small fixes can be pushed to `main` if appropriate.
+- Keep UI component duplication to a minimum — prefer the `floatingMenus` folder for shared chrome components.
+
+## Releases & changelog
+
+See `CHANGELOG.md` for release history and the `Unreleased` section for pending changes.
 
 ## License
-©2025 Anarkade - All rights reserved
 
-
-
-
-## 🤝 Development Workflow```powershell```powershell
-
-
-
-1. **Make changes** on feature branches or directly on `main`# Create a new version tagnpm install
-
-2. **Push to main** - Automatically triggers deployment
-
-3. **Monitor deployment** - Check [GitHub Actions](https://github.com/Anarkade/deliaxe-paint/actions)git tag v0.1.0npm run dev
-
-4. **Verify live site** - Visit https://anarkade.github.io/deliaxe-paint/
-
-```
-
-### Creating Releases
-
-# Build and deploy
-
-```bash
-
-# Create and push a new tagnpm run build- Open the local URL printed by Vite (for example `http://localhost:5173/` or `http://localhost:8082/`).
-
-git tag -a v1.0.0 -m "Release version 1.0.0"
-
-git push origin v1.0.0powershell -ExecutionPolicy Bypass -File .devscripts/deploy-worktrees.ps1
-
-
-
-# This will update the version shown in the app footer```- To verify the camera preview sizing in the app, open DevTools → Console and run the following snippet. It prints the video metadata and container geometry used by the preview UI:
-
-```
-
-
-
-## 📝 License
-
-## 📁 Project Structure```javascript
-
-©2025 Anarkade - All rights reserved
-
-(() => {
-
-## 🤝 Contributing
-
-```	const res = { location: location.href, protocol: location.protocol, isSecureContext: window.isSecureContext };
-
-This project is primarily maintained by Anarkade. For bug reports or feature requests, please open an issue on GitHub.
-
-deliaxe-paint/	const video = document.querySelector('video');
+© 2025 Anarkade — All rights reserved
 
 ---
-
-├── public/                 # Static assets	res.videoFound = !!video;
-
-**Built with ❤️ for retro digital art enthusiasts**
-│   ├── logo.gif           # App logo and favicon	if (video) {
-
-│   └── version.json       # Generated version info		const rect = video.getBoundingClientRect();
-
-├── src/		res.videoRect = { w: Math.round(rect.width), h: Math.round(rect.height) };
-
-│   ├── components/        # React components		res.videoMeta = { videoWidth: video.videoWidth, videoHeight: video.videoHeight };
-
-│   ├── contexts/          # React contexts		try {
-
-│   ├── hooks/            # Custom React hooks			const tracks = video.srcObject ? (video.srcObject).getVideoTracks() : [];
-
-│   ├── lib/              # Utility libraries			if (tracks && tracks.length) res.trackSettings = tracks[0].getSettings ? tracks[0].getSettings() : null;
-
-│   ├── locales/          # Internationalization		} catch (e) { res.trackSettingsError = String(e); }
-
-│   ├── pages/            # Route pages	}
+*This README was cleaned and consolidated to remove legacy blocks and duplicates.*
 
 │   ├── utils/            # Helper functions
 

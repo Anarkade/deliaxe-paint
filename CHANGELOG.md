@@ -116,35 +116,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Build date and time display in footer with Spanish locale format
-- Static version.json generation during build process
-- Enhanced git tag detection system with multiple fallback strategies
-- VITE_BUILD_DATE environment variable injection
-
-### Fixed
-- Logo 404 error by moving logo.gif to public directory
-- Version display showing v0.0.0 instead of actual git tag version
-- Index.html references to non-existent compiled assets causing app crashes
-- Logo path references in favicon and meta tags
-
-### Changed
-- Footer now displays version and build timestamp: "©2025 Anarkade - v0.0.17 (08/10/2025, 06:41)"
-- Improved version detection system using static files instead of runtime git operations
-- Enhanced vite.config.ts with version file generation capabilities
-
-### Removed
-- Debug components and routes (Debug.tsx, VersionDebug.tsx)
-- Unused useVersion React hook
-- Temporary debug artifacts and console logging
-
-## [0.0.16-static-version] - 2025-10-08
+## [Unreleased]
 
 ### Added
-- Initial static version system implementation
-- Version.json generation in public directory
+- Automated docs updates in CI (README/CHANGELOG sync)
+
+### Changed
+- Consolidated UI chrome under `src/components/floatingMenus/` (Toolbar, Footer, PaletteViewer). Removed duplicate `src/components/PaletteViewer.tsx` and normalized imports.
 
 ### Fixed
-- Basic version detection issues
+- Minor spacing and layout fixes across toolbar and preview components.
 
-## Previous Versions
+---
 
-Previous changes were not documented in changelog format.
+## [v0.0.43-toolbars-tweaked] - 2025-11-01
+
+### Changed
+- Canonized Toolbar and Footer under `src/components/floatingMenus/` and simplified toolbar vertical layout.
+
+### Build
+- `public/version.json` is produced by the build and preferred at runtime for version/date display; footer formats the UTC `buildDate` into Europe/Madrid time (CET/CEST).
+
+---
+
+## [v0.0.41-image-preview-tweaked] - 2025-10-25
+
+### Added
+- ImagePreview footer now includes palette information and helper text; this centralizes viewer status messaging.
+
+### Changed
+- Moved palette info lines from PaletteViewer to ImagePreview footer to avoid duplication.
+
+---
+
+## Older changes (summary)
+
+- 2025-10-22: Build-time normalization and improved version metadata handling.
+- 2025-10-22..2025-10-25: Toolbar layout and UI polish (vertical toolbar, spacing, buttons sizing).
+
+For full history see git tags and releases.
