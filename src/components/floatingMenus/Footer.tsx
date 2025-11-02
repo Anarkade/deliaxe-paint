@@ -129,7 +129,6 @@ export const Footer: React.FC<FooterProps> = ({ compact = false }) => {
     // treat this as the page footer. Keep it narrow and multiline.
     return (
       <div className="m-0 p-0 w-full">
-  <div className="h-[2px] bg-elegant-border my-2 w-full" />
         <div className="m-0 p-0 text-center text-[10px] leading-tight text-muted-foreground whitespace-pre-line max-w-[64px] mx-auto">
           <div className="mt-2" />
           <div>{buildLabel}</div>
@@ -140,7 +139,7 @@ export const Footer: React.FC<FooterProps> = ({ compact = false }) => {
 
   // Full-width site footer (page bottom)
   return (
-    <footer className="border-t border-elegant-border bg-card flex-shrink-0 w-full">
+    <footer className="bg-card flex-shrink-0 w-full">
       <div className="w-full px-[5px] py-[5px]">
         <p className="text-sm text-muted-foreground text-center">
           ©2025 ANARKADE Barcelona - {buildLabel}

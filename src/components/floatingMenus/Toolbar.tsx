@@ -172,10 +172,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           {/* Center: Zoom cell (copied from vertical toolbar), centered horizontally and vertically */}
           <div className="flex-1 h-full flex items-center justify-center">
             {originalImage ? (
-  <div className="flex flex-col items-center justify-center w-full py-0 my-0">
-                  <div className="h-[2px] bg-elegant-border my-2 w-full" />
-                <div className="h-[2px] bg-elegant-border my-2 w-full" />
-                <div className="h-[2px] bg-elegant-border my-2 w-full" />
+          <div className="flex flex-col items-center justify-center w-full py-0 my-0">
           <div className="flex items-center gap-2 justify-center w-full py-0 my-0">
                   <div className="flex items-center">
                     <TooltipProvider>
@@ -236,7 +233,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                     />
                   </div>
                 </div>
-                <div className="h-[3px] bg-elegant-border my-1 w-full" />
+                
               </div>
             ) : null}
           </div>
@@ -353,8 +350,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
       />
     </div>
 
-    {/* Middle group: All main controls vertically centered */}
-    <div className="flex-1 flex flex-col justify-center py-2">
+  {/* Middle group: All main controls vertically centered */}
+  <div className="flex-1 flex flex-col justify-center">
       {/* Two-column grid with fixed 32px tracks so text below cannot widen the toolbar */}
       <div className="grid grid-cols-[32px_32px] gap-1 justify-items-center items-center">
           {/* Row 1: Import (left) / Export (right) */}
@@ -438,7 +435,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           {/* Row 5: Zoom control (spans 2 columns) - render only when an image is loaded */}
           {originalImage ? (
             <>
-              <div className="col-span-2 w-full"><div className="h-[3px] bg-elegant-border my-1 w-full" /></div>
+              
               <div className="col-span-2 w-full min-w-0 flex items-center gap-1 py-0 my-0 px-0 mx-0 justify-self-stretch">
               <TooltipProvider>
                 <Tooltip>
@@ -497,7 +494,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                 />
               </div>
               </div>
-              <div className="col-span-2 w-full"><div className="h-[3px] bg-elegant-border my-1 w-full" /></div>
+              
             </>
           ) : null}
 
