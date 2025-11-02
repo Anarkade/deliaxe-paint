@@ -299,50 +299,50 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           const toolbarRect = toolbarEl ? toolbarEl.getBoundingClientRect() : selectedRect;
           const centerRect = centerEl ? centerEl.getBoundingClientRect() : toolbarRect;
 
-          const scrollX = window.scrollX || window.pageXOffset || document.documentElement.scrollLeft || 0;
-          const scrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0;
-
           const editorWidthPx = editorRect.width || 340;
           const editorHeightPx = editorRect.height || 320;
 
-          // Left edge of editor should touch the toolbar right edge (document coords)
-          let x = Math.round(toolbarRect.right + scrollX);
-          // Vertically center editor to the toolbar center block (document coords)
-          let y = Math.round(centerRect.top + scrollY + (centerRect.height / 2) - (editorHeightPx / 2));
+          // Because the PaletteViewer root is positioned (relative), the
+          // ColorEditor will be absolutely positioned relative to that root.
+          // Compute coordinates local to the palette container so the left/top
+          // we set match the desired document placement and the editor will
+          // scroll together with the page.
+          const containerEl = paletteContainer as HTMLElement | null;
+          const containerRect = containerEl ? containerEl.getBoundingClientRect() : { left: 0, top: 0 } as DOMRect;
 
-          // Clamp to keep editor visible within viewport (with small margins)
-          const vw = (window.innerWidth || document.documentElement.clientWidth) + scrollX;
+          // Left edge local: toolbar right (viewport) minus container left (viewport)
+          let localX = Math.round(toolbarRect.right - containerRect.left);
+          // Vertical center local: centerRect.top - containerRect.top + half-height - half-editor
+          let localY = Math.round(centerRect.top - containerRect.top + (centerRect.height / 2) - (editorHeightPx / 2));
+
+          // Clamp within container viewport area to keep it visible
           const margin = 8;
-          if (x + editorWidthPx > vw - margin) {
-            // If it would overflow to the right, place to the left of the toolbar
-            x = Math.max(margin, Math.round(toolbarRect.left + scrollX - editorWidthPx));
+          const vw = window.innerWidth || document.documentElement.clientWidth;
+          if (localX + editorWidthPx > vw - margin) {
+            // Try to place to the left of the toolbar inside the same container
+            localX = Math.max(margin, Math.round(toolbarRect.left - containerRect.left - editorWidthPx));
           }
-          const minY = scrollY + margin;
-          const maxY = scrollY + (window.innerHeight || document.documentElement.clientHeight) - editorHeightPx - margin;
-          y = Math.max(minY, Math.min(maxY, y));
+          const minY = Math.round(Math.max(0, containerRect.top - containerRect.top + margin));
+          const maxY = Math.round((window.innerHeight || document.documentElement.clientHeight) - editorHeightPx - margin);
+          localY = Math.max(minY, Math.min(maxY, localY));
 
-          position = { x: Math.round(x), y: Math.round(y) };
+          position = { x: Math.round(localX), y: Math.round(localY) };
           // Use absolute positioning (fixed: false) so editor scrolls with the page
           setEditorState({ open: true, index, depth, position, width: Math.round(editorWidthPx), fixed: false });
 
           // Re-measure after the editor had a chance to apply width-dependent layout
-          // (some internal elements may wrap and change height). If the measured
-          // height differs, update the Y coordinate so the editor stays vertically
-          // centered with the toolbar center block.
+          // and adjust local Y if the height changes.
           setTimeout(() => {
             const re = document.querySelector('[role="dialog"][aria-label="Color editor"]') as HTMLElement | null;
-            if (!re) return;
+            if (!re || !containerEl) return;
             const newRect = re.getBoundingClientRect();
             const newEditorH = newRect.height || editorHeightPx;
-            const newY = Math.round(centerRect.top + scrollY + (centerRect.height / 2) - (newEditorH / 2));
-            const minY2 = scrollY + margin;
-            const maxY2 = scrollY + (window.innerHeight || document.documentElement.clientHeight) - newEditorH - margin;
-            const clampedY = Math.max(minY2, Math.min(maxY2, newY));
-            // Only update if different to avoid extra renders
+            const newLocalY = Math.round(centerRect.top - containerRect.top + (centerRect.height / 2) - (newEditorH / 2));
+            const clampedY = Math.max(minY, Math.min(maxY, newLocalY));
             if (Math.abs(clampedY - position.y) > 1) {
               setEditorState(prev => ({ ...prev, position: { x: position.x, y: Math.round(clampedY) }, width: Math.round(newRect.width || editorWidthPx) }));
             }
-          }, 20);
+          }, 50);
         } else if (paletteContainer) {
           // Existing behavior: compute relative to the palette viewer container
           const containerRect = paletteContainer.getBoundingClientRect();
