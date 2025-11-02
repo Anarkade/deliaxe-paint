@@ -673,12 +673,13 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         }
         
         // Calculate and set preview container height based on chosen zoom
-  const displayHeight = currentImage.height * (newZoom / 100);
-  const minHeight = 150;
-  const calculatedHeight = Math.max(minHeight, displayHeight);
-  // Use floor here to ensure we never overshoot the available height,
-  // which would otherwise create a tiny extra scrollable area.
-  setPreviewHeight(Math.floor(calculatedHeight));
+        const displayHeight = currentImage.height * (newZoom / 100);
+        const minHeight = 150;
+        const calculatedHeight = Math.max(minHeight, displayHeight);
+        // Use floor here to ensure we never overshoot the available height,
+        // then subtract 1px so the preview is guaranteed to be one pixel
+        // smaller than the visible viewport area (prevents accidental scrollbars).
+        setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
         // After height is applied, ensure scroll can't go below the card.
         // Use double RAF to wait for layout and style recalculation.
         requestAnimationFrame(() => {

@@ -324,7 +324,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
         const hasPalette = Array.isArray(externalPalette) && externalPalette.length > 0;
         const shouldShow = selectedPalette !== 'original' || hasPalette;
         return shouldShow ? (
-          <div className="px-2 py-2 mb-1 color-bg-highlight w-full overflow-x-hidden">
+          <div className="px-2 py-2 my-0 color-bg-highlight w-full overflow-x-hidden">
             <PaletteViewer
               selectedPalette={selectedPalette as unknown as string}
               imageData={processedImageData}
@@ -502,7 +502,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           ) : null}
 
           {/* Palette viewer integrated below the zoom (spans 2 columns) */}
-          <div className="col-span-2 w-full min-w-0 justify-self-stretch mb-1">
+          <div className="col-span-2 w-full min-w-0 justify-self-stretch my-0">
             {(() => {
               const externalPalette = (showOriginalPreview ? originalPaletteColors : processedPaletteColors) || [];
               const hasPalette = Array.isArray(externalPalette) && externalPalette.length > 0;
@@ -526,7 +526,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     </div>
 
     {/* Bottom group: Footer pinned to bottom */}
-    <div className="mt-auto">
+    <div className="mt-auto mb-2">
       {/* Footer lives inside the toolbar (compact), ensuring the app has no separate page footer */}
       <Footer isVerticalLayout={true} compact />
     </div>
