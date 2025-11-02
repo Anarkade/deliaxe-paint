@@ -131,9 +131,6 @@ export const Footer: React.FC<FooterProps> = ({ compact = false }) => {
       <div className="m-0 p-0 w-full">
   <div className="h-[2px] bg-elegant-border my-2 w-full" />
         <div className="m-0 p-0 text-center text-[10px] leading-tight text-muted-foreground whitespace-pre-line max-w-[64px] mx-auto">
-          <div>©2025</div>
-          <div>ANARKADE</div>
-          <div>Barcelona</div>
           <div className="mt-2" />
           <div>{buildLabel}</div>
         </div>

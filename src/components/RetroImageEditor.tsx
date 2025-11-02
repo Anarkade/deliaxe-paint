@@ -2113,12 +2113,15 @@ export const RetroImageEditor = () => {
         width: '100%',
         height: '100%',
         overflow: 'auto',
-        // Note: Avoid reserving a persistent scrollbar gutter so the
-        // non-toolbar area can truly use the full viewport width without
-        // leaving a blank strip on the right when there's no scrollbar.
-        // If layout shift becomes a concern when vertical scrollbars appear,
-        // consider applying `scrollbar-gutter: stable;` conditionally via a
-        // CSS class only when overflow actually occurs.
+        // Prevent vertical overscroll/bounce that may reveal the background
+        // below the ImagePreview card when content reflows.
+        overscrollBehaviorY: 'contain',
+        // Reserve the scrollbar gutter to avoid tiny layout shifts when the
+        // page toggles overflow on/off during image/zoom changes.
+        // Use 'auto' so when there is no vertical scrollbar, no right-side
+        // empty space is reserved. This fixes the visible black strip on the
+        // right edge when content fits the viewport height.
+        scrollbarGutter: 'auto',
       }}
     >
       {/* Two-column grid fixed to the viewport: left column reserved for vertical toolbar (or 0 when not used), right column holds header, preview and footer */}
@@ -2514,13 +2517,8 @@ export const RetroImageEditor = () => {
                 />
               </div>
             )}
-
           </div>
         </div>
-
-        {/* Footer moved inside the left toolbar (compact). No page footer here. */}
-
-        
       </div>
     </div>
   );

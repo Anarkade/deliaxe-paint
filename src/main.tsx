@@ -4,7 +4,8 @@ import './index.css'
 import { TranslationProvider } from '@/contexts/TranslationContext'
 import { initGA, sendPageview } from '@/lib/ga';
 
-import './App.css'
+// Remove the default Vite template styles that constrained #root width.
+// Keeping our own global styles from index.css is enough.
 
 // Global error handlers to capture build-only issues
 window.addEventListener('error', (e) => {

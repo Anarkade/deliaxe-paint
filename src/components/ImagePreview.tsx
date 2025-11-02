@@ -222,6 +222,35 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   const autoFitAllowed = useRef(true);
   const expectingProcessedChange = useRef(false);
   const isUserDraggingSlider = useRef(false);
+  // Utility: find the scrollable container (the app's fixed root wrapper)
+  const getScrollContainer = useCallback((): HTMLElement | null => {
+    try {
+      // Start from this component root and walk up until we find overflowY auto/scroll
+      let p: HTMLElement | null = rootRef.current ? rootRef.current.parentElement : null;
+      while (p) {
+        const cs = window.getComputedStyle(p);
+        const oy = cs.overflowY;
+        if (oy === 'auto' || oy === 'scroll') return p;
+        p = p.parentElement;
+      }
+      // Fallback to the document scroller
+      return (document.scrollingElement as HTMLElement) || null;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // Clamp page scroll so it never goes below the bottom of the preview card
+  const clampScrollToBottom = useCallback(() => {
+    try {
+      const scroller = getScrollContainer();
+      if (!scroller) return;
+      const max = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+      if (scroller.scrollTop > max) scroller.scrollTop = max;
+    } catch {
+      // ignore
+    }
+  }, [getScrollContainer]);
   // When the user interacts with the zoom controls we temporarily suppress
   // any automatic fit-to-width triggers (both while dragging and for a short
   // cooldown after release). This ensures user-chosen zoom is never overridden
@@ -605,8 +634,11 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
 
   // Safety margin: 0 so the fitted image reaches the viewport edge without leaving a gap
   const safetyMargin = 0; // px
-        const viewportH = (typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight || 0) : 0);
-        const availableForImageH = Math.max(0, viewportH - previewFooterH - extraVerticalSpacing - safetyMargin);
+  const viewportH = (typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight || 0) : 0);
+  // Apply a tiny fudge factor to avoid 1px rounding-induced overflow that
+  // can create a scrollable gap below ImagePreview after fitting.
+  const fitFudgePx = 1;
+  const availableForImageH = Math.max(0, viewportH - previewFooterH - extraVerticalSpacing - safetyMargin - fitFudgePx);
         const heightZoom = currentImage.height > 0
           ? Math.floor((availableForImageH / currentImage.height) * 100)
           : ZOOM_BOUNDS.min;
@@ -641,10 +673,17 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         }
         
         // Calculate and set preview container height based on chosen zoom
-        const displayHeight = currentImage.height * (newZoom / 100);
-        const minHeight = 150;
-        const calculatedHeight = Math.max(minHeight, displayHeight);
-        setPreviewHeight(Math.ceil(calculatedHeight));
+  const displayHeight = currentImage.height * (newZoom / 100);
+  const minHeight = 150;
+  const calculatedHeight = Math.max(minHeight, displayHeight);
+  // Use floor here to ensure we never overshoot the available height,
+  // which would otherwise create a tiny extra scrollable area.
+  setPreviewHeight(Math.floor(calculatedHeight));
+        // After height is applied, ensure scroll can't go below the card.
+        // Use double RAF to wait for layout and style recalculation.
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => clampScrollToBottom());
+        });
       }
     } finally {
       // Allow a short delay before clearing running flag to avoid immediate reentry
@@ -994,13 +1033,17 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         const minHeight = 150;
         const calculatedHeight = Math.max(minHeight, imageHeight);
         setPreviewHeight(Math.ceil(calculatedHeight));
+        // Re-clamp scroll after preview height changes
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => clampScrollToBottom());
+        });
       } else {
         setPreviewHeight(120);
       }
     }, 50);
 
     return () => clearTimeout(timeoutId);
-  }, [originalImage, processedImageData, zoom, showOriginal]);
+  }, [originalImage, processedImageData, zoom, showOriginal, clampScrollToBottom]);
 
 
   useEffect(() => {
