@@ -343,8 +343,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     );
   }
   return (
-  <aside className="h-full flex flex-col flex-shrink-0 box-border border-r border-elegant-border z-50 color-bg-highlight px-2 w-max">
-      <div className="py-2 h-full">
+  <aside className="flex flex-col flex-shrink-0 box-border border-r border-elegant-border z-50 color-bg-highlight px-2 w-max min-h-screen">
+    <div className="py-2">
   {/* Two-column grid with fixed 32px tracks so text below cannot widen the toolbar */}
   <div className="grid grid-cols-[32px_32px] gap-1 justify-items-center items-center">
           {/* Row 1: App icon spanning 2 columns, centered horizontally and vertically */}

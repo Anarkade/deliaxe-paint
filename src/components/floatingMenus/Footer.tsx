@@ -137,7 +137,6 @@ export const Footer: React.FC<FooterProps> = ({ compact = false }) => {
           <div className="mt-2" />
           <div>{buildLabel}</div>
         </div>
-  <div className="h-[2px] bg-elegant-border my-2 w-full" />
       </div>
     );
   }
