@@ -30,7 +30,8 @@ Notes
 - import.meta.env.BASE_URL is used for logo paths so GitHub Pages works correctly.
 
 ## Project structure
-- src/components/floatingMenus/ – canonical Toolbar (Toolbar.tsx) and Footer (Footer.tsx). The footer renders in compact mode inside the left toolbar; there’s no page-level footer.
+- src/components/floatingMenus/ – canonical Toolbar (Toolbar.tsx), Footer (Footer.tsx) and PaletteViewer (PaletteViewer.tsx). The footer renders in compact mode inside the left toolbar; there’s no page-level footer.
+    - Note: `PaletteViewer` was consolidated under `src/components/floatingMenus/PaletteViewer.tsx`; any previous duplicate under `src/components/` has been removed and imports updated.
 - src/components/tabMenus/ – the tabbed panels (resolution, palette, grids, language, etc.)
 - src/lib/ – color quantization, encoders, GA helpers, utils
 - src/workers/ – image processing and color analysis

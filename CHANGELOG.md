@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions workflow now updates CHANGELOG.md and README.md before deployment
 - Documentation is automatically kept in sync with latest changes
  - Replaced several hardcoded color values with the new semantic classes across components (e.g. `PaletteViewer`, `Toolbar`, `ImagePreview`, `ResolutionSelector`).
+ - Moved `PaletteViewer` implementation into `src/components/floatingMenus/PaletteViewer.tsx` and removed the duplicate `src/components/PaletteViewer.tsx` to avoid confusion. All imports were normalized to the new location.
 
 ### Fixed
 - Fix ReferenceError in `ResolutionSelector` (missing `Expand` icon import).
