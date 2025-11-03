@@ -18,6 +18,9 @@ const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for performance
 const RESIZE_DEBOUNCE_MS = 100; // Debounce resize calculations
 const FIT_DEBOUNCE_MS = 250; // Minimum interval between fitToWindow executions
 const ZOOM_BOUNDS = { min: 1, max: 100000 }; // Updated zoom limits per request
+// Helpers for consistent precision and safe sizing
+const round2 = (n: number) => Math.round(n * 100) / 100;
+const floor2 = (n: number) => Math.floor(n * 100) / 100;
 
 // Performance-optimized image format analysis with pixel sampling
 const analyzeImageFormat = (image: HTMLImageElement, t: (key: string) => string): Promise<string> => {
@@ -267,13 +270,16 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   // Default to 100% so initial view uses 100% unless changed by user/fit
   const mostRecentZoomOriginal = useRef<number>(100);
   const mostRecentZoomProcessed = useRef<number>(100);
+  // Prevent brief wrong-zoom flashes when switching Original/Processed
+  const [isSwitchingView, setIsSwitchingView] = useState(false);
+  const pendingSwitchRef = useRef<{ targetShowOriginal: boolean; zoom: number } | null>(null);
 
   // (moved) useImperativeHandle is defined after fitToWidth to avoid TDZ issues
 
   // Sync external controlled zoom with internal zoom state
   useEffect(() => {
     if (typeof controlledZoom === 'number' && Number.isFinite(controlledZoom)) {
-      const clamped = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, Math.round(controlledZoom)));
+  const clamped = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, round2(controlledZoom)));
       if (zoom[0] !== clamped) {
         // Programmatic change: suppress auto-fit briefly to avoid loops
         programmaticZoomChange.current = true;
@@ -296,7 +302,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
           const displayHeight = currentImage.height * (clamped / 100);
           const minHeight = 150;
           const calculatedHeight = Math.max(minHeight, displayHeight);
-          setPreviewHeight(Math.ceil(calculatedHeight));
+          setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
         }
       }
     }
@@ -589,7 +595,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       if (originalImage && cw > 0) {
         const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
         // Width-constrained zoom (%): image should not exceed container width
-        const widthZoom = Math.floor((cw / currentImage.width) * 100);
+  const widthZoom = floor2((cw / currentImage.width) * 100);
 
         // Height-constrained zoom (%): image height plus ImagePreview's own footer must fit viewport.
         // Note: The global site Footer has been moved inside the left toolbar (compact),
@@ -640,7 +646,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   const fitFudgePx = 1;
   const availableForImageH = Math.max(0, viewportH - previewFooterH - extraVerticalSpacing - safetyMargin - fitFudgePx);
         const heightZoom = currentImage.height > 0
-          ? Math.floor((availableForImageH / currentImage.height) * 100)
+          ? floor2((availableForImageH / currentImage.height) * 100)
           : ZOOM_BOUNDS.min;
 
         // Choose the most restrictive zoom to ensure the whole view fits the window
@@ -653,8 +659,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
           ? (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : null)
           : originalImage;
         if (altImage && altImage.width > 0 && altImage.height > 0) {
-          const altWidthZoom = Math.floor((cw / altImage.width) * 100);
-          const altHeightZoom = Math.floor((availableForImageH / altImage.height) * 100);
+          const altWidthZoom = floor2((cw / altImage.width) * 100);
+          const altHeightZoom = floor2((availableForImageH / altImage.height) * 100);
           const altFitZoom = Math.min(altWidthZoom, altHeightZoom);
           altNewZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, altFitZoom));
         }
@@ -754,7 +760,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       const displayHeight = currentImage.height * (newZoom / 100);
       const minHeight = 150;
       const calculatedHeight = Math.max(minHeight, displayHeight);
-      setPreviewHeight(Math.ceil(calculatedHeight));
+  setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
     }
   }, [originalImage, showOriginal, processedImageData, onZoomChange]);
 
@@ -796,7 +802,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       const displayHeight = currentImage.height * (clampedZoom / 100);
       const minHeight = 150;
       const calculatedHeight = Math.max(minHeight, displayHeight);
-      setPreviewHeight(Math.ceil(calculatedHeight));
+  setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
     }
     
     // Reset dragging flag after a short delay (increase to avoid auto-fit race)
@@ -981,6 +987,200 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     }
   }, [zoom, onZoomChange]);
 
+  // Unified preview toggle handler to avoid transient wrong zoom
+  const togglePreview = useCallback(() => {
+    const currentShowOriginal = (controlledShowOriginal !== undefined) ? controlledShowOriginal : showOriginal;
+    const next = !currentShowOriginal;
+    const restoreZoom = next ? mostRecentZoomOriginal.current : mostRecentZoomProcessed.current;
+    const nextImage = next ? originalImage : (processedImageData || originalImage);
+
+    // Hide content during the switch until size/zoom are applied
+    setIsSwitchingView(true);
+
+    if (controlledShowOriginal !== undefined) {
+      // Controlled by parent: defer zoom/height until prop updates
+      pendingSwitchRef.current = { targetShowOriginal: next, zoom: restoreZoom };
+      try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
+    } else {
+      // Uncontrolled: apply state atomically in this batch
+      setShowOriginal(next);
+      setZoom([restoreZoom]);
+      setSliderValue([restoreZoom]);
+      try { onZoomChange?.(restoreZoom); } catch (e) { /* ignore */ }
+      // After the DOM reflects the new footer/content, measure available height
+      // and clamp zoom if the restored zoom would overflow vertically.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          try {
+            const img = nextImage;
+            if (img) {
+              const cw = containerWidthRef.current || 0;
+              // Measure footer + surrounding spacing exactly as in fitToWidth()
+              const previewFooterH = (() => {
+                try {
+                  const el = (footerRef.current as HTMLElement | null);
+                  if (!el) return 0;
+                  const rect = el.getBoundingClientRect();
+                  return Math.ceil(rect.height);
+                } catch { return 0; }
+              })();
+              const extraVerticalSpacing = (() => {
+                try {
+                  let sum = 0;
+                  const root = rootRef.current as HTMLElement | null;
+                  if (root) {
+                    const cs = window.getComputedStyle(root);
+                    sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+                    sum += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+                  }
+                  const cont = containerRef.current as HTMLElement | null;
+                  if (cont) {
+                    const cs = window.getComputedStyle(cont);
+                    sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+                    sum += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+                  }
+                  const footer = footerRef.current as HTMLElement | null;
+                  if (footer) {
+                    const cs = window.getComputedStyle(footer);
+                    sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+                  }
+                  return Math.ceil(sum);
+                } catch { return 0; }
+              })();
+              const viewportH = (typeof window !== 'undefined'
+                ? (window.innerHeight || document.documentElement.clientHeight || 0)
+                : 0);
+              const fitFudgePx = 1;
+              const availableForImageH = Math.max(0, viewportH - previewFooterH - extraVerticalSpacing - fitFudgePx);
+
+              // Compute fitted zoom respecting width and height constraints
+              const widthZoom = img.width > 0 ? floor2((cw / img.width) * 100) : ZOOM_BOUNDS.min;
+              const heightZoom = img.height > 0 ? floor2((availableForImageH / img.height) * 100) : ZOOM_BOUNDS.min;
+              const maxAllowedZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, Math.min(widthZoom, heightZoom)));
+
+              const appliedZoom = restoreZoom > maxAllowedZoom ? maxAllowedZoom : restoreZoom;
+              if (appliedZoom !== restoreZoom) {
+                programmaticZoomChange.current = true;
+                setZoom([appliedZoom]);
+                setSliderValue([appliedZoom]);
+                try { onZoomChange?.(appliedZoom); } catch (e) { /* ignore */ }
+                if (next) mostRecentZoomOriginal.current = appliedZoom; else mostRecentZoomProcessed.current = appliedZoom;
+              } else {
+                if (next) mostRecentZoomOriginal.current = restoreZoom; else mostRecentZoomProcessed.current = restoreZoom;
+              }
+
+              const displayHeight = img.height * (appliedZoom / 100);
+              const minHeight = 150;
+              const calculatedHeight = Math.max(minHeight, displayHeight);
+              setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
+            }
+          } finally {
+            // Reveal after layout and possible correction
+            setIsSwitchingView(false);
+            // ensure scroll doesn't overshoot
+            requestAnimationFrame(() => { requestAnimationFrame(() => clampScrollToBottom()); });
+          }
+        });
+      });
+      try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
+    }
+  }, [controlledShowOriginal, showOriginal, originalImage, processedImageData, onZoomChange, onShowOriginalChange]);
+
+  // When parent controls showOriginal, apply pending zoom/height once prop updates
+  useEffect(() => {
+    if (controlledShowOriginal === undefined) return;
+    const pending = pendingSwitchRef.current;
+    const target = controlledShowOriginal;
+    const apply = (zoomValue: number) => {
+      setZoom([zoomValue]);
+      setSliderValue([zoomValue]);
+      try { onZoomChange?.(zoomValue); } catch (e) { /* ignore */ }
+      const img = target ? originalImage : (processedImageData || originalImage);
+      if (img) {
+        const displayHeight = img.height * (zoomValue / 100);
+        const minHeight = 150;
+        const calculatedHeight = Math.max(minHeight, displayHeight);
+  setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
+        // After DOM updates with the new footer, clamp to fit if needed
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            try {
+              const cw = containerWidthRef.current || 0;
+              const previewFooterH = (() => {
+                try {
+                  const el = (footerRef.current as HTMLElement | null);
+                  if (!el) return 0;
+                  const rect = el.getBoundingClientRect();
+                  return Math.ceil(rect.height);
+                } catch { return 0; }
+              })();
+              const extraVerticalSpacing = (() => {
+                try {
+                  let sum = 0;
+                  const root = rootRef.current as HTMLElement | null;
+                  if (root) {
+                    const cs = window.getComputedStyle(root);
+                    sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+                    sum += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+                  }
+                  const cont = containerRef.current as HTMLElement | null;
+                  if (cont) {
+                    const cs = window.getComputedStyle(cont);
+                    sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+                    sum += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+                  }
+                  const footer = footerRef.current as HTMLElement | null;
+                  if (footer) {
+                    const cs = window.getComputedStyle(footer);
+                    sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+                  }
+                  return Math.ceil(sum);
+                } catch { return 0; }
+              })();
+              const viewportH = (typeof window !== 'undefined'
+                ? (window.innerHeight || document.documentElement.clientHeight || 0)
+                : 0);
+              const fitFudgePx = 1;
+              const availableForImageH = Math.max(0, viewportH - previewFooterH - extraVerticalSpacing - fitFudgePx);
+              const widthZoom = img.width > 0 ? floor2((cw / img.width) * 100) : ZOOM_BOUNDS.min;
+              const heightZoom = img.height > 0 ? floor2((availableForImageH / img.height) * 100) : ZOOM_BOUNDS.min;
+              const maxAllowedZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, Math.min(widthZoom, heightZoom)));
+              const appliedZoom = zoomValue > maxAllowedZoom ? maxAllowedZoom : zoomValue;
+              if (appliedZoom !== zoomValue) {
+                programmaticZoomChange.current = true;
+                setZoom([appliedZoom]);
+                setSliderValue([appliedZoom]);
+                try { onZoomChange?.(appliedZoom); } catch (e) { /* ignore */ }
+                if (target) mostRecentZoomOriginal.current = appliedZoom; else mostRecentZoomProcessed.current = appliedZoom;
+                const dh = img.height * (appliedZoom / 100);
+                const ch = Math.max(minHeight, dh);
+                setPreviewHeight(Math.max(minHeight, Math.floor(ch) - 1));
+              } else {
+                if (target) mostRecentZoomOriginal.current = zoomValue; else mostRecentZoomProcessed.current = zoomValue;
+              }
+            } finally {
+              requestAnimationFrame(() => { requestAnimationFrame(() => clampScrollToBottom()); });
+            }
+          });
+        });
+      }
+    };
+
+    if (pending && pending.targetShowOriginal === target) {
+      // This update corresponds to a user-initiated switch
+      apply(pending.zoom);
+      pendingSwitchRef.current = null;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setIsSwitchingView(false));
+      });
+    } else if (pending == null) {
+      // External control changed the view; still ensure zoom/height are consistent
+      const z = target ? mostRecentZoomOriginal.current : mostRecentZoomProcessed.current;
+      apply(z);
+      // Do not toggle visibility in this path; assume external changes are settled
+    }
+  }, [controlledShowOriginal, originalImage, processedImageData, onZoomChange]);
+
   // Enable auto-fit on new image load with enhanced reliability
   useEffect(() => {
     if (originalImage) {
@@ -1033,7 +1233,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         const imageHeight = currentImage.height * currentZoom;
         const minHeight = 150;
         const calculatedHeight = Math.max(minHeight, imageHeight);
-        setPreviewHeight(Math.ceil(calculatedHeight));
+  setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
         // Re-clamp scroll after preview height changes
         requestAnimationFrame(() => {
           requestAnimationFrame(() => clampScrollToBottom());
@@ -1299,7 +1499,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     }
   >
         {originalImage ? (
-          <div className="relative" style={{ width: displayedWidth <= containerWidthRef.current ? `${displayedWidth}px` : '100%', height: `${displayedHeight}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+          <div className="relative" style={{ width: displayedWidth <= containerWidthRef.current ? `${displayedWidth}px` : '100%', height: `${displayedHeight}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', visibility: isSwitchingView ? 'hidden' : 'visible' }}>
             <canvas
               ref={canvasRef}
               style={{ 
@@ -1442,29 +1642,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                 {hasProcessedImage && (
                   <div style={{ textAlign: 'left' }} className="px-4">
                     <Button
-                      onClick={() => {
-                        const next = !showOriginal;
-                        if (controlledShowOriginal !== undefined) {
-                          try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
-                        } else {
-                          setShowOriginal(next);
-                          try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
-                        }
-                        try {
-                          const restoreZoom = next ? mostRecentZoomOriginal.current : mostRecentZoomProcessed.current;
-                          setZoom([restoreZoom]);
-                          setSliderValue([restoreZoom]);
-                          onZoomChange?.(restoreZoom);
-                          const currentImage = next ? originalImage : (processedImageData || originalImage);
-                          if (currentImage) {
-                            const displayHeight = currentImage.height * (restoreZoom / 100);
-                            const minHeight = 150;
-                            const calculatedHeight = Math.max(minHeight, displayHeight);
-                            setPreviewHeight(Math.ceil(calculatedHeight));
-                          }
-                        } catch (e) {}
-                        try { onShowOriginalChange?.(next); } catch (e) {}
-                      }}
+                      onClick={togglePreview}
                       variant="highlighted"
                       size="sm"
                       className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
@@ -1547,29 +1725,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                 {hasProcessedImage && (
                   <div className="w-full flex items-center justify-center py-1">
                     <Button
-                      onClick={() => {
-                        const next = !showOriginal;
-                        if (controlledShowOriginal !== undefined) {
-                          try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
-                        } else {
-                          setShowOriginal(next);
-                          try { onShowOriginalChange?.(next); } catch (e) { /* ignore */ }
-                        }
-                        try {
-                          const restoreZoom = next ? mostRecentZoomOriginal.current : mostRecentZoomProcessed.current;
-                          setZoom([restoreZoom]);
-                          setSliderValue([restoreZoom]);
-                          onZoomChange?.(restoreZoom);
-                          const currentImage = next ? originalImage : (processedImageData || originalImage);
-                          if (currentImage) {
-                            const displayHeight = currentImage.height * (restoreZoom / 100);
-                            const minHeight = 150;
-                            const calculatedHeight = Math.max(minHeight, displayHeight);
-                            setPreviewHeight(Math.ceil(calculatedHeight));
-                          }
-                        } catch (e) {}
-                        try { onShowOriginalChange?.(next); } catch (e) {}
-                      }}
+                      onClick={togglePreview}
                       variant="highlighted"
                       size="sm"
                       className="flex items-center justify-center h-8 w-8 p-0 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
