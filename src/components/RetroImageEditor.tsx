@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { LoadImage } from '@/components/tabMenus/LoadImage';
+import { ImportImage } from '@/components/tabMenus/ImportImage';
 import { CameraSelector } from '@/components/tabMenus/CameraSelector';
 import { ChangePalette, PaletteType } from '@/components/tabMenus/ChangePalette';
 import { ImagePreview, type ImagePreviewHandle } from '@/components/ImagePreview';
@@ -2274,7 +2274,7 @@ export const RetroImageEditor = () => {
                 data-section="load-image"
                 className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
               >
-                <LoadImage
+                <ImportImage
                   onImageLoad={loadImage}
                   onCameraPreviewRequest={() => {
                       // Prevent the global click handler from immediately closing the section
