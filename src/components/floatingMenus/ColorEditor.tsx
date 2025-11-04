@@ -101,6 +101,22 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   // Dragging state for moving the editor
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
+  const dragPosRef = useRef<{ x: number; y: number } | null>(null);
+  const positionRef = useRef<{ x: number; y: number } | undefined>(position);
+  const positioningRef = useRef<'absolute' | 'fixed'>(positioning);
+  
+  // Keep refs in sync with props and state
+  useEffect(() => {
+    dragPosRef.current = dragPos;
+  }, [dragPos]);
+  
+  useEffect(() => {
+    positionRef.current = position;
+  }, [position]);
+  
+  useEffect(() => {
+    positioningRef.current = positioning;
+  }, [positioning]);
 
   // Draw gradient canvas for current HSL and active mode
   useEffect(() => {
@@ -277,23 +293,80 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
   ev.preventDefault();
       const startMouseX = ev.clientX;
       const startMouseY = ev.clientY;
-      // Compute the element's offset relative to its offsetParent. Using
-      // getBoundingClientRect() gives viewport coordinates; left/top style
-      // computed against the offsetParent must use coordinates relative to
-      // that parent to avoid jumps when switching from a centered transform
-      // to absolute left/top values.
-      const rect = root.getBoundingClientRect();
-      let startX = 0; let startY = 0;
-      if (positioning === 'fixed') {
-        // For fixed positioning, left/top are relative to the viewport directly
-        startX = Math.round(rect.left);
-        startY = Math.round(rect.top);
+      
+      // Use refs to get current values (not captured by closure)
+      const currentDragPos = dragPosRef.current;
+      const currentPosition = positionRef.current;
+      const currentPositioning = positioningRef.current;
+      
+      // If dragPos is null and we have a position prop, use it as the starting position
+      // Otherwise, compute from getBoundingClientRect
+      let startX: number;
+      let startY: number;
+      
+      if (!currentDragPos && currentPosition) {
+        // Element is currently positioned with the position prop
+        startX = currentPosition.x;
+        startY = currentPosition.y;
+      } else if (currentDragPos) {
+        // Element is currently positioned with dragPos state
+        startX = currentDragPos.x;
+        startY = currentDragPos.y;
       } else {
-        const op = root.offsetParent as Element | null;
-        const opRect = op ? op.getBoundingClientRect() : { left: 0, top: 0 } as DOMRect;
-        startX = Math.round(rect.left - (opRect.left || 0));
-        startY = Math.round(rect.top - (opRect.top || 0));
+        // Element is centered or has other positioning - calculate from viewport
+        const rect = root.getBoundingClientRect();
+        if (currentPositioning === 'fixed') {
+          startX = Math.round(rect.left);
+          startY = Math.round(rect.top);
+        } else {
+          const op = root.offsetParent as Element | null;
+          const opRect = op ? op.getBoundingClientRect() : { left: 0, top: 0 } as DOMRect;
+          startX = Math.round(rect.left - (opRect.left || 0));
+          startY = Math.round(rect.top - (opRect.top || 0));
+        }
       }
+      
+      // Calculate boundaries for clamping (once at drag start)
+      const rect = root.getBoundingClientRect();
+      const editorWidth = rect.width;
+      const editorHeight = rect.height;
+      
+      let minX = 0;
+      let minY = 0;
+      let maxX = 0;
+      let maxY = 0;
+      
+      if (currentPositioning === 'fixed') {
+        // Fixed positioning: clamp to viewport
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        maxX = viewportWidth - editorWidth;
+        maxY = viewportHeight - editorHeight;
+      } else {
+        // Absolute positioning: use viewport as safe boundary
+        // (offsetParent dimensions can be unreliable)
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const op = root.offsetParent as Element | null;
+        const opRect = op ? op.getBoundingClientRect() : null;
+        
+        // Calculate available space in viewport from offsetParent position
+        if (opRect) {
+          // Max position is viewport edge minus editor size, relative to offsetParent
+          maxX = viewportWidth - opRect.left - editorWidth;
+          maxY = viewportHeight - opRect.top - editorHeight;
+          // Min position should keep editor visible (allow some negative to not be too restrictive)
+          minX = -opRect.left;
+          minY = -opRect.top;
+        } else {
+          // Fallback if no offsetParent
+          maxX = viewportWidth - editorWidth;
+          maxY = viewportHeight - editorHeight;
+        }
+      }
+      
+      // Initialize dragPos with current position to avoid jump
+      setDragPos({ x: startX, y: startY });
       dragStartRef.current = { mouseX: startMouseX, mouseY: startMouseY, startX, startY };
 
       const onMouseMove = (mv: MouseEvent) => {
@@ -301,7 +374,12 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
         if (!s) return;
         const dx = mv.clientX - s.mouseX;
         const dy = mv.clientY - s.mouseY;
-        setDragPos({ x: Math.round(s.startX + dx), y: Math.round(s.startY + dy) });
+        
+        // Calculate new position and apply clamping
+        const newX = Math.max(minX, Math.min(maxX, s.startX + dx));
+        const newY = Math.max(minY, Math.min(maxY, s.startY + dy));
+        
+        setDragPos({ x: Math.round(newX), y: Math.round(newY) });
       };
 
       const onMouseUp = () => {
