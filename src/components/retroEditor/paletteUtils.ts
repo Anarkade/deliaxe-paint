@@ -201,8 +201,51 @@ export function mergePreservePalette(preferred: Color[] | null | undefined, from
   return out;
 }
 
+// writeOrderedPalette updates the editor's ordered palette colors with
+// deduplication. It checks for manual palette override and prevents
+// automatic updates from overwriting user edits.
+export interface WriteOrderedPaletteDependencies {
+  editorRefs: {
+    manualPaletteOverrideRef: React.MutableRefObject<boolean>;
+    lastWrittenPaletteRef: React.MutableRefObject<string | null>;
+  };
+  editorActions: {
+    setOrderedPaletteColors: (colors: Color[]) => void;
+  };
+}
+
+export function writeOrderedPalette(
+  colors: Color[],
+  source: string,
+  deps: WriteOrderedPaletteDependencies
+): void {
+  try {
+    // development logging removed
+  } catch (e) { /* ignore logging errors */ }
+
+  // If user manually edited the palette recently, ignore automatic updates
+  // unless the update originates from the manual path.
+  if (deps.editorRefs.manualPaletteOverrideRef.current && source !== 'manual') {
+    return;
+  }
+
+  // Perform the actual state update
+  try {
+    const serialized = paletteKey(colors);
+    if (deps.editorRefs.lastWrittenPaletteRef.current === serialized) {
+      return;
+    }
+    deps.editorRefs.lastWrittenPaletteRef.current = serialized;
+  } catch (e) {
+    // fall through to set
+  }
+
+  deps.editorActions.setOrderedPaletteColors(colors);
+}
+
 export default {
   extractPaletteFromFile,
   paletteKey,
   mergePreservePalette,
+  writeOrderedPalette,
 };
