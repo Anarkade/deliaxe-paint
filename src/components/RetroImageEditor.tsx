@@ -755,7 +755,7 @@ export const RetroImageEditor = () => {
           {isVerticalLayout && (
             <FloatingPanels
               showToolbar={true}
-              showPalette={true}
+              showPalette={false}
               toolbarProps={{
                 isVerticalLayout,
                 originalImage,
@@ -810,7 +810,7 @@ export const RetroImageEditor = () => {
           {!isVerticalLayout && (
             <FloatingPanels
               showToolbar={true}
-              showPalette={true}
+              showPalette={false}
               toolbarProps={{
                 isVerticalLayout,
                 originalImage,

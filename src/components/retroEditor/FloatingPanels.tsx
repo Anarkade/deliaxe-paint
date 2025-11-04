@@ -2,7 +2,6 @@ import React from 'react';
 import ColorEditor from '../floatingMenus/ColorEditor';
 import { PaletteViewer } from '../floatingMenus/PaletteViewer';
 import { Toolbar } from '../floatingMenus/Toolbar';
-import { Footer } from '../floatingMenus/Footer';
 
 type FloatingPanelsProps = {
   // Allow parent to pass visibility flags or callbacks as needed.
@@ -23,7 +22,6 @@ export const FloatingPanels: React.FC<FloatingPanelsProps> = ({ showToolbar = tr
       {showColorEditor && (
         <ColorEditor {...(colorEditorProps || { initial: { r: 0, g: 0, b: 0 }, onAccept: () => {}, onCancel: () => {} })} />
       )}
-      <Footer {...(toolbarProps?.footerProps || { isVerticalLayout: false })} />
     </>
   );
 };
