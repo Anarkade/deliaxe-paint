@@ -165,7 +165,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   // height set to 1.5x the button height (h-10 -> 2.5rem * 1.5 = 3.75rem)
   // Add horizontal padding equal to gap-2 so logo and buttons sit inset from edges
   <>
-  <header className="border-b border-elegant-border w-full flex-shrink-0 m-0 px-2 py-0 min-h-[3.75rem] flex flex-col color-bg-highlight rounded-md overflow-hidden">
+  <header className="border-b border-elegant-border w-full flex-shrink-0 m-0 px-2 py-0 min-h-[3.75rem] flex flex-col color-bg-highlight rounded-md overflow-visible">
     {/* Top row: buttons + zoom */}
     <div className="w-full max-w-none flex items-center justify-between m-0 p-0">
           {/* Left: App icon - hidden in horizontal toolbar (reserve space to keep layout centered) */}
@@ -342,7 +342,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     );
   }
   return (
-  <aside className="flex flex-col flex-shrink-0 box-border border-r border-elegant-border z-50 color-bg-highlight px-2 w-max min-h-screen rounded-md overflow-hidden">
+  <aside className="flex flex-col flex-shrink-0 box-border border-r border-elegant-border z-50 color-bg-highlight px-2 w-max min-h-screen rounded-md overflow-visible">
     {/* Top group: App icon pinned to the very top */}
     <div className="pt-2 flex items-start justify-center">
       <img
