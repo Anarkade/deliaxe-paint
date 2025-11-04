@@ -7,6 +7,8 @@ import { ExportImage } from '@/components/tabMenus/ExportImage';
 import { ChangeLanguage } from '@/components/tabMenus/ChangeLanguage';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Toolbar } from '@/components/floatingMenus/Toolbar';
+import FloatingPanels from './retroEditor/FloatingPanels';
+import useRetroEditorState from './retroEditor/useRetroEditorState';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
@@ -29,441 +31,9 @@ const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory 
 const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size
 const PROCESSING_DEBOUNCE_MS = 100; // Debounce time for image processing
 const COLOR_SAMPLE_INTERVAL = 16; // Sample every 4th pixel for color analysis (performance optimization)
-
-// Attempt to extract a palette from a source file or data URL.
-// Tries format-specific parsers (GIF, BMP) for exact table order, then
-// falls back to raster-sampling which preserves first-seen order.
-async function extractPaletteFromFile(source: File | string, imgElement?: HTMLImageElement) {
-  const toRgbArray = (arr: any) => {
-    const out: { r: number; g: number; b: number }[] = [];
-    if (!arr) return out;
-    // Accept flat arrays of numbers or arrays of [r,g,b]
-    if (Array.isArray(arr) && arr.length > 0 && typeof arr[0] === 'number') {
-      for (let i = 0; i + 2 < arr.length; i += 3) out.push({ r: arr[i], g: arr[i + 1], b: arr[i + 2] });
-      return out;
-    }
-    for (const e of arr) {
-      if (Array.isArray(e) && e.length >= 3) out.push({ r: e[0], g: e[1], b: e[2] });
-      else if (typeof e === 'number') {
-        // packed integer? skip
-      }
-    }
-    return out;
-  };
-
-  const getArrayBuffer = async () => {
-    if (typeof source === 'string') {
-      if (source.startsWith('data:')) {
-        const base64 = source.split(',')[1] || '';
-        const bin = atob(base64);
-        const buf = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-        return buf.buffer;
-      }
-      const res = await fetch(source);
-      return await res.arrayBuffer();
-    }
-    return await (source as File).arrayBuffer();
-  };
-
-  const ext = (typeof source === 'string' ? source.toLowerCase() : (source && (source as File).name?.toLowerCase())) || '';
-
-  // GIF exact extraction using gifuct-js (global color table)
-  try {
-    if (ext.includes('.gif') || (typeof source === 'string' && source.startsWith('data:image/gif'))) {
-      try {
-        const buf = await getArrayBuffer();
-        const bytes = new Uint8Array(buf);
-        // Quick header attempt: look for Global Color Table (GCT) in LSD
-        try {
-          if (bytes.length >= 13 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46) {
-            const packed = bytes[10];
-            const globalColorTableFlag = (packed & 0x80) !== 0;
-            if (globalColorTableFlag) {
-              const sizeFlag = packed & 0x07; // value N
-              const tableEntries = 2 ** (sizeFlag + 1);
-              const tableSize = 3 * tableEntries;
-              const tableStart = 13; // header (6) + LSD (7)
-              if (bytes.length >= tableStart + tableSize) {
-                const pal: { r: number; g: number; b: number }[] = [];
-                for (let i = tableStart; i < tableStart + tableSize; i += 3) {
-                  pal.push({ r: bytes[i], g: bytes[i + 1], b: bytes[i + 2] });
-                }
-                if (pal.length > 0) {
-                  // console.debug for diagnosis
-                  // eslint-disable-next-line no-console
-                  console.debug('extractPaletteFromFile: GIF header GCT extracted', { source: ext, entries: pal.length });
-                  return pal;
-                }
-              }
-            }
-          }
-        } catch (hdrErr) {
-          // ignore header parse errors and continue to robust parser
-        }
-
-        // Fallback to gifuct-js: parse and scan parsed blocks/frames for any
-        // color table (global or local). Some GIFs only have local color
-        // tables per-frame -- prefer the global table when present but accept
-        // the first frame-local table if that's all that's available.
-        const { parseGIF, decompressFrames } = await import('gifuct-js');
-  const parsed = parseGIF(buf as ArrayBuffer);
-        const frames = decompressFrames(parsed, true) as any[];
-
-        // Inspect parsed blocks for a gct or color table
-        let found: any = null;
-        try {
-          if (Array.isArray(parsed)) {
-            for (const block of parsed as any[]) {
-              if (!block) continue;
-              if (block.gct && block.gct.length) { found = block.gct; break; }
-              if (block.colorTable && block.colorTable.length) { found = block.colorTable; break; }
-            }
-          }
-        } catch (scanErr) {
-          // ignore
-        }
-
-        // If none in parsed blocks, check frames for local color tables
-        if (!found && Array.isArray(frames) && frames.length > 0) {
-          for (const f of frames) {
-            if (!f) continue;
-            if ((f as any).colorTable && (f as any).colorTable.length) { found = (f as any).colorTable; break; }
-            if ((f as any).gct && (f as any).gct.length) { found = (f as any).gct; break; }
-            // some frames expose a palette property
-            if ((f as any).palette && (f as any).palette.length) { found = (f as any).palette; break; }
-          }
-        }
-
-        if (found && found.length) {
-          // console.debug for diagnosis
-          // eslint-disable-next-line no-console
-          console.debug('extractPaletteFromFile: GIF parsed color table found', { source: ext, entries: found.length });
-          return toRgbArray(found as any);
-        }
-      } catch (e) {
-        // parser missing or failed -> continue to other extractors
-        // eslint-disable-next-line no-console
-        console.debug('extractPaletteFromFile: GIF parser failed', { source: ext, err: (e && (e as Error).message) || e });
-      }
-    }
-  } catch (e) {}
-
-  // BMP/ICO via bmp-js (palette present for 8-bit BMP/ICO)
-  try {
-    if (ext.includes('.bmp') || ext.includes('.ico')) {
-      try {
-        const buf = await getArrayBuffer();
-        const bmpModule = await import('bmp-js');
-        const decoded: any = bmpModule.decode(new Uint8Array(buf));
-        if (decoded && decoded.palette && decoded.palette.length) {
-          // eslint-disable-next-line no-console
-          console.debug('extractPaletteFromFile: BMP/ICO palette extracted (bmp-js)', { source: ext, entries: decoded.palette.length });
-          return toRgbArray(decoded.palette as any);
-        }
-
-        // If bmp-js didn't expose a palette for an ICO, attempt a lightweight
-        // manual ICO directory scan and BMP-in-ICO palette extraction. ICO
-        // entries may contain PNG images (skip those) or BMP infoheaders.
-        if (ext.includes('.ico')) {
-          try {
-            const bytes = new Uint8Array(buf);
-            const dv = new DataView(buf);
-            // Check for ICO header: reserved=0, type=1
-            if (dv.getUint16(0, true) === 0 && dv.getUint16(2, true) === 1) {
-              const count = dv.getUint16(4, true);
-              for (let idx = 0; idx < count; idx++) {
-                const dir = 6 + idx * 16;
-                const imgSize = dv.getUint32(dir + 8, true);
-                const imgOffset = dv.getUint32(dir + 12, true);
-                if (imgOffset + 4 > bytes.length) continue;
-                // PNG signature check
-                if (bytes[imgOffset] === 0x89 && bytes[imgOffset + 1] === 0x50 && bytes[imgOffset + 2] === 0x4E && bytes[imgOffset + 3] === 0x47) {
-                  continue; // PNG inside ICO - skip
-                }
-                // Attempt to read BITMAPINFOHEADER at imgOffset
-                if (imgOffset + 40 <= bytes.length) {
-                  const biSize = dv.getUint32(imgOffset, true);
-                  if (biSize >= 12 && imgOffset + biSize <= bytes.length) {
-                    const biBitCount = dv.getUint16(imgOffset + 14, true);
-                    const biClrUsed = dv.getUint32(imgOffset + 32, true);
-                    const paletteCount = biClrUsed || (biBitCount <= 8 ? (1 << biBitCount) : 0);
-                    const palStart = imgOffset + biSize;
-                    const palBytes = paletteCount * 4; // BMP palette entries are typically 4 bytes (B,G,R,Reserved)
-                    if (paletteCount > 0 && palStart + palBytes <= bytes.length) {
-                      const pal: { r: number; g: number; b: number }[] = [];
-                      for (let p = 0; p < paletteCount; p++) {
-                        const off = palStart + p * 4;
-                        const b = bytes[off];
-                        const g = bytes[off + 1];
-                        const r = bytes[off + 2];
-                        pal.push({ r, g, b });
-                      }
-                      if (pal.length > 0) {
-                        // eslint-disable-next-line no-console
-                        console.debug('extractPaletteFromFile: ICO manual parsed palette', { source: ext, entries: pal.length });
-                        return pal;
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          } catch (icoErr) {
-            // ignore ICO fallback errors
-            // eslint-disable-next-line no-console
-            console.debug('extractPaletteFromFile: ICO fallback parse failed', { source: ext, err: icoErr && (icoErr as Error).message });
-          }
-        }
-      } catch (e) {
-        // ignore and continue
-      }
-    }
-  } catch (e) {}
-
-  // PCX: palette at file tail for 8-bit PCX files: 0x0C marker + 768 bytes (256*3)
-  try {
-    if (ext.includes('.pcx')) {
-      try {
-        const buf = await getArrayBuffer();
-        const bytes = new Uint8Array(buf);
-        if (bytes.length >= 769) {
-          const marker = bytes[bytes.length - 769];
-          if (marker === 0x0C) {
-            const palStart = bytes.length - 768;
-            const pal: { r: number; g: number; b: number }[] = [];
-            for (let i = palStart; i < bytes.length; i += 3) {
-              pal.push({ r: bytes[i], g: bytes[i + 1], b: bytes[i + 2] });
-            }
-            if (pal.length > 0) {
-              // eslint-disable-next-line no-console
-              console.debug('extractPaletteFromFile: PCX tail palette extracted', { source: ext, entries: pal.length });
-              return pal;
-            }
-          }
-        }
-      } catch (e) {}
-    }
-  } catch (e) {}
-
-  // TGA: color map specified in header when colormaptype === 1
-  try {
-    if (ext.includes('.tga')) {
-      try {
-        const buf = await getArrayBuffer();
-        const bytes = new Uint8Array(buf);
-        if (bytes.length >= 18) {
-          const idLength = bytes[0];
-          const colorMapType = bytes[1];
-          const colorMapOrigin = bytes[3] | (bytes[4] << 8);
-          const colorMapLength = bytes[5] | (bytes[6] << 8);
-          const colorMapDepth = bytes[7];
-          if (colorMapType === 1 && colorMapLength > 0) {
-            const entrySize = Math.max(1, Math.floor(colorMapDepth / 8));
-            const cmapOffset = 18 + idLength;
-            const expectedLen = colorMapLength * entrySize;
-            if (bytes.length >= cmapOffset + expectedLen) {
-              const pal: { r: number; g: number; b: number }[] = [];
-              for (let i = 0; i < colorMapLength; i++) {
-                const off = cmapOffset + i * entrySize;
-                // Handle common entry sizes: 1,2,3 bytes. For 2-byte (16-bit)
-                // entries interpret as 5-5-5 little-endian (common in TGA palettes)
-                if (entrySize === 2) {
-                  const lo = bytes[off] || 0;
-                  const hi = bytes[off + 1] || 0;
-                  const val = lo | (hi << 8);
-                  const r = ((val >> 10) & 0x1F) << 3;
-                  const g = ((val >> 5) & 0x1F) << 3;
-                  const b = (val & 0x1F) << 3;
-                  pal.push({ r, g, b });
-                } else {
-                  // TGA palette entries are typically BGR when 3 bytes
-                  const b = bytes[off] || 0;
-                  const g = bytes[off + 1] || 0;
-                  const r = bytes[off + 2] || 0;
-                  pal.push({ r, g, b });
-                }
-              }
-              if (pal.length > 0) {
-                // eslint-disable-next-line no-console
-                console.debug('extractPaletteFromFile: TGA colormap extracted', { source: ext, entries: pal.length, depth: colorMapDepth });
-                return pal;
-              }
-            }
-          }
-        }
-      } catch (e) {}
-    }
-  } catch (e) {}
-
-  // IFF/ILBM: search for 'CMAP' chunk and read its data (3-byte RGB triplets)
-  try {
-    if (ext.includes('.iff') || ext.includes('.lbm') || ext.includes('.ilbm')) {
-      try {
-        const buf = await getArrayBuffer();
-        const bytes = new Uint8Array(buf);
-        const dv = new DataView(buf);
-        // Search for ASCII 'CMAP'
-        for (let i = 0; i + 8 < bytes.length; i++) {
-          if (bytes[i] === 0x43 && bytes[i + 1] === 0x4D && bytes[i + 2] === 0x41 && bytes[i + 3] === 0x50) {
-            // next 4 bytes (i+4..i+7) are big-endian length
-            const len = dv.getUint32(i + 4, false); // big-endian
-            const start = i + 8;
-            // Some IFF implementations pad chunk lengths to even boundaries
-            const paddedLen = len + (len % 2);
-            if (start + len <= bytes.length) {
-              const pal: { r: number; g: number; b: number }[] = [];
-              for (let j = start; j + 2 < start + len; j += 3) {
-                pal.push({ r: bytes[j], g: bytes[j + 1], b: bytes[j + 2] });
-              }
-              if (pal.length > 0) {
-                // eslint-disable-next-line no-console
-                console.debug('extractPaletteFromFile: IFF CMAP extracted', { source: ext, entries: pal.length });
-                return pal;
-              }
-            }
-            // Skip to next possible chunk (account for padding)
-            i = start + paddedLen - 1;
-          }
-        }
-      } catch (e) {}
-    }
-  } catch (e) {}
-
-  // No exact palette table found for known indexed formats. Treat as non-indexed.
-  return null;
-}
-
-
-const rgbToXyz = (r: number, g: number, b: number) => {
-  const srgb = [r / 255, g / 255, b / 255].map((v) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
-  const [lr, lg, lb] = srgb;
-  const x = lr * 0.4124564 + lg * 0.3575761 + lb * 0.1804375;
-  const y = lr * 0.2126729 + lg * 0.7151522 + lb * 0.0721750;
-  const z = lr * 0.0193339 + lg * 0.1191920 + lb * 0.9503041;
-  return [x, y, z];
-};
-
-const xyzToLab = (x: number, y: number, z: number) => {
-  const xr = x / 0.95047;
-  const yr = y / 1.0;
-  const zr = z / 1.08883;
-
-  const f = (t: number) => (t > 0.008856 ? Math.cbrt(t) : (7.787 * t) + 16 / 116);
-
-  const fx = f(xr);
-  const fy = f(yr);
-  const fz = f(zr);
-
-  const L = (116 * fy) - 16;
-  const a = 500 * (fx - fy);
-  const b = 200 * (fy - fz);
-  return [L, a, b];
-};
-
-const rgbToLab = (r: number, g: number, b: number) => {
-  const [x, y, z] = rgbToXyz(r, g, b);
-  return xyzToLab(x, y, z);
-};
-
-const deg2rad = (deg: number) => (deg * Math.PI) / 180;
-const rad2deg = (rad: number) => (rad * 180) / Math.PI;
-
-const deltaE2000 = (lab1: number[], lab2: number[]) => {
-  const [L1, a1, b1] = lab1;
-  const [L2, a2, b2] = lab2;
-
-  const avgLp = (L1 + L2) / 2.0;
-  const C1 = Math.sqrt(a1 * a1 + b1 * b1);
-  const C2 = Math.sqrt(a2 * a2 + b2 * b2);
-  const avgC = (C1 + C2) / 2.0;
-
-  const G = 0.5 * (1 - Math.sqrt(Math.pow(avgC, 7) / (Math.pow(avgC, 7) + Math.pow(25, 7))));
-  const a1p = a1 * (1 + G);
-  const a2p = a2 * (1 + G);
-  const C1p = Math.sqrt(a1p * a1p + b1 * b1);
-  const C2p = Math.sqrt(a2p * a2p + b2 * b2);
-  const avgCp = (C1p + C2p) / 2.0;
-
-  const h1p = Math.atan2(b1, a1p) >= 0 ? Math.atan2(b1, a1p) : Math.atan2(b1, a1p) + 2 * Math.PI;
-  const h2p = Math.atan2(b2, a2p) >= 0 ? Math.atan2(b2, a2p) : Math.atan2(b2, a2p) + 2 * Math.PI;
-
-  let deltahp = 0;
-  if (Math.abs(h1p - h2p) <= Math.PI) {
-    deltahp = h2p - h1p;
-  } else if (h2p <= h1p) {
-    deltahp = h2p - h1p + 2 * Math.PI;
-  } else {
-    deltahp = h2p - h1p - 2 * Math.PI;
-  }
-
-  const deltaLp = L2 - L1;
-  const deltaCp = C2p - C1p;
-  const deltaHp = 2 * Math.sqrt(C1p * C2p) * Math.sin(deltahp / 2.0);
-
-  const avgLpminus50sq = (avgLp - 50) * (avgLp - 50);
-  const SL = 1 + ((0.015 * avgLpminus50sq) / Math.sqrt(20 + avgLpminus50sq));
-  const SC = 1 + 0.045 * avgCp;
-
-  const T = 1 - 0.17 * Math.cos(h1p + h2p) + 0.24 * Math.cos(2 * (h1p + h2p)) + 0.32 * Math.cos(3 * (h1p + h2p) + deg2rad(6)) - 0.20 * Math.cos(4 * (h1p + h2p) - deg2rad(63));
-  const SH = 1 + 0.015 * avgCp * T;
-
-  const deltaro = 30 * Math.exp(-((rad2deg((h1p + h2p) / 2) - 275) / 25) * ((rad2deg((h1p + h2p) / 2) - 275) / 25));
-  const RC = 2 * Math.sqrt(Math.pow(avgCp, 7) / (Math.pow(avgCp, 7) + Math.pow(25, 7)));
-  const RT = -Math.sin(deg2rad(2 * deltaro)) * RC;
-
-  const kL = 1;
-  const kC = 1;
-  const kH = 1;
-
-  const deltaE = Math.sqrt(
-    Math.pow(deltaLp / (kL * SL), 2) +
-    Math.pow(deltaCp / (kC * SC), 2) +
-    Math.pow(deltaHp / (kH * SH), 2) +
-    RT * (deltaCp / (kC * SC)) * (deltaHp / (kH * SH))
-  );
-
-  return deltaE;
-};
-
-const applyFixedPalette = (data: Uint8ClampedArray, palette: number[][]) => {
-  const paletteLab = palette.map(([pr, pg, pb]) => rgbToLab(pr, pg, pb));
-  const cache = new Map<string, number[]>();
-
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-
-    const key = `${r},${g},${b}`;
-    const cached = cache.get(key);
-    if (cached) {
-      data[i] = cached[0];
-      data[i + 1] = cached[1];
-      data[i + 2] = cached[2];
-      continue;
-    }
-
-    const lab = rgbToLab(r, g, b);
-    let minDelta = Infinity;
-    let bestIndex = 0;
-
-    for (let p = 0; p < paletteLab.length; p++) {
-      const d = deltaE2000(lab, paletteLab[p]);
-      if (d < minDelta) {
-        minDelta = d;
-        bestIndex = p;
-      }
-    }
-
-    const chosen = palette[bestIndex];
-    cache.set(key, chosen);
-
-    data[i] = chosen[0];
-    data[i + 1] = chosen[1];
-    data[i + 2] = chosen[2];
-  }
-};
+// Imported helpers (extracted to smaller modules)
+import { extractPaletteFromFile, paletteKey as paletteKeyImpl, mergePreservePalette as mergePreservePaletteImpl } from './retroEditor/paletteUtils';
+import { rgbToLab, deltaE2000, applyFixedPalette, detectAndUnscaleImage } from './retroEditor/processing';
 
 // Local history state type used by the editor
 type HistoryState = {
@@ -480,16 +50,13 @@ export const RetroImageEditor = () => {
   const [isVerticalLayout, setIsVerticalLayout] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [originalImageSource, setOriginalImageSource] = useState<File | string | null>(null);
-  const [isOriginalPNG8Indexed, setIsOriginalPNG8Indexed] = useState(false);
-  const [originalPaletteColors, setOriginalPaletteColors] = useState<Color[]>([]);
-  const [orderedPaletteColors, setOrderedPaletteColors] = useState<Color[]>([]);
+  // Palette state moved to editor hook (destructured after hook init)
   const { t, currentLanguage, changeLanguage, languages, getLanguageName } = useTranslation();
   const [originalImage, setOriginalImage] = useState<HTMLImageElement | null>(null);
   const [processedImageData, setProcessedImageData] = useState<ImageData | null>(null);
   const [selectedPalette, setSelectedPalette] = useState<PaletteType>('original');
   // Optional explicit palette depth to inform children (e.g., PaletteViewer)
-  const [paletteDepthOriginal, setPaletteDepthOriginal] = useState<{ r: number; g: number; b: number }>({ r: 8, g: 8, b: 8 });
-  const [paletteDepthProcessed, setPaletteDepthProcessed] = useState<{ r: number; g: number; b: number }>({ r: 8, g: 8, b: 8 });
+  // paletteDepth now in editorState
   // Restore resolution/scaling state that the selector will control
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('scale-to-fit-width');
@@ -513,8 +80,8 @@ export const RetroImageEditor = () => {
         : selectedPalette === 'masterSystem'
           ? { r: 2, g: 2, b: 2 }
           : { r: 8, g: 8, b: 8 };
-    setPaletteDepthOriginal({ r: 8, g: 8, b: 8 });
-    setPaletteDepthProcessed(processedDepth);
+  editorActions.setPaletteDepthOriginal({ r: 8, g: 8, b: 8 });
+  editorActions.setPaletteDepthProcessed(processedDepth);
   }, [selectedPalette]);
   // When set, skip the immediate automated processing pass to avoid
   // overwriting intentional manual palette/image edits from the UI.
@@ -524,17 +91,8 @@ export const RetroImageEditor = () => {
   // When the user manually edits the palette we set this flag so automatic
   // processing won't overwrite the manual palette until the user explicitly
   // changes the palette selection or resets the editor.
-  const manualPaletteOverrideRef = useRef<boolean>(false);
-  const manualPaletteTimeoutRef = useRef<number | null>(null);
-  const lastManualProcessedRef = useRef<ImageData | null>(null);
-  // When user selects a new palette and we convert the previous ordered
-  // palette to the new depth, store it temporarily so the processing
-  // pipeline can merge it back into the final written ordered palette.
-  const pendingConvertedPaletteRef = useRef<Color[] | null>(null);
-
-  // Helper to update ordered palette with instrumentation and respect the
-  // manual override flag. The `source` string helps trace where updates come from.
-  const lastWrittenPaletteRef = useRef<string | null>(null);
+  // Manual/pending refs moved to editorRefs
+  // manualPaletteOverrideRef, pendingConvertedPaletteRef, lastManualProcessedRef, lastWrittenPaletteRef
 
   const paletteKey = (cols: Color[] | null | undefined) => {
     try {
@@ -550,22 +108,22 @@ export const RetroImageEditor = () => {
 
     // If user manually edited the palette recently, ignore automatic updates
     // unless the update originates from the manual path.
-    if (manualPaletteOverrideRef.current && source !== 'manual') {
+    if (editorRefs.manualPaletteOverrideRef.current && source !== 'manual') {
       return;
     }
 
     // Perform the actual state update
     try {
       const serialized = paletteKey(colors);
-      if (lastWrittenPaletteRef.current === serialized) {
+      if (editorRefs.lastWrittenPaletteRef.current === serialized) {
         return;
       }
-      lastWrittenPaletteRef.current = serialized;
+      editorRefs.lastWrittenPaletteRef.current = serialized;
     } catch (e) {
       // fall through to set
     }
 
-    setOrderedPaletteColors(colors);
+  editorActions.setOrderedPaletteColors(colors);
   }, []);
 
   // Merge helper: preserve `preferred` colors in order, then fill remaining
@@ -637,6 +195,10 @@ export const RetroImageEditor = () => {
   const performanceMonitor = usePerformanceMonitor();
   const { getCanvas, returnCanvas } = useCanvasPool();
 
+  // Hooked editor state (start small; we'll migrate more logic here)
+  const editor = useRetroEditorState();
+  const { state: editorState, actions: editorActions, refs: editorRefs, helpers: editorHelpers } = editor;
+
   // Stable callback to receive zoom updates from ImagePreview. Using useCallback
   // prevents a new function reference being passed on every render which can
   // cause the preview to behave oddly (recreating handlers and triggering
@@ -671,8 +233,8 @@ export const RetroImageEditor = () => {
     setProcessingOperation('');
 
     // Grid & palette related defaults
-    setIsOriginalPNG8Indexed(false);
-    setOriginalPaletteColors([]);
+  editorActions.setIsOriginalPNG8Indexed(false);
+  editorActions.setOriginalPaletteColors([]);
   writeOrderedPalette([], 'init');
     setShowTileGrid(false);
     setShowFrameGrid(false);
@@ -693,7 +255,7 @@ export const RetroImageEditor = () => {
   setPreviewShowingOriginal(true);
 
   // Clear any manual palette override when resetting the editor
-  manualPaletteOverrideRef.current = false;
+  editorRefs.manualPaletteOverrideRef.current = false;
 
     // Clear history to free memory
     setHistory([]);
@@ -831,18 +393,18 @@ export const RetroImageEditor = () => {
         }
 
         if (extractedPalette && extractedPalette.length > 0) {
-          setIsOriginalPNG8Indexed(true);
-          setOriginalPaletteColors(extractedPalette as any);
+          editorActions.setIsOriginalPNG8Indexed(true);
+          editorActions.setOriginalPaletteColors(extractedPalette as any);
           writeOrderedPalette(extractedPalette as any, isPng ? 'png-extract' : 'format-extract');
         } else {
-          setIsOriginalPNG8Indexed(false);
-          setOriginalPaletteColors([]);
+          editorActions.setIsOriginalPNG8Indexed(false);
+          editorActions.setOriginalPaletteColors([]);
           writeOrderedPalette([], isPng ? 'png-extract-fallback' : 'no-palette');
         }
       } catch (e) {
         console.error('Palette extraction failed:', e);
-        setIsOriginalPNG8Indexed(false);
-        setOriginalPaletteColors([]);
+  editorActions.setIsOriginalPNG8Indexed(false);
+  editorActions.setOriginalPaletteColors([]);
         writeOrderedPalette([], 'no-palette-exception');
       }
       
@@ -1211,7 +773,7 @@ export const RetroImageEditor = () => {
 
         applyGbBrightnessMapping(resultData, gbColors);
 
-  if (!manualPaletteOverrideRef.current) writeOrderedPalette(toColorObjects(gbColors), 'applyPaletteConversion-gb');
+      if (!editorRefs.manualPaletteOverrideRef.current) writeOrderedPalette(toColorObjects(gbColors), 'applyPaletteConversion-gb');
         return resultImageData;
       }
 
@@ -1227,9 +789,9 @@ export const RetroImageEditor = () => {
     // only using the Game Boy BG 4-color set.
     applyGbBrightnessMapping(resultData, gbBgColors);
 
-  if (!manualPaletteOverrideRef.current) writeOrderedPalette(toColorObjects(gbBgColors), 'applyPaletteConversion-gbBg');
+  if (!editorRefs.manualPaletteOverrideRef.current) writeOrderedPalette(toColorObjects(gbBgColors), 'applyPaletteConversion-gbBg');
     // Align with other fixed palette paths: clear any pending converted palette
-    pendingConvertedPaletteRef.current = null;
+    editorRefs.pendingConvertedPaletteRef.current = null;
         return resultImageData;
       }
 
@@ -1244,11 +806,11 @@ export const RetroImageEditor = () => {
         // Use the exact same brightness-based mapping thresholds as other GB palettes
         applyGbBrightnessMapping(resultData, gbRealColors);
 
-        if (!manualPaletteOverrideRef.current) {
+        if (!editorRefs.manualPaletteOverrideRef.current) {
           writeOrderedPalette(toColorObjects(gbRealColors), 'applyPaletteConversion-gbRealistic');
         }
         // Align with fixed palette behavior
-        pendingConvertedPaletteRef.current = null;
+        editorRefs.pendingConvertedPaletteRef.current = null;
         return resultImageData;
       }
 
@@ -1256,17 +818,17 @@ export const RetroImageEditor = () => {
         try {
           // If we have a preserved-order palette (from switching from original indexed),
           // apply it directly without recalculating/merging. This becomes the processed palette.
-          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
-            const preserved = pendingConvertedPaletteRef.current.slice();
+          if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
+            const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
             const applied = await imageProcessor.applyPalette(resultImageData, preserved as any, (progress: number) => setProcessingProgress(progress));
-            if (!manualPaletteOverrideRef.current) {
+            if (!editorRefs.manualPaletteOverrideRef.current) {
               writeOrderedPalette(preserved, 'applyPaletteConversion-mega-preserved');
             }
-            pendingConvertedPaletteRef.current = null;
+            editorRefs.pendingConvertedPaletteRef.current = null;
             // Prevent any subsequent automatic processing pass from overwriting
             // the preserved-order palette; this fulfills the strict requirement
             // to keep order/count exactly as in the original palette.
-            manualPaletteOverrideRef.current = true;
+            editorRefs.manualPaletteOverrideRef.current = true;
             return applied;
           }
           const megaDriveResult = await imageProcessor.processMegaDriveImage(
@@ -1274,12 +836,12 @@ export const RetroImageEditor = () => {
             customColors,
             (progress) => setProcessingProgress(progress)
           );
-          if (!manualPaletteOverrideRef.current) {
+          if (!editorRefs.manualPaletteOverrideRef.current) {
             const resultPalette = megaDriveResult.palette.map(({ r, g, b }) => ({ r, g, b }));
-            if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
-              const merged = mergePreservePalette(pendingConvertedPaletteRef.current, resultPalette, 16);
+            if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
+              const merged = mergePreservePalette(editorRefs.pendingConvertedPaletteRef.current, resultPalette, 16);
               writeOrderedPalette(merged, 'applyPaletteConversion-mega-merged');
-              pendingConvertedPaletteRef.current = null;
+              editorRefs.pendingConvertedPaletteRef.current = null;
             } else {
               writeOrderedPalette(resultPalette, 'applyPaletteConversion-mega');
             }
@@ -1288,20 +850,20 @@ export const RetroImageEditor = () => {
         } catch (error) {
           console.error('Mega Drive processing error:', error);
           // If worker path fails and we still have a preserved palette, use it directly
-          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
+          if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
             try {
-              const preserved = pendingConvertedPaletteRef.current.slice();
+              const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
               const applied = await imageProcessor.applyPalette(resultImageData, preserved as any);
-              if (!manualPaletteOverrideRef.current) {
+              if (!editorRefs.manualPaletteOverrideRef.current) {
                 writeOrderedPalette(preserved, 'applyPaletteConversion-mega-preserved-fallback');
               }
-              pendingConvertedPaletteRef.current = null;
-              manualPaletteOverrideRef.current = true;
+              editorRefs.pendingConvertedPaletteRef.current = null;
+              editorRefs.manualPaletteOverrideRef.current = true;
               return applied;
             } catch (e2) { /* continue to library fallback */ }
           }
           const fallback = processMegaDriveImage(resultImageData, customColors);
-          if (!manualPaletteOverrideRef.current) {
+          if (!editorRefs.manualPaletteOverrideRef.current) {
             const resultPalette = fallback.palette.map(({ r, g, b }) => ({ r, g, b }));
             writeOrderedPalette(resultPalette, 'applyPaletteConversion-mega-fallback');
           }
@@ -1312,19 +874,19 @@ export const RetroImageEditor = () => {
       case 'gameGear': {
         try {
           // Prefer imageProcessor implementation if provided (keeps heavy work off main thread)
-          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
-            const preserved = pendingConvertedPaletteRef.current.slice();
+          if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
+            const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
             const applied = await imageProcessor.applyPalette(resultImageData, preserved as any, (progress: number) => setProcessingProgress(progress));
-            if (!manualPaletteOverrideRef.current) {
+            if (!editorRefs.manualPaletteOverrideRef.current) {
               writeOrderedPalette(preserved, 'applyPaletteConversion-gamegear-preserved');
             }
-            pendingConvertedPaletteRef.current = null;
-            manualPaletteOverrideRef.current = true;
+            editorRefs.pendingConvertedPaletteRef.current = null;
+            editorRefs.manualPaletteOverrideRef.current = true;
             return applied;
           }
           if (imageProcessor && typeof (imageProcessor as any).processGameGearImage === 'function') {
             const ggResult: any = await (imageProcessor as any).processGameGearImage(resultImageData, customColors, (progress: number) => setProcessingProgress(progress));
-            if (!manualPaletteOverrideRef.current) {
+            if (!editorRefs.manualPaletteOverrideRef.current) {
               const resultPalette = ggResult.palette.map(({ r, g, b }: any) => ({ r, g, b }));
               writeOrderedPalette(resultPalette, 'applyPaletteConversion-gamegear');
             }
@@ -1333,20 +895,20 @@ export const RetroImageEditor = () => {
           // Fallback to local synchronous implementation
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const { processGameGearImage } = await import('@/lib/colorQuantization');
-          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
+          if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
             try {
-              const preserved = pendingConvertedPaletteRef.current.slice();
+              const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
               const applied = await imageProcessor.applyPalette(resultImageData, preserved as any);
-              if (!manualPaletteOverrideRef.current) {
+              if (!editorRefs.manualPaletteOverrideRef.current) {
                 writeOrderedPalette(preserved, 'applyPaletteConversion-gamegear-preserved-fallback');
               }
-              pendingConvertedPaletteRef.current = null;
-              manualPaletteOverrideRef.current = true;
+              editorRefs.pendingConvertedPaletteRef.current = null;
+              editorRefs.manualPaletteOverrideRef.current = true;
               return applied;
             } catch (e2) { /* continue to library fallback */ }
           }
           const ggFallback = processGameGearImage(resultImageData, customColors);
-          if (!manualPaletteOverrideRef.current) {
+          if (!editorRefs.manualPaletteOverrideRef.current) {
             const resultPalette = ggFallback.palette.map(({ r, g, b }) => ({ r, g, b }));
             writeOrderedPalette(resultPalette, 'applyPaletteConversion-gamegear-fallback');
           }
@@ -1356,8 +918,9 @@ export const RetroImageEditor = () => {
           // If something fails, fall back to applying a fixed palette if available
           const preset = FIXED_PALETTES['gameGear'];
           if (preset && preset.length > 0) {
-            applyFixedPalette(resultData, preset);
-            if (!manualPaletteOverrideRef.current) writeOrderedPalette(preset.map(([r, g, b]) => ({ r, g, b })), 'applyPaletteConversion-gamegear-fixed');
+            const remapped = await applyFixedPalette(resultImageData, preset);
+            if (!editorRefs.manualPaletteOverrideRef.current) writeOrderedPalette(preset.map(([r, g, b]) => ({ r, g, b })), 'applyPaletteConversion-gamegear-fixed');
+            return remapped;
           }
           return resultImageData;
         }
@@ -1365,39 +928,39 @@ export const RetroImageEditor = () => {
 
       case 'masterSystem': {
         try {
-          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
-            const preserved = pendingConvertedPaletteRef.current.slice();
+          if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
+            const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
             const applied = await imageProcessor.applyPalette(resultImageData, preserved as any, (progress: number) => setProcessingProgress(progress));
-            if (!manualPaletteOverrideRef.current) {
+            if (!editorRefs.manualPaletteOverrideRef.current) {
               writeOrderedPalette(preserved, 'applyPaletteConversion-master-preserved');
             }
-            pendingConvertedPaletteRef.current = null;
-            manualPaletteOverrideRef.current = true;
+            editorRefs.pendingConvertedPaletteRef.current = null;
+            editorRefs.manualPaletteOverrideRef.current = true;
             return applied;
           }
           if (imageProcessor && typeof (imageProcessor as any).processMasterSystemImage === 'function') {
             const msResult: any = await (imageProcessor as any).processMasterSystemImage(resultImageData, customColors, (progress: number) => setProcessingProgress(progress));
-            if (!manualPaletteOverrideRef.current) {
+            if (!editorRefs.manualPaletteOverrideRef.current) {
               const resultPalette = msResult.palette.map(({ r, g, b }: any) => ({ r, g, b }));
               writeOrderedPalette(resultPalette, 'applyPaletteConversion-master');
             }
             return msResult.imageData;
           }
           const { processMasterSystemImage } = await import('@/lib/colorQuantization');
-          if (pendingConvertedPaletteRef.current && pendingConvertedPaletteRef.current.length > 0) {
+          if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
             try {
-              const preserved = pendingConvertedPaletteRef.current.slice();
+              const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
               const applied = await imageProcessor.applyPalette(resultImageData, preserved as any);
-              if (!manualPaletteOverrideRef.current) {
+              if (!editorRefs.manualPaletteOverrideRef.current) {
                 writeOrderedPalette(preserved, 'applyPaletteConversion-master-preserved-fallback');
               }
-              pendingConvertedPaletteRef.current = null;
-              manualPaletteOverrideRef.current = true;
+              editorRefs.pendingConvertedPaletteRef.current = null;
+              editorRefs.manualPaletteOverrideRef.current = true;
               return applied;
             } catch (e2) { /* continue to library fallback */ }
           }
           const msFallback = processMasterSystemImage(resultImageData, customColors);
-          if (!manualPaletteOverrideRef.current) {
+          if (!editorRefs.manualPaletteOverrideRef.current) {
             const resultPalette = msFallback.palette.map(({ r, g, b }) => ({ r, g, b }));
             writeOrderedPalette(resultPalette, 'applyPaletteConversion-master-fallback');
           }
@@ -1406,8 +969,9 @@ export const RetroImageEditor = () => {
           console.error('Master System processing error:', err);
           const preset = FIXED_PALETTES['masterSystem'];
           if (preset && preset.length > 0) {
-            applyFixedPalette(resultData, preset);
-            if (!manualPaletteOverrideRef.current) writeOrderedPalette(preset.map(([r, g, b]) => ({ r, g, b })), 'applyPaletteConversion-master-fixed');
+            const remapped = await applyFixedPalette(resultImageData, preset);
+            if (!editorRefs.manualPaletteOverrideRef.current) writeOrderedPalette(preset.map(([r, g, b]) => ({ r, g, b })), 'applyPaletteConversion-master-fixed');
+            return remapped;
           }
           return resultImageData;
         }
@@ -1424,28 +988,25 @@ export const RetroImageEditor = () => {
           // This ensures selecting a canonical palette from the UI always
           // remaps pixels to the canonical set.
           const paletteToApply = preset; // ignore customColors for fixed palettes
-          applyFixedPalette(resultData, paletteToApply);
-          if (!manualPaletteOverrideRef.current) {
+          const remapped = await applyFixedPalette(resultImageData, paletteToApply);
+          if (!editorRefs.manualPaletteOverrideRef.current) {
             const resultPalette = toColorObjects(paletteToApply as number[][]);
             writeOrderedPalette(resultPalette, 'applyPaletteConversion-fixed');
           }
           // Clear any pending converted palette since it is not applicable here
-          pendingConvertedPaletteRef.current = null;
+          editorRefs.pendingConvertedPaletteRef.current = null;
+          return remapped;
         }
         return resultImageData;
       }
     }
-  }, [imageProcessor, setProcessingProgress, setOrderedPaletteColors]);
+  }, [imageProcessor, setProcessingProgress, editorActions.setOrderedPaletteColors]);
 
 
   const processImage = useCallback(async () => {
     // If the user has manually edited the palette/image, skip automated processing
     // to avoid overwriting intentional manual edits. Manual edits must be cleared
     // explicitly (for example when the user selects a new palette or resets).
-    if (manualPaletteOverrideRef.current) {
-      return;
-    }
-    // If a suppression flag is set (due to a manual palette/image edit),
     // consume it and skip processing so we don't overwrite the user's manual
     // adjustments. This covers both debounced automatic runs and direct
     // invocations that may happen shortly after a manual edit.
@@ -1678,27 +1239,28 @@ export const RetroImageEditor = () => {
         }
       }
 
-      // Read resulting pixels from temp canvas
-      const tempImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
+  // Read resulting pixels from temp canvas
+  const tempImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
 
       // If we're preserving the original palette (indexed PNG), quantize the
       // pixels to that palette only when the user keeps the 'original' selection.
-      if (selectedPalette === 'original' && Array.isArray(originalPaletteColors) && originalPaletteColors.length > 0) {
-        const paletteColorsArr = originalPaletteColors.map((c: any) => [c.r, c.g, c.b]);
-        applyFixedPalette(tempImageData.data, paletteColorsArr);
+      let remappedOriginal: ImageData | null = null;
+      if (selectedPalette === 'original' && Array.isArray(editorState.originalPaletteColors) && editorState.originalPaletteColors.length > 0) {
+        const paletteColorsArr = editorState.originalPaletteColors.map((c: any) => [c.r, c.g, c.b]);
+        remappedOriginal = await applyFixedPalette(tempImageData, paletteColorsArr);
       }
 
 
-      let convertedImageData = tempImageData;
+      let convertedImageData = remappedOriginal || tempImageData;
 
       if (selectedPalette !== 'original') {
         convertedImageData = await applyPaletteConversion(
           tempImageData,
           selectedPalette,
-          orderedPaletteColors.length > 0 ? orderedPaletteColors : undefined
+          editorState.orderedPaletteColors.length > 0 ? editorState.orderedPaletteColors : undefined
         );
-      } else if (isOriginalPNG8Indexed && originalPaletteColors.length > 0) {
-  writeOrderedPalette(originalPaletteColors, 'restore-original-palette');
+    } else if (editorState.isOriginalPNG8Indexed && editorState.originalPaletteColors.length > 0) {
+  writeOrderedPalette(editorState.originalPaletteColors, 'restore-original-palette');
       } else if (selectedPalette === 'original') {
   writeOrderedPalette([], 'restore-original-palette-clear');
       }
@@ -1753,9 +1315,9 @@ export const RetroImageEditor = () => {
     getCanvas,
     returnCanvas,
     detectAndUnscaleImage,
-    isOriginalPNG8Indexed,
-    originalPaletteColors,
-    orderedPaletteColors,
+  editorState.isOriginalPNG8Indexed,
+    editorState.originalPaletteColors,
+    editorState.orderedPaletteColors,
     selectedResolution,
     scalingMode,
     toast,
@@ -1783,8 +1345,8 @@ export const RetroImageEditor = () => {
       const srcHash = (!previewShowingOriginal && processedImageData)
         ? hashImageData(processedImageData)
         : (originalImage ? hashImage(originalImage) : '');
-      const paletteKey = orderedPaletteColors && orderedPaletteColors.length > 0
-        ? JSON.stringify(orderedPaletteColors)
+      const paletteKey = editorState.orderedPaletteColors && editorState.orderedPaletteColors.length > 0
+        ? JSON.stringify(editorState.orderedPaletteColors)
         : '';
       // Include the forceUseOriginal flag in the key so a run explicitly
       // forced to use the original image is considered distinct by the
@@ -1793,7 +1355,7 @@ export const RetroImageEditor = () => {
     } catch (e) {
       return `${Date.now()}`; // fallback to something unique on error
     }
-  }, [processedImageData, originalImage, orderedPaletteColors, selectedPalette, selectedResolution, scalingMode, previewShowingOriginal]);
+  }, [processedImageData, originalImage, editorState.orderedPaletteColors, selectedPalette, selectedResolution, scalingMode, previewShowingOriginal]);
 
   // Schedule processing with non-reentrant semantics. If a process is already
   // running we remember the latest requested key and run it once the active
@@ -1849,10 +1411,10 @@ export const RetroImageEditor = () => {
       // Mark that the user manually edited the palette so automated
       // processing doesn't overwrite it. Persist the manual override until
       // the user explicitly selects a new palette or resets the editor.
-      manualPaletteOverrideRef.current = true;
-      if (manualPaletteTimeoutRef.current) {
-        window.clearTimeout(manualPaletteTimeoutRef.current as any);
-        manualPaletteTimeoutRef.current = null;
+      editorRefs.manualPaletteOverrideRef.current = true;
+      if (editorRefs.manualPaletteTimeoutRef.current) {
+        window.clearTimeout(editorRefs.manualPaletteTimeoutRef.current as any);
+        editorRefs.manualPaletteTimeoutRef.current = null;
       }
 
       // If this update includes a 'replace' meta (single-color exact replace)
@@ -1934,7 +1496,7 @@ export const RetroImageEditor = () => {
             setProcessedImageData(newProcessed);
             // remember the last manual processed raster so toggling the
             // preview back to processed restores the exact edited image.
-            lastManualProcessedRef.current = newProcessed;
+            editorRefs.lastManualProcessedRef.current = newProcessed;
             previewToggleWasManualRef.current = true;
             setPreviewShowingOriginal(false);
             saveToHistory({ imageData: newProcessed, palette: selectedPalette });
@@ -1947,7 +1509,7 @@ export const RetroImageEditor = () => {
           // If hashing fails for any reason, fall back to applying the update
           // to avoid losing the user's manual edit.
           setProcessedImageData(newProcessed);
-          lastManualProcessedRef.current = newProcessed;
+          editorRefs.lastManualProcessedRef.current = newProcessed;
           previewToggleWasManualRef.current = true;
           setPreviewShowingOriginal(false);
           saveToHistory({ imageData: newProcessed, palette: selectedPalette });
@@ -1969,9 +1531,9 @@ export const RetroImageEditor = () => {
   // the automated processing pipeline which may re-quantize them.
   useEffect(() => {
     if (!previewShowingOriginal) {
-      if (manualPaletteOverrideRef.current && lastManualProcessedRef.current) {
+      if (editorRefs.manualPaletteOverrideRef.current && editorRefs.lastManualProcessedRef.current) {
         try {
-          const src = lastManualProcessedRef.current;
+          const src = editorRefs.lastManualProcessedRef.current;
           const cloned = new ImageData(new Uint8ClampedArray(src.data), src.width, src.height);
           // Prevent the scheduled processing run from overwriting this
           suppressNextProcessRef.current = true;
@@ -2062,13 +1624,13 @@ export const RetroImageEditor = () => {
   // Handle palette changes - restore original palette metadata when the selection returns to 'original'
   useEffect(() => {
     if (selectedPalette === 'original') {
-      if (isOriginalPNG8Indexed && originalPaletteColors.length > 0) {
-  writeOrderedPalette(originalPaletteColors, 'selectedPalette-original-restore');
+      if (editorState.isOriginalPNG8Indexed && editorState.originalPaletteColors.length > 0) {
+  writeOrderedPalette(editorState.originalPaletteColors, 'selectedPalette-original-restore');
       } else {
   writeOrderedPalette([], 'selectedPalette-original-clear');
       }
     }
-  }, [selectedPalette, isOriginalPNG8Indexed, originalPaletteColors]);
+  }, [selectedPalette, editorState.isOriginalPNG8Indexed, editorState.originalPaletteColors]);
 
   const languagesSafe = Array.isArray(languages) ? languages : [];
   const sortedLanguages = [...languagesSafe].sort((a, b) => 
@@ -2142,36 +1704,54 @@ export const RetroImageEditor = () => {
         {/* Left column: toolbar when vertical */}
   <div className="m-0 p-0 row-start-1 row-end-4 col-start-1 col-end-2" style={{ minWidth: 0 }}>
           {isVerticalLayout && (
-            <Toolbar
-              isVerticalLayout={isVerticalLayout}
-              originalImage={originalImage}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              resetEditor={resetEditor}
-              loadFromClipboard={loadFromClipboard}
-              toast={toast}
-              t={t}
-              zoomPercent={currentZoom}
-              onZoomPercentChange={(z) => setCurrentZoom(z)}
-              onFitToWindowRequest={() => {
-                try { imagePreviewRef.current?.fitToWidthButtonAction(); } catch (e) { /* ignore */ }
+            <FloatingPanels
+              showToolbar={true}
+              showPalette={true}
+              toolbarProps={{
+                isVerticalLayout,
+                originalImage,
+                activeTab,
+                setActiveTab,
+                resetEditor,
+                loadFromClipboard,
+                toast,
+                t,
+                zoomPercent: currentZoom,
+                onZoomPercentChange: (z: number) => setCurrentZoom(z),
+                onFitToWindowRequest: () => { try { imagePreviewRef.current?.fitToWidthButtonAction(); } catch (e) {} },
+                selectedPalette,
+                processedImageData,
+                originalImageSource,
+                originalPaletteColors: editorState.originalPaletteColors,
+                processedPaletteColors: editorState.orderedPaletteColors,
+                onToolbarPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
+                onToolbarImageUpdate: (img: ImageData) => {
+                  setProcessedImageData(img);
+                  editorRefs.lastManualProcessedRef.current = img;
+                  previewToggleWasManualRef.current = true;
+                  setPreviewShowingOriginal(false);
+                },
+                showOriginalPreview: previewShowingOriginal,
+                paletteDepthOriginal: editorState.paletteDepthOriginal,
+                paletteDepthProcessed: editorState.paletteDepthProcessed,
+                editor,
+                footerProps: { isVerticalLayout }
               }}
-              selectedPalette={selectedPalette}
-              processedImageData={processedImageData}
-              originalImageSource={originalImageSource}
-              originalPaletteColors={originalPaletteColors}
-              processedPaletteColors={orderedPaletteColors}
-              onToolbarPaletteUpdate={(colors, meta) => handlePaletteUpdateFromViewer(colors, meta)}
-              onToolbarImageUpdate={(img) => {
-                // mirror ImagePreview onImageUpdate behavior
-                setProcessedImageData(img);
-                lastManualProcessedRef.current = img;
-                previewToggleWasManualRef.current = true;
-                setPreviewShowingOriginal(false);
+              paletteProps={{
+                selectedPalette,
+                imageData: processedImageData,
+                onPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
+                originalImageSource,
+                externalPalette: editorState.originalPaletteColors,
+                onImageUpdate: (img: ImageData) => {
+                  setProcessedImageData(img);
+                  editorRefs.lastManualProcessedRef.current = img;
+                  previewToggleWasManualRef.current = true;
+                  setPreviewShowingOriginal(false);
+                },
+                showOriginal: previewShowingOriginal,
+                paletteDepth: editorState.paletteDepthProcessed,
               }}
-              showOriginalPreview={previewShowingOriginal}
-              paletteDepthOriginal={paletteDepthOriginal}
-              paletteDepthProcessed={paletteDepthProcessed}
             />
           )}
         </div>
@@ -2179,35 +1759,54 @@ export const RetroImageEditor = () => {
         {/* Right column header: toolbar when horizontal */}
         <div className="m-0 p-0 row-start-1 col-start-2 col-end-3" ref={(el) => (headerRef.current = el)} style={{ minWidth: 0 }}>
           {!isVerticalLayout && (
-            <Toolbar
-              isVerticalLayout={isVerticalLayout}
-              originalImage={originalImage}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-              resetEditor={resetEditor}
-              loadFromClipboard={loadFromClipboard}
-              toast={toast}
-              t={t}
-              zoomPercent={currentZoom}
-              onZoomPercentChange={(z) => setCurrentZoom(z)}
-              onFitToWindowRequest={() => {
-                try { imagePreviewRef.current?.fitToWidthButtonAction(); } catch (e) { /* ignore */ }
+            <FloatingPanels
+              showToolbar={true}
+              showPalette={true}
+              toolbarProps={{
+                isVerticalLayout,
+                originalImage,
+                activeTab,
+                setActiveTab,
+                resetEditor,
+                loadFromClipboard,
+                toast,
+                t,
+                zoomPercent: currentZoom,
+                onZoomPercentChange: (z: number) => setCurrentZoom(z),
+                onFitToWindowRequest: () => { try { imagePreviewRef.current?.fitToWidthButtonAction(); } catch (e) {} },
+                selectedPalette,
+                processedImageData,
+                originalImageSource,
+                originalPaletteColors: editorState.originalPaletteColors,
+                processedPaletteColors: editorState.orderedPaletteColors,
+                onToolbarPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
+                onToolbarImageUpdate: (img: ImageData) => {
+                  setProcessedImageData(img);
+                  editorRefs.lastManualProcessedRef.current = img;
+                  previewToggleWasManualRef.current = true;
+                  setPreviewShowingOriginal(false);
+                },
+                showOriginalPreview: previewShowingOriginal,
+                paletteDepthOriginal: editorState.paletteDepthOriginal,
+                paletteDepthProcessed: editorState.paletteDepthProcessed,
+                editor,
+                footerProps: { isVerticalLayout }
               }}
-              selectedPalette={selectedPalette}
-              processedImageData={processedImageData}
-              originalImageSource={originalImageSource}
-              originalPaletteColors={originalPaletteColors}
-              processedPaletteColors={orderedPaletteColors}
-              onToolbarPaletteUpdate={(colors, meta) => handlePaletteUpdateFromViewer(colors, meta)}
-              onToolbarImageUpdate={(img) => {
-                setProcessedImageData(img);
-                lastManualProcessedRef.current = img;
-                previewToggleWasManualRef.current = true;
-                setPreviewShowingOriginal(false);
+              paletteProps={{
+                selectedPalette,
+                imageData: processedImageData,
+                onPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
+                originalImageSource,
+                externalPalette: editorState.originalPaletteColors,
+                onImageUpdate: (img: ImageData) => {
+                  setProcessedImageData(img);
+                  editorRefs.lastManualProcessedRef.current = img;
+                  previewToggleWasManualRef.current = true;
+                  setPreviewShowingOriginal(false);
+                },
+                showOriginal: previewShowingOriginal,
+                paletteDepth: editorState.paletteDepthProcessed,
               }}
-              showOriginalPreview={previewShowingOriginal}
-              paletteDepthOriginal={paletteDepthOriginal}
-              paletteDepthProcessed={paletteDepthProcessed}
             />
           )}
         </div>
@@ -2224,8 +1823,8 @@ export const RetroImageEditor = () => {
               originalImageSource={originalImageSource}
               selectedPalette={selectedPalette}
               onPaletteUpdate={handlePaletteUpdateFromViewer}
-              originalPaletteColors={originalPaletteColors}
-              processedPaletteColors={orderedPaletteColors}
+              originalPaletteColors={editorState.originalPaletteColors}
+              processedPaletteColors={editorState.orderedPaletteColors}
               showCameraPreview={showCameraPreview}
               onCameraPreviewChange={setShowCameraPreview}
               selectedCameraId={selectedCameraId}
@@ -2258,14 +1857,14 @@ export const RetroImageEditor = () => {
                       setProcessedImageData(img);
                       // Record as last manual processed image so toggling preview
                       // back to processed will restore this exact raster.
-                      lastManualProcessedRef.current = img;
+                      editorRefs.lastManualProcessedRef.current = img;
                 // Ensure preview shows processed image and mark toggle as manual so
                 // we don't auto-revert
                 previewToggleWasManualRef.current = true;
                 setPreviewShowingOriginal(false);
               }}
-              paletteDepthOriginal={paletteDepthOriginal}
-              paletteDepthProcessed={paletteDepthProcessed}
+              paletteDepthOriginal={editorState.paletteDepthOriginal}
+              paletteDepthProcessed={editorState.paletteDepthProcessed}
             />
 
             {/* Floating Content Sections - now constrained inside preview cell (absolute inset) */}
@@ -2333,8 +1932,8 @@ export const RetroImageEditor = () => {
                     // Selecting a new palette is an explicit user action that
                     // clears any manual palette edits so automatic processing
                     // may run again.
-                    manualPaletteOverrideRef.current = false;
-                    lastManualProcessedRef.current = null;
+                    editorRefs.manualPaletteOverrideRef.current = false;
+                    editorRefs.lastManualProcessedRef.current = null;
                     // Ensure the next processing run uses the ORIGINAL raster
                     // as the source. This prevents cascading palette applications
                     // when the user switches palettes quickly.
@@ -2347,7 +1946,7 @@ export const RetroImageEditor = () => {
                       : palette === 'masterSystem' ? { r: 2, g: 2, b: 2 }
                       : { r: 8, g: 8, b: 8 };
                     // Do not change ORIGINAL palette depth; only update PROCESSED
-                    setPaletteDepthProcessed(depth);
+                    editorActions.setPaletteDepthProcessed(depth);
                     if (palette !== 'original') {
                       try {
                         // Special case required by app: when switching FROM an indexed "original"
@@ -2356,12 +1955,12 @@ export const RetroImageEditor = () => {
                         // exact order and count, and quantize each entry to the target depth. Use
                         // that palette both for processing and as the processed palette in the UI.
                         const isRetroFreePalette = (palette === 'megadrive' || palette === 'masterSystem' || palette === 'gameGear');
-                        if (isRetroFreePalette && isOriginalPNG8Indexed && originalPaletteColors.length > 0) {
+                        if (isRetroFreePalette && editorState.isOriginalPNG8Indexed && editorState.originalPaletteColors.length > 0) {
                           const bitsR = depth.r || 8;
                           const bitsG = depth.g || 8;
                           const bitsB = depth.b || 8;
                           // Quantize each original entry preserving order
-                          const quantizedExact = originalPaletteColors.map((c) => ({
+                          const quantizedExact = editorState.originalPaletteColors.map((c) => ({
                             r: quantizeChannelToBits(c.r, bitsR),
                             g: quantizeChannelToBits(c.g, bitsG),
                             b: quantizeChannelToBits(c.b, bitsB)
@@ -2373,23 +1972,23 @@ export const RetroImageEditor = () => {
                           let final = quantizedExact.slice(0, targetLen);
                           while (final.length < targetLen) final.push({ r: 0, g: 0, b: 0 } as Color);
                           // No dedupe and no reorder beyond truncation/padding
-                          pendingConvertedPaletteRef.current = final;
+                          editorRefs.pendingConvertedPaletteRef.current = final;
                           writeOrderedPalette(final, 'selectedPalette-preserve-order-pad');
                         } else {
                           const defaults = getDefaultPalette(palette as string) || [];
                           if (defaults && defaults.length > 0) {
                             // convert SimpleColor -> Color
                             const casted = defaults.map(({ r, g, b }) => ({ r, g, b } as Color));
-                            pendingConvertedPaletteRef.current = null;
+                            editorRefs.pendingConvertedPaletteRef.current = null;
                             writeOrderedPalette(casted, 'selectedPalette-default');
                           } else {
                             // Fallback: quantize previously ordered or original palette to the new depth,
                             // preserving order; do NOT dedupe. Adjust length to target by pad/truncate.
-                            const prev = (orderedPaletteColors && orderedPaletteColors.length > 0)
-                              ? orderedPaletteColors
-                              : (originalPaletteColors && originalPaletteColors.length > 0 ? originalPaletteColors : []);
+                            const prev = (editorState.orderedPaletteColors && editorState.orderedPaletteColors.length > 0)
+                              ? editorState.orderedPaletteColors
+                              : (editorState.originalPaletteColors && editorState.originalPaletteColors.length > 0 ? editorState.originalPaletteColors : []);
                             if (prev.length === 0) {
-                              pendingConvertedPaletteRef.current = null;
+                              editorRefs.pendingConvertedPaletteRef.current = null;
                               writeOrderedPalette([], 'undo-clear');
                             } else {
                               const bitsR2 = depth.r || 8;
@@ -2405,7 +2004,7 @@ export const RetroImageEditor = () => {
                               else if (palette === 'gameGear') targetLen = 32;
                               let final = quantizedPrev.slice(0, targetLen);
                               while (final.length < targetLen) final.push({ r: 0, g: 0, b: 0 } as Color);
-                              pendingConvertedPaletteRef.current = final;
+                              editorRefs.pendingConvertedPaletteRef.current = final;
                               writeOrderedPalette(final, 'selectedPalette-quantized-prev-pad');
                             }
                           }
@@ -2494,7 +2093,7 @@ export const RetroImageEditor = () => {
                   setFrameGridColor={setFrameGridColor}
                   frameLineThickness={frameLineThickness}
                   setFrameLineThickness={setFrameLineThickness}
-                  paletteDepthProcessed={paletteDepthProcessed}
+                  paletteDepthProcessed={editorState.paletteDepthProcessed}
                   onClose={() => setActiveTab(null)}
                 />
               </div>
@@ -2510,7 +2109,7 @@ export const RetroImageEditor = () => {
                   processedImageData={processedImageData}
                   originalImage={originalImage}
                   selectedPalette={selectedPalette}
-                  paletteColors={orderedPaletteColors.length > 0 ? orderedPaletteColors : originalPaletteColors}
+                  paletteColors={editorState.orderedPaletteColors.length > 0 ? editorState.orderedPaletteColors : editorState.originalPaletteColors}
                   currentZoom={currentZoom / 100}
                   onClose={() => setActiveTab(null)}
                   originalFilename={originalImageSource instanceof File ? originalImageSource.name : 'image.png'}
