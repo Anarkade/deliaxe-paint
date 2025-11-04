@@ -289,8 +289,40 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
         const editorWidth = editorRect.width || 340;
         const editorHeight = editorRect.height || 320;
 
-        if (toolbarMode) {
-          // Align editor so its left edge touches the toolbar's right edge and
+        if (toolbarRowsMode) {
+          // Horizontal toolbar mode: position ColorEditor below the toolbar
+          const toolbarEl = selectedElement.closest('header') as HTMLElement | null;
+          const toolbarRect = toolbarEl ? toolbarEl.getBoundingClientRect() : selectedRect;
+          
+          const editorWidthPx = editorRect.width || 340;
+          const editorHeightPx = editorRect.height || 320;
+          
+          const containerEl = paletteContainer as HTMLElement | null;
+          const containerRect = containerEl ? containerEl.getBoundingClientRect() : { left: 0, top: 0 } as DOMRect;
+          
+          // Position below the toolbar: toolbar bottom minus container top
+          let localY = Math.round(toolbarRect.bottom - containerRect.top);
+          
+          // Center horizontally on the selected color block
+          let localX = Math.round((selectedRect.left - containerRect.left) + (selectedRect.width / 2) - (editorWidthPx / 2));
+          
+          // Clamp to viewport bounds
+          const margin = 8;
+          const vw = window.innerWidth || document.documentElement.clientWidth;
+          const vh = window.innerHeight || document.documentElement.clientHeight;
+          
+          // Horizontal clamping
+          localX = Math.max(margin, Math.min(vw - editorWidthPx - margin, localX));
+          
+          // Vertical clamping (ensure it doesn't go off bottom of viewport)
+          const viewportTop = (window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0);
+          const maxY = Math.round(viewportTop - containerRect.top + vh - editorHeightPx - margin);
+          localY = Math.min(maxY, localY);
+          
+          position = { x: Math.round(localX), y: Math.round(localY) };
+          setEditorState({ open: true, index, depth, position, width: Math.round(editorWidthPx), fixed: false });
+        } else if (toolbarMode) {
+          // Vertical toolbar mode: align editor so its left edge touches the toolbar's right edge and
           // vertically center it to the toolbar's central block. Compute page
           // coordinates (client + scroll) so the editor uses absolute
           // positioning and moves together with the page scroll.
