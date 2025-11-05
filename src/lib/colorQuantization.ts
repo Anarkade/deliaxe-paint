@@ -45,80 +45,220 @@ const colorDistance = (c1: Color, c2: Color): number => {
 };
 
 /**
- * Median cut algorithm for color quantization
+ * Xiaolin Wu's color quantization algorithm
+ * Superior to Median Cut as it considers color variance and moment-based splitting
+ * for perceptually better palette generation.
  */
-export const medianCutQuantization = (colors: Color[], targetCount: number): Color[] => {
+export const xiaolinWuQuantization = (colors: Color[], targetCount: number): Color[] => {
   if (colors.length <= targetCount) {
     return colors;
   }
-  
-  // Sort by most frequent colors first
-  colors.sort((a, b) => (b.count || 0) - (a.count || 0));
-  
-  const buckets: Color[][] = [colors];
-  
-  while (buckets.length < targetCount) {
-    // Find the bucket with the largest range
-    let largestBucket = 0;
-    let largestRange = 0;
+
+  // Box structure for Wu's algorithm
+  interface Box {
+    r0: number; r1: number;
+    g0: number; g1: number;
+    b0: number; b1: number;
+    volume: number;
+  }
+
+  // Build 3D histogram with moment calculations
+  const HIST_SIZE = 33; // 33x33x33 reduces memory while maintaining quality
+  const histogram = new Float32Array(HIST_SIZE * HIST_SIZE * HIST_SIZE);
+  const momentsR = new Float32Array(HIST_SIZE * HIST_SIZE * HIST_SIZE);
+  const momentsG = new Float32Array(HIST_SIZE * HIST_SIZE * HIST_SIZE);
+  const momentsB = new Float32Array(HIST_SIZE * HIST_SIZE * HIST_SIZE);
+  const moments = new Float32Array(HIST_SIZE * HIST_SIZE * HIST_SIZE);
+
+  const getIndex = (r: number, g: number, b: number): number => {
+    return (r * HIST_SIZE * HIST_SIZE) + (g * HIST_SIZE) + b;
+  };
+
+  // Populate histogram (quantize colors to histogram grid)
+  for (const color of colors) {
+    const r = Math.floor((color.r * (HIST_SIZE - 1)) / 255);
+    const g = Math.floor((color.g * (HIST_SIZE - 1)) / 255);
+    const b = Math.floor((color.b * (HIST_SIZE - 1)) / 255);
+    const idx = getIndex(r, g, b);
+    const count = color.count || 1;
     
-    for (let i = 0; i < buckets.length; i++) {
-      const bucket = buckets[i];
-      if (bucket.length <= 1) continue;
-      
-      const rRange = Math.max(...bucket.map(c => c.r)) - Math.min(...bucket.map(c => c.r));
-      const gRange = Math.max(...bucket.map(c => c.g)) - Math.min(...bucket.map(c => c.g));
-      const bRange = Math.max(...bucket.map(c => c.b)) - Math.min(...bucket.map(c => c.b));
-      
-      const range = Math.max(rRange, gRange, bRange);
-      if (range > largestRange) {
-        largestRange = range;
-        largestBucket = i;
+    histogram[idx] += count;
+    momentsR[idx] += color.r * count;
+    momentsG[idx] += color.g * count;
+    momentsB[idx] += color.b * count;
+    moments[idx] += (color.r * color.r + color.g * color.g + color.b * color.b) * count;
+  }
+
+  // Build cumulative moments (integral histogram)
+  const m = new Float32Array(HIST_SIZE * HIST_SIZE * HIST_SIZE);
+  const mr = new Float32Array(HIST_SIZE * HIST_SIZE * HIST_SIZE);
+  const mg = new Float32Array(HIST_SIZE * HIST_SIZE * HIST_SIZE);
+  const mb = new Float32Array(HIST_SIZE * HIST_SIZE * HIST_SIZE);
+  const m2 = new Float32Array(HIST_SIZE * HIST_SIZE * HIST_SIZE);
+
+  for (let r = 0; r < HIST_SIZE; r++) {
+    const area = new Float32Array(HIST_SIZE * HIST_SIZE);
+    const areaR = new Float32Array(HIST_SIZE * HIST_SIZE);
+    const areaG = new Float32Array(HIST_SIZE * HIST_SIZE);
+    const areaB = new Float32Array(HIST_SIZE * HIST_SIZE);
+    const area2 = new Float32Array(HIST_SIZE * HIST_SIZE);
+
+    for (let g = 0; g < HIST_SIZE; g++) {
+      let line = 0, lineR = 0, lineG = 0, lineB = 0, line2 = 0;
+      for (let b = 0; b < HIST_SIZE; b++) {
+        const idx = getIndex(r, g, b);
+        line += histogram[idx];
+        lineR += momentsR[idx];
+        lineG += momentsG[idx];
+        lineB += momentsB[idx];
+        line2 += moments[idx];
+
+        const areaIdx = g * HIST_SIZE + b;
+        area[areaIdx] += line;
+        areaR[areaIdx] += lineR;
+        areaG[areaIdx] += lineG;
+        areaB[areaIdx] += lineB;
+        area2[areaIdx] += line2;
+
+        m[idx] = (r > 0 ? m[getIndex(r - 1, g, b)] : 0) + area[areaIdx];
+        mr[idx] = (r > 0 ? mr[getIndex(r - 1, g, b)] : 0) + areaR[areaIdx];
+        mg[idx] = (r > 0 ? mg[getIndex(r - 1, g, b)] : 0) + areaG[areaIdx];
+        mb[idx] = (r > 0 ? mb[getIndex(r - 1, g, b)] : 0) + areaB[areaIdx];
+        m2[idx] = (r > 0 ? m2[getIndex(r - 1, g, b)] : 0) + area2[areaIdx];
       }
     }
-    
-    if (largestRange === 0) break;
-    
-    const bucket = buckets[largestBucket];
-    
-    // Determine which channel has the largest range
-    const rRange = Math.max(...bucket.map(c => c.r)) - Math.min(...bucket.map(c => c.r));
-    const gRange = Math.max(...bucket.map(c => c.g)) - Math.min(...bucket.map(c => c.g));
-    const bRange = Math.max(...bucket.map(c => c.b)) - Math.min(...bucket.map(c => c.b));
-    
-    let sortKey: keyof Color;
-    if (rRange >= gRange && rRange >= bRange) {
-      sortKey = 'r';
-    } else if (gRange >= bRange) {
-      sortKey = 'g';
-    } else {
-      sortKey = 'b';
-    }
-    
-    // Sort by the channel with largest range
-    bucket.sort((a, b) => (a[sortKey] as number) - (b[sortKey] as number));
-    
-    // Split at median
-    const median = Math.floor(bucket.length / 2);
-    const bucket1 = bucket.slice(0, median);
-    const bucket2 = bucket.slice(median);
-    
-    buckets[largestBucket] = bucket1;
-    buckets.push(bucket2);
   }
-  
-  // Calculate average color for each bucket
-  return buckets.map(bucket => {
-    const totalCount = bucket.reduce((sum, c) => sum + (c.count || 1), 0);
-    const avgR = bucket.reduce((sum, c) => sum + c.r * (c.count || 1), 0) / totalCount;
-    const avgG = bucket.reduce((sum, c) => sum + c.g * (c.count || 1), 0) / totalCount;
-    const avgB = bucket.reduce((sum, c) => sum + c.b * (c.count || 1), 0) / totalCount;
+
+  // Calculate variance for a box
+  const variance = (box: Box): number => {
+    const vol = volume(box, m);
+    if (vol === 0) return 0;
+    const mR = volume(box, mr);
+    const mG = volume(box, mg);
+    const mB = volume(box, mb);
+    const m2Val = volume(box, m2);
+    return m2Val - (mR * mR + mG * mG + mB * mB) / vol;
+  };
+
+  // Calculate volume (weight) of a box
+  const volume = (box: Box, moment: Float32Array): number => {
+    return (
+      moment[getIndex(box.r1, box.g1, box.b1)] -
+      moment[getIndex(box.r1, box.g1, box.b0)] -
+      moment[getIndex(box.r1, box.g0, box.b1)] +
+      moment[getIndex(box.r1, box.g0, box.b0)] -
+      moment[getIndex(box.r0, box.g1, box.b1)] +
+      moment[getIndex(box.r0, box.g1, box.b0)] +
+      moment[getIndex(box.r0, box.g0, box.b1)] -
+      moment[getIndex(box.r0, box.g0, box.b0)]
+    );
+  };
+
+  // Create initial box spanning entire color space
+  const boxes: Box[] = [{
+    r0: 0, r1: HIST_SIZE - 1,
+    g0: 0, g1: HIST_SIZE - 1,
+    b0: 0, b1: HIST_SIZE - 1,
+    volume: 0
+  }];
+  boxes[0].volume = variance(boxes[0]);
+
+  // Split boxes until we reach target count
+  while (boxes.length < targetCount) {
+    // Find box with maximum variance
+    let maxVariance = -1;
+    let maxIdx = -1;
+    for (let i = 0; i < boxes.length; i++) {
+      const v = variance(boxes[i]);
+      if (v > maxVariance) {
+        maxVariance = v;
+        maxIdx = i;
+      }
+    }
+
+    if (maxVariance <= 0 || maxIdx === -1) break;
+
+    const box = boxes[maxIdx];
     
+    // Try splitting along each axis and pick the best split
+    let bestCut: { axis: 'r' | 'g' | 'b'; value: number; variance: number } | null = null;
+
+    // Try R axis
+    if (box.r1 > box.r0) {
+      for (let cut = box.r0 + 1; cut <= box.r1; cut++) {
+        const box1: Box = { ...box, r1: cut - 1, volume: 0 };
+        const box2: Box = { ...box, r0: cut, volume: 0 };
+        const v = variance(box1) + variance(box2);
+        if (!bestCut || v > bestCut.variance) {
+          bestCut = { axis: 'r', value: cut, variance: v };
+        }
+      }
+    }
+
+    // Try G axis
+    if (box.g1 > box.g0) {
+      for (let cut = box.g0 + 1; cut <= box.g1; cut++) {
+        const box1: Box = { ...box, g1: cut - 1, volume: 0 };
+        const box2: Box = { ...box, g0: cut, volume: 0 };
+        const v = variance(box1) + variance(box2);
+        if (!bestCut || v > bestCut.variance) {
+          bestCut = { axis: 'g', value: cut, variance: v };
+        }
+      }
+    }
+
+    // Try B axis
+    if (box.b1 > box.b0) {
+      for (let cut = box.b0 + 1; cut <= box.b1; cut++) {
+        const box1: Box = { ...box, b1: cut - 1, volume: 0 };
+        const box2: Box = { ...box, b0: cut, volume: 0 };
+        const v = variance(box1) + variance(box2);
+        if (!bestCut || v > bestCut.variance) {
+          bestCut = { axis: 'b', value: cut, variance: v };
+        }
+      }
+    }
+
+    if (!bestCut) break;
+
+    // Apply the best split
+    const box1 = { ...box };
+    const box2 = { ...box };
+    if (bestCut.axis === 'r') {
+      box1.r1 = bestCut.value - 1;
+      box2.r0 = bestCut.value;
+    } else if (bestCut.axis === 'g') {
+      box1.g1 = bestCut.value - 1;
+      box2.g0 = bestCut.value;
+    } else {
+      box1.b1 = bestCut.value - 1;
+      box2.b0 = bestCut.value;
+    }
+    box1.volume = variance(box1);
+    box2.volume = variance(box2);
+
+    boxes[maxIdx] = box1;
+    boxes.push(box2);
+  }
+
+  // Calculate representative color for each box
+  return boxes.map(box => {
+    const weight = volume(box, m);
+    if (weight === 0) {
+      // Empty box - return center color
+      return {
+        r: Math.round(((box.r0 + box.r1) / 2) * 255 / (HIST_SIZE - 1)),
+        g: Math.round(((box.g0 + box.g1) / 2) * 255 / (HIST_SIZE - 1)),
+        b: Math.round(((box.b0 + box.b1) / 2) * 255 / (HIST_SIZE - 1)),
+        count: 0
+      };
+    }
+
     return {
-      r: Math.round(avgR),
-      g: Math.round(avgG),
-      b: Math.round(avgB),
-      count: totalCount
+      r: Math.round((volume(box, mr) / weight)),
+      g: Math.round((volume(box, mg) / weight)),
+      b: Math.round((volume(box, mb) / weight)),
+      count: Math.round(weight)
     };
   });
 };
@@ -228,8 +368,8 @@ export const processMegaDriveImage = (imageData: ImageData, originalPalette?: Co
     // Use the RGB 3-3-3 converted colors as-is if 16 or fewer
     finalPalette = uniqueColors;
   } else {
-    // Always quantize to 16 colors using median cut for images with more than 16 colors
-    finalPalette = medianCutQuantization(uniqueColors, 16);
+    // Always quantize to 16 colors using Xiaolin Wu's algorithm for images with more than 16 colors
+    finalPalette = xiaolinWuQuantization(uniqueColors, 16);
   }
   
   // Ensure all palette colors are snapped to RGB 3-3-3 grid
@@ -297,7 +437,7 @@ export const processGameGearImage = (imageData: ImageData, originalPalette?: Col
   if (uniqueColors.length <= 32) {
     finalPalette = uniqueColors;
   } else {
-    finalPalette = medianCutQuantization(uniqueColors, 32);
+    finalPalette = xiaolinWuQuantization(uniqueColors, 32);
   }
 
   finalPalette = finalPalette.map(color => toRGB444(color.r, color.g, color.b));
@@ -360,7 +500,7 @@ export const processMasterSystemImage = (imageData: ImageData, originalPalette?:
   if (uniqueColors.length <= 16) {
     finalPalette = uniqueColors;
   } else {
-    finalPalette = medianCutQuantization(uniqueColors, 16);
+    finalPalette = xiaolinWuQuantization(uniqueColors, 16);
   }
 
   finalPalette = finalPalette.map(color => toRGB222(color.r, color.g, color.b));
