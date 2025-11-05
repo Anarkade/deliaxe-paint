@@ -212,6 +212,7 @@ export async function loadImage(
     toast.error(t('imageLoadError'));
     console.error('Image loading error:', error);
     setIsProcessing(false);
+    // Reset progress immediately on error since there's no completion toast
     setProcessingProgress(0);
     setProcessingOperation('');
   }

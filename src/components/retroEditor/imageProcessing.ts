@@ -128,8 +128,11 @@ export async function processImage(deps: ProcessImageDependencies): Promise<void
     // Start performance monitoring
     performanceMonitor.startMeasurement('image_processing');
     setIsProcessing(true);
-    setProcessingProgress(0);
+    setProcessingProgress(5);
     setProcessingOperation(`Processing with ${selectedPalette} palette...`);
+
+    // Small delay to allow React to render the processing state before heavy computation
+    await new Promise(resolve => setTimeout(resolve, 0));
 
     // Use canvas pool for memory efficiency. Request a canvas sized to the
     // target output. We'll draw the source (either the processed image data
@@ -267,6 +270,7 @@ export async function processImage(deps: ProcessImageDependencies): Promise<void
     // Clear with black background
     tempCtx.fillStyle = '#000000';
     tempCtx.fillRect(0, 0, targetWidth, targetHeight);
+    setProcessingProgress(15);
 
     // Draw source canvas onto temp canvas using the selected scaling/alignment
     // logic. Use the sourceCanvas dimensions instead of originalImage.
@@ -317,6 +321,7 @@ export async function processImage(deps: ProcessImageDependencies): Promise<void
 
     // Read resulting pixels from temp canvas
     const tempImageData = tempCtx.getImageData(0, 0, targetWidth, targetHeight);
+    setProcessingProgress(25);
 
     // If we're preserving the original palette (indexed PNG), quantize the
     // pixels to that palette only when the user keeps the 'original' selection.
@@ -327,6 +332,7 @@ export async function processImage(deps: ProcessImageDependencies): Promise<void
     }
 
     let convertedImageData = remappedOriginal || tempImageData;
+    setProcessingProgress(30);
 
     if (selectedPalette !== 'original') {
       convertedImageData = await applyPaletteConversion(
@@ -377,7 +383,8 @@ export async function processImage(deps: ProcessImageDependencies): Promise<void
       returnCanvas(canvas);
     }
     setIsProcessing(false);
-    setProcessingProgress(0);
+    // Note: Don't reset progress here - let the toast useEffect handle it
+    // after showing completion message
     setProcessingOperation('');
   }
 }
@@ -387,7 +394,7 @@ export async function processImage(deps: ProcessImageDependencies): Promise<void
 export interface BuildProcessKeyDependencies {
   processedImageData: ImageData | null;
   originalImage: HTMLImageElement | null;
-  previewShowingOriginal: boolean;
+  previewShowingOriginal?: boolean; // Optional: no longer used in key calculation
   orderedPaletteColors: Color[];
   selectedPalette: PaletteType;
   selectedResolution: ResolutionType;
@@ -397,16 +404,20 @@ export interface BuildProcessKeyDependencies {
 
 export function buildProcessKey(deps: BuildProcessKeyDependencies): string {
   try {
-    const srcHash = (!deps.previewShowingOriginal && deps.processedImageData)
-      ? hashImageData(deps.processedImageData)
-      : (deps.originalImage ? hashImage(deps.originalImage) : '');
+    // Always use the original image hash as the source identifier regardless
+    // of which view is showing. The processedImageData is the OUTPUT of
+    // processing, not an input that should trigger reprocessing when toggled.
+    const srcHash = deps.originalImage ? hashImage(deps.originalImage) : '';
     const paletteKey = deps.orderedPaletteColors && deps.orderedPaletteColors.length > 0
       ? JSON.stringify(deps.orderedPaletteColors)
       : '';
     // Include the forceUseOriginal flag in the key so a run explicitly
     // forced to use the original image is considered distinct by the
     // scheduler (avoids skipping work when src hashes match).
-    return `${srcHash}|${deps.selectedPalette}|${deps.selectedResolution}|${deps.scalingMode}|${paletteKey}|${deps.previewShowingOriginal}|forceOrig=${deps.forceUseOriginalRef.current}`;
+    // NOTE: previewShowingOriginal is intentionally NOT included in the key
+    // because toggling the preview should not trigger reprocessing - the
+    // processed image is already calculated and stored in processedImageData.
+    return `${srcHash}|${deps.selectedPalette}|${deps.selectedResolution}|${deps.scalingMode}|${paletteKey}|forceOrig=${deps.forceUseOriginalRef.current}`;
   } catch (e) {
     return `${Date.now()}`; // fallback to something unique on error
   }

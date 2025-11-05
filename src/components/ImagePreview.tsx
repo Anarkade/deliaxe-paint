@@ -217,6 +217,11 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   const [availableCameras, setAvailableCameras] = useState<MediaDeviceInfo[]>([]);
   const [currentCameraId, setCurrentCameraId] = useState<string>('');
   const [integerScaling, setIntegerScaling] = useState(false);
+  // Cache a GPU-friendly bitmap version of the processed ImageData so toggling
+  // between Original and Processed doesn't need to re-upload pixels via putImageData
+  // on every toggle (which is very slow for large images).
+  const processedBitmapRef = useRef<ImageBitmap | null>(null);
+  const [processedBitmapVersion, setProcessedBitmapVersion] = useState(0);
   // Note: Grid dimensions now come from props
   const programmaticZoomChange = useRef(false);
   const isAutoFitting = useRef(false);
@@ -514,6 +519,37 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       setProcessedFormat('');
     }
   }, [processedImageData, t]);
+
+  // Build/refresh ImageBitmap when processedImageData changes to speed up drawing
+  useEffect(() => {
+    let cancelled = false;
+    const buildBitmap = async () => {
+      try {
+        // Dispose previous bitmap
+        if (processedBitmapRef.current) {
+          try { (processedBitmapRef.current as any).close?.(); } catch { /* ignore */ }
+          processedBitmapRef.current = null;
+        }
+        if (!processedImageData) {
+          setProcessedBitmapVersion(v => v + 1);
+          return;
+        }
+        // Create GPU-friendly bitmap once per processed raster
+        const bmp = await createImageBitmap(processedImageData);
+        if (cancelled) {
+          try { (bmp as any).close?.(); } catch { /* ignore */ }
+          return;
+        }
+        processedBitmapRef.current = bmp;
+        setProcessedBitmapVersion(v => v + 1); // trigger redraw
+      } catch (e) {
+        // If createImageBitmap fails, we'll fall back to putImageData in draw effect
+        setProcessedBitmapVersion(v => v + 1);
+      }
+    };
+    buildBitmap();
+    return () => { cancelled = true; };
+  }, [processedImageData]);
 
   // Calculate container width and fit-to-width zoom (observe element size)
   useEffect(() => {
@@ -1273,13 +1309,33 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     if (showOriginal && originalImage) {
       drawImageIfReady(originalImage);
     } else if (processedImageData) {
-      canvas.width = processedImageData.width;
-      canvas.height = processedImageData.height;
-      ctx.putImageData(processedImageData, 0, 0);
+      const bmp = processedBitmapRef.current;
+      if (bmp) {
+        canvas.width = (bmp as any).width ?? processedImageData.width;
+        canvas.height = (bmp as any).height ?? processedImageData.height;
+        // Prefer GPU-accelerated drawImage path for large images
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(bmp as any, 0, 0);
+      } else {
+        // Fallback while bitmap is being prepared
+        canvas.width = processedImageData.width;
+        canvas.height = processedImageData.height;
+        ctx.putImageData(processedImageData, 0, 0);
+      }
     } else if (originalImage) {
       drawImageIfReady(originalImage);
     }
-  }, [originalImage, processedImageData, showOriginal]);
+  }, [originalImage, processedImageData, showOriginal, processedBitmapVersion]);
+
+  // Cleanup bitmap on unmount
+  useEffect(() => {
+    return () => {
+      if (processedBitmapRef.current) {
+        try { (processedBitmapRef.current as any).close?.(); } catch { /* ignore */ }
+        processedBitmapRef.current = null;
+      }
+    };
+  }, []);
 
   const hasProcessedImage = processedImageData !== null;
   // Pass the real selectedPalette to the PaletteViewer. PaletteViewer will

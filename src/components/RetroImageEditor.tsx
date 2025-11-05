@@ -128,6 +128,8 @@ export const RetroImageEditor = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingOperation, setProcessingOperation] = useState<string>('');
+  // Limit progress toast to explicit user actions: palette/resolution changes via menus
+  const processingContextRef = useRef<null | 'palette' | 'resolution'>(null);
   
   // Grid state
   const [showTileGrid, setShowTileGrid] = useState(false);
@@ -433,21 +435,91 @@ export const RetroImageEditor = () => {
     };
   }, [processImage]);
 
+  // Progress toast management - show/update toast while processing
+  const progressToastIdRef = useRef<{ id: string; dismiss: () => void; update: (props: any) => void } | null>(null);
+  const isCompletingRef = useRef(false);
+  // Incrementing run id to guard against stale completion timers from previous runs
+  const toastRunIdRef = useRef(0);
+  
+  useEffect(() => {
+    // Only show progress toast for palette/resolution changes explicitly initiated from menus
+    if (processingContextRef.current !== 'palette' && processingContextRef.current !== 'resolution') {
+      return;
+    }
+    // Processing complete - show 100% and auto-dismiss
+    if (processingProgress >= 100 && progressToastIdRef.current && !isCompletingRef.current) {
+      isCompletingRef.current = true;
+      const thisRunId = toastRunIdRef.current;
+      
+      const finalText = t('percentProcessed').replace('{count}', '100');
+      progressToastIdRef.current.update({
+        title: finalText,
+        duration: 1500,
+      });
+      
+      // Clear refs after toast dismisses. Guard against clearing a new run's toast.
+      setTimeout(() => {
+        if (toastRunIdRef.current === thisRunId) {
+          progressToastIdRef.current = null;
+          isCompletingRef.current = false;
+          // Clear context after a completed, toast-managed run
+          processingContextRef.current = null;
+        }
+      }, 1500);
+      return;
+    }
+    
+    // Don't create/update toasts while completing
+    if (isCompletingRef.current) return;
+    
+    // Processing active - show or update toast
+    if (isProcessing) {
+      if (processingProgress > 0) {
+        const progressText = t('percentProcessed').replace('{count}', Math.round(processingProgress).toString());
+        
+        if (progressToastIdRef.current) {
+          // Update existing toast
+          progressToastIdRef.current.update({
+            title: progressText,
+            duration: Infinity,
+          });
+        } else {
+          // Create new toast
+          toastRunIdRef.current += 1;
+          progressToastIdRef.current = toast({
+            title: progressText,
+            duration: Infinity,
+          });
+        }
+      } else if (!progressToastIdRef.current) {
+        // Processing started but no progress yet
+        toastRunIdRef.current += 1;
+        progressToastIdRef.current = toast({
+          title: t('Processing') + '...',
+          duration: Infinity,
+        });
+      }
+    }
+  }, [isProcessing, processingProgress, t]);
+
   // Build a simple key representing the current processing inputs so we can
   // avoid running the same work repeatedly when nothing meaningful changed.
   // Wrapper for buildProcessKey
+  // NOTE: previewShowingOriginal is intentionally NOT included in dependencies
+  // because toggling the preview should not trigger a new buildProcessKey,
+  // which would cause unnecessary reprocessing. The processed image is already
+  // calculated and stored in processedImageData.
   const buildProcessKey = useCallback(() => {
     return buildProcessKeyImpl({
       processedImageData,
       originalImage,
-      previewShowingOriginal,
       orderedPaletteColors: editorState.orderedPaletteColors,
       selectedPalette,
       selectedResolution,
       scalingMode,
       forceUseOriginalRef,
     });
-  }, [processedImageData, originalImage, previewShowingOriginal, editorState.orderedPaletteColors, selectedPalette, selectedResolution, scalingMode]);
+  }, [processedImageData, originalImage, editorState.orderedPaletteColors, selectedPalette, selectedResolution, scalingMode]);
 
   // Wrapper for scheduleProcessImage
   const scheduleProcessImage = useCallback(async (force = false) => {
@@ -971,6 +1043,8 @@ export const RetroImageEditor = () => {
                 <ChangePalette
                   selectedPalette={selectedPalette}
                   onPaletteChange={(palette) => {
+                    // Mark context so the progress toast is shown for this explicit action
+                    processingContextRef.current = 'palette';
                     setSelectedPalette(palette);
                     // Force using the ORIGINAL image and ORIGINAL palette as the
                     // source for the next processing pass, but show the
@@ -1096,12 +1170,14 @@ export const RetroImageEditor = () => {
                     // Force the next processing run to use the ORIGINAL image
                     // as the source to avoid cumulative degradation when changing
                     // resolution repeatedly.
+                    processingContextRef.current = 'resolution';
                     forceUseOriginalRef.current = true;
                     setSelectedResolution(r);
                   }}
                   onChangeScalingMode={(m) => {
                     // Same rationale as above: resolution/scaling changes should
                     // be applied relative to the ORIGINAL raster.
+                    processingContextRef.current = 'resolution';
                     forceUseOriginalRef.current = true;
                     setScalingMode(m);
                   }}

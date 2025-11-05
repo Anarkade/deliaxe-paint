@@ -71,15 +71,19 @@ export async function applyPaletteConversion(
 
   switch (palette) {
     case 'original': {
+      setProcessingProgress(50);
+      await new Promise(resolve => setTimeout(resolve, 10));
       if (customColors && customColors.length > 0) {
         // customColors are explicit from caller (user selection) so always
         // respect them and update ordered palette.
         writeOrderedPalette(customColors.map(({ r, g, b }) => ({ r, g, b })), 'applyPaletteConversion-custom');
       }
+      setProcessingProgress(100);
       return resultImageData;
     }
 
     case 'gameboy': {
+      setProcessingProgress(40);
       const gbColors = paletteFromCustomOrDefault([
         [7, 24, 33],
         [134, 192, 108],
@@ -87,15 +91,21 @@ export async function applyPaletteConversion(
         [101, 255, 0]
       ]);
 
+      await new Promise(resolve => setTimeout(resolve, 10));
+      setProcessingProgress(70);
       applyGbBrightnessMapping(resultData, gbColors);
 
+      await new Promise(resolve => setTimeout(resolve, 10));
+      setProcessingProgress(90);
       if (!editorRefs.manualPaletteOverrideRef.current) {
         writeOrderedPalette(toColorObjects(gbColors), 'applyPaletteConversion-gb');
       }
+      setProcessingProgress(100);
       return resultImageData;
     }
 
     case 'gameboyBg': {
+      setProcessingProgress(40);
       const gbBgColors = paletteFromCustomOrDefault([
         [7, 24, 33],
         [48, 104, 80],
@@ -103,19 +113,25 @@ export async function applyPaletteConversion(
         [224, 248, 207]
       ]);
 
+      await new Promise(resolve => setTimeout(resolve, 10));
+      setProcessingProgress(70);
       // Apply the exact same brightness-based mapping as 'gameboy',
       // only using the Game Boy BG 4-color set.
       applyGbBrightnessMapping(resultData, gbBgColors);
 
+      await new Promise(resolve => setTimeout(resolve, 10));
+      setProcessingProgress(90);
       if (!editorRefs.manualPaletteOverrideRef.current) {
         writeOrderedPalette(toColorObjects(gbBgColors), 'applyPaletteConversion-gbBg');
       }
       // Align with other fixed palette paths: clear any pending converted palette
       editorRefs.pendingConvertedPaletteRef.current = null;
+      setProcessingProgress(100);
       return resultImageData;
     }
 
     case 'gameboyRealistic': {
+      setProcessingProgress(40);
       const gbRealColors = paletteFromCustomOrDefault([
         [56, 72, 40],
         [96, 112, 40],
@@ -123,14 +139,19 @@ export async function applyPaletteConversion(
         [208, 224, 64]
       ]);
 
+      await new Promise(resolve => setTimeout(resolve, 10));
+      setProcessingProgress(70);
       // Use the exact same brightness-based mapping thresholds as other GB palettes
       applyGbBrightnessMapping(resultData, gbRealColors);
 
+      await new Promise(resolve => setTimeout(resolve, 10));
+      setProcessingProgress(90);
       if (!editorRefs.manualPaletteOverrideRef.current) {
         writeOrderedPalette(toColorObjects(gbRealColors), 'applyPaletteConversion-gbRealistic');
       }
       // Align with fixed palette behavior
       editorRefs.pendingConvertedPaletteRef.current = null;
+      setProcessingProgress(100);
       return resultImageData;
     }
 
@@ -333,6 +354,8 @@ export async function applyPaletteConversion(
     default: {
       const preset = FIXED_PALETTES[palette];
       if (preset && preset.length > 0) {
+        setProcessingProgress(40);
+        await new Promise(resolve => setTimeout(resolve, 10));
         // For fixed, canonical palettes (CGA, NES, GameBoy variants, C64, Spectrum, Amstrad)
         // we must apply the palette exactly as defined by the preset. Always
         // apply the canonical palette to the image raster and update the
@@ -341,13 +364,18 @@ export async function applyPaletteConversion(
         // This ensures selecting a canonical palette from the UI always
         // remaps pixels to the canonical set.
         const paletteToApply = preset; // ignore customColors for fixed palettes
+        setProcessingProgress(60);
+        await new Promise(resolve => setTimeout(resolve, 10));
         const remapped = await applyFixedPalette(resultImageData, paletteToApply);
+        setProcessingProgress(90);
+        await new Promise(resolve => setTimeout(resolve, 10));
         if (!editorRefs.manualPaletteOverrideRef.current) {
           const resultPalette = toColorObjects(paletteToApply as number[][]);
           writeOrderedPalette(resultPalette, 'applyPaletteConversion-fixed');
         }
         // Clear any pending converted palette since it is not applicable here
         editorRefs.pendingConvertedPaletteRef.current = null;
+        setProcessingProgress(100);
         return remapped;
       }
       return resultImageData;
