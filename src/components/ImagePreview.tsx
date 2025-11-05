@@ -1217,39 +1217,49 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     }
   }, [controlledShowOriginal, originalImage, processedImageData, onZoomChange]);
 
-  // Enable auto-fit on new image load with enhanced reliability
+  // Reset zoom to 100% when a new image is loaded (image identity change, not just props update)
+  const originalImageIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (originalImage) {
-      autoFitAllowed.current = true;
-      setShouldAutoFit(true);
-      // Previously this scheduled fitToWidth(true) and retries; removed to avoid automatic calls
+      // Create a unique ID for this image based on its src
+      const newId = originalImage.src;
+      if (newId !== originalImageIdRef.current) {
+        originalImageIdRef.current = newId;
+        
+        // Reset zoom to 100% for both views
+        const newZoom = 100;
+        programmaticZoomChange.current = true;
+        setZoom([newZoom]);
+        setSliderValue([newZoom]);
+        
+        // Notify parent immediately to sync controlled zoom
+        try {
+          onZoomChange?.(newZoom);
+        } catch (e) {
+          // ignore
+        }
+        
+        // Reset stored zooms for both views
+        mostRecentZoomOriginal.current = newZoom;
+        mostRecentZoomProcessed.current = newZoom;
+        
+        // Clear any user-set zoom flags so future automatic operations can work
+        userSetZoomRef.current = false;
+        suppressAutoFitRef.current = false;
+        
+        // Recalculate preview height based on 100% zoom
+        if (containerWidth > 0) {
+          const displayHeight = originalImage.height * (newZoom / 100);
+          const minHeight = 150;
+          const calculatedHeight = Math.max(minHeight, displayHeight);
+          setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
+        }
+      }
     }
-  }, [originalImage, containerWidth]);
+  }, [originalImage, containerWidth, onZoomChange]);
 
-  // Prepare auto-fit when resolution/scaling changes; wait for processed image
-  useEffect(() => {
-    if (autoFitKey !== undefined) {
-      autoFitAllowed.current = true;
-      expectingProcessedChange.current = true;
-    }
-  }, [autoFitKey]);
-
-  // When processed image updates due to resolution/scaling changes and auto-fit is allowed, trigger it once
-  useEffect(() => {
-    if (expectingProcessedChange.current && autoFitAllowed.current) {
-      setShouldAutoFit(true);
-    }
-  }, [processedImageData]);
-
-  // Apply fit to width once when auto-fit is pending and container size is known
-  useEffect(() => {
-    // Auto-fit pending watcher retained but no automatic fitToWidth invocation
-    if (!originalImage || containerWidth <= 0) return;
-    if (!shouldAutoFit || isUserDraggingSlider.current) return;
-    // Previously would call fitToWidth(true) here; removed to prevent loops
-    setShouldAutoFit(false);
-    expectingProcessedChange.current = false;
-  }, [shouldAutoFit, containerWidth, originalImage]);
+  // autoFitKey is kept as a prop for backward compatibility but no longer triggers auto-fit
+  // Zoom changes are now only initiated by user actions (manual zoom controls, fit-to-width button, etc.)
 
   // Layout-aware height recalculation effect
   useEffect(() => {

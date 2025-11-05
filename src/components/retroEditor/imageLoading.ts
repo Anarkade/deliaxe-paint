@@ -166,8 +166,8 @@ export async function loadImage(
         rasterCtx.drawImage(img, 0, 0);
         const rasterImageData = rasterCtx.getImageData(0, 0, img.width, img.height);
         setProcessedImageData(rasterImageData);
-        // Trigger preview autofit immediately
-        setAutoFitKey(String(Date.now()));
+        // Do NOT trigger autofit - let user control zoom manually
+        // setAutoFitKey was removed to prevent automatic zoom changes on load
       } else {
         setProcessedImageData(null);
       }
@@ -179,21 +179,9 @@ export async function loadImage(
       setProcessedImageData(null);
     }
     
-    // Force height recalculation after image load with enhanced timing for camera captures
-    const isCameraCapture = typeof source !== 'string' && source.name === 'camera-capture.png';
-    const delay = isCameraCapture ? 300 : 150; // Longer delay for camera captures
-    
-    setTimeout(() => {
-      // This will trigger the ImagePreview auto-fit mechanism
-      window.dispatchEvent(new CustomEvent('imageLoaded', { detail: { width: img.width, height: img.height } }));
-      
-      // Additional retry for camera captures due to async nature
-      if (isCameraCapture) {
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('imageLoaded', { detail: { width: img.width, height: img.height } }));
-        }, 200);
-      }
-    }, delay);
+    // Dispatch imageLoaded event for components that need to know about new images
+    // but do NOT trigger auto-fit - zoom stays at 100% until user changes it
+    window.dispatchEvent(new CustomEvent('imageLoaded', { detail: { width: img.width, height: img.height } }));
     
     // Reset settings when loading new image
     setSelectedPalette('original');
