@@ -1128,57 +1128,79 @@ const perceptualDistance = (a: Color, b: Color): number => {
  * Seeds with the two most distant colors, then greedily adds colors that maximize coverage.
  */
 /**
- * STEP 2: Select N most representative colors balancing frequency and diversity.
- * Strategy: Pick most frequent colors first (they represent the image), then fill
- * remaining slots with diverse colors to maximize coverage.
+ * STEP 2: Select N most mutually different colors using max-min diversity in perceptual Lab space.
+ * Seeds with the two most distant colors, then greedily adds colors that maximize coverage.
+ * This selection is PURELY based on diversity, NOT frequency.
  */
 export const selectMostDiverseColors = (allColors: { r: number; g: number; b: number; count: number }[], target: number): Color[] => {
   if (allColors.length === 0) return [];
   if (allColors.length <= target) return allColors.map(c => ({ r: c.r, g: c.g, b: c.b, count: c.count }));
   
-  // Sort by frequency (most common first)
-  const sorted = allColors.slice().sort((a, b) => b.count - a.count);
+  // Find the two most distant colors as initial seeds for maximum coverage
+  let maxDist = -Infinity;
+  let seed1Idx = 0;
+  let seed2Idx = 1;
   
-  // Take top 50% of slots for most frequent colors (guarantees important colors are included)
-  const frequentCount = Math.ceil(target * 0.5);
-  const selected: Color[] = sorted.slice(0, frequentCount).map(c => ({ r: c.r, g: c.g, b: c.b, count: c.count }));
+  for (let i = 0; i < allColors.length; i++) {
+    for (let j = i + 1; j < allColors.length; j++) {
+      const dist = perceptualDistance(
+        { r: allColors[i].r, g: allColors[i].g, b: allColors[i].b },
+        { r: allColors[j].r, g: allColors[j].g, b: allColors[j].b }
+      );
+      if (dist > maxDist) {
+        maxDist = dist;
+        seed1Idx = i;
+        seed2Idx = j;
+      }
+    }
+  }
   
-  console.log('[selectMostDiverse] Top frequent:', selected.slice(0, Math.min(5, selected.length)).map(c => 
-    `#${c.r.toString(16).padStart(2,'0')}${c.g.toString(16).padStart(2,'0')}${c.b.toString(16).padStart(2,'0')} (${c.count}px)`
-  ).join(' '));
+  const selected: Color[] = [];
+  const remaining = allColors.slice();
   
-  // Remaining slots: fill with most diverse colors from the rest
-  const remaining = sorted.slice(frequentCount);
+  // Add the two most distant colors as seeds
+  selected.push({ r: remaining[seed1Idx].r, g: remaining[seed1Idx].g, b: remaining[seed1Idx].b, count: remaining[seed1Idx].count });
+  selected.push({ r: remaining[seed2Idx].r, g: remaining[seed2Idx].g, b: remaining[seed2Idx].b, count: remaining[seed2Idx].count });
   
-  if (remaining.length > 0 && selected.length < target) {
-    // Greedy max-min diversity selection from remaining colors
-    while (selected.length < target && remaining.length > 0) {
-      let bestIdx = 0;
-      let bestMinDistance = -Infinity;
+  console.log('[selectMostDiverse] Seeds:', 
+    `#${remaining[seed1Idx].r.toString(16).padStart(2,'0')}${remaining[seed1Idx].g.toString(16).padStart(2,'0')}${remaining[seed1Idx].b.toString(16).padStart(2,'0')}`,
+    `#${remaining[seed2Idx].r.toString(16).padStart(2,'0')}${remaining[seed2Idx].g.toString(16).padStart(2,'0')}${remaining[seed2Idx].b.toString(16).padStart(2,'0')}`,
+    'dist:', maxDist.toFixed(1)
+  );
+  
+  // Remove seeds from remaining (remove larger index first to avoid index shift)
+  if (seed1Idx > seed2Idx) {
+    remaining.splice(seed1Idx, 1);
+    remaining.splice(seed2Idx, 1);
+  } else {
+    remaining.splice(seed2Idx, 1);
+    remaining.splice(seed1Idx, 1);
+  }
+  
+  // Greedily add colors that maximize minimum distance to selected set (pure diversity)
+  while (selected.length < target && remaining.length > 0) {
+    let bestIdx = 0;
+    let bestMinDistance = -Infinity;
+    
+    for (let i = 0; i < remaining.length; i++) {
+      const candidate = remaining[i];
       
-      for (let i = 0; i < remaining.length; i++) {
-        const candidate = remaining[i];
-        
-        // Find minimum perceptual distance to any already-selected color
-        let minDistance = Infinity;
-        for (const s of selected) {
-          const dist = perceptualDistance({ r: candidate.r, g: candidate.g, b: candidate.b }, s);
-          if (dist < minDistance) minDistance = dist;
-        }
-        
-        // Boost score slightly for more frequent colors (10% weight on frequency)
-        const frequencyBoost = (candidate.count / sorted[0].count) * minDistance * 0.1;
-        const score = minDistance + frequencyBoost;
-        
-        if (score > bestMinDistance) {
-          bestMinDistance = score;
-          bestIdx = i;
-        }
+      // Find minimum perceptual distance to any already-selected color
+      let minDistance = Infinity;
+      for (const s of selected) {
+        const dist = perceptualDistance({ r: candidate.r, g: candidate.g, b: candidate.b }, s);
+        if (dist < minDistance) minDistance = dist;
       }
       
-      const chosen = remaining.splice(bestIdx, 1)[0];
-      selected.push({ r: chosen.r, g: chosen.g, b: chosen.b, count: chosen.count });
+      // Choose candidate that maximizes this minimum distance (furthest from nearest neighbor)
+      if (minDistance > bestMinDistance) {
+        bestMinDistance = minDistance;
+        bestIdx = i;
+      }
     }
+    
+    const chosen = remaining.splice(bestIdx, 1)[0];
+    selected.push({ r: chosen.r, g: chosen.g, b: chosen.b, count: chosen.count });
   }
   
   console.log('[selectMostDiverse] Final selection:', selected.map(c => 
@@ -1401,9 +1423,17 @@ export const buildRetroConsolePaletteBruteForce = async (
   // STEP 2: Select most diverse colors from the already-quantized space
   // This prevents wasted selection of colors that will collapse to the same value
   const diverse = selectMostDiverseColors(allQuantized, Math.min(allQuantized.length, targetColors));
-  await report(45);
+  await report(30);
   
-  let finalPalette = diverse.slice(0, targetColors);
+  // STEP 3: Map every color in the image to its nearest diverse representative
+  const mapping = mapColorsToNearestRepresentative(allQuantized, diverse);
+  await report(40);
+  
+  // STEP 4: Compute weighted average for each representative based on mapped colors
+  const weighted = computeWeightedRepresentativeColors(diverse, mapping, allQuantized);
+  await report(50);
+  
+  let finalPalette = weighted.slice(0, targetColors);
   await report(60);
   
   // If still need more colors (image had fewer unique quantized colors than target),
