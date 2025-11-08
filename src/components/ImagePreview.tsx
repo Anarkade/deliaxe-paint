@@ -1353,10 +1353,14 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   // viewer to receive 'original' which prevented applying retro palettes
   // when the preview was still showing the original image.
   const paletteViewerSelectedPalette = selectedPalette;
+  // When processedPaletteColors is explicitly [], pass [] (not undefined) to PaletteViewer
+  // to prevent it from falling back to default palette during brute-force processing
   const paletteViewerColors = showOriginal
     ? (originalPaletteColors && originalPaletteColors.length > 0 ? originalPaletteColors : undefined)
-    : (processedPaletteColors && processedPaletteColors.length > 0 ? processedPaletteColors : undefined);
-  const paletteViewerExternal = paletteViewerColors?.map(({ r, g, b }) => ({ r, g, b }));
+    : processedPaletteColors; // Pass through as-is ([] or actual colors or undefined)
+  const paletteViewerExternal = paletteViewerColors && paletteViewerColors.length >= 0
+    ? paletteViewerColors.map(({ r, g, b }) => ({ r, g, b }))
+    : undefined;
   const handlePaletteViewerUpdate = useCallback((colors: Color[], meta?: any) => {
     try {
       const key = (colors || []).map(c => `${c.r},${c.g},${c.b}`).join('|');

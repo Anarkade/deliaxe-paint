@@ -136,7 +136,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
   const imageProcessor = useImageProcessor();
 
   // External palette handling: if provided, it is the source of truth.
-  const hasExternalPalette = Array.isArray(externalPalette) && externalPalette.length > 0;
+  // Distinguish between undefined (use default) and [] (show empty, no default)
+  const hasExternalPalette = Array.isArray(externalPalette);
   const externalPaletteKey = useMemo(
     () => (hasExternalPalette ? (externalPalette || []).map(c => `${c.r},${c.g},${c.b}`).join('|') : ''),
     [hasExternalPalette, externalPalette]

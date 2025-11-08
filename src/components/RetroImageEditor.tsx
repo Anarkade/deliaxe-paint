@@ -108,6 +108,7 @@ export const RetroImageEditor = () => {
 
   // Wrapper for writeOrderedPalette
   const writeOrderedPalette = useCallback((colors: Color[], source: string) => {
+    console.log(`[writeOrderedPalette] source=${source}, colors.length=${colors.length}, palette preview:`, colors.slice(0, 5));
     writeOrderedPaletteImpl(colors, source, {
       editorRefs: {
         manualPaletteOverrideRef: editorRefs.manualPaletteOverrideRef,
@@ -478,31 +479,35 @@ export const RetroImageEditor = () => {
     if (isProcessing) {
       if (processingProgress > 0) {
         const progressText = t('percentProcessed').replace('{count}', Math.round(processingProgress).toString());
+        const fullMessage = processingOperation 
+          ? `${processingOperation} - ${progressText}`
+          : progressText;
         
         if (progressToastIdRef.current) {
           // Update existing toast
           progressToastIdRef.current.update({
-            title: progressText,
+            title: fullMessage,
             duration: Infinity,
           });
         } else {
           // Create new toast
           toastRunIdRef.current += 1;
           progressToastIdRef.current = toast({
-            title: progressText,
+            title: fullMessage,
             duration: Infinity,
           });
         }
       } else if (!progressToastIdRef.current) {
         // Processing started but no progress yet
+        const initialMessage = processingOperation || 'Processing...';
         toastRunIdRef.current += 1;
         progressToastIdRef.current = toast({
-          title: t('Processing') + '...',
+          title: initialMessage,
           duration: Infinity,
         });
       }
     }
-  }, [isProcessing, processingProgress, t]);
+  }, [isProcessing, processingProgress, processingOperation, t]);
 
   // Build a simple key representing the current processing inputs so we can
   // avoid running the same work repeatedly when nothing meaningful changed.
@@ -1097,6 +1102,8 @@ export const RetroImageEditor = () => {
                           && editorState.originalPaletteColors.length > 0 
                           && editorState.originalPaletteColors.length <= targetLen;
                         
+                        console.log(`[ChangePalette] palette=${palette}, isRetroFreePalette=${isRetroFreePalette}, canPreserveOrder=${canPreserveOrder}, isOriginalPNG8Indexed=${editorState.isOriginalPNG8Indexed}, originalPaletteColors.length=${editorState.originalPaletteColors.length}, orderedPaletteColors.length=${editorState.orderedPaletteColors.length}`);
+                        
                         if (isRetroFreePalette && canPreserveOrder) {
                           const bitsR = depth.r || 8;
                           const bitsG = depth.g || 8;
@@ -1114,13 +1121,14 @@ export const RetroImageEditor = () => {
                           writeOrderedPalette(final, 'selectedPalette-preserve-order-pad');
                         } else if (isRetroFreePalette && !canPreserveOrder) {
                           // Image has too many colors: clear pending so brute-force kicks in
-                          // Don't call writeOrderedPalette here - it causes re-renders and shows
-                          // intermediate empty palette. Let brute-force complete and write the
+                          // Clear the current palette so no placeholder/previous palette is shown
+                          // while brute-force is processing. Let brute-force complete and write the
                           // final palette when processing finishes. The useEffect will trigger
                           // processing automatically when selectedPalette changes.
                           console.log(`[ChangePalette] Original has ${editorState.originalPaletteColors.length} colors > ${targetLen}, will use brute-force diversity`);
                           editorRefs.pendingConvertedPaletteRef.current = null;
-                          // Do NOT write palette here - brute-force will write final result
+                          // Clear palette to avoid showing previous/placeholder colors
+                          writeOrderedPalette([], 'selectedPalette-brute-force-pending');
                         } else {
                           const defaults = getDefaultPalette(palette as string) || [];
                           if (defaults && defaults.length > 0) {
