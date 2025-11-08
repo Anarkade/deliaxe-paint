@@ -7,6 +7,29 @@ import type { EditorRefs } from './useRetroEditorState';
 
 const MAX_CANVAS_SIZE = 4096;
 
+// Map palette internal names to translation keys (using labelKey from ChangePalette)
+// These keys come from texts_constant.csv and translationsChangePalette.csv
+function getPaletteTranslationKey(palette: PaletteType): string {
+  const paletteMap: Record<string, string> = {
+    'original': 'originalPalette',
+    'amstradCpc': 'amstradCpc',
+    'cga0': 'cgaPalette0',
+    'cga1': 'cgaPalette1',
+    'cga2': 'cgaPalette2',
+    'commodore64': 'commodore64',
+    'gameboy': 'gameBoy',
+    'gameboyBg': 'gameBoyBg',
+    'gameboyRealistic': 'gameBoyRealistic',
+    'megadrive': 'megaDrive16',
+    'masterSystem': 'masterSystemPlatform', // From texts_constant.csv
+    'gameGear': 'gameGearPlatform', // From texts_constant.csv
+    'nes': 'nesPalette',
+    'zxSpectrum': 'zxSpectrumPalette'
+  };
+  
+  return paletteMap[palette] || palette;
+}
+
 export type ProcessImageDependencies = {
   // State
   originalImage: HTMLImageElement | null;
@@ -129,7 +152,10 @@ export async function processImage(deps: ProcessImageDependencies): Promise<void
     performanceMonitor.startMeasurement('image_processing');
     setIsProcessing(true);
     setProcessingProgress(0);
-    setProcessingOperation(`Processing with ${selectedPalette} palette...`);
+    // Use translated palette name from ChangePalette menu
+    const paletteKey = getPaletteTranslationKey(selectedPalette);
+    const paletteName = t(paletteKey);
+    setProcessingOperation(`${paletteName}`);
 
     // Small delay to allow React to render the processing state before heavy computation
     await new Promise(resolve => setTimeout(resolve, 0));

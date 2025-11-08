@@ -449,14 +449,18 @@ export const RetroImageEditor = () => {
     if (processingContextRef.current !== 'palette' && processingContextRef.current !== 'resolution') {
       return;
     }
-    // Processing complete - show 100% and auto-dismiss
+    // Processing complete - show 100% with operation message and auto-dismiss
     if (processingProgress >= 100 && progressToastIdRef.current && !isCompletingRef.current) {
       isCompletingRef.current = true;
       const thisRunId = toastRunIdRef.current;
       
       const finalText = t('percentProcessed').replace('{count}', '100');
+      const fullMessage = processingOperation 
+        ? `${processingOperation} - ${finalText}`
+        : finalText;
+      
       progressToastIdRef.current.update({
-        title: finalText,
+        title: fullMessage,
         duration: 1500,
       });
       
