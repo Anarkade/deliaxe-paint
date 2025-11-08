@@ -1,14 +1,15 @@
 // Web Worker for CPU-intensive image processing operations
 // This offloads heavy computations from the main thread to prevent UI freezing
 
-import { extractColorsFromImageData, medianCutQuantization, applyQuantizedPalette, toRGB333, Color } from '@/lib/colorQuantization';
+import { extractColorsFromImageData, kMeansQuantization, applyQuantizedPalette, toRGB333, Color, setQuantizationConfig } from '@/lib/colorQuantization';
 
 export type ProcessingMessageType =
   | 'PROCESS_IMAGE'
   | 'QUANTIZE_COLORS'
   | 'APPLY_PALETTE'
   | 'EXTRACT_COLORS'
-  | 'MEGA_DRIVE_PROCESS';
+  | 'MEGA_DRIVE_PROCESS'
+  | 'SET_QUANT_CONFIG';
 
 export interface ProcessingMessage {
   type: ProcessingMessageType;
@@ -31,10 +32,10 @@ const processImageData = (imageData: ImageData, operation: string, options: Reco
       case 'EXTRACT_COLORS':
         return extractColorsFromImageData(imageData);
         
-      case 'QUANTIZE_COLORS':
+      case 'QUANTIZE':
         {
           const { colors, targetCount } = options as { colors?: Color[]; targetCount?: number };
-          return medianCutQuantization(colors || [], targetCount || 16);
+          return kMeansQuantization(colors || [], targetCount || 16);
         }
         
       case 'APPLY_PALETTE':
@@ -50,36 +51,107 @@ const processImageData = (imageData: ImageData, operation: string, options: Reco
     }
 };
 
-// Optimized Mega Drive processing in worker
+// Optimized Mega Drive processing in worker (mirroring library implementation)
 type RGBColor = { r: number; g: number; b: number; count?: number };
 
 const processMegaDriveInWorker = (imageData: ImageData, originalPalette?: RGBColor[]) => {
-  // Step 1: Extract original colors
-  const originalColors = extractColorsFromImageData(imageData);
+  const TARGET_COLORS = 16;
+  const totalPixels = imageData.data.length / 4;
   
-  // Step 2: Convert to RGB 3-3-3 format with progress tracking
-  const rgb333ImageData = new ImageData(
+  // Step 1 & 2: Determine palette source
+  let workingPalette: RGBColor[];
+  
+  // Check if we have a valid indexed palette that we should preserve
+  const hasValidIndexedPalette = originalPalette && originalPalette.length > 0 && originalPalette.length <= TARGET_COLORS;
+  
+  if (hasValidIndexedPalette) {
+    // Case 1: Original has indexed palette with ≤16 colors
+    // Copy the original palette maintaining order, pad to 16 colors with black
+    workingPalette = [...originalPalette];
+    while (workingPalette.length < TARGET_COLORS) {
+      workingPalette.push({ r: 0, g: 0, b: 0, count: 0 });
+    }
+  } else {
+    // Case 2: No indexed palette, palette has >16 colors, or it's an RGB image
+    // ALWAYS extract colors from the current imageData (not from originalPalette)
+    const extractedColors = extractColorsFromImageData(imageData);
+    
+    // Validate that we have colors to work with
+    if (!extractedColors || extractedColors.length === 0) {
+      // Fallback: create a grayscale palette
+      workingPalette = [];
+      for (let i = 0; i < TARGET_COLORS; i++) {
+        const val = Math.round((i / (TARGET_COLORS - 1)) * 255);
+        workingPalette.push({ r: val, g: val, b: val, count: 1 });
+      }
+    } else if (extractedColors.length <= TARGET_COLORS) {
+      workingPalette = extractedColors;
+      while (workingPalette.length < TARGET_COLORS) {
+        workingPalette.push({ r: 0, g: 0, b: 0, count: 0 });
+      }
+    } else {
+      // Use K-Means for optimal quantization
+      workingPalette = kMeansQuantization(extractedColors, TARGET_COLORS);
+      // Pad if quantization returned fewer colors
+      while (workingPalette.length < TARGET_COLORS) {
+        workingPalette.push({ r: 0, g: 0, b: 0, count: 0 });
+      }
+    }
+  }
+  
+  // Ensure exactly 16 colors
+  workingPalette = workingPalette.slice(0, TARGET_COLORS);
+  
+  // Step 3: Apply RGB 3-3-3 depth reduction to the palette
+  const processedPalette = workingPalette.map(color => toRGB333(color.r, color.g, color.b));
+  
+  // Step 4: Copy original image to processed image
+  const processedImageData = new ImageData(
     new Uint8ClampedArray(imageData.data),
     imageData.width,
     imageData.height
   );
   
-  const data = rgb333ImageData.data;
-  const totalPixels = data.length / 4;
+  // Step 5: Apply the color transformation
+  const data = processedImageData.data;
+  const progressStep = Math.max(1, Math.floor(totalPixels / 10));
+  
+  // Helper for color distance
+  const colorDist = (r1: number, g1: number, b1: number, c2: RGBColor) => {
+    const dr = r1 - c2.r;
+    const dg = g1 - c2.g;
+    const db = b1 - c2.b;
+    return dr * dr + dg * dg + db * db;
+  };
   
   for (let i = 0; i < data.length; i += 4) {
     if (data[i + 3] > 0) { // Only process non-transparent pixels
-      const rgb333 = toRGB333(data[i], data[i + 1], data[i + 2]);
-      data[i] = rgb333.r;
-      data[i + 1] = rgb333.g;
-      data[i + 2] = rgb333.b;
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      
+      // Find closest color in the working palette
+      let closestIdx = 0;
+      let minDist = Infinity;
+      
+      for (let j = 0; j < workingPalette.length; j++) {
+        const dist = colorDist(r, g, b, workingPalette[j]);
+        if (dist < minDist) {
+          minDist = dist;
+          closestIdx = j;
+        }
+      }
+      
+      // Apply the RGB333-transformed color from processedPalette
+      const mappedColor = processedPalette[closestIdx];
+      data[i] = mappedColor.r;
+      data[i + 1] = mappedColor.g;
+      data[i + 2] = mappedColor.b;
     }
     
-    // Send progress updates for large images
-    // Send progress updates every 10% of pixels processed (use integer math)
-    const progressStep = Math.max(1, Math.floor(totalPixels / 10));
+    // Send progress updates every 10% of pixels processed
     if (i > 0 && ((i / 4) % progressStep) === 0) {
-      const percent = Math.floor(((i / 4) / totalPixels) * 50); // First 50% is RGB conversion
+      const percent = Math.floor(((i / 4) / totalPixels) * 100);
       self.postMessage({
         type: 'PROCESSING_PROGRESS',
         progress: percent,
@@ -88,39 +160,9 @@ const processMegaDriveInWorker = (imageData: ImageData, originalPalette?: RGBCol
     }
   }
   
-  // Step 3: Extract unique colors from converted image
-  const uniqueColors = extractColorsFromImageData(rgb333ImageData);
-  
-  // Step 4: Quantize if needed
-  let finalPalette;
-  if (uniqueColors.length <= 16) {
-    finalPalette = uniqueColors;
-  } else {
-    finalPalette = medianCutQuantization(uniqueColors, 16);
-  }
-  
-  // Ensure all palette colors are RGB 3-3-3
-  // Ensure each palette entry conforms to RGBColor then convert to 3-3-3
-  finalPalette = finalPalette.map((c) => {
-    const color = c as Partial<RGBColor>;
-    const r = typeof color.r === 'number' ? color.r : 0;
-    const g = typeof color.g === 'number' ? color.g : 0;
-    const b = typeof color.b === 'number' ? color.b : 0;
-    return toRGB333(r, g, b);
-  });
-  
-  // Pad to exactly 16 colors
-  while (finalPalette.length < 16) {
-    finalPalette.push({ r: 0, g: 0, b: 0, count: 0 });
-  }
-  finalPalette = finalPalette.slice(0, 16);
-  
-  // Step 5: Apply final palette
-  const finalImageData = applyQuantizedPalette(rgb333ImageData, finalPalette);
-  
   return {
-    imageData: finalImageData,
-    palette: finalPalette
+    imageData: processedImageData,
+    palette: processedPalette
   };
 };
 
@@ -165,6 +207,16 @@ self.addEventListener('message', (event: MessageEvent<ProcessingMessage>) => {
     const payload = data || {};
 
     switch (type) {
+      case 'SET_QUANT_CONFIG': {
+        try {
+          const cfg = (data as any)?.cfg || {};
+          setQuantizationConfig(cfg as any);
+          result = { ok: true };
+        } catch (e) {
+          result = { ok: false };
+        }
+        break;
+      }
       case 'PROCESS_IMAGE': {
         // Reconstruct ImageData from transferred buffer
         const raw = payload.imageData as { width?: number; height?: number; buffer?: ArrayBuffer } | undefined;
@@ -180,7 +232,7 @@ self.addEventListener('message', (event: MessageEvent<ProcessingMessage>) => {
       case 'QUANTIZE_COLORS': {
         const colors = Array.isArray(payload.colors) ? (payload.colors as Color[]) : [];
         const targetCount = typeof payload.targetCount === 'number' ? payload.targetCount : Number(payload.targetCount) || 16;
-        result = medianCutQuantization(colors, targetCount);
+        result = kMeansQuantization(colors, targetCount);
         break;
       }
 

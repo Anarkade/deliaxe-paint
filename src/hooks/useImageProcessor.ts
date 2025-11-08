@@ -200,6 +200,18 @@ export const useImageProcessor = () => {
     });
   }, []);
 
+  // Broadcast quantization config to worker (no-op if worker ignores it)
+  const setQuantizationConfig = useCallback((cfg: any) => {
+    if (!workerRef.current) return;
+    const id = `cfg_${++requestIdRef.current}`;
+    const message: ProcessingMessage = {
+      type: 'SET_QUANT_CONFIG' as any,
+      data: { cfg } as any,
+      id
+    };
+    try { workerRef.current.postMessage(message); } catch {}
+  }, []);
+
   // Process Mega Drive image
   const processMegaDriveImage = useCallback((
     imageData: ImageData,
@@ -349,6 +361,7 @@ export const useImageProcessor = () => {
     extractColors,
     quantizeColors,
     applyPalette,
-    cancelProcessing
+    cancelProcessing,
+    setQuantizationConfig
   };
 };

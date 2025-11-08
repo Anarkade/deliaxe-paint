@@ -1461,9 +1461,20 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   })();
 
   const paletteColorsForInfo: { r: number; g: number; b: number }[] | undefined = (() => {
-    // Prefer externally provided palettes when available
-    const external = showOriginal ? originalPaletteColors : processedPaletteColors;
-    if (external && external.length > 0) return external as any;
+    // When viewing Original: ONLY show palette info if the original image has an indexed palette
+    if (showOriginal) {
+      if (originalPaletteColors && originalPaletteColors.length > 0) {
+        return originalPaletteColors as any;
+      }
+      // No indexed palette in original → don't show any palette info
+      return undefined;
+    }
+    
+    // When viewing Processed: prefer processed palette colors
+    if (processedPaletteColors && processedPaletteColors.length > 0) {
+      return processedPaletteColors as any;
+    }
+    
     // For retro (non-'original') palettes, fall back to default palette to show count
     if (selectedPalette && selectedPalette !== 'original') {
       try {

@@ -128,7 +128,7 @@ export async function processImage(deps: ProcessImageDependencies): Promise<void
     // Start performance monitoring
     performanceMonitor.startMeasurement('image_processing');
     setIsProcessing(true);
-    setProcessingProgress(5);
+    setProcessingProgress(0);
     setProcessingOperation(`Processing with ${selectedPalette} palette...`);
 
     // Small delay to allow React to render the processing state before heavy computation

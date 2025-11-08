@@ -27,6 +27,7 @@ import { imageProcessingCache, hashImage, hashImageData } from '@/utils/imageCac
 import { ChangeGridSelector } from '@/components/tabMenus/ChangeGridSelector';
 import { ChangeImageResolution, ResolutionType, CombinedScalingMode } from '@/components/tabMenus/ChangeImageResolution';
 import { ChangeDisplayAspectRatio } from '@/components/tabMenus/ChangeDisplayAspectRatio';
+// DevQuantization removed
 // Performance constants - Optimized for large image handling
 const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory issues
 const MAX_CANVAS_SIZE = 4096; // Maximum output canvas size
@@ -361,8 +362,9 @@ export const RetroImageEditor = () => {
       editorRefs,
       writeOrderedPalette,
       setProcessingProgress,
+      originalPaletteColors: editorState.originalPaletteColors, // Pass original palette for dynamic retro palette workflow
     });
-  }, [imageProcessor, editorRefs, writeOrderedPalette, setProcessingProgress]);
+  }, [imageProcessor, editorRefs, writeOrderedPalette, setProcessingProgress, editorState.originalPaletteColors]);
 
 
   // Wrapper for processImage that provides all dependencies
@@ -732,6 +734,12 @@ export const RetroImageEditor = () => {
   // have either an original image or a rasterized processedImageData (this
   // makes resolution changes apply for indexed images that were rasterized
   // on load). Debounce to avoid repeated runs during rapid UI changes.
+  // NOTE: processImage is NOT in dependencies because it's a stable callback
+  // passed to scheduleProcessImage. Including it would cause infinite loops
+  // as processImage gets recreated on every render.
+  // NOTE: processedImageData is also NOT in dependencies to avoid infinite
+  // loops where processing updates processedImageData which triggers another
+  // process cycle. We only trigger on user-initiated changes (palette, resolution, scaling).
   useEffect(() => {
     if (originalImage || processedImageData) {
       const timeoutId = setTimeout(() => {
@@ -740,7 +748,8 @@ export const RetroImageEditor = () => {
 
       return () => clearTimeout(timeoutId);
     }
-  }, [originalImage, processedImageData, selectedPalette, selectedResolution, scalingMode, processImage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originalImage, selectedPalette, selectedResolution, scalingMode]);
 
   // Handle palette changes - restore original palette metadata when the selection returns to 'original'
   useEffect(() => {
@@ -1077,8 +1086,18 @@ export const RetroImageEditor = () => {
                         // based on image usage. Instead, take the original indexed palette, keep
                         // exact order and count, and quantize each entry to the target depth. Use
                         // that palette both for processing and as the processed palette in the UI.
+                        // HOWEVER: if the original palette has MORE colors than the target platform
+                        // supports (e.g., 35 colors for MegaDrive which only supports 16), then
+                        // skip this pre-calculation and let applyPaletteConversion use brute-force
+                        // diversity selection instead.
                         const isRetroFreePalette = (palette === 'megadrive' || palette === 'masterSystem' || palette === 'gameGear');
-                        if (isRetroFreePalette && editorState.isOriginalPNG8Indexed && editorState.originalPaletteColors.length > 0) {
+                        const targetLen = (palette === 'megadrive' || palette === 'masterSystem') ? 16
+                          : (palette === 'gameGear' ? 32 : 256);
+                        const canPreserveOrder = editorState.isOriginalPNG8Indexed 
+                          && editorState.originalPaletteColors.length > 0 
+                          && editorState.originalPaletteColors.length <= targetLen;
+                        
+                        if (isRetroFreePalette && canPreserveOrder) {
                           const bitsR = depth.r || 8;
                           const bitsG = depth.g || 8;
                           const bitsB = depth.b || 8;
@@ -1088,15 +1107,20 @@ export const RetroImageEditor = () => {
                             g: quantizeChannelToBits(c.g, bitsG),
                             b: quantizeChannelToBits(c.b, bitsB)
                           } as Color));
-                          // Ensure processed palette matches target size for selected palette
-                          let targetLen = quantizedExact.length;
-                          if (palette === 'megadrive' || palette === 'masterSystem') targetLen = 16;
-                          else if (palette === 'gameGear') targetLen = 32;
                           let final = quantizedExact.slice(0, targetLen);
                           while (final.length < targetLen) final.push({ r: 0, g: 0, b: 0 } as Color);
                           // No dedupe and no reorder beyond truncation/padding
                           editorRefs.pendingConvertedPaletteRef.current = final;
                           writeOrderedPalette(final, 'selectedPalette-preserve-order-pad');
+                        } else if (isRetroFreePalette && !canPreserveOrder) {
+                          // Image has too many colors: clear pending so brute-force kicks in
+                          // Don't call writeOrderedPalette here - it causes re-renders and shows
+                          // intermediate empty palette. Let brute-force complete and write the
+                          // final palette when processing finishes. The useEffect will trigger
+                          // processing automatically when selectedPalette changes.
+                          console.log(`[ChangePalette] Original has ${editorState.originalPaletteColors.length} colors > ${targetLen}, will use brute-force diversity`);
+                          editorRefs.pendingConvertedPaletteRef.current = null;
+                          // Do NOT write palette here - brute-force will write final result
                         } else {
                           const defaults = getDefaultPalette(palette as string) || [];
                           if (defaults && defaults.length > 0) {
@@ -1137,11 +1161,8 @@ export const RetroImageEditor = () => {
                         writeOrderedPalette([], 'undo-clear-error');
                       }
                     }
-                    // Schedule processing using the scheduler to avoid stale closures
-                    // and prevent duplicate/reentrant processing.
-                    setTimeout(() => {
-                      try { scheduleProcessImage(); } catch (e) { /* ignore */ }
-                    }, PROCESSING_DEBOUNCE_MS + 10);
+                    // No need for explicit setTimeout - the useEffect watching selectedPalette
+                    // (line 738) already triggers scheduleProcessImage with proper debouncing
                   }}
                   onClose={() => setActiveTab(null)}
                 />
@@ -1241,6 +1262,8 @@ export const RetroImageEditor = () => {
                 />
               </div>
             )}
+
+            {/* DevQuantization tab removed */}
           </div>
         </div>
       </div>

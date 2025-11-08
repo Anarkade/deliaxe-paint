@@ -31,7 +31,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 // Build the logo URL from Vite's BASE_URL so it resolves correctly on GitHub Pages
 const logoGif = `${import.meta.env.BASE_URL}logo.gif`;
 import { Button } from '../ui/button';
-import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch, Ratio, Tv } from 'lucide-react';
+import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch, Ratio, Tv, Wrench } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { PaletteViewer } from './PaletteViewer';
@@ -306,6 +306,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             >
                 <Download className="h-4 w-4 m-0 p-0" />
             </Button>
+            {/* DevQuantization button removed */}
             <Button
               variant={getButtonVariant('language') as import('@/components/ui/button').ButtonProps['variant']}
               onClick={() => handleTabClick('language')}
@@ -323,17 +324,22 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           const shouldShow = selectedPalette !== 'original' || hasPalette;
           return shouldShow ? (
             <div className="w-full mt-0 py-0">
-              <PaletteViewer
-                selectedPalette={selectedPalette as unknown as string}
-                imageData={processedImageData}
-                onPaletteUpdate={(cols: Color[], meta?: unknown) => onToolbarPaletteUpdate?.(cols, meta)}
-                originalImageSource={originalImageSource || undefined}
-                externalPalette={externalPalette as unknown as Color[]}
-                onImageUpdate={(img: ImageData) => onToolbarImageUpdate?.(img)}
-                showOriginal={showOriginalPreview}
-                paletteDepth={showOriginalPreview ? paletteDepthOriginal : paletteDepthProcessed}
-                toolbarRowsMode
-              />
+              {/* Only show PaletteViewer when:
+                  1. Showing processed image (showOriginalPreview === false), OR
+                  2. Showing original image with an indexed palette (originalPaletteColors.length > 0) */}
+              {(!showOriginalPreview || (originalPaletteColors && originalPaletteColors.length > 0)) && (
+                <PaletteViewer
+                  selectedPalette={selectedPalette as unknown as string}
+                  imageData={processedImageData}
+                  onPaletteUpdate={(cols: Color[], meta?: unknown) => onToolbarPaletteUpdate?.(cols, meta)}
+                  originalImageSource={originalImageSource || undefined}
+                  externalPalette={externalPalette as unknown as Color[]}
+                  onImageUpdate={(img: ImageData) => onToolbarImageUpdate?.(img)}
+                  showOriginal={showOriginalPreview}
+                  paletteDepth={showOriginalPreview ? paletteDepthOriginal : paletteDepthProcessed}
+                  toolbarRowsMode
+                />
+              )}
             </div>
           ) : null;
         })()}
@@ -425,6 +431,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           >
             <Grid3X3 className="h-4 w-4 m-0 p-0" />
           </Button>
+          {/* DevQuantization button removed */}
           <Button
             variant={getButtonVariant('language') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('language')}
@@ -504,8 +511,10 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <div className="col-span-2 w-full min-w-0 justify-self-stretch my-0">
             {(() => {
               const externalPalette = (showOriginalPreview ? originalPaletteColors : processedPaletteColors) || [];
-              const hasPalette = Array.isArray(externalPalette) && externalPalette.length > 0;
-              const shouldShow = selectedPalette !== 'original' || hasPalette;
+              // Only show PaletteViewer when:
+              // 1. Showing processed image (showOriginalPreview === false), OR
+              // 2. Showing original image with an indexed palette (originalPaletteColors.length > 0)
+              const shouldShow = !showOriginalPreview || (originalPaletteColors && originalPaletteColors.length > 0);
               return shouldShow ? (
                 <PaletteViewer
                   selectedPalette={selectedPalette as unknown as string}
