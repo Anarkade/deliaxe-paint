@@ -51,102 +51,122 @@ const processImageData = (imageData: ImageData, operation: string, options: Reco
     }
 };
 
-// Optimized Mega Drive processing in worker (mirroring library implementation)
+// Optimized Mega Drive processing in worker using direct RGB333 approach
+// This avoids Lab<->RGB conversion issues by working entirely in RGB333 space
 type RGBColor = { r: number; g: number; b: number; count?: number };
 
 const processMegaDriveInWorker = (imageData: ImageData, originalPalette?: RGBColor[]) => {
   const TARGET_COLORS = 16;
-  const totalPixels = imageData.data.length / 4;
   
-  // Step 1 & 2: Determine palette source
-  let workingPalette: RGBColor[];
+  // Step 1: Convert ENTIRE IMAGE to RGB333 space first
+  const rgb333ImageData = new ImageData(
+    new Uint8ClampedArray(imageData.data),
+    imageData.width,
+    imageData.height
+  );
+  const data = rgb333ImageData.data;
   
-  // Check if we have a valid indexed palette that we should preserve
-  const hasValidIndexedPalette = originalPalette && originalPalette.length > 0 && originalPalette.length <= TARGET_COLORS;
-  
-  if (hasValidIndexedPalette) {
-    // Case 1: Original has indexed palette with ≤16 colors
-    // Copy the original palette maintaining order, pad to 16 colors with black
-    workingPalette = [...originalPalette];
-    while (workingPalette.length < TARGET_COLORS) {
-      workingPalette.push({ r: 0, g: 0, b: 0, count: 0 });
-    }
-  } else {
-    // Case 2: No indexed palette, palette has >16 colors, or it's an RGB image
-    // ALWAYS extract colors from the current imageData (not from originalPalette)
-    const extractedColors = extractColorsFromImageData(imageData);
-    
-    // Validate that we have colors to work with
-    if (!extractedColors || extractedColors.length === 0) {
-      // Fallback: create a grayscale palette
-      workingPalette = [];
-      for (let i = 0; i < TARGET_COLORS; i++) {
-        const val = Math.round((i / (TARGET_COLORS - 1)) * 255);
-        workingPalette.push({ r: val, g: val, b: val, count: 1 });
-      }
-    } else if (extractedColors.length <= TARGET_COLORS) {
-      workingPalette = extractedColors;
-      while (workingPalette.length < TARGET_COLORS) {
-        workingPalette.push({ r: 0, g: 0, b: 0, count: 0 });
-      }
-    } else {
-      // Use K-Means for optimal quantization
-      workingPalette = kMeansQuantization(extractedColors, TARGET_COLORS);
-      // Pad if quantization returned fewer colors
-      while (workingPalette.length < TARGET_COLORS) {
-        workingPalette.push({ r: 0, g: 0, b: 0, count: 0 });
-      }
+  // Pre-convert all pixels to RGB333 to work in the target space
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      const reduced = toRGB333(data[i], data[i + 1], data[i + 2]);
+      data[i] = reduced.r;
+      data[i + 1] = reduced.g;
+      data[i + 2] = reduced.b;
     }
   }
   
-  // Ensure exactly 16 colors
-  workingPalette = workingPalette.slice(0, TARGET_COLORS);
+  // Step 2: Extract unique RGB333 colors from the pre-converted image
+  const rgb333Colors = extractColorsFromImageData(rgb333ImageData);
   
-  // Step 3: Apply RGB 3-3-3 depth reduction to the palette
-  const processedPalette = workingPalette.map(color => toRGB333(color.r, color.g, color.b));
+  let workingPalette: RGBColor[];
   
-  // Step 4: Copy original image to processed image
+  // Check if we have indexed palette
+  const hasValidIndexedPalette = originalPalette && originalPalette.length > 0 && originalPalette.length <= TARGET_COLORS;
+  
+  if (hasValidIndexedPalette) {
+    // Convert indexed palette to RGB333 and use it
+    workingPalette = originalPalette.map(c => toRGB333(c.r, c.g, c.b));
+  } else {
+    // Quantize in RGB333 space
+    if (rgb333Colors.length <= TARGET_COLORS) {
+      workingPalette = rgb333Colors;
+    } else {
+      // Request more colors to handle potential duplicates
+      const SAFETY_MARGIN = Math.min(TARGET_COLORS * 2, rgb333Colors.length);
+      const candidates = kMeansQuantization(rgb333Colors, SAFETY_MARGIN);
+      
+      // Deduplicate immediately
+      const uniqueSet = new Set<string>();
+      const uniqueCandidates: RGBColor[] = [];
+      for (const c of candidates) {
+        const key = `${c.r},${c.g},${c.b}`;
+        if (!uniqueSet.has(key)) {
+          uniqueSet.add(key);
+          uniqueCandidates.push(c);
+        }
+      }
+      
+      // Take first TARGET_COLORS unique colors
+      workingPalette = uniqueCandidates.slice(0, TARGET_COLORS);
+    }
+  }
+  
+  // Final deduplication pass
+  const uniqueSet = new Set<string>();
+  const finalPalette: RGBColor[] = [];
+  for (const c of workingPalette) {
+    const key = `${c.r},${c.g},${c.b}`;
+    if (!uniqueSet.has(key)) {
+      uniqueSet.add(key);
+      finalPalette.push(c);
+    }
+  }
+  
+  // Fill to target if needed (simplified - no diversity selection in worker)
+  while (finalPalette.length < TARGET_COLORS) {
+    finalPalette.push({ r: 0, g: 0, b: 0, count: 0 });
+  }
+  
+  const palette = finalPalette.slice(0, TARGET_COLORS);
+  
+  // Step 3: Map image using SIMPLE RGB distance (not Lab!)
   const processedImageData = new ImageData(
     new Uint8ClampedArray(imageData.data),
     imageData.width,
     imageData.height
   );
   
-  // Step 5: Apply the color transformation
-  const data = processedImageData.data;
+  const pData = processedImageData.data;
+  const totalPixels = pData.length / 4;
   const progressStep = Math.max(1, Math.floor(totalPixels / 10));
   
-  // Helper for color distance
-  const colorDist = (r1: number, g1: number, b1: number, c2: RGBColor) => {
-    const dr = r1 - c2.r;
-    const dg = g1 - c2.g;
-    const db = b1 - c2.b;
-    return dr * dr + dg * dg + db * db;
-  };
-  
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] > 0) { // Only process non-transparent pixels
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
+  for (let i = 0; i < pData.length; i += 4) {
+    if (pData[i + 3] > 0) {
+      // Convert pixel to RGB333
+      const pixelRGB333 = toRGB333(pData[i], pData[i + 1], pData[i + 2]);
       
-      // Find closest color in the working palette
-      let closestIdx = 0;
+      // Find closest in palette using SIMPLE RGB DISTANCE
+      let bestIdx = 0;
       let minDist = Infinity;
       
-      for (let j = 0; j < workingPalette.length; j++) {
-        const dist = colorDist(r, g, b, workingPalette[j]);
+      for (let j = 0; j < palette.length; j++) {
+        const p = palette[j];
+        // Simple Euclidean in RGB333 space
+        const dr = pixelRGB333.r - p.r;
+        const dg = pixelRGB333.g - p.g;
+        const db = pixelRGB333.b - p.b;
+        const dist = dr * dr + dg * dg + db * db;
+        
         if (dist < minDist) {
           minDist = dist;
-          closestIdx = j;
+          bestIdx = j;
         }
       }
       
-      // Apply the RGB333-transformed color from processedPalette
-      const mappedColor = processedPalette[closestIdx];
-      data[i] = mappedColor.r;
-      data[i + 1] = mappedColor.g;
-      data[i + 2] = mappedColor.b;
+      pData[i] = palette[bestIdx].r;
+      pData[i + 1] = palette[bestIdx].g;
+      pData[i + 2] = palette[bestIdx].b;
     }
     
     // Send progress updates every 10% of pixels processed
@@ -162,7 +182,7 @@ const processMegaDriveInWorker = (imageData: ImageData, originalPalette?: RGBCol
   
   return {
     imageData: processedImageData,
-    palette: processedPalette
+    palette
   };
 };
 
