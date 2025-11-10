@@ -29,6 +29,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - Removed `GADebugPanel` component (debug-only UI). Google Analytics implementation remains in `src/lib/ga.ts`.
 
+## [v0.0.50-aspect-ratio-implemented] - 2025-11-11
+
+### Added
+- Aspect-ratio-aware fit/restore behavior in `ImagePreview`: the FitToWindow/fitToWidth logic now accounts for the simulated display aspect ratio applied to the processed raster. When a non-original display aspect ratio is selected the visual height used for zoom/fit calculations is width / targetAspect.
+
+### Fixed
+- Persist and restore per-view zoom correctly when toggling between Original and Processed. The preview now preserves separate recent zoom values for each view and restores them reliably even when the processed display aspect ratio differs from the raster's native aspect.
+
+
 ## [v0.0.43-toolbars-tweaked] - 2025-11-01
 
 ### Changed
