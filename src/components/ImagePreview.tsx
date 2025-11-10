@@ -634,24 +634,35 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     
     try {
       if (originalImage && cw > 0) {
-        const currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
-        // Width-constrained zoom (%): image should not exceed container width
-  const widthZoom = floor2((cw / currentImage.width) * 100);
+        // --- Cálculo para imagen original ---
+        let currentImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
+        let widthZoom = floor2((cw / currentImage.width) * 100);
+        let visualHeight = currentImage.height;
 
-        // Height-constrained zoom (%): image height plus ImagePreview's own footer must fit viewport.
-        // Note: The global site Footer has been moved inside the left toolbar (compact),
-        // so it MUST NOT be subtracted here anymore.
-        // Measure ImagePreview footer height (inside this component)
+        // Si estamos mostrando la imagen procesada y aspect ratio != original, ajusta la altura visual
+        if (!showOriginal && processedImageData) {
+          const originalAspect = processedImageData.width / processedImageData.height;
+          const targetAspect = processedAspectRatio === 'original'
+            ? originalAspect
+            : (typeof DISPLAY_ASPECT_RATIOS[processedAspectRatio] === 'number'
+                ? DISPLAY_ASPECT_RATIOS[processedAspectRatio]
+                : originalAspect);
+          if (targetAspect !== originalAspect) {
+            visualHeight = processedImageData.width / targetAspect;
+          } else {
+            visualHeight = processedImageData.height;
+          }
+        }
+
+        // --- Cálculo de heightZoom usando la altura visual ---
         const previewFooterH = (() => {
           try {
             const el = (footerRef.current as HTMLElement | null);
             if (!el) return 0;
             const rect = el.getBoundingClientRect();
-            // Use ceiling to avoid subpixel rounding causing overflow
             return Math.ceil(rect.height);
           } catch { return 0; }
         })();
-        // Account for vertical paddings/margins around the preview area (top/bottom)
         const extraVerticalSpacing = (() => {
           try {
             let sum = 0;
@@ -665,52 +676,61 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
             if (cont) {
               const cs = window.getComputedStyle(cont);
               sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
-              // container uses no padding by default; if it exists, include it
               sum += (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
             }
             const footer = footerRef.current as HTMLElement | null;
             if (footer) {
               const cs = window.getComputedStyle(footer);
-              // Height is already counted separately (previewFooterH),
-              // but include possible footer margins here.
               sum += (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
             }
             return Math.ceil(sum);
           } catch { return 0; }
         })();
-
-  // Safety margin: 0 so the fitted image reaches the viewport edge without leaving a gap
-  const safetyMargin = 0; // px
-  const viewportH = (typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight || 0) : 0);
-  // Apply a tiny fudge factor to avoid 1px rounding-induced overflow that
-  // can create a scrollable gap below ImagePreview after fitting.
-  const fitFudgePx = 1;
-  const availableForImageH = Math.max(0, viewportH - previewFooterH - extraVerticalSpacing - safetyMargin - fitFudgePx);
-        const heightZoom = currentImage.height > 0
-          ? floor2((availableForImageH / currentImage.height) * 100)
+        const safetyMargin = 0;
+        const viewportH = (typeof window !== 'undefined' ? (window.innerHeight || document.documentElement.clientHeight || 0) : 0);
+        const fitFudgePx = 1;
+        const availableForImageH = Math.max(0, viewportH - previewFooterH - extraVerticalSpacing - safetyMargin - fitFudgePx);
+        let heightZoom = visualHeight > 0
+          ? floor2((availableForImageH / visualHeight) * 100)
           : ZOOM_BOUNDS.min;
 
-        // Choose the most restrictive zoom to ensure the whole view fits the window
-        const fitZoom = Math.min(widthZoom, heightZoom);
-        const newZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, fitZoom));
-
-        // Also compute fitted zoom for the alternate image (original vs processed)
+        // --- Cálculo alternativo para la otra imagen (original/processed) ---
         let altNewZoom: number | null = null;
-        const altImage = showOriginal
-          ? (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : null)
-          : originalImage;
-        if (altImage && altImage.width > 0 && altImage.height > 0) {
-          const altWidthZoom = floor2((cw / altImage.width) * 100);
-          const altHeightZoom = floor2((availableForImageH / altImage.height) * 100);
+        if (showOriginal && processedImageData) {
+          // Si alterna a processed, calcula la altura visual para processed
+          const originalAspect = processedImageData.width / processedImageData.height;
+          const targetAspect = processedAspectRatio === 'original'
+            ? originalAspect
+            : (typeof DISPLAY_ASPECT_RATIOS[processedAspectRatio] === 'number'
+                ? DISPLAY_ASPECT_RATIOS[processedAspectRatio]
+                : originalAspect);
+          const altVisualHeight = targetAspect !== originalAspect
+            ? processedImageData.width / targetAspect
+            : processedImageData.height;
+          const altWidthZoom = floor2((cw / processedImageData.width) * 100);
+          const altHeightZoom = altVisualHeight > 0
+            ? floor2((availableForImageH / altVisualHeight) * 100)
+            : ZOOM_BOUNDS.min;
+          const altFitZoom = Math.min(altWidthZoom, altHeightZoom);
+          altNewZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, altFitZoom));
+        } else if (!showOriginal && originalImage) {
+          // Si alterna a original, usa la altura original
+          const altWidthZoom = floor2((cw / originalImage.width) * 100);
+          const altHeightZoom = originalImage.height > 0
+            ? floor2((availableForImageH / originalImage.height) * 100)
+            : ZOOM_BOUNDS.min;
           const altFitZoom = Math.min(altWidthZoom, altHeightZoom);
           altNewZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, altFitZoom));
         }
+
+        // --- Zoom final ---
+        const fitZoom = Math.min(widthZoom, heightZoom);
+        const newZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, fitZoom));
 
         programmaticZoomChange.current = true;
         setZoom([newZoom]);
         setSliderValue([newZoom]);
         onZoomChange?.(newZoom);
-        // Store both per-view recent zooms so toggling keeps each view fitted
         if (showOriginal) {
           mostRecentZoomOriginal.current = newZoom;
           mostRecentZoomProcessed.current = (altNewZoom ?? newZoom);
@@ -718,17 +738,12 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
           mostRecentZoomProcessed.current = newZoom;
           mostRecentZoomOriginal.current = (altNewZoom ?? newZoom);
         }
-        
-        // Calculate and set preview container height based on chosen zoom
-        const displayHeight = currentImage.height * (newZoom / 100);
+
+        // --- Altura visual para previewHeight ---
+        const displayHeight = visualHeight * (newZoom / 100);
         const minHeight = 150;
         const calculatedHeight = Math.max(minHeight, displayHeight);
-        // Use floor here to ensure we never overshoot the available height,
-        // then subtract 1px so the preview is guaranteed to be one pixel
-        // smaller than the visible viewport area (prevents accidental scrollbars).
         setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
-        // After height is applied, ensure scroll can't go below the card.
-        // Use double RAF to wait for layout and style recalculation.
         requestAnimationFrame(() => {
           requestAnimationFrame(() => clampScrollToBottom());
         });
@@ -1054,7 +1069,25 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         requestAnimationFrame(() => {
           try {
             const img = nextImage;
-            if (img) {
+              if (img) {
+                // Compute visual height: for processed images, respect the
+                // selected display aspect ratio (which may stretch/shrink height)
+                let visualHeight = (img as any).height;
+                if (!next && processedImageData) {
+                  try {
+                    const pid = processedImageData;
+                    const originalAspect = pid.width / pid.height;
+                    const targetAspect = processedAspectRatio === 'original'
+                      ? originalAspect
+                      : (typeof DISPLAY_ASPECT_RATIOS[processedAspectRatio] === 'number'
+                          ? DISPLAY_ASPECT_RATIOS[processedAspectRatio]
+                          : originalAspect);
+                    visualHeight = targetAspect !== originalAspect ? Math.round(pid.width / targetAspect) : pid.height;
+                  } catch (e) {
+                    // fallback to reported height
+                    visualHeight = (img as any).height;
+                  }
+                }
               const cw = containerWidthRef.current || 0;
               // Measure footer + surrounding spacing exactly as in fitToWidth()
               const previewFooterH = (() => {
@@ -1095,8 +1128,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
               const availableForImageH = Math.max(0, viewportH - previewFooterH - extraVerticalSpacing - fitFudgePx);
 
               // Compute fitted zoom respecting width and height constraints
-              const widthZoom = img.width > 0 ? floor2((cw / img.width) * 100) : ZOOM_BOUNDS.min;
-              const heightZoom = img.height > 0 ? floor2((availableForImageH / img.height) * 100) : ZOOM_BOUNDS.min;
+              const widthZoom = (img as any).width > 0 ? floor2((cw / (img as any).width) * 100) : ZOOM_BOUNDS.min;
+              const heightZoom = visualHeight > 0 ? floor2((availableForImageH / visualHeight) * 100) : ZOOM_BOUNDS.min;
               const maxAllowedZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, Math.min(widthZoom, heightZoom)));
 
               const appliedZoom = restoreZoom > maxAllowedZoom ? maxAllowedZoom : restoreZoom;
@@ -1110,7 +1143,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                 if (next) mostRecentZoomOriginal.current = restoreZoom; else mostRecentZoomProcessed.current = restoreZoom;
               }
 
-              const displayHeight = img.height * (appliedZoom / 100);
+              const displayHeight = visualHeight * (appliedZoom / 100);
               const minHeight = 150;
               const calculatedHeight = Math.max(minHeight, displayHeight);
               setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
@@ -1138,10 +1171,24 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       try { onZoomChange?.(zoomValue); } catch (e) { /* ignore */ }
       const img = target ? originalImage : (processedImageData || originalImage);
       if (img) {
-        const displayHeight = img.height * (zoomValue / 100);
+        // Compute visual height for processed images
+        let visualHeight = (img as any).height;
+        if (!target && processedImageData) {
+          try {
+            const pid = processedImageData;
+            const originalAspect = pid.width / pid.height;
+            const targetAspect = processedAspectRatio === 'original'
+              ? originalAspect
+              : (typeof DISPLAY_ASPECT_RATIOS[processedAspectRatio] === 'number'
+                  ? DISPLAY_ASPECT_RATIOS[processedAspectRatio]
+                  : originalAspect);
+            visualHeight = targetAspect !== originalAspect ? Math.round(pid.width / targetAspect) : pid.height;
+          } catch (e) { visualHeight = (img as any).height; }
+        }
+        const displayHeight = visualHeight * (zoomValue / 100);
         const minHeight = 150;
         const calculatedHeight = Math.max(minHeight, displayHeight);
-  setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
+        setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
         // After DOM updates with the new footer, clamp to fit if needed
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -1184,7 +1231,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
               const fitFudgePx = 1;
               const availableForImageH = Math.max(0, viewportH - previewFooterH - extraVerticalSpacing - fitFudgePx);
               const widthZoom = img.width > 0 ? floor2((cw / img.width) * 100) : ZOOM_BOUNDS.min;
-              const heightZoom = img.height > 0 ? floor2((availableForImageH / img.height) * 100) : ZOOM_BOUNDS.min;
+              // Use visualHeight (which already accounts for processed aspect ratio)
+              const heightZoom = visualHeight > 0 ? floor2((availableForImageH / visualHeight) * 100) : ZOOM_BOUNDS.min;
               const maxAllowedZoom = Math.max(ZOOM_BOUNDS.min, Math.min(ZOOM_BOUNDS.max, Math.min(widthZoom, heightZoom)));
               const appliedZoom = zoomValue > maxAllowedZoom ? maxAllowedZoom : zoomValue;
               if (appliedZoom !== zoomValue) {
@@ -1193,9 +1241,9 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                 setSliderValue([appliedZoom]);
                 try { onZoomChange?.(appliedZoom); } catch (e) { /* ignore */ }
                 if (target) mostRecentZoomOriginal.current = appliedZoom; else mostRecentZoomProcessed.current = appliedZoom;
-                const dh = img.height * (appliedZoom / 100);
-                const ch = Math.max(minHeight, dh);
-                setPreviewHeight(Math.max(minHeight, Math.floor(ch) - 1));
+                  const dh = visualHeight * (appliedZoom / 100);
+                  const ch = Math.max(minHeight, dh);
+                  setPreviewHeight(Math.max(minHeight, Math.floor(ch) - 1));
               } else {
                 if (target) mostRecentZoomOriginal.current = zoomValue; else mostRecentZoomProcessed.current = zoomValue;
               }
