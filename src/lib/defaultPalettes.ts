@@ -25,7 +25,7 @@ export const getDefaultPalette = (paletteType: string): SimpleColor[] => {
         { r: 160, g: 168, b: 48 },   // Light
         { r: 208, g: 224, b: 64 }    // Lightest
       ];
-    case 'megadrive':
+    case 'megaDrive16':
       return [
         { r: 0, g: 0, b: 0 },       // Black
         { r: 0, g: 0, b: 146 },     // Dark Blue

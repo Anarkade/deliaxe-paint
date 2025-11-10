@@ -224,7 +224,7 @@ export const useImageProcessor = () => {
         return;
       }
 
-      const id = `megadrive_${++requestIdRef.current}`;
+  const id = `megaDrive16_${++requestIdRef.current}`;
       
       pendingRequests.current.set(id, {
         resolve,

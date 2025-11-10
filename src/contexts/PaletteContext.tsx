@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { processMegaDriveImage, Color } from '@/lib/colorQuantization';
+import { processMegaDriveImage, buildRetroConsolePaletteBruteForce, Color } from '@/lib/colorQuantization';
 import { PaletteType } from '@/components/tabMenus/ChangePalette';
 
 interface PaletteContextType {
@@ -87,7 +87,7 @@ export const PaletteProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       }
         break;
-      case 'megadrive': {
+      case 'megaDrive16': {
         try {
           // Aquí deberías usar el imageProcessor del editor si lo necesitas
           const megaDriveResult = processMegaDriveImage(imageData);
@@ -96,6 +96,18 @@ export const PaletteProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setCurrentPaletteColors(megaDriveResult.palette.map(color => ({ r: color.r, g: color.g, b: color.b })));
         } catch (error) {
           console.error('Mega Drive processing error:', error);
+        }
+      }
+        break;
+      case 'megaDrive61': {
+        try {
+          // Use brute-force builder for 61 colors using RGB333 depth
+          const result = await buildRetroConsolePaletteBruteForce(imageData, 61, 'RGB333');
+          const processedData = result.imageData.data;
+          for (let i = 0; i < data.length; i++) data[i] = processedData[i];
+          setCurrentPaletteColors(result.palette.map(color => ({ r: color.r, g: color.g, b: color.b })));
+        } catch (error) {
+          console.error('Mega Drive (61) processing error:', error);
         }
       }
         break;

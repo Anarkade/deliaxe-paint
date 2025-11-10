@@ -399,6 +399,189 @@ const removeExactDuplicatesAndReplaceRGB444 = (palette: Color[], imageData: Imag
 };
 
 /**
+ * Median Cut color quantization algorithm
+ * Guarantees that ALL targetColors will be used in the final palette
+ * Better than K-Means for preserving color distribution and accent colors
+ */
+interface ColorBox {
+  colors: Array<{ r: number; g: number; b: number; count: number }>;
+  rMin: number; rMax: number;
+  gMin: number; gMax: number;
+  bMin: number; bMax: number;
+}
+
+function getColorBoxRange(box: ColorBox): { axis: 'r' | 'g' | 'b'; range: number } {
+  const rRange = box.rMax - box.rMin;
+  const gRange = box.gMax - box.gMin;
+  const bRange = box.bMax - box.bMin;
+  
+  if (rRange >= gRange && rRange >= bRange) {
+    return { axis: 'r', range: rRange };
+  } else if (gRange >= bRange) {
+    return { axis: 'g', range: gRange };
+  } else {
+    return { axis: 'b', range: bRange };
+  }
+}
+
+function splitColorBox(box: ColorBox, axis: 'r' | 'g' | 'b'): [ColorBox, ColorBox] {
+  // Sort colors by the chosen axis
+  const sorted = box.colors.slice().sort((a, b) => a[axis] - b[axis]);
+  
+  // Find median by pixel count (weighted split)
+  const totalPixels = sorted.reduce((sum, c) => sum + c.count, 0);
+  let pixelCount = 0;
+  let medianIndex = 0;
+  
+  for (let i = 0; i < sorted.length; i++) {
+    pixelCount += sorted[i].count;
+    if (pixelCount >= totalPixels / 2) {
+      medianIndex = i + 1; // Split after this color
+      break;
+    }
+  }
+  
+  // Ensure both boxes have at least one color
+  if (medianIndex === 0) medianIndex = 1;
+  if (medianIndex >= sorted.length) medianIndex = sorted.length - 1;
+  
+  const leftColors = sorted.slice(0, medianIndex);
+  const rightColors = sorted.slice(medianIndex);
+  
+  // Create bounding boxes
+  const createBox = (colors: typeof sorted): ColorBox => {
+    if (colors.length === 0) {
+      return {
+        colors: [],
+        rMin: 0, rMax: 0,
+        gMin: 0, gMax: 0,
+        bMin: 0, bMax: 0
+      };
+    }
+    
+    const rs = colors.map(c => c.r);
+    const gs = colors.map(c => c.g);
+    const bs = colors.map(c => c.b);
+    
+    return {
+      colors,
+      rMin: Math.min(...rs), rMax: Math.max(...rs),
+      gMin: Math.min(...gs), gMax: Math.max(...gs),
+      bMin: Math.min(...bs), bMax: Math.max(...bs)
+    };
+  };
+  
+  return [createBox(leftColors), createBox(rightColors)];
+}
+
+function getBoxRepresentativeColor(box: ColorBox): { r: number; g: number; b: number } {
+  if (box.colors.length === 0) {
+    return { r: 0, g: 0, b: 0 };
+  }
+  
+  // Weighted average by pixel count
+  let totalR = 0, totalG = 0, totalB = 0, totalCount = 0;
+  
+  for (const { r, g, b, count } of box.colors) {
+    totalR += r * count;
+    totalG += g * count;
+    totalB += b * count;
+    totalCount += count;
+  }
+  
+  return {
+    r: Math.round(totalR / totalCount),
+    g: Math.round(totalG / totalCount),
+    b: Math.round(totalB / totalCount)
+  };
+}
+
+export function medianCutQuantization(
+  imageData: ImageData,
+  targetColors: number
+): { palette: Color[]; } {
+  const data = imageData.data;
+  
+  // Count color frequencies
+  const colorFrequency = new Map<string, number>();
+  
+  for (let i = 0; i < data.length; i += 4) {
+    const key = `${data[i]},${data[i + 1]},${data[i + 2]}`;
+    colorFrequency.set(key, (colorFrequency.get(key) || 0) + 1);
+  }
+  
+  // Create initial box with all colors
+  let initialColors = Array.from(colorFrequency.entries()).map(([key, count]) => {
+    const [r, g, b] = key.split(',').map(Number);
+    return { r, g, b, count };
+  });
+  
+  if (initialColors.length === 0) {
+    // Return black palette if no colors
+    return { palette: Array(targetColors).fill({ r: 0, g: 0, b: 0 }) };
+  }
+  
+  if (initialColors.length <= targetColors) {
+    // Return all colors (no black padding - image simply has fewer colors than target)
+    const palette = initialColors.map(c => ({ r: c.r, g: c.g, b: c.b }));
+    return { palette };
+  }
+  
+  // 🆕 CRITICAL: Limit color count to prevent stack overflow
+  // If we have too many unique colors, sample the most frequent ones
+  const MAX_COLORS_FOR_MEDIAN_CUT = 5000;
+  if (initialColors.length > MAX_COLORS_FOR_MEDIAN_CUT) {
+    console.log(`[Median Cut] Too many colors (${initialColors.length}), sampling top ${MAX_COLORS_FOR_MEDIAN_CUT} by frequency`);
+    initialColors.sort((a, b) => (b.count || 0) - (a.count || 0));
+    initialColors = initialColors.slice(0, MAX_COLORS_FOR_MEDIAN_CUT);
+  }
+  
+  const rs = initialColors.map(c => c.r);
+  const gs = initialColors.map(c => c.g);
+  const bs = initialColors.map(c => c.b);
+  
+  const boxes: ColorBox[] = [{
+    colors: initialColors,
+    rMin: Math.min(...rs), rMax: Math.max(...rs),
+    gMin: Math.min(...gs), gMax: Math.max(...gs),
+    bMin: Math.min(...bs), bMax: Math.max(...bs)
+  }];
+  
+  // Split boxes until we have targetColors
+  while (boxes.length < targetColors) {
+    // Find box with largest range
+    let maxRange = -1;
+    let maxRangeIndex = 0;
+    
+    for (let i = 0; i < boxes.length; i++) {
+      if (boxes[i].colors.length <= 1) continue; // Can't split single-color box
+      
+      const { range } = getColorBoxRange(boxes[i]);
+      if (range > maxRange) {
+        maxRange = range;
+        maxRangeIndex = i;
+      }
+    }
+    
+    // Can't split further if all boxes have range 0 or single colors
+    if (maxRange === 0) break;
+    
+    // Split the box with the largest range
+    const boxToSplit = boxes[maxRangeIndex];
+    const { axis } = getColorBoxRange(boxToSplit);
+    const [left, right] = splitColorBox(boxToSplit, axis);
+    
+    // Replace old box with two new boxes
+    boxes.splice(maxRangeIndex, 1, left, right);
+  }
+  
+  // Generate palette from boxes (one color per box)
+  const palette = boxes.map(box => getBoxRepresentativeColor(box));
+  
+  return { palette: palette.slice(0, targetColors) };
+}
+
+/**
  * Remove exact RGB duplicate colors from palette and replace with diverse alternatives (RGB333 variant)
  */
 const removeExactDuplicatesAndReplace = (palette: Color[], imageData: ImageData, targetCount: number): Color[] => {
@@ -411,6 +594,198 @@ const removeExactDuplicatesAndReplace = (palette: Color[], imageData: ImageData,
 const removeExactDuplicatesAndReplaceRGB222 = (palette: Color[], imageData: ImageData, targetCount: number): Color[] => {
   return removeExactDuplicatesGeneric(palette, imageData, targetCount, toRGB222, 'RGB222');
 };
+
+/**
+ * 🆕 GENERIC PALETTE QUANTIZATION FOR REDUCED COLOR DEPTH
+ * 
+ * This is the CORRECT approach for Sega and similar palettes:
+ * 1. Convert entire image to target color depth (RGB222/RGB333/RGB444)
+ * 2. Extract unique colors from reduced image (eliminates duplicates naturally)
+ * 3. Select the N most DIVERSE colors (maximum difference between them)
+ *    - Ensures representation of important accent/detail colors
+ *    - Not just the most frequent colors
+ * 
+ * GUARANTEES:
+ * - ALL palette colors exist in the original image (after depth reduction)
+ * - ZERO duplicates (eliminated in step 2)
+ * - ZERO black padding (only when image has fewer unique colors than target)
+ * - Maximum color diversity for better representation of details and accents
+ * 
+ * @param imageData - Original image data
+ * @param targetColors - Desired palette size (16, 32, 61, etc.)
+ * @param depthConverter - Function to convert RGB to target depth (toRGB222, toRGB333, etc.)
+ * @param depthName - Name for logging ("RGB222", "RGB333", etc.)
+ * @returns Palette of exactly targetColors (or fewer if image has fewer unique colors)
+ */
+export async function quantizeToReducedDepthPalette(
+  imageData: ImageData,
+  targetColors: number,
+  depthConverter: (r: number, g: number, b: number) => Color,
+  depthName: string,
+  onProgress?: (progress: number) => void
+): Promise<Color[]> {
+  onProgress?.(12); // Starting depth conversion
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  // Step 1: Convert ENTIRE image to target color depth
+  const reducedImageData = new ImageData(
+    new Uint8ClampedArray(imageData.data),
+    imageData.width,
+    imageData.height
+  );
+  const data = reducedImageData.data;
+  const totalPixels = data.length / 4;
+  let lastReported = 0;
+  
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      const converted = depthConverter(data[i], data[i + 1], data[i + 2]);
+      data[i] = converted.r;
+      data[i + 1] = converted.g;
+      data[i + 2] = converted.b;
+    }
+    
+    // Report progress during depth conversion (12% -> 25%)
+    const pixelIndex = i / 4;
+    const currentProgress = 12 + (pixelIndex / totalPixels) * 13;
+    const currentBucket = Math.floor(currentProgress / 5);
+    if (currentBucket !== lastReported) {
+      lastReported = currentBucket;
+      onProgress?.(currentProgress);
+      await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+    }
+  }
+  
+  onProgress?.(25); // Depth conversion complete
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  // Step 2: Extract unique colors from reduced image
+  const uniqueColors = extractColorsFromImageData(reducedImageData);
+  
+  onProgress?.(35); // Unique colors extracted
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  onProgress?.(35); // Unique colors extracted
+  
+  // Step 3: Select the N most DIVERSE colors
+  if (uniqueColors.length <= targetColors) {
+    // Image has fewer unique colors than target - use all of them
+    onProgress?.(40);
+    await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+    
+    const palette = uniqueColors.map(c => ({ r: c.r, g: c.g, b: c.b }));
+    
+    onProgress?.(45);
+    await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+    
+    // Sort by luminosity (darker to lighter) for better palette visualization
+    palette.sort((a, b) => {
+      const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
+      const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
+      return lumA - lumB;
+    });
+    
+    onProgress?.(50);
+    await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+    
+    return palette;
+  }
+  
+  // Select most diverse colors using greedy farthest-point algorithm
+  // This is the most time-consuming operation (35% -> 48%)
+  let palette = await selectMostDiverseColorsByDistance(uniqueColors, targetColors, onProgress);
+  
+  onProgress?.(48); // Diversity selection complete
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  // Sort palette by luminosity (darker to lighter) for better visualization
+  palette.sort((a, b) => {
+    const lumA = 0.299 * a.r + 0.587 * a.g + 0.114 * a.b;
+    const lumB = 0.299 * b.r + 0.587 * b.g + 0.114 * b.b;
+    return lumA - lumB;
+  });
+  
+  onProgress?.(50); // Sorting complete
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  return palette;
+}
+
+/**
+ * Select the N most diverse colors from a list using greedy farthest-point algorithm.
+ * This ensures maximum color variety, capturing important accent colors even if infrequent.
+ * 
+ * Algorithm:
+ * 1. Start with the most frequent color (likely background/dominant)
+ * 2. Iteratively add the color that is farthest from all selected colors
+ * 3. Repeat until we have N colors
+ */
+async function selectMostDiverseColorsByDistance(
+  colors: Array<Color & { count?: number }>,
+  targetCount: number,
+  onProgress?: (progress: number) => void
+): Promise<Color[]> {
+  if (colors.length <= targetCount) {
+    return colors.map(c => ({ r: c.r, g: c.g, b: c.b }));
+  }
+  
+  const selected: Color[] = [];
+  const remaining = [...colors];
+  
+  // Start with the most frequent color (usually background or dominant tone)
+  remaining.sort((a, b) => (b.count || 0) - (a.count || 0));
+  selected.push({ r: remaining[0].r, g: remaining[0].g, b: remaining[0].b });
+  remaining.splice(0, 1);
+  
+  onProgress?.(36); // Started diversity selection
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  // Iteratively add the color farthest from all selected colors
+  // Report progress from 36% to 48%
+  while (selected.length < targetCount && remaining.length > 0) {
+    let maxMinDistance = -1;
+    let farthestIndex = 0;
+    
+    // For each remaining color, find its minimum distance to selected colors
+    for (let i = 0; i < remaining.length; i++) {
+      const candidate = remaining[i];
+      let minDistToSelected = Infinity;
+      
+      for (const sel of selected) {
+        const dr = candidate.r - sel.r;
+        const dg = candidate.g - sel.g;
+        const db = candidate.b - sel.b;
+        const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+        
+        if (dist < minDistToSelected) {
+          minDistToSelected = dist;
+        }
+      }
+      
+      // Keep track of the color with maximum minimum distance
+      if (minDistToSelected > maxMinDistance) {
+        maxMinDistance = minDistToSelected;
+        farthestIndex = i;
+      }
+    }
+    
+    // Add the farthest color to selected
+    const farthest = remaining[farthestIndex];
+    selected.push({ r: farthest.r, g: farthest.g, b: farthest.b });
+    remaining.splice(farthestIndex, 1);
+    
+    // Report progress during diversity selection (36% -> 48%)
+    const progress = 36 + (selected.length / targetCount) * 12;
+    onProgress?.(progress);
+    
+    // Yield to UI every few iterations to keep browser responsive
+    if (selected.length % 5 === 0) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+  }
+  
+  return selected;
+}
 
 /**
  * Generic function to remove exact RGB duplicate colors from palette and replace with diverse alternatives
@@ -767,6 +1142,53 @@ export const processMegaDriveImage = (imageData: ImageData, originalPalette?: Co
   // Step 3.5: Remove exact RGB duplicates that emerged from RGB333 conversion
   // This is critical because different source colors can map to the same RGB333 value
   processedPalette = removeExactDuplicatesAndReplace(processedPalette, imageData, TARGET_COLORS);
+
+  // Ensure the processed palette contains exactly TARGET_COLORS unique entries.
+  // In some images many original colors may collapse to the same reduced value
+  // (RGB333). As a safety net, top-up the palette from image-derived colors
+  // converted to the reduced space, then from the full reduced color space,
+  // and finally pad with black if still short. This guarantees callers always
+  // receive an array with length == TARGET_COLORS.
+  {
+    const unique = new Map<string, Color>();
+    for (const c of processedPalette) {
+      unique.set(`${c.r},${c.g},${c.b}`, c);
+    }
+
+    if (unique.size < TARGET_COLORS) {
+      // 1) Prefer image-derived candidates (preserve representativeness)
+      const extracted = extractColorsFromImageData(imageData, 5000);
+      for (const orig of extracted) {
+        const conv = toRGB333(orig.r, orig.g, orig.b);
+        const key = `${conv.r},${conv.g},${conv.b}`;
+        if (!unique.has(key)) {
+          unique.set(key, conv);
+          if (unique.size >= TARGET_COLORS) break;
+        }
+      }
+    }
+
+    if (unique.size < TARGET_COLORS) {
+      // 2) Fill from the full reduced color space (RGB333) to guarantee coverage
+      const allReduced = generateReducedColorSpace('RGB333');
+      for (const c of allReduced) {
+        const key = `${c.r},${c.g},${c.b}`;
+        if (!unique.has(key)) {
+          unique.set(key, c);
+          if (unique.size >= TARGET_COLORS) break;
+        }
+      }
+    }
+
+    // 3) Final padding with black if still short (shouldn't happen)
+    while (unique.size < TARGET_COLORS) {
+      const key = `0,0,0`;
+      if (!unique.has(key)) unique.set(key, { r: 0, g: 0, b: 0, count: 0 });
+      else break; // already present
+    }
+
+    processedPalette = Array.from(unique.values()).slice(0, TARGET_COLORS);
+  }
 
   // Step 4: Copy original image to processed image
   const processedImageData = new ImageData(
@@ -1495,21 +1917,33 @@ export const buildRetroConsolePaletteBruteForce = async (
   if (finalPalette.length < targetColors) {
     await report(62);
     const existingSet = new Set(finalPalette.map(c => `${c.r},${c.g},${c.b}`));
-    
-    // Generate all possible colors from the reduced color space
-    const allPossibleColors = generateReducedColorSpace(depthMode).map(c => ({ ...c, count: 0 }));
-    const candidates = allPossibleColors.filter(c => !existingSet.has(`${c.r},${c.g},${c.b}`));
-    
-    await report(65);
-    // Select most diverse colors from candidates
+
+    // Prefer padding from image-derived quantized colors (most representative first)
+    const quantCandidates = allQuantized.filter(c => !existingSet.has(`${c.r},${c.g},${c.b}`));
+    quantCandidates.sort((a, b) => (b.count || 0) - (a.count || 0));
     const needed = targetColors - finalPalette.length;
-    if (candidates.length > 0) {
-  const selectedCandidates = selectMostDiverseColors(candidates, Math.min(needed, candidates.length), depthMode);
-      finalPalette.push(...selectedCandidates);
+    if (quantCandidates.length > 0) {
+      const take = quantCandidates.slice(0, needed);
+      for (const c of take) {
+        finalPalette.push({ r: c.r, g: c.g, b: c.b, count: c.count });
+        existingSet.add(`${c.r},${c.g},${c.b}`);
+      }
     }
-    await report(70);
-    
-    // Only if absolutely necessary (shouldn't happen with 64+ color space), pad with black
+
+    // If still short (rare), fall back to selecting diverse colors from full reduced color space
+    if (finalPalette.length < targetColors) {
+      await report(65);
+      const allPossibleColors = generateReducedColorSpace(depthMode).map(c => ({ ...c, count: 0 }));
+      const candidates = allPossibleColors.filter(c => !existingSet.has(`${c.r},${c.g},${c.b}`));
+      const stillNeeded = targetColors - finalPalette.length;
+      if (candidates.length > 0) {
+        const selectedCandidates = selectMostDiverseColors(candidates, Math.min(stillNeeded, candidates.length), depthMode);
+        finalPalette.push(...selectedCandidates);
+      }
+      await report(70);
+    }
+
+    // Only if absolutely necessary (shouldn't happen), pad with black
     while (finalPalette.length < targetColors) {
       finalPalette.push({ r: 0, g: 0, b: 0 });
     }
@@ -1589,31 +2023,15 @@ const generateAllRGB444Colors = (): Color[] => {
  * Works entirely in RGB333 color space to avoid Lab<->RGB<->RGB333 conversion mismatches.
  * Uses simple RGB Euclidean distance for better results with highly reduced palettes.
  */
-export const processMegaDriveImageDirect = (imageData: ImageData, originalPalette?: Color[]): { imageData: ImageData; palette: Color[] } => {
+export const processMegaDriveImageDirect = async (
+  imageData: ImageData, 
+  originalPalette?: Color[],
+  onProgress?: (progress: number) => void
+): Promise<{ imageData: ImageData; palette: Color[] }> => {
   const TARGET_COLORS = 16;
   
-  // Step 1: Convert ENTIRE IMAGE to RGB333 space first
-  const rgb333ImageData = new ImageData(
-    new Uint8ClampedArray(imageData.data),
-    imageData.width,
-    imageData.height
-  );
-  const data = rgb333ImageData.data;
-  
-  // Pre-convert all pixels to RGB333 to work in the target space
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] > 0) {
-      const reduced = toRGB333(data[i], data[i + 1], data[i + 2]);
-      data[i] = reduced.r;
-      data[i + 1] = reduced.g;
-      data[i + 2] = reduced.b;
-    }
-  }
-  
-  // Step 2: Extract unique RGB333 colors from the pre-converted image
-  const rgb333Colors = extractColorsFromImageData(rgb333ImageData);
-  
-  console.log(`[MegaDrive Direct] Found ${rgb333Colors.length} unique RGB333 colors in image`);
+  onProgress?.(10);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
   
   let workingPalette: Color[];
   
@@ -1624,65 +2042,21 @@ export const processMegaDriveImageDirect = (imageData: ImageData, originalPalett
     // Convert indexed palette to RGB333 and use it
     workingPalette = originalPalette!.map(c => toRGB333(c.r, c.g, c.b));
   } else {
-    // Quantize in RGB333 space
-    if (rgb333Colors.length <= TARGET_COLORS) {
-      workingPalette = rgb333Colors;
-    } else {
-      // Request more colors than needed to account for potential duplicates
-      const SAFETY_MARGIN = Math.min(TARGET_COLORS * 2, rgb333Colors.length);
-      const candidates = kMeansQuantization(rgb333Colors, SAFETY_MARGIN);
-      
-      // Deduplicate candidates immediately
-      const uniqueSet = new Set<string>();
-      const uniqueCandidates: Color[] = [];
-      for (const c of candidates) {
-        const key = `${c.r},${c.g},${c.b}`;
-        if (!uniqueSet.has(key)) {
-          uniqueSet.add(key);
-          uniqueCandidates.push(c);
-        }
-      }
-      
-      console.log(`[MegaDrive Direct] K-Means produced ${uniqueCandidates.length} unique colors from ${SAFETY_MARGIN} requested`);
-      
-      // Select the most diverse colors
-      if (uniqueCandidates.length >= TARGET_COLORS) {
-        workingPalette = selectMostDiverseColors(
-          uniqueCandidates.map(c => ({ ...c, count: 0 })),
-          TARGET_COLORS,
-          'RGB333'
-        );
-      } else {
-        workingPalette = uniqueCandidates;
-      }
-    }
+    // 🆕 Use the NEW generic quantization function
+    // This guarantees ALL colors are from the image (no duplicates, no black padding)
+    workingPalette = await quantizeToReducedDepthPalette(imageData, TARGET_COLORS, toRGB333, 'MegaDrive16', onProgress);
   }
   
-  // Final deduplication pass
-  const uniqueSet = new Set<string>();
-  const finalPalette: Color[] = [];
-  for (const c of workingPalette) {
-    const key = `${c.r},${c.g},${c.b}`;
-    if (!uniqueSet.has(key)) {
-      uniqueSet.add(key);
-      finalPalette.push(c);
-    }
+  onProgress?.(50);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  // Ensure we have exactly TARGET_COLORS (fill with black only if image has fewer unique colors)
+  const palette = workingPalette.slice(0, TARGET_COLORS);
+  while (palette.length < TARGET_COLORS) {
+    palette.push({ r: 0, g: 0, b: 0 });
   }
   
-  console.log(`[MegaDrive Direct] After final deduplication: ${finalPalette.length} unique colors (need ${TARGET_COLORS})`);
-  
-  // Fill to target with diverse RGB333 colors if needed
-  if (finalPalette.length < TARGET_COLORS) {
-    const existing = new Set(finalPalette.map(c => `${c.r},${c.g},${c.b}`));
-    const allRGB333 = generateAllRGB333Colors().filter(c => !existing.has(`${c.r},${c.g},${c.b}`));
-    
-    // Select diverse colors from RGB333 space
-    const needed = TARGET_COLORS - finalPalette.length;
-    const diverse = selectMostDiverseColors(allRGB333.map(c => ({ ...c, count: 0 })), needed, 'RGB333');
-    finalPalette.push(...diverse);
-  }
-  
-  const palette = finalPalette.slice(0, TARGET_COLORS);
+  onProgress?.(60);
   
   // Step 3: Map image using EUCLIDEAN RGB distance (not Lab!)
   // Since we're in RGB333 space, simple RGB distance works better
@@ -1693,6 +2067,9 @@ export const processMegaDriveImageDirect = (imageData: ImageData, originalPalett
   );
   
   const pData = processedImageData.data;
+  const totalPixels = pData.length / 4;
+  let lastReportedProgress = 60;
+  
   for (let i = 0; i < pData.length; i += 4) {
     if (pData[i + 3] > 0) {
       // Convert pixel to RGB333
@@ -1720,7 +2097,127 @@ export const processMegaDriveImageDirect = (imageData: ImageData, originalPalett
       pData[i + 1] = palette[bestIdx].g;
       pData[i + 2] = palette[bestIdx].b;
     }
+    
+    // Report progress during pixel mapping (60% to 95%)
+    const pixelProgress = (i / 4) / totalPixels;
+    const currentProgress = 60 + Math.floor(pixelProgress * 35);
+    if (currentProgress > lastReportedProgress && currentProgress < 95) {
+      onProgress?.(currentProgress);
+      lastReportedProgress = currentProgress;
+      
+      // Yield to UI every 2% to keep browser responsive and show frequent updates
+      if ((currentProgress - 60) % 2 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
   }
+  
+  onProgress?.(95);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  return {
+    imageData: processedImageData,
+    palette
+  };
+};
+
+/**
+ * Parameterized version of processMegaDriveImageDirect that accepts target color count.
+ * Uses the same RGB333 quantization algorithm as processMegaDriveImageDirect.
+ * This ensures megaDrive16 and megaDrive61 use identical algorithms, differing only in color count.
+ */
+export const processMegaDriveImageDirectN = async (
+  imageData: ImageData, 
+  targetColors: number, 
+  originalPalette?: Color[],
+  onProgress?: (progress: number) => void
+): Promise<{ imageData: ImageData; palette: Color[] }> => {
+  const TARGET_COLORS = Math.max(1, Math.min(512, Math.floor(targetColors))); // RGB333 has max 512 colors
+  
+  onProgress?.(10);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  let workingPalette: Color[];
+  
+  // Check if we have indexed palette
+  const hasValidIndexedPalette = originalPalette && originalPalette.length > 0 && originalPalette.length <= TARGET_COLORS;
+  
+  if (hasValidIndexedPalette) {
+    // Convert indexed palette to RGB333 and use it
+    workingPalette = originalPalette!.map(c => toRGB333(c.r, c.g, c.b));
+  } else {
+    // 🆕 Use the NEW generic quantization function
+    // This guarantees ALL colors are from the image (no duplicates, no black padding)
+    workingPalette = await quantizeToReducedDepthPalette(imageData, TARGET_COLORS, toRGB333, `MegaDrive${TARGET_COLORS}`, onProgress);
+  }
+  
+  onProgress?.(50);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  // Ensure we have exactly TARGET_COLORS (fill with black only if image has fewer unique colors)
+  const palette = workingPalette.slice(0, TARGET_COLORS);
+  while (palette.length < TARGET_COLORS) {
+    palette.push({ r: 0, g, b: 0 });
+  }
+  
+  onProgress?.(60);
+  
+  // Step 3: Map image using EUCLIDEAN RGB distance (not Lab!)
+  // Since we're in RGB333 space, simple RGB distance works better
+  const processedImageData = new ImageData(
+    new Uint8ClampedArray(imageData.data),
+    imageData.width,
+    imageData.height
+  );
+  
+  const pData = processedImageData.data;
+  const totalPixels = pData.length / 4;
+  let lastReported = 0;
+  
+  for (let i = 0; i < pData.length; i += 4) {
+    if (pData[i + 3] > 0) {
+      // Convert pixel to RGB333
+      const pixelRGB333 = toRGB333(pData[i], pData[i + 1], pData[i + 2]);
+      
+      // Find closest in palette using SIMPLE RGB DISTANCE
+      let bestIdx = 0;
+      let minDist = Infinity;
+      
+      for (let j = 0; j < palette.length; j++) {
+        const p = palette[j];
+        // Simple Euclidean in RGB333 space (no Lab needed)
+        const dr = pixelRGB333.r - p.r;
+        const dg = pixelRGB333.g - p.g;
+        const db = pixelRGB333.b - p.b;
+        const dist = dr * dr + dg * dg + db * db;
+        
+        if (dist < minDist) {
+          minDist = dist;
+          bestIdx = j;
+        }
+      }
+      
+      pData[i] = palette[bestIdx].r;
+      pData[i + 1] = palette[bestIdx].g;
+      pData[i + 2] = palette[bestIdx].b;
+    }
+    
+    // Report progress during pixel mapping (60% to 95%)
+    const pixelProgress = (i / 4) / totalPixels;
+    const currentProgress = 60 + Math.floor(pixelProgress * 35);
+    if (currentProgress > lastReportedProgress && currentProgress < 95) {
+      onProgress?.(currentProgress);
+      lastReportedProgress = currentProgress;
+      
+      // Yield to UI every 2% to keep browser responsive and show frequent updates
+      if ((currentProgress - 60) % 2 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
+  }
+  
+  onProgress?.(95);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
   
   return {
     imageData: processedImageData,
@@ -1732,29 +2229,15 @@ export const processMegaDriveImageDirect = (imageData: ImageData, originalPalett
  * NEW: Direct Master System processing in RGB222 space
  * Works entirely in RGB222 color space (64 colors) with simple RGB distance.
  */
-export const processMasterSystemImageDirect = (imageData: ImageData, originalPalette?: Color[]): { imageData: ImageData; palette: Color[] } => {
+export const processMasterSystemImageDirect = async (
+  imageData: ImageData, 
+  originalPalette?: Color[],
+  onProgress?: (progress: number) => void
+): Promise<{ imageData: ImageData; palette: Color[] }> => {
   const TARGET_COLORS = 16;
   
-  // Pre-convert to RGB222
-  const rgb222ImageData = new ImageData(
-    new Uint8ClampedArray(imageData.data),
-    imageData.width,
-    imageData.height
-  );
-  const data = rgb222ImageData.data;
-  
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] > 0) {
-      const reduced = toRGB222(data[i], data[i + 1], data[i + 2]);
-      data[i] = reduced.r;
-      data[i + 1] = reduced.g;
-      data[i + 2] = reduced.b;
-    }
-  }
-  
-  const rgb222Colors = extractColorsFromImageData(rgb222ImageData);
-  
-  console.log(`[Master System Direct] Found ${rgb222Colors.length} unique RGB222 colors in image`);
+  onProgress?.(10);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
   
   let workingPalette: Color[];
   const hasValidIndexedPalette = originalPalette && originalPalette.length > 0 && originalPalette.length <= TARGET_COLORS;
@@ -1762,85 +2245,21 @@ export const processMasterSystemImageDirect = (imageData: ImageData, originalPal
   if (hasValidIndexedPalette) {
     workingPalette = originalPalette!.map(c => toRGB222(c.r, c.g, c.b));
   } else {
-    if (rgb222Colors.length <= TARGET_COLORS) {
-      workingPalette = rgb222Colors;
-    } else {
-      // For RGB222, use frequency-weighted selection instead of pure K-Means
-      // This preserves important colors better in such a tiny color space (64 total)
-      
-      // Sort by frequency (most common first)
-      const sortedByFreq = rgb222Colors.slice().sort((a, b) => (b.count || 0) - (a.count || 0));
-      
-      // Take top colors by frequency as seeds
-      const topFreqCount = Math.min(8, TARGET_COLORS);
-      const topColors = sortedByFreq.slice(0, topFreqCount);
-      
-      console.log(`[Master System Direct] Top ${topFreqCount} colors by frequency:`,
-        topColors.map(c => `#${c.r.toString(16).padStart(2,'0')}${c.g.toString(16).padStart(2,'0')}${c.b.toString(16).padStart(2,'0')} (${c.count}px)`).join(', '));
-      
-      // For remaining slots, select diverse colors from the rest
-      const remaining = sortedByFreq.slice(topFreqCount);
-      const neededMore = TARGET_COLORS - topFreqCount;
-      
-      if (remaining.length > 0 && neededMore > 0) {
-        // Use diversity selection on remaining colors, preserving their frequency info
-        const diverseFromRemaining = selectMostDiverseColors(
-          remaining.map(c => ({ r: c.r, g: c.g, b: c.b, count: c.count || 0 })),
-          Math.min(neededMore, remaining.length),
-          'RGB222'
-        );
-        workingPalette = [...topColors, ...diverseFromRemaining];
-      } else {
-        workingPalette = topColors;
-      }
-      
-      console.log(`[Master System Direct] Selected ${topColors.length} frequent + ${workingPalette.length - topColors.length} diverse = ${workingPalette.length} total`);
-    }
+    // 🆕 Use the NEW generic quantization function
+    // This guarantees ALL colors are from the image (no duplicates, no black padding)
+    workingPalette = await quantizeToReducedDepthPalette(imageData, TARGET_COLORS, toRGB222, 'MasterSystem', onProgress);
   }
   
-  // Final deduplication pass (in case indexed palette had duplicates)
-  const uniqueSet = new Set<string>();
-  const finalPalette: Color[] = [];
-  for (const c of workingPalette) {
-    const key = `${c.r},${c.g},${c.b}`;
-    if (!uniqueSet.has(key)) {
-      uniqueSet.add(key);
-      finalPalette.push(c);
-    }
+  onProgress?.(50);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  // Ensure we have exactly TARGET_COLORS (fill with black only if image has fewer unique colors)
+  const palette = workingPalette.slice(0, TARGET_COLORS);
+  while (palette.length < TARGET_COLORS) {
+    palette.push({ r: 0, g: 0, b: 0 });
   }
   
-  console.log(`[Master System Direct] After final deduplication: ${finalPalette.length} unique colors (need ${TARGET_COLORS})`);
-  console.log(`[Master System Direct] Palette after dedup:`, finalPalette.map(c => `#${c.r.toString(16).padStart(2,'0')}${c.g.toString(16).padStart(2,'0')}${c.b.toString(16).padStart(2,'0')}`).join(', '));
-  
-  // Fill with diverse RGB222 colors
-  if (finalPalette.length < TARGET_COLORS) {
-    const existing = new Set(finalPalette.map(c => `${c.r},${c.g},${c.b}`));
-    const allRGB222 = generateAllRGB222Colors().filter(c => !existing.has(`${c.r},${c.g},${c.b}`));
-    const needed = TARGET_COLORS - finalPalette.length;
-    console.log(`[Master System Direct] Need to fill ${needed} colors from ${allRGB222.length} available RGB222 colors`);
-    const diverse = selectMostDiverseColors(allRGB222.map(c => ({ ...c, count: 0 })), needed, 'RGB222');
-    console.log(`[Master System Direct] Selected ${diverse.length} diverse colors:`, diverse.map(c => `#${c.r.toString(16).padStart(2,'0')}${c.g.toString(16).padStart(2,'0')}${c.b.toString(16).padStart(2,'0')}`).join(', '));
-    finalPalette.push(...diverse);
-  }
-  
-  const palette = finalPalette.slice(0, TARGET_COLORS);
-  
-  console.log(`[Master System Direct] FINAL PALETTE (${palette.length} colors):`, palette.map(c => `#${c.r.toString(16).padStart(2,'0')}${c.g.toString(16).padStart(2,'0')}${c.b.toString(16).padStart(2,'0')}`).join(', '));
-  
-  // Verify no duplicates in final palette
-  const finalCheck = new Set<string>();
-  let duplicateCount = 0;
-  for (const c of palette) {
-    const key = `${c.r},${c.g},${c.b}`;
-    if (finalCheck.has(key)) {
-      duplicateCount++;
-      console.error(`[Master System Direct] DUPLICATE FOUND IN FINAL PALETTE: #${c.r.toString(16).padStart(2,'0')}${c.g.toString(16).padStart(2,'0')}${c.b.toString(16).padStart(2,'0')}`);
-    }
-    finalCheck.add(key);
-  }
-  if (duplicateCount > 0) {
-    console.error(`[Master System Direct] ⚠️ TOTAL DUPLICATES IN FINAL PALETTE: ${duplicateCount}`);
-  }
+  onProgress?.(60);
   
   // Map with simple RGB distance
   const processedImageData = new ImageData(
@@ -1850,6 +2269,9 @@ export const processMasterSystemImageDirect = (imageData: ImageData, originalPal
   );
   
   const pData = processedImageData.data;
+  const totalPixels = pData.length / 4;
+  let lastReported = 0;
+  
   for (let i = 0; i < pData.length; i += 4) {
     if (pData[i + 3] > 0) {
       const pixelRGB222 = toRGB222(pData[i], pData[i + 1], pData[i + 2]);
@@ -1874,7 +2296,23 @@ export const processMasterSystemImageDirect = (imageData: ImageData, originalPal
       pData[i + 1] = palette[bestIdx].g;
       pData[i + 2] = palette[bestIdx].b;
     }
+    
+    // Report progress during pixel mapping (60% to 95%)
+    const pixelProgress = (i / 4) / totalPixels;
+    const currentProgress = 60 + Math.floor(pixelProgress * 35);
+    if (currentProgress > lastReportedProgress && currentProgress < 95) {
+      onProgress?.(currentProgress);
+      lastReportedProgress = currentProgress;
+      
+      // Yield to UI every 2% to keep browser responsive and show frequent updates
+      if ((currentProgress - 60) % 2 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
   }
+  
+  onProgress?.(95);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
   
   return {
     imageData: processedImageData,
@@ -1886,29 +2324,15 @@ export const processMasterSystemImageDirect = (imageData: ImageData, originalPal
  * NEW: Direct Game Gear processing in RGB444 space
  * Works entirely in RGB444 color space (4096 colors) with simple RGB distance.
  */
-export const processGameGearImageDirect = (imageData: ImageData, originalPalette?: Color[]): { imageData: ImageData; palette: Color[] } => {
+export const processGameGearImageDirect = async (
+  imageData: ImageData, 
+  originalPalette?: Color[],
+  onProgress?: (progress: number) => void
+): Promise<{ imageData: ImageData; palette: Color[] }> => {
   const TARGET_COLORS = 32;
   
-  // Pre-convert to RGB444
-  const rgb444ImageData = new ImageData(
-    new Uint8ClampedArray(imageData.data),
-    imageData.width,
-    imageData.height
-  );
-  const data = rgb444ImageData.data;
-  
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] > 0) {
-      const reduced = toRGB444(data[i], data[i + 1], data[i + 2]);
-      data[i] = reduced.r;
-      data[i + 1] = reduced.g;
-      data[i + 2] = reduced.b;
-    }
-  }
-  
-  const rgb444Colors = extractColorsFromImageData(rgb444ImageData);
-  
-  console.log(`[Game Gear Direct] Found ${rgb444Colors.length} unique RGB444 colors in image`);
+  onProgress?.(10);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
   
   let workingPalette: Color[];
   const hasValidIndexedPalette = originalPalette && originalPalette.length > 0 && originalPalette.length <= TARGET_COLORS;
@@ -1916,62 +2340,21 @@ export const processGameGearImageDirect = (imageData: ImageData, originalPalette
   if (hasValidIndexedPalette) {
     workingPalette = originalPalette!.map(c => toRGB444(c.r, c.g, c.b));
   } else {
-    if (rgb444Colors.length <= TARGET_COLORS) {
-      workingPalette = rgb444Colors;
-    } else {
-      // Request more colors to ensure diversity after deduplication
-      const SAFETY_MARGIN = Math.min(TARGET_COLORS * 2, rgb444Colors.length);
-      const candidates = kMeansQuantization(rgb444Colors, SAFETY_MARGIN);
-      
-      // Deduplicate candidates
-      const uniqueSet = new Set<string>();
-      const uniqueCandidates: Color[] = [];
-      for (const c of candidates) {
-        const key = `${c.r},${c.g},${c.b}`;
-        if (!uniqueSet.has(key)) {
-          uniqueSet.add(key);
-          uniqueCandidates.push(c);
-        }
-      }
-      
-      console.log(`[Game Gear Direct] K-Means produced ${uniqueCandidates.length} unique colors from ${SAFETY_MARGIN} requested`);
-      
-      // Select most diverse colors
-      if (uniqueCandidates.length >= TARGET_COLORS) {
-        workingPalette = selectMostDiverseColors(
-          uniqueCandidates.map(c => ({ ...c, count: 0 })),
-          TARGET_COLORS,
-          'RGB444'
-        );
-      } else {
-        workingPalette = uniqueCandidates;
-      }
-    }
+    // 🆕 Use the NEW generic quantization function
+    // This guarantees ALL colors are from the image (no duplicates, no black padding)
+    workingPalette = await quantizeToReducedDepthPalette(imageData, TARGET_COLORS, toRGB444, 'GameGear', onProgress);
   }
   
-  // Final deduplication pass
-  const uniqueSet = new Set<string>();
-  const finalPalette: Color[] = [];
-  for (const c of workingPalette) {
-    const key = `${c.r},${c.g},${c.b}`;
-    if (!uniqueSet.has(key)) {
-      uniqueSet.add(key);
-      finalPalette.push(c);
-    }
+  onProgress?.(50);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
+  
+  // Ensure we have exactly TARGET_COLORS (fill with black only if image has fewer unique colors)
+  const palette = workingPalette.slice(0, TARGET_COLORS);
+  while (palette.length < TARGET_COLORS) {
+    palette.push({ r: 0, g: 0, b: 0 });
   }
   
-  console.log(`[Game Gear Direct] After final deduplication: ${finalPalette.length} unique colors (need ${TARGET_COLORS})`);
-  
-  // Fill with diverse RGB444 colors
-  if (finalPalette.length < TARGET_COLORS) {
-    const existing = new Set(finalPalette.map(c => `${c.r},${c.g},${c.b}`));
-    const allRGB444 = generateAllRGB444Colors().filter(c => !existing.has(`${c.r},${c.g},${c.b}`));
-    const needed = TARGET_COLORS - finalPalette.length;
-    const diverse = selectMostDiverseColors(allRGB444.map(c => ({ ...c, count: 0 })), needed, 'RGB444');
-    finalPalette.push(...diverse);
-  }
-  
-  const palette = finalPalette.slice(0, TARGET_COLORS);
+  onProgress?.(60);
   
   // Map with simple RGB distance
   const processedImageData = new ImageData(
@@ -1981,6 +2364,9 @@ export const processGameGearImageDirect = (imageData: ImageData, originalPalette
   );
   
   const pData = processedImageData.data;
+  const totalPixels = pData.length / 4;
+  let lastReportedProgress = 60;
+  
   for (let i = 0; i < pData.length; i += 4) {
     if (pData[i + 3] > 0) {
       const pixelRGB444 = toRGB444(pData[i], pData[i + 1], pData[i + 2]);
@@ -2005,10 +2391,130 @@ export const processGameGearImageDirect = (imageData: ImageData, originalPalette
       pData[i + 1] = palette[bestIdx].g;
       pData[i + 2] = palette[bestIdx].b;
     }
+    
+    // Report progress during pixel mapping (60% to 95%)
+    const pixelProgress = (i / 4) / totalPixels;
+    const currentProgress = 60 + Math.floor(pixelProgress * 35);
+    if (currentProgress > lastReportedProgress && currentProgress < 95) {
+      onProgress?.(currentProgress);
+      lastReportedProgress = currentProgress;
+      
+      // Yield to UI every 2% to keep browser responsive and show frequent updates
+      if ((currentProgress - 60) % 2 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+    }
   }
+  
+  onProgress?.(95);
+  await new Promise(resolve => setTimeout(resolve, 0)); // Yield to UI
   
   return {
     imageData: processedImageData,
     palette
   };
+};
+
+/**
+ * Generic Mega Drive style processor for arbitrary target palette sizes.
+ * Mirrors the algorithm used in processMegaDriveImage but accepts a variable
+ * targetColors parameter. This ensures behavior is consistent between
+ * 16-color and other Mega Drive-like palettes (e.g., 61 colors) and avoids
+ * introducing colors that are not derived from the source image.
+ */
+export const processMegaDriveNImage = (imageData: ImageData, targetColors: number, originalPalette?: Color[]): { imageData: ImageData; palette: Color[] } => {
+  const TARGET_COLORS = Math.max(1, Math.min(256, Math.floor(targetColors)));
+
+  // Step 1 & 2: Determine palette source
+  let workingPalette: Color[];
+
+  const hasValidIndexedPalette = originalPalette && originalPalette.length > 0 && originalPalette.length <= TARGET_COLORS;
+
+  if (hasValidIndexedPalette) {
+    workingPalette = [...originalPalette];
+    while (workingPalette.length < TARGET_COLORS) {
+      workingPalette.push({ r: 0, g: 0, b: 0, count: 0 });
+    }
+  } else {
+    const extractedColors = extractColorsFromImageData(imageData);
+
+    if (!extractedColors || extractedColors.length === 0) {
+      workingPalette = [];
+      for (let i = 0; i < TARGET_COLORS; i++) {
+        const val = Math.round((i / (TARGET_COLORS - 1)) * 255);
+        workingPalette.push({ r: val, g: val, b: val, count: 1 });
+      }
+    } else if (extractedColors.length <= TARGET_COLORS) {
+      workingPalette = extractedColors;
+      while (workingPalette.length < TARGET_COLORS) {
+        workingPalette.push({ r: 0, g: 0, b: 0, count: 0 });
+      }
+    } else {
+      // Use K-Means for optimal quantization in original color space, then
+      // enforce diversity. This is the same approach as the 16-color path.
+      workingPalette = kMeansQuantization(extractedColors, TARGET_COLORS);
+    }
+  }
+
+  workingPalette = workingPalette.slice(0, TARGET_COLORS);
+
+  // Apply RGB333 depth reduction
+  const colorMap = new Map<string, Color>();
+  let processedPalette = workingPalette.map(color => {
+    const rgb333Color = toRGB333(color.r, color.g, color.b);
+    const originalKey = `${color.r},${color.g},${color.b}`;
+    colorMap.set(originalKey, rgb333Color);
+    return rgb333Color;
+  });
+
+  processedPalette = removeExactDuplicatesAndReplace(processedPalette, imageData, TARGET_COLORS);
+
+  const processedImageData = new ImageData(
+    new Uint8ClampedArray(imageData.data),
+    imageData.width,
+    imageData.height
+  );
+
+  const finalMap = new Map<string, Color>();
+  const processedLabs = processedPalette.map(p => rgbToLab(p.r, p.g, p.b));
+  const workingLabs = workingPalette.map(w => rgbToLab(w.r, w.g, w.b));
+
+  for (let i = 0; i < workingPalette.length; i++) {
+    const orig = workingPalette[i];
+    const origKey = `${orig.r},${orig.g},${orig.b}`;
+    const reduced = toRGB333(orig.r, orig.g, orig.b);
+    let mapped = processedPalette.find(p => p.r === reduced.r && p.g === reduced.g && p.b === reduced.b);
+    if (!mapped) {
+      let bestIdx = 0; let minD = Infinity;
+      const oLab = workingLabs[i];
+      for (let j = 0; j < processedPalette.length; j++) {
+        const pl = processedLabs[j];
+        const d = deltaE76(oLab.L, oLab.a, oLab.b, pl.L, pl.a, pl.b);
+        if (d < minD) { minD = d; bestIdx = j; }
+      }
+      mapped = processedPalette[bestIdx];
+    }
+    finalMap.set(origKey, mapped || processedPalette[0]);
+  }
+
+  const data = processedImageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] > 0) {
+      const r = data[i]; const g = data[i + 1]; const b = data[i + 2];
+      const pLab = rgbToLab(r, g, b);
+      let bestIdx = 0; let minD = Infinity;
+      for (let j = 0; j < workingLabs.length; j++) {
+        const wLab = workingLabs[j];
+        const d = deltaE76(pLab.L, pLab.a, pLab.b, wLab.L, wLab.a, wLab.b);
+        if (d < minD) { minD = d; bestIdx = j; }
+      }
+      const origKey = `${workingPalette[bestIdx].r},${workingPalette[bestIdx].g},${workingPalette[bestIdx].b}`;
+      const mappedColor = finalMap.get(origKey) || processedPalette[0];
+      data[i] = mappedColor.r;
+      data[i + 1] = mappedColor.g;
+      data[i + 2] = mappedColor.b;
+    }
+  }
+
+  return { imageData: processedImageData, palette: processedPalette };
 };

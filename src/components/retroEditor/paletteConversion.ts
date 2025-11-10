@@ -1,4 +1,4 @@
-import { type Color, processMegaDriveImageDirect, processMasterSystemImageDirect, processGameGearImageDirect, buildRetroConsolePaletteBruteForce } from '@/lib/colorQuantization';
+import { type Color, processMegaDriveImageDirect, processMegaDriveImageDirectN, processMegaDriveNImage, processMasterSystemImageDirect, processGameGearImageDirect, buildRetroConsolePaletteBruteForce } from '@/lib/colorQuantization';
 import { type PaletteType } from '@/components/tabMenus/ChangePalette';
 import FIXED_PALETTES from '@/lib/fixedPalettes';
 import { applyFixedPalette } from './processing';
@@ -10,7 +10,7 @@ import type { EditorRefs } from './useRetroEditorState';
  * 
  * This function handles all palette conversion logic including:
  * - Game Boy variants (gameboy, gameboyBg, gameboyRealistic)
- * - Retro consoles (megadrive, gameGear, masterSystem)
+ * - Retro consoles (megaDrive16, gameGear, masterSystem)
  * - Fixed canonical palettes (CGA, NES, C64, Spectrum, etc.)
  * - Original palette preservation
  * 
@@ -156,40 +156,50 @@ export async function applyPaletteConversion(
       return resultImageData;
     }
 
-    case 'megadrive': {
+    case 'megaDrive16': {
+      // Scope paletteToUse outside the try so the fallback/catch block can
+      // reference it if needed. This prevents a TS "Cannot find name" error
+      // when the try block defines it with `const` but the catch needs it.
+      let paletteToUse: Color[] | undefined;
       try {
-        console.log('[MegaDrive] START - pendingConverted:', editorRefs.pendingConvertedPaletteRef.current?.length || 0);
         // If we have a preserved-order palette (from switching from original indexed),
         // apply it directly without recalculating/merging. This becomes the processed palette.
         if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
-          console.log('[MegaDrive] Using CACHED pending palette');
           const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
-          const applied = await imageProcessor.applyPalette(
-            resultImageData,
-            preserved as any,
-            (progress: number) => setProcessingProgress(progress)
-          );
-          if (!editorRefs.manualPaletteOverrideRef.current) {
-            writeOrderedPalette(preserved, 'applyPaletteConversion-mega-preserved');
+          if (preserved.length <= 16) {
+            const applied = await imageProcessor.applyPalette(
+              resultImageData,
+              preserved as any,
+              (progress: number) => setProcessingProgress(progress)
+            );
+            if (!editorRefs.manualPaletteOverrideRef.current) {
+              writeOrderedPalette(preserved, 'applyPaletteConversion-mega16-preserved');
+            }
+            editorRefs.pendingConvertedPaletteRef.current = null;
+            // Prevent any subsequent automatic processing pass from overwriting
+            // the preserved-order palette; this fulfills the strict requirement
+            // to keep order/count exactly as in the original palette.
+            editorRefs.manualPaletteOverrideRef.current = true;
+            return applied;
           }
-          editorRefs.pendingConvertedPaletteRef.current = null;
-          // Prevent any subsequent automatic processing pass from overwriting
-          // the preserved-order palette; this fulfills the strict requirement
-          // to keep order/count exactly as in the original palette.
-          editorRefs.manualPaletteOverrideRef.current = true;
-          return applied;
+          // If preserved palette is larger than 16, fall through to processing
         }
         // Pass originalPaletteColors ONLY if it's truly an indexed palette
         // This allows the algorithm to preserve indexed palettes while still
         // quantizing RGB images properly. Never pass as fallback to customColors.
-        const paletteToUse = (originalPaletteColors && originalPaletteColors.length > 0 && originalPaletteColors.length <= 16)
+        paletteToUse = (originalPaletteColors && originalPaletteColors.length > 0 && originalPaletteColors.length <= 16)
           ? originalPaletteColors
           : undefined;
 
-        console.log('[MegaDrive] originalPaletteColors:', originalPaletteColors?.length, 'paletteToUse:', paletteToUse ? 'indexed' : 'direct');
+        // Set initial progress
+        setProcessingProgress(0);
 
-        // Use direct processing function instead of brute-force
-        const megaDriveResult = processMegaDriveImageDirect(resultImageData, paletteToUse);
+        // Use direct processing function (RGB333 quantization algorithm)
+        const megaDriveResult = await processMegaDriveImageDirect(
+          resultImageData, 
+          paletteToUse,
+          (progress: number) => setProcessingProgress(progress)
+        );
         
         if (!editorRefs.manualPaletteOverrideRef.current) {
           const resultPalette = megaDriveResult.palette.map(({ r, g, b }) => ({ r, g, b }));
@@ -199,43 +209,142 @@ export async function applyPaletteConversion(
               resultPalette,
               16
             );
-            writeOrderedPalette(merged, 'applyPaletteConversion-mega-merged');
+            writeOrderedPalette(merged, 'applyPaletteConversion-mega16-merged');
             editorRefs.pendingConvertedPaletteRef.current = null;
           } else {
-            writeOrderedPalette(resultPalette, 'applyPaletteConversion-mega');
+            writeOrderedPalette(resultPalette, 'applyPaletteConversion-mega16');
           }
         }
         // Report 100% after palette UI update completes
         setProcessingProgress(100);
         return megaDriveResult.imageData;
       } catch (error) {
-        console.error('Mega Drive processing error:', error);
+        console.error('Mega Drive (16) processing error:', error);
         // If worker path fails and we still have a preserved palette, use it directly
         if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
-          try {
-            const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
-            const applied = await imageProcessor.applyPalette(resultImageData, preserved as any);
-            if (!editorRefs.manualPaletteOverrideRef.current) {
-              writeOrderedPalette(preserved, 'applyPaletteConversion-mega-preserved-fallback');
+          const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
+          if (preserved.length <= 16) {
+            try {
+              const applied = await imageProcessor.applyPalette(resultImageData, preserved as any);
+              if (!editorRefs.manualPaletteOverrideRef.current) {
+                writeOrderedPalette(preserved, 'applyPaletteConversion-mega16-preserved-fallback');
+              }
+              editorRefs.pendingConvertedPaletteRef.current = null;
+              editorRefs.manualPaletteOverrideRef.current = true;
+              return applied;
+            } catch (e2) {
+              /* continue to library fallback */
             }
-            editorRefs.pendingConvertedPaletteRef.current = null;
-            editorRefs.manualPaletteOverrideRef.current = true;
-            return applied;
-          } catch (e2) {
-            /* continue to library fallback */
           }
         }
+        // Fallback uses same RGB333 algorithm
+        setProcessingProgress(0);
+        const fallback = await processMegaDriveImageDirectN(
+          resultImageData, 
+          61, 
+          paletteToUse,
+          (progress: number) => setProcessingProgress(progress)
+        );
+        if (!editorRefs.manualPaletteOverrideRef.current) {
+          const resultPalette = fallback.palette.map(({ r, g, b }) => ({ r, g, b }));
+          writeOrderedPalette(resultPalette, 'applyPaletteConversion-mega16-fallback');
+        }
+        return fallback.imageData;
+      }
+    }
+
+    case 'megaDrive61': {
+      // Scope paletteToUse outside the try so the fallback/catch block can
+      // reference it if needed. This prevents a TS "Cannot find name" error
+      // when the try block defines it with `const` but the catch needs it.
+      let paletteToUse: Color[] | undefined;
+      try {
+        // If we have a preserved-order palette (from switching from original indexed),
+        // apply it directly without recalculating/merging. This becomes the processed palette.
+        if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
+          const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
+          if (preserved.length <= 61) {
+            const applied = await imageProcessor.applyPalette(
+              resultImageData,
+              preserved as any,
+              (progress: number) => setProcessingProgress(progress)
+            );
+            if (!editorRefs.manualPaletteOverrideRef.current) {
+              writeOrderedPalette(preserved, 'applyPaletteConversion-mega61-preserved');
+            }
+            editorRefs.pendingConvertedPaletteRef.current = null;
+            // Prevent any subsequent automatic processing pass from overwriting
+            // the preserved-order palette; this fulfills the strict requirement
+            // to keep order/count exactly as in the original palette.
+            editorRefs.manualPaletteOverrideRef.current = true;
+            return applied;
+          }
+          // If preserved palette is larger than 61, fall through to processing
+        }
         // Pass originalPaletteColors ONLY if it's truly an indexed palette
-        const paletteToUseFallback = (originalPaletteColors && originalPaletteColors.length > 0 && originalPaletteColors.length <= 16)
+        // This allows the algorithm to preserve indexed palettes while still
+        // quantizing RGB images properly. Never pass as fallback to customColors.
+        paletteToUse = (originalPaletteColors && originalPaletteColors.length > 0 && originalPaletteColors.length <= 61)
           ? originalPaletteColors
           : undefined;
 
-        const fallback = !paletteToUseFallback
-          ? await buildRetroConsolePaletteBruteForce(resultImageData, 16, 'RGB333', setProcessingProgress)
-          : processMegaDriveImageDirect(resultImageData, paletteToUseFallback);
+        // Set initial progress
+        setProcessingProgress(0);
+
+        // Use same RGB333 quantization algorithm as megaDrive16 but with 61 colors
+        const megaDriveResult = await processMegaDriveImageDirectN(
+          resultImageData, 
+          61, 
+          paletteToUse,
+          (progress: number) => setProcessingProgress(progress)
+        );
+        
+        if (!editorRefs.manualPaletteOverrideRef.current) {
+          const resultPalette = megaDriveResult.palette.map(({ r, g, b }) => ({ r, g, b }));
+          if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
+            const merged = mergePreservePalette(
+              editorRefs.pendingConvertedPaletteRef.current,
+              resultPalette,
+              61
+            );
+            writeOrderedPalette(merged, 'applyPaletteConversion-mega61-merged');
+            editorRefs.pendingConvertedPaletteRef.current = null;
+          } else {
+            writeOrderedPalette(resultPalette, 'applyPaletteConversion-mega61');
+          }
+        }
+        // Report 100% after palette UI update completes
+        setProcessingProgress(100);
+        return megaDriveResult.imageData;
+      } catch (error) {
+        console.error('Mega Drive (61) processing error:', error);
+        // If worker path fails and we still have a preserved palette, use it directly
+        if (editorRefs.pendingConvertedPaletteRef.current && editorRefs.pendingConvertedPaletteRef.current.length > 0) {
+          const preserved = editorRefs.pendingConvertedPaletteRef.current.slice();
+          if (preserved.length <= 61) {
+            try {
+              const applied = await imageProcessor.applyPalette(resultImageData, preserved as any);
+              if (!editorRefs.manualPaletteOverrideRef.current) {
+                writeOrderedPalette(preserved, 'applyPaletteConversion-mega61-preserved-fallback');
+              }
+              editorRefs.pendingConvertedPaletteRef.current = null;
+              editorRefs.manualPaletteOverrideRef.current = true;
+              return applied;
+            } catch (e2) {
+              /* continue to library fallback */
+            }
+          }
+        }
+        // Pass originalPaletteColors ONLY if it's truly an indexed palette
+        setProcessingProgress(0);
+        const fallback = processMegaDriveNImage(
+          resultImageData, 
+          61, 
+          paletteToUse
+        );
         if (!editorRefs.manualPaletteOverrideRef.current) {
           const resultPalette = fallback.palette.map(({ r, g, b }) => ({ r, g, b }));
-          writeOrderedPalette(resultPalette, 'applyPaletteConversion-mega-fallback');
+          writeOrderedPalette(resultPalette, 'applyPaletteConversion-mega61-fallback');
         }
         return fallback.imageData;
       }
@@ -264,8 +373,15 @@ export async function applyPaletteConversion(
           ? originalPaletteColors
           : undefined;
 
+        // Set initial progress
+        setProcessingProgress(0);
+
         // Use direct processing function instead of brute-force
-        const ggResult: any = processGameGearImageDirect(resultImageData, paletteToUseGG);
+        const ggResult: any = await processGameGearImageDirect(
+          resultImageData, 
+          paletteToUseGG,
+          (progress: number) => setProcessingProgress(progress)
+        );
         
         if (!editorRefs.manualPaletteOverrideRef.current) {
           const resultPalette = ggResult.palette.map(({ r, g, b }: any) => ({ r, g, b }));
@@ -310,8 +426,15 @@ export async function applyPaletteConversion(
           ? originalPaletteColors
           : undefined;
 
+        // Set initial progress
+        setProcessingProgress(0);
+
         // Use direct processing function instead of brute-force for RGB images
-        const msResult: any = processMasterSystemImageDirect(resultImageData, paletteToUseMS);
+        const msResult: any = await processMasterSystemImageDirect(
+          resultImageData, 
+          paletteToUseMS,
+          (progress: number) => setProcessingProgress(progress)
+        );
         
         if (!editorRefs.manualPaletteOverrideRef.current) {
           const resultPalette = msResult.palette.map(({ r, g, b }: any) => ({ r, g, b }));

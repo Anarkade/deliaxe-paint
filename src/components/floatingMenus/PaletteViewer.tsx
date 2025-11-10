@@ -268,8 +268,8 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
   const openEditor = (index: number, currentPalette: PaletteType) => {
     // Prefer an explicit paletteDepth prop (provided by parent for original/processed views),
-    // otherwise fall back to palette-specific defaults (megadrive -> 3-3-3, else 8-8-8).
-    const depth = paletteDepth ?? (currentPalette === 'megadrive' ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 });
+    // otherwise fall back to palette-specific defaults (megaDrive16 -> 3-3-3, else 8-8-8).
+  const depth = paletteDepth ?? ((currentPalette === 'megaDrive16' || currentPalette === 'megaDrive61') ? { r: 3, g: 3, b: 3 } : { r: 8, g: 8, b: 8 });
 
   // First open the editor without position to measure its height
   setEditorState({ open: true, index, depth, position: undefined, fixed: toolbarMode ? true : undefined });

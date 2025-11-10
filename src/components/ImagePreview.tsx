@@ -1460,7 +1460,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     const d = showOriginal ? paletteDepthOriginal : paletteDepthProcessed;
     if (d) return d;
     // Fallbacks by palette type
-    if (selectedPalette === 'megadrive') return { r: 3, g: 3, b: 3 } as const;
+  if (selectedPalette === 'megaDrive16' || selectedPalette === 'megaDrive61') return { r: 3, g: 3, b: 3 } as const;
     return { r: 8, g: 8, b: 8 } as const;
   })();
 

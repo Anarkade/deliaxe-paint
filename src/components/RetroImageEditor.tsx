@@ -74,7 +74,7 @@ export const RetroImageEditor = () => {
   // - ORIGINAL palette should remain 8-8-8 (do not mutate or relabel it)
   // - PROCESSED palette reflects the selected target palette depth
   useEffect(() => {
-    const processedDepth = selectedPalette === 'megadrive'
+  const processedDepth = (selectedPalette === 'megaDrive16' || selectedPalette === 'megaDrive61')
       ? { r: 3, g: 3, b: 3 }
       : selectedPalette === 'gameGear'
         ? { r: 4, g: 4, b: 4 }
@@ -108,7 +108,6 @@ export const RetroImageEditor = () => {
 
   // Wrapper for writeOrderedPalette
   const writeOrderedPalette = useCallback((colors: Color[], source: string) => {
-    console.log(`[writeOrderedPalette] source=${source}, colors.length=${colors.length}, palette preview:`, colors.slice(0, 5));
     writeOrderedPaletteImpl(colors, source, {
       editorRefs: {
         manualPaletteOverrideRef: editorRefs.manualPaletteOverrideRef,
@@ -130,6 +129,7 @@ export const RetroImageEditor = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [processingOperation, setProcessingOperation] = useState<string>('');
+  const processingOperationRef = useRef<string>(''); // Preserve operation name for final toast
   // Limit progress toast to explicit user actions: palette/resolution changes via menus
   const processingContextRef = useRef<null | 'palette' | 'resolution'>(null);
   
@@ -443,6 +443,36 @@ export const RetroImageEditor = () => {
   const isCompletingRef = useRef(false);
   // Incrementing run id to guard against stale completion timers from previous runs
   const toastRunIdRef = useRef(0);
+  const lastProcessingContextRef = useRef<string | null>(null);
+  
+  // IMMEDIATELY create toast when processing context is set (palette/resolution change)
+  // This ensures the toast appears right away, before any async processing starts
+  useEffect(() => {
+    const currentContext = processingContextRef.current;
+    
+    // Only create initial toast for palette/resolution changes
+    if ((currentContext === 'palette' || currentContext === 'resolution') && 
+        currentContext !== lastProcessingContextRef.current &&
+        !progressToastIdRef.current &&
+        !isCompletingRef.current &&
+        processingOperation) { // Wait until we have the operation name
+      
+      lastProcessingContextRef.current = currentContext;
+      
+      // Save operation name to ref so it persists even after state is cleared
+      processingOperationRef.current = processingOperation;
+      
+      // Create toast immediately with 0% and "procesado" text
+      const progressText = t('percentProcessed').replace('{count}', '0');
+      const initialMessage = `${processingOperation} - ${progressText}`;
+      
+      toastRunIdRef.current += 1;
+      progressToastIdRef.current = toast({
+        title: initialMessage,
+        duration: Infinity,
+      });
+    }
+  });
   
   useEffect(() => {
     // Only show progress toast for palette/resolution changes explicitly initiated from menus
@@ -455,8 +485,10 @@ export const RetroImageEditor = () => {
       const thisRunId = toastRunIdRef.current;
       
       const finalText = t('percentProcessed').replace('{count}', '100');
-      const fullMessage = processingOperation 
-        ? `${processingOperation} - ${finalText}`
+      // Use the ref value which persists even after state is cleared
+      const operationName = processingOperationRef.current || processingOperation;
+      const fullMessage = operationName 
+        ? `${operationName} - ${finalText}`
         : finalText;
       
       progressToastIdRef.current.update({
@@ -469,6 +501,8 @@ export const RetroImageEditor = () => {
         if (toastRunIdRef.current === thisRunId) {
           progressToastIdRef.current = null;
           isCompletingRef.current = false;
+          lastProcessingContextRef.current = null;
+          processingOperationRef.current = ''; // Clear the ref too
           // Clear context after a completed, toast-managed run
           processingContextRef.current = null;
         }
@@ -481,32 +515,31 @@ export const RetroImageEditor = () => {
     
     // Processing active - show or update toast
     if (isProcessing) {
-      if (processingProgress > 0) {
-        const progressText = t('percentProcessed').replace('{count}', Math.round(processingProgress).toString());
-        const fullMessage = processingOperation 
-          ? `${processingOperation} - ${progressText}`
-          : progressText;
-        
-        if (progressToastIdRef.current) {
-          // Update existing toast
-          progressToastIdRef.current.update({
-            title: fullMessage,
-            duration: Infinity,
-          });
-        } else {
-          // Create new toast
-          toastRunIdRef.current += 1;
-          progressToastIdRef.current = toast({
-            title: fullMessage,
-            duration: Infinity,
-          });
-        }
-      } else if (!progressToastIdRef.current) {
-        // Processing started but no progress yet
-        const initialMessage = processingOperation || 'Processing...';
+      // Save operation name to ref whenever we update (in case state gets cleared)
+      if (processingOperation) {
+        processingOperationRef.current = processingOperation;
+      }
+      
+      const progressText = processingProgress > 0
+        ? t('percentProcessed').replace('{count}', Math.round(processingProgress).toString())
+        : t('percentProcessed').replace('{count}', '0');
+      // Use ref if state is empty (fallback)
+      const operationName = processingOperation || processingOperationRef.current;
+      const fullMessage = operationName 
+        ? `${operationName} - ${progressText}`
+        : progressText;
+      
+      if (progressToastIdRef.current) {
+        // Update existing toast
+        progressToastIdRef.current.update({
+          title: fullMessage,
+          duration: Infinity,
+        });
+      } else {
+        // Create new toast - ALWAYS create when isProcessing is true, even at 0%
         toastRunIdRef.current += 1;
         progressToastIdRef.current = toast({
-          title: initialMessage,
+          title: fullMessage,
           duration: Infinity,
         });
       }
@@ -1081,8 +1114,8 @@ export const RetroImageEditor = () => {
                     forceUseOriginalRef.current = true;
                     // Update explicit per-view paletteDepth for known retro palettes
                     // so the PaletteViewer can display an accurate detailedCountLabel.
-                    // For example, 'megadrive' uses RGB 3-3-3 quantization.
-                    const depth = palette === 'megadrive' ? { r: 3, g: 3, b: 3 }
+                    // For example, 'megaDrive16' and 'megaDrive61' use RGB 3-3-3 quantization.
+                    const depth = (palette === 'megaDrive16' || palette === 'megaDrive61') ? { r: 3, g: 3, b: 3 }
                       : palette === 'gameGear' ? { r: 4, g: 4, b: 4 }
                       : palette === 'masterSystem' ? { r: 2, g: 2, b: 2 }
                       : { r: 8, g: 8, b: 8 };
@@ -1099,14 +1132,14 @@ export const RetroImageEditor = () => {
                         // supports (e.g., 35 colors for MegaDrive which only supports 16), then
                         // skip this pre-calculation and let applyPaletteConversion use brute-force
                         // diversity selection instead.
-                        const isRetroFreePalette = (palette === 'megadrive' || palette === 'masterSystem' || palette === 'gameGear');
-                        const targetLen = (palette === 'megadrive' || palette === 'masterSystem') ? 16
-                          : (palette === 'gameGear' ? 32 : 256);
+                        const isRetroFreePalette = (palette === 'megaDrive16' || palette === 'megaDrive61' || palette === 'masterSystem' || palette === 'gameGear');
+                        let targetLen = 256;
+                        if (palette === 'megaDrive16' || palette === 'masterSystem') targetLen = 16;
+                        else if (palette === 'gameGear') targetLen = 32;
+                        else if (palette === 'megaDrive61') targetLen = 61;
                         const canPreserveOrder = editorState.isOriginalPNG8Indexed 
                           && editorState.originalPaletteColors.length > 0 
                           && editorState.originalPaletteColors.length <= targetLen;
-                        
-                        console.log(`[ChangePalette] palette=${palette}, isRetroFreePalette=${isRetroFreePalette}, canPreserveOrder=${canPreserveOrder}, isOriginalPNG8Indexed=${editorState.isOriginalPNG8Indexed}, originalPaletteColors.length=${editorState.originalPaletteColors.length}, orderedPaletteColors.length=${editorState.orderedPaletteColors.length}`);
                         
                         if (isRetroFreePalette && canPreserveOrder) {
                           const bitsR = depth.r || 8;
@@ -1129,7 +1162,6 @@ export const RetroImageEditor = () => {
                           // while brute-force is processing. Let brute-force complete and write the
                           // final palette when processing finishes. The useEffect will trigger
                           // processing automatically when selectedPalette changes.
-                          console.log(`[ChangePalette] Original has ${editorState.originalPaletteColors.length} colors > ${targetLen}, will use brute-force diversity`);
                           editorRefs.pendingConvertedPaletteRef.current = null;
                           // Clear palette to avoid showing previous/placeholder colors
                           writeOrderedPalette([], 'selectedPalette-brute-force-pending');
@@ -1159,7 +1191,7 @@ export const RetroImageEditor = () => {
                                 b: quantizeChannelToBits(c.b, bitsB2)
                               } as Color));
                               let targetLen = quantizedPrev.length;
-                              if (palette === 'megadrive' || palette === 'masterSystem') targetLen = 16;
+                              if (palette === 'megaDrive16' || palette === 'masterSystem') targetLen = 16;
                               else if (palette === 'gameGear') targetLen = 32;
                               let final = quantizedPrev.slice(0, targetLen);
                               while (final.length < targetLen) final.push({ r: 0, g: 0, b: 0 } as Color);

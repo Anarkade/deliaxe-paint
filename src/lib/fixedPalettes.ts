@@ -1,6 +1,6 @@
 // Centralized canonical fixed palettes shared across the app.
 // This file intentionally excludes palettes that should preserve ordered
-// user palettes (e.g., megadrive, gameGear, masterSystem) and includes
+// user palettes (e.g., megaDrive16, gameGear, masterSystem) and includes
 // Game Boy variants as fixed palettes.
 export const FIXED_PALETTES: Record<string, number[][]> = {
   cga0: [ [0,0,0], [255,85,255], [85,255,255], [255,255,255] ],
