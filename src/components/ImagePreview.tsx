@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
+import { DISPLAY_ASPECT_RATIOS } from './tabMenus/ChangeDisplayAspectRatio';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -113,6 +114,8 @@ const analyzeImageDataFormat = (imageData: ImageData, t: (key: string) => string
 interface ImagePreviewProps {
   originalImage: HTMLImageElement | null;
   processedImageData: ImageData | null;
+  processedAspectRatio?: import('./tabMenus/ChangeDisplayAspectRatio').DisplayAspectRatioOption;
+  originalAspectRatio?: import('./tabMenus/ChangeDisplayAspectRatio').DisplayAspectRatioOption;
   onDownload?: () => void;
   onLoadImageClick?: (source: File | string) => void;
   originalImageSource?: File | string; // Add source for PNG analysis
@@ -154,6 +157,8 @@ export type ImagePreviewHandle = {
 export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({ 
   originalImage, 
   processedImageData, 
+  processedAspectRatio = 'original',
+  originalAspectRatio = 'original',
   onDownload, 
   onLoadImageClick, 
   originalImageSource, 
@@ -1320,22 +1325,34 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       drawImageIfReady(originalImage);
     } else if (processedImageData) {
       const bmp = processedBitmapRef.current;
+      // Aspect ratio simulation: mantener ancho, modificar altura visual
+      const originalAspect = processedImageData.width / processedImageData.height;
+      const targetAspect = processedAspectRatio === 'original'
+        ? originalAspect
+        : (typeof DISPLAY_ASPECT_RATIOS[processedAspectRatio] === 'number'
+            ? DISPLAY_ASPECT_RATIOS[processedAspectRatio]
+            : originalAspect);
+      let targetWidth = processedImageData.width;
+      let targetHeight = processedImageData.height;
+      if (targetAspect !== originalAspect) {
+        // Mantener ancho, modificar altura para simular aspect ratio
+        targetHeight = Math.round(targetWidth / targetAspect);
+      }
       if (bmp) {
-        canvas.width = (bmp as any).width ?? processedImageData.width;
-        canvas.height = (bmp as any).height ?? processedImageData.height;
-        // Prefer GPU-accelerated drawImage path for large images
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(bmp as any, 0, 0);
+        ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, 0, 0, targetWidth, targetHeight);
       } else {
-        // Fallback while bitmap is being prepared
-        canvas.width = processedImageData.width;
-        canvas.height = processedImageData.height;
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        // putImageData no escala, así que solo se verá bien si aspect ratio = original
         ctx.putImageData(processedImageData, 0, 0);
       }
     } else if (originalImage) {
       drawImageIfReady(originalImage);
     }
-  }, [originalImage, processedImageData, showOriginal, processedBitmapVersion]);
+  }, [originalImage, processedImageData, showOriginal, processedBitmapVersion, processedAspectRatio]);
 
   // Cleanup bitmap on unmount
   useEffect(() => {
@@ -1423,10 +1440,35 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   // immediately when the zoom slider changes. We compute it later once
   // displayedWidth/currentDisplayedImage are available.
 
+  // Compute aspect ratio multiplier
+  const aspectRatioValue = (() => {
+    if (showOriginal) {
+      if (originalAspectRatio === 'original') return 1;
+      return typeof DISPLAY_ASPECT_RATIOS[originalAspectRatio] === 'number' ? DISPLAY_ASPECT_RATIOS[originalAspectRatio] : 1;
+    } else {
+      if (processedAspectRatio === 'original') return 1;
+      return typeof DISPLAY_ASPECT_RATIOS[processedAspectRatio] === 'number' ? DISPLAY_ASPECT_RATIOS[processedAspectRatio] : 1;
+    }
+  })();
+
   // Compute wrapper size based on the image currently displayed (processed or original)
-  const currentDisplayedImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
-  const displayedWidth = currentDisplayedImage ? currentDisplayedImage.width * (zoom[0] / 100) : 0;
-  const displayedHeight = currentDisplayedImage ? currentDisplayedImage.height * (zoom[0] / 100) : 0;
+  let currentDisplayedImage = showOriginal ? originalImage : (processedImageData ? { width: processedImageData.width, height: processedImageData.height } : originalImage);
+  let displayedWidth = currentDisplayedImage ? currentDisplayedImage.width * (zoom[0] / 100) : 0;
+  let displayedHeight = currentDisplayedImage ? currentDisplayedImage.height * (zoom[0] / 100) : 0;
+
+  // Si estamos mostrando la imagen procesada y el aspect ratio es distinto, ajusta la altura visual
+  if (!showOriginal && processedImageData) {
+    const originalAspect = processedImageData.width / processedImageData.height;
+    const targetAspect = processedAspectRatio === 'original'
+      ? originalAspect
+      : (typeof DISPLAY_ASPECT_RATIOS[processedAspectRatio] === 'number'
+          ? DISPLAY_ASPECT_RATIOS[processedAspectRatio]
+          : originalAspect);
+    if (targetAspect !== originalAspect) {
+      // Mantener el ancho, modificar la altura visual
+      displayedHeight = displayedWidth / targetAspect;
+    }
+  }
 
   // Determine final rendered size of one image pixel in CSS pixels.
   // Prefer an exact ratio using displayedWidth/current image width so that
@@ -1576,7 +1618,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
     style={
       showCameraPreview
         ? { display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minWidth: 0, ...containerStyle }
-        : { height: previewHeight ? `${previewHeight}px` : undefined, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minWidth: 0, ...containerStyle }
+        : { height: `${displayedHeight}px`, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', minWidth: 0, ...containerStyle }
     }
   >
         {originalImage ? (

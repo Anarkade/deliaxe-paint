@@ -26,7 +26,7 @@ import { useCanvasPool } from '@/utils/canvasPool';
 import { imageProcessingCache, hashImage, hashImageData } from '@/utils/imageCache';
 import { ChangeGridSelector } from '@/components/tabMenus/ChangeGridSelector';
 import { ChangeImageResolution, ResolutionType, CombinedScalingMode } from '@/components/tabMenus/ChangeImageResolution';
-import { ChangeDisplayAspectRatio } from '@/components/tabMenus/ChangeDisplayAspectRatio';
+import { ChangeDisplayAspectRatio, DISPLAY_ASPECT_RATIOS, DisplayAspectRatioOption } from '@/components/tabMenus/ChangeDisplayAspectRatio';
 // DevQuantization removed
 // Performance constants - Optimized for large image handling
 const MAX_IMAGE_SIZE = 4096; // Maximum input image dimension to prevent memory issues
@@ -44,6 +44,9 @@ import type { HistoryState } from './retroEditor/useHistory';
 
 export const RetroImageEditor = () => {
   // UI state variables
+  // Aspect ratio state: processed and original
+  const [processedAspectRatio, setProcessedAspectRatio] = useState<DisplayAspectRatioOption>('original');
+  const [originalAspectRatio, setOriginalAspectRatio] = useState<DisplayAspectRatioOption>('original');
   const [currentZoom, setCurrentZoom] = useState(100);
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
   const [showCameraPreview, setShowCameraPreview] = useState(false);
@@ -191,9 +194,13 @@ export const RetroImageEditor = () => {
     setScalingMode('scale-to-fit-width');
     setAutoFitKey(undefined);
 
-    // Reset camera & preview state
-    setShowCameraPreview(false);
-    setSelectedCameraId(null);
+  // Reset camera & preview state
+  setShowCameraPreview(false);
+  setSelectedCameraId(null);
+
+  // Reset aspect ratios
+  setProcessedAspectRatio('original');
+  setOriginalAspectRatio('original');
 
     // Reset processing state and progress
     setIsProcessing(false);
@@ -311,6 +318,9 @@ export const RetroImageEditor = () => {
   // Optimized image loading with memory management and performance monitoring
   // Wrapper for loadImage that provides all dependencies
   const loadImage = useCallback(async (source: File | string) => {
+    // Reset aspect ratios on new image load
+    setProcessedAspectRatio('original');
+    setOriginalAspectRatio('original');
     await loadImageImpl(source, {
       editorActions,
       writeOrderedPalette,
@@ -990,6 +1000,8 @@ export const RetroImageEditor = () => {
               ref={imagePreviewRef}
               originalImage={originalImage}
               processedImageData={processedImageData}
+              processedAspectRatio={processedAspectRatio}
+              originalAspectRatio={originalAspectRatio}
               onDownload={downloadImage}
               onLoadImageClick={loadImage}
               originalImageSource={originalImageSource}
@@ -1219,7 +1231,11 @@ export const RetroImageEditor = () => {
                 className={`absolute inset-0 z-50 bg-card border border-elegant-border rounded-none shadow-none m-0 p-0 overflow-auto`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <ChangeDisplayAspectRatio onClose={() => setActiveTab(null)} />
+                <ChangeDisplayAspectRatio
+                  onClose={() => setActiveTab(null)}
+                  value={processedAspectRatio}
+                  onChange={(ar) => setProcessedAspectRatio(ar)}
+                />
               </div>
             )}
 

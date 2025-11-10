@@ -5,11 +5,25 @@ import { Label } from '@/components/ui/label';
 import { Ratio, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
+
+export type DisplayAspectRatioOption = 'original' | 'ar32' | 'ar43' | 'ar4339' | 'ar479455' | 'ar9183';
+export const DISPLAY_ASPECT_RATIOS: Record<DisplayAspectRatioOption, number | 'original'> = {
+  original: 'original',
+  ar32: 3 / 2,
+  ar43: 4 / 3,
+  ar4339: 43 / 39,
+  ar479455: 479 / 455,
+  ar9183: 91 / 83,
+};
+
 interface ChangeDisplayAspectRatioProps {
   onClose?: () => void;
+  value?: DisplayAspectRatioOption;
+  onChange?: (value: DisplayAspectRatioOption) => void;
 }
 
-export const ChangeDisplayAspectRatio = ({ onClose }: ChangeDisplayAspectRatioProps) => {
+
+export const ChangeDisplayAspectRatio = ({ onClose, value = 'original', onChange }: ChangeDisplayAspectRatioProps) => {
   const { t } = useTranslation();
 
   const options = [
@@ -43,8 +57,7 @@ export const ChangeDisplayAspectRatio = ({ onClose }: ChangeDisplayAspectRatioPr
           <p className="text-sm text-muted-foreground pt-2 pb-2 text-left">{t('ChangeAspectRatioDesc')}</p>
         </div>
         <div className="border-t border-elegant-border my-4" />
-        {/* Uncontrolled radio group. Placeholder: selection does nothing for now. */}
-        <RadioGroup defaultValue="original" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3 pt-5">
+        <RadioGroup value={value} onValueChange={onChange} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-3 pt-5">
           {options.map((opt) => (
             <div key={opt.value} className="flex space-x-1 min-h-[2.5rem]">
               <RadioGroupItem value={opt.value} id={`ar-${opt.value}`} className="h-3 w-3 mt-1 flex-shrink-0" />
