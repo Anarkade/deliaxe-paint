@@ -2270,7 +2270,7 @@ export const processMasterSystemImageDirect = async (
   
   const pData = processedImageData.data;
   const totalPixels = pData.length / 4;
-  let lastReported = 0;
+  let lastReportedProgress = 60;
   
   for (let i = 0; i < pData.length; i += 4) {
     if (pData[i + 3] > 0) {

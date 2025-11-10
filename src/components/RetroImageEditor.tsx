@@ -479,7 +479,7 @@ export const RetroImageEditor = () => {
     if (processingContextRef.current !== 'palette' && processingContextRef.current !== 'resolution') {
       return;
     }
-    // Processing complete - show 100% with operation message and auto-dismiss
+    // Processing complete - show 100% for 1 second then dismiss
     if (processingProgress >= 100 && progressToastIdRef.current && !isCompletingRef.current) {
       isCompletingRef.current = true;
       const thisRunId = toastRunIdRef.current;
@@ -493,10 +493,10 @@ export const RetroImageEditor = () => {
       
       progressToastIdRef.current.update({
         title: fullMessage,
-        duration: 1500,
+        duration: 1000, // Show for 1 second
       });
       
-      // Clear refs after toast dismisses. Guard against clearing a new run's toast.
+      // Clear refs after toast dismisses
       setTimeout(() => {
         if (toastRunIdRef.current === thisRunId) {
           progressToastIdRef.current = null;
@@ -506,7 +506,7 @@ export const RetroImageEditor = () => {
           // Clear context after a completed, toast-managed run
           processingContextRef.current = null;
         }
-      }, 1500);
+      }, 1000);
       return;
     }
     
