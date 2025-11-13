@@ -31,7 +31,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 // Build the logo URL from Vite's BASE_URL so it resolves correctly on GitHub Pages
 const logoGif = `${import.meta.env.BASE_URL}logo.gif`;
 import { Button } from '../ui/button';
-import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch, Ratio, Tv, Wrench } from 'lucide-react';
+import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch, Ratio, Tv, Wrench, Brush, Pipette, Eraser, PaintBucket } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { PaletteViewer } from './PaletteViewer';
@@ -70,9 +70,46 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
         return;
       }
       switch (key) {
-        case 'i':
+        case 'm':
+          // Remap Import Image to 'M'
           event.preventDefault();
           setActiveTab('load-image');
+          break;
+        case 'b':
+          // Brush placeholder (disabled when no image)
+          event.preventDefault();
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            setActiveTab('brush');
+          }
+          break;
+        case 'i':
+          // Eyedropper placeholder (disabled when no image)
+          event.preventDefault();
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            setActiveTab('eyedropper');
+          }
+          break;
+        case 'e':
+          // Eraser placeholder (new)
+          event.preventDefault();
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            setActiveTab('eraser');
+          }
+          break;
+        case 'g':
+          // Paint bucket placeholder (new)
+          event.preventDefault();
+          if (!originalImage) {
+            toast.error(t('loadImageToStart'));
+          } else {
+            setActiveTab('paint-bucket');
+          }
           break;
         case 'a':
           event.preventDefault();
@@ -106,7 +143,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             setActiveTab('resolution');
           }
           break;
-        case 'g':
+        case 'h':
+          // change-grids reassigned from 'g' -> 'h'
           event.preventDefault();
           if (!originalImage) {
             toast.error(t('loadImageToStart'));
@@ -114,7 +152,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             setActiveTab('change-grids');
           }
           break;
-        case 'e':
+        case 'x':
+          // export-image reassigned from 'e' -> 'x'
           event.preventDefault();
           if (!originalImage) {
             toast.error(t('loadImageToStart'));
@@ -379,6 +418,45 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             title={t('exportImage')}
           >
             <Download className="h-4 w-4 m-0 p-0" />
+          </Button>
+
+          {/* NEW Row: Brush (left) / Eyedropper (right) - placeholders, disabled until image loaded */}
+          <Button
+            variant={getButtonVariant('brush') as import('@/components/ui/button').ButtonProps['variant']}
+            onClick={() => handleTabClick('brush')}
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            disabled={!originalImage}
+            title={t('brush')}
+          >
+            <Brush className="h-4 w-4 m-0 p-0" />
+          </Button>
+          <Button
+            variant={getButtonVariant('eyedropper') as import('@/components/ui/button').ButtonProps['variant']}
+            onClick={() => handleTabClick('eyedropper')}
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            disabled={!originalImage}
+            title={t('eyedropper')}
+          >
+            <Pipette className="h-4 w-4 m-0 p-0" />
+          </Button>
+          {/* NEW Row: Eraser (left) / Paint Bucket (right) - placeholders, disabled until image loaded */}
+          <Button
+            variant={getButtonVariant('eraser') as import('@/components/ui/button').ButtonProps['variant']}
+            onClick={() => handleTabClick('eraser')}
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            disabled={!originalImage}
+            title={t('eraser')}
+          >
+            <Eraser className="h-4 w-4 m-0 p-0" />
+          </Button>
+          <Button
+            variant={getButtonVariant('paint-bucket') as import('@/components/ui/button').ButtonProps['variant']}
+            onClick={() => handleTabClick('paint-bucket')}
+            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            disabled={!originalImage}
+            title={t('paintBucket')}
+          >
+            <PaintBucket className="h-4 w-4 m-0 p-0" />
           </Button>
 
           {/* Row 2: Resolution (left) / Palette (right) */}
