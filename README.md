@@ -95,11 +95,15 @@ Invariant
 ## Keyboard shortcuts
 
 - Ctrl/Cmd+V — Load image from clipboard
-- I — Open image loader
+- M — Open image loader (was `I`)
+- B — Activate Brush tool (placeholder)
+- I — Activate Eyedropper tool (placeholder)
+- E — Activate Eraser tool (placeholder)
+- G — Activate Paint Bucket tool (placeholder)
 - P — Open palette selector
 - R — Open resolution selector
-- G — Toggle grid options
-- E — Export image
+- H — Open grid options (was `G`)
+- X — Export image (was `E`)
 - L — Change UI language
 - +/- — Zoom in/out
 - Esc — Close the current panel

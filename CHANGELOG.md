@@ -16,6 +16,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - UI polish and accessibility tweaks in multiple components (palette/backgrounds, slider track color, spacing adjustments).
 
 ### Changed
+- Left vertical `Toolbar` updated with four new placeholder tools (rows updated):
+	- `Brush` (icon `brush`) — shortcut `B` (placeholder).
+	- `Eyedropper` (icon `pipette`) — shortcut `I` (placeholder).
+	- `Eraser` (icon `eraser`) — shortcut `E` (placeholder).
+	- `Paint Bucket` (icon `paint-bucket`) — shortcut `G` (placeholder).
+- Keyboard shortcut remappings:
+	- Import Image: `I` → `M` (translations and handler updated).
+	- Export Image: `E` → `X` (translations and handler updated).
+	- Change Grids: `G` → `H` (translations and handler updated).
+- Updated localization CSVs for visible shortcut hints (`translationsExportImage.csv`, `translationsChangeGrids.csv`, `translationsImportImage.csv`).
+
+### Changed
 - GitHub Actions workflow now updates CHANGELOG.md and README.md before deployment
 - Documentation is automatically kept in sync with latest changes
  - Replaced several hardcoded color values with the new semantic classes across components (e.g. `PaletteViewer`, `Toolbar`, `ImagePreview`, `ResolutionSelector`).
