@@ -76,8 +76,8 @@ export function useRetroEditorState(initial?: Partial<EditorState>) {
   const [paletteDepthOriginal, setPaletteDepthOriginal] = useState<Depth>({ r: 8, g: 8, b: 8 });
   const [paletteDepthProcessed, setPaletteDepthProcessed] = useState<Depth>({ r: 8, g: 8, b: 8 });
   // Foreground / background colors used by drawing tools and toolbar swatches
-  const [colorForeground, setColorForeground] = useState<Color>({ r: 0, g: 0, b: 0 });
-  const [colorBackground, setColorBackground] = useState<Color>({ r: 255, g: 255, b: 255 });
+  const [colorForeground, setColorForeground] = useState<Color | null>(null);
+  const [colorBackground, setColorBackground] = useState<Color | null>(null);
 
   // Refs for cross-cutting flags and temporary buffers
   const manualPaletteOverrideRef = useRef<boolean>(false);

@@ -29,7 +29,7 @@ export interface ToolbarProps {
   colorForeground?: Color | null;
   colorBackground?: Color | null;
 }
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 // Build the logo URL from Vite's BASE_URL so it resolves correctly on GitHub Pages
 const logoGif = `${import.meta.env.BASE_URL}logo.gif`;
 import { Button } from '../ui/button';
@@ -54,6 +54,24 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     const toHex = (v: number) => v.toString(16).padStart(2, '0');
     return `#${toHex(c.r)}${toHex(c.g)}${toHex(c.b)}`;
   };
+
+  // Swatch sizing constants (used for layout calculations)
+  const SWATCH_BOX = 20; // px
+  // Fixed small offset for background swatch (right/down) — keeps overlap minimal
+  // Use 10px so foreground/background overlap is small but clearly overlapping
+  const SWATCH_OFFSET = 10; // px
+  const SWATCH_CONTAINER_WIDTH = SWATCH_BOX + SWATCH_OFFSET + 8; // room for borders/margin
+  const SWATCH_CONTAINER_BASE_HEIGHT = SWATCH_BOX + SWATCH_OFFSET; // container height
+
+  // Determine whether to show swatches: only when an image is loaded,
+  // processedImageData is available and both colors are set, and import menu is closed
+  const showSwatches = !!(originalImage && processedImageData && colorForeground && colorBackground && activeTab !== 'load-image');
+
+  // Refs kept for possible future use; we disable dynamic measurement
+  const zoomRef = useRef<HTMLSpanElement | null>(null);
+  const swatchesCellRef = useRef<HTMLDivElement | null>(null);
+  const paletteCellRef = useRef<HTMLDivElement | null>(null);
+  const fgRef = useRef<HTMLDivElement | null>(null);
 
   // Sync local text with external zoom when not focused (avoid fighting typing)
   useEffect(() => {
@@ -189,6 +207,12 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [originalImage, t, loadFromClipboard, setActiveTab, toast, zoomPercent, onZoomPercentChange]);
 
+  // We avoid dynamic DOM measurement here and instead keep the swatches
+  // integrated in the normal flow of the toolbar. This ensures they scale
+  // and move consistently with the rest of the toolbar when the browser
+  // zoom changes. Spacing is kept symmetric by using the same vertical
+  // margin as the zoom control row (my-[7px]).
+
   const getButtonVariant = (tabId: string) => {
     if (tabId === 'language') return 'highlighted';
     if (tabId === 'load-image') return 'highlighted';
@@ -222,7 +246,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <div className="flex-1 h-full flex items-center justify-center">
             {originalImage ? (
           <div className="flex flex-col items-center justify-center w-full py-0 my-0">
-          <div className="flex items-center gap-2 justify-center w-full py-0 my-[7px]">
+          <div className="flex items-center gap-2 justify-center w-full py-0 mt-[7px] mb-0">
                   <div className="flex items-center">
                     <TooltipProvider>
                       <Tooltip>
@@ -279,6 +303,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                       className={("h-8 w-[12ch] px-2 text-[10px] sm:text-[10px] md:text-[10px] lg:text-[10px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
                         (zoomValid ? "border-transparent border-opacity-0" : "border-red-500 border-opacity-100") +
                         " focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus:outline-none")}
+                      style={{ borderWidth: '2px', borderColor: '#7f7f7f' }}
                       title={t('zoom')}
                     />
                   </div>
@@ -404,22 +429,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
         className="h-8 w-8 flex-none block m-0 p-0 min-w-[32px] min-h-[32px] object-contain"
       />
     </div>
-
-    {/* Foreground/Background swatches (slightly overlapped) */}
-    <div className="flex items-center justify-center mt-2">
-      <div className="relative w-8 h-8">
-        <div
-          className="absolute left-0 top-1 w-5 h-5 rounded-sm border"
-          style={{ backgroundColor: colorToHex(colorBackground) }}
-          aria-hidden="true"
-        />
-        <div
-          className="absolute left-1 top-0 w-5 h-5 rounded-sm border z-10"
-          style={{ backgroundColor: colorToHex(colorForeground) }}
-          aria-hidden="true"
-        />
-      </div>
-    </div>
+    
 
   {/* Middle group: All main controls vertically centered */}
   <div data-toolbar-center="true" className="flex-1 flex flex-col justify-center">
@@ -547,11 +557,11 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           {originalImage ? (
             <>
               
-              <div className="col-span-2 w-full min-w-0 flex items-center gap-1 py-0 my-[7px] px-0 mx-0 justify-self-stretch">
+              <div className="col-span-2 w-full min-w-0 flex items-center gap-1 py-0 mt-[7px] mb-0 px-0 mx-0 justify-self-stretch">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span>
+                    <span ref={zoomRef}>
                       <ScanSearch
                         className="h-4 w-4 m-0 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
                         role="button"
@@ -601,6 +611,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                   className={("h-4 w-full px-0 text-[10px] sm:text-[10px] md:text-[10px] lg:text-[10px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
                     (zoomValid ? "border-transparent border-opacity-0" : "border-red-500 border-opacity-100") +
                     " focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus:outline-none")}
+                  style={{ borderWidth: '2px', borderColor: '#7f7f7f' }}
                   title={t('zoom')}
                 />
               </div>
@@ -608,9 +619,47 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               
             </>
           ) : null}
+          {/* FG/BG swatches — placed between zoom control and palette viewer */}
+          <div ref={swatchesCellRef} className="col-span-2 w-full min-w-0 justify-self-stretch mt-[7px] mb-0 flex items-center justify-center">
+            {showSwatches ? (
+              <div className="relative" style={{ width: `${SWATCH_CONTAINER_WIDTH}px`, height: `${SWATCH_CONTAINER_BASE_HEIGHT}px` }}>
+                {/* background square (slightly offset to the right/down) - positioned inside the container so it stays in flow */}
+                <div
+                  className="absolute z-0"
+                  style={{
+                    left: `${SWATCH_OFFSET}px`,
+                    top: `${SWATCH_OFFSET}px`,
+                    width: `${SWATCH_BOX}px`,
+                    height: `${SWATCH_BOX}px`,
+                    borderRadius: '2px',
+                    border: '2px solid #7f7f7f',
+                    backgroundColor: colorToHex(colorBackground),
+                    boxSizing: 'border-box',
+                  }}
+                  aria-hidden="true"
+                />
+                {/* foreground square (on top, left) - overlaps the background */}
+                <div
+                  ref={fgRef}
+                  className="absolute z-10"
+                  style={{
+                    left: '0px',
+                    top: '0px',
+                    width: `${SWATCH_BOX}px`,
+                    height: `${SWATCH_BOX}px`,
+                    borderRadius: '2px',
+                    border: '2px solid #7f7f7f',
+                    backgroundColor: colorToHex(colorForeground),
+                    boxSizing: 'border-box',
+                  }}
+                  aria-hidden="true"
+                />
+              </div>
+            ) : null}
+          </div>
 
           {/* Palette viewer integrated below the zoom (spans 2 columns) */}
-          <div className="col-span-2 w-full min-w-0 justify-self-stretch my-0">
+          <div ref={paletteCellRef} className="col-span-2 w-full min-w-0 justify-self-stretch mt-[7px] mb-0">
             {(() => {
               const externalPalette = (showOriginalPreview ? originalPaletteColors : processedPaletteColors) || [];
               // Only show PaletteViewer when:
