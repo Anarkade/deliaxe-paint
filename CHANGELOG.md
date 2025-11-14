@@ -43,6 +43,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.0.50-aspect-ratio-implemented] - 2025-11-11
 
+## [v0.0.51-colorfg-and-colorbg-in-toolbar] - 2025-11-14
+
+### Added
+- Editor-scoped `colorForeground` and `colorBackground` state (stored in `useRetroEditorState`) and exposed to the `Toolbar` UI.
+- On import of indexed (palette) images the app computes per-palette pixel counts (worker-backed histogram) and automatically selects a sensible background (most-used palette color) and foreground (nearest color to the inverse of the background). The top‑5 palette counts are logged to the console for debugging.
+- Toolbar now renders two overlapping FG/BG swatches integrated into the left toolbar column. The swatches are placed inside the normal toolbar flow so their sizes and distances scale consistently with browser zoom.
+- Small visual/UX tuning: `SWATCH_OFFSET` tuned for subtle overlap; zoom textbox receives a 1px `#7f7f7f` border.
+
+### Changed
+- Swatches moved from an absolutely-positioned, transform-based layout to a relative container with absolute swatches inside, ensuring they do not overlap the zoom control at different browser zoom levels.
+
+
 ### Added
 - Aspect-ratio-aware fit/restore behavior in `ImagePreview`: the FitToWindow/fitToWidth logic now accounts for the simulated display aspect ratio applied to the processed raster. When a non-original display aspect ratio is selected the visual height used for zoom/fit calculations is width / targetAspect.
 
