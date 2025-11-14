@@ -303,7 +303,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                       className={("h-8 w-[12ch] px-2 text-[10px] sm:text-[10px] md:text-[10px] lg:text-[10px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
                         (zoomValid ? "border-transparent border-opacity-0" : "border-red-500 border-opacity-100") +
                         " focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus:outline-none")}
-                      style={{ borderWidth: '2px', borderColor: '#7f7f7f' }}
+                      style={{ borderWidth: '1px', borderColor: '#7f7f7f' }}
                       title={t('zoom')}
                     />
                   </div>
@@ -611,7 +611,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                   className={("h-4 w-full px-0 text-[10px] sm:text-[10px] md:text-[10px] lg:text-[10px] text-center no-number-spin m-0 leading-none border border-solid bg-background " +
                     (zoomValid ? "border-transparent border-opacity-0" : "border-red-500 border-opacity-100") +
                     " focus-visible:ring-0 focus-visible:ring-transparent focus-visible:ring-offset-0 focus:outline-none")}
-                  style={{ borderWidth: '2px', borderColor: '#7f7f7f' }}
+                  style={{ borderWidth: '1px', borderColor: '#7f7f7f' }}
                   title={t('zoom')}
                 />
               </div>
