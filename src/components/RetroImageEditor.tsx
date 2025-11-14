@@ -339,6 +339,7 @@ export const RetroImageEditor = () => {
       setProcessingOperation,
       previewToggleWasManualRef,
       toast,
+      imageProcessor: imageProcessor,
       t,
     });
   }, [
@@ -906,6 +907,8 @@ export const RetroImageEditor = () => {
                 originalImageSource,
                 originalPaletteColors: editorState.originalPaletteColors,
                 processedPaletteColors: editorState.orderedPaletteColors,
+                colorForeground: editorState.colorForeground,
+                colorBackground: editorState.colorBackground,
                 onToolbarPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
                 onToolbarImageUpdate: (img: ImageData) => {
                   setProcessedImageData(img);
@@ -961,6 +964,8 @@ export const RetroImageEditor = () => {
                 originalImageSource,
                 originalPaletteColors: editorState.originalPaletteColors,
                 processedPaletteColors: editorState.orderedPaletteColors,
+                colorForeground: editorState.colorForeground,
+                colorBackground: editorState.colorBackground,
                 onToolbarPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
                 onToolbarImageUpdate: (img: ImageData) => {
                   setProcessedImageData(img);

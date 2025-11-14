@@ -26,6 +26,8 @@ export interface ToolbarProps {
   showOriginalPreview?: boolean;
   paletteDepthOriginal?: { r: number; g: number; b: number };
   paletteDepthProcessed?: { r: number; g: number; b: number };
+  colorForeground?: Color | null;
+  colorBackground?: Color | null;
 }
 import { useEffect, useMemo, useRef, useState } from 'react';
 // Build the logo URL from Vite's BASE_URL so it resolves correctly on GitHub Pages
@@ -38,7 +40,7 @@ import { PaletteViewer } from './PaletteViewer';
 import { Footer } from './Footer';
 
 
-export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, zoomPercent = 100, onZoomPercentChange, onFitToWindowRequest, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed }: ToolbarProps) => {
+export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, zoomPercent = 100, onZoomPercentChange, onFitToWindowRequest, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed, colorForeground = null, colorBackground = null }: ToolbarProps) => {
   // Local input state to allow free typing (even invalid) and validate live
   const inputRef = useRef<HTMLInputElement | null>(null);
   const fmtZoom = (z: number) => (Number.isFinite(z) ? `${(z as number).toFixed(2)}%` : '100.00%');
@@ -46,6 +48,12 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     fmtZoom(Number.isFinite(zoomPercent) ? (zoomPercent as number) : 100)
   );
   const [zoomValid, setZoomValid] = useState<boolean>(true);
+
+  const colorToHex = (c?: Color | null) => {
+    if (!c) return '#000000';
+    const toHex = (v: number) => v.toString(16).padStart(2, '0');
+    return `#${toHex(c.r)}${toHex(c.g)}${toHex(c.b)}`;
+  };
 
   // Sync local text with external zoom when not focused (avoid fighting typing)
   useEffect(() => {
@@ -395,6 +403,22 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
         alt="Vintage Palette Studio"
         className="h-8 w-8 flex-none block m-0 p-0 min-w-[32px] min-h-[32px] object-contain"
       />
+    </div>
+
+    {/* Foreground/Background swatches (slightly overlapped) */}
+    <div className="flex items-center justify-center mt-2">
+      <div className="relative w-8 h-8">
+        <div
+          className="absolute left-0 top-1 w-5 h-5 rounded-sm border"
+          style={{ backgroundColor: colorToHex(colorBackground) }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute left-1 top-0 w-5 h-5 rounded-sm border z-10"
+          style={{ backgroundColor: colorToHex(colorForeground) }}
+          aria-hidden="true"
+        />
+      </div>
     </div>
 
   {/* Middle group: All main controls vertically centered */}

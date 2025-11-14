@@ -9,6 +9,8 @@ export type LoadImageDependencies = {
   editorActions: {
     setIsOriginalPNG8Indexed: (value: boolean) => void;
     setOriginalPaletteColors: (colors: Color[]) => void;
+    setColorForeground?: (c: Color) => void;
+    setColorBackground?: (c: Color) => void;
   };
   
   // Functions
@@ -31,6 +33,10 @@ export type LoadImageDependencies = {
   
   // Refs
   previewToggleWasManualRef: React.MutableRefObject<boolean>;
+  // Image processing worker wrapper
+  imageProcessor?: {
+    extractColors: (imageData: ImageData, onProgress?: (p: number) => void) => Promise<any>;
+  };
   
   // Toast & translation
   toast: any;
@@ -99,13 +105,13 @@ export async function loadImage(
     // fall back to format-aware extractors (GIF/BMP via dynamic parsers)
     // or a raster-sampling fallback which preserves first-seen order.
     const isPng = (typeof source === 'string' && (source.startsWith('data:image/png') || source.endsWith('.png'))) || (typeof source !== 'string' && source.name?.endsWith('.png'));
+    // Keep the extracted palette in outer scope so we can map pixel counts after rasterization
+    let extractedPalette: Color[] | null = null;
     try {
-      let extractedPalette: any[] | null = null;
-
       if (isPng) {
         try {
           const pngModule = await import('@/lib/pngAnalyzer');
-          extractedPalette = await pngModule.extractPNGPalette(source as File | string);
+          extractedPalette = await pngModule.extractPNGPalette(source as File | string) as Color[] | null;
         } catch (e) {
           // pngAnalyzer failed or not available; fall through to generic extractor
           extractedPalette = null;
@@ -114,7 +120,7 @@ export async function loadImage(
 
       if (!extractedPalette) {
         try {
-          extractedPalette = await extractPaletteFromFile(source, img as HTMLImageElement);
+          extractedPalette = await extractPaletteFromFile(source, img as HTMLImageElement) as Color[] | null;
         } catch (err) {
           // extraction failed; leave null and handle below
           extractedPalette = null;
@@ -135,6 +141,7 @@ export async function loadImage(
       editorActions.setIsOriginalPNG8Indexed(false);
       editorActions.setOriginalPaletteColors([]);
       writeOrderedPalette([], 'no-palette-exception');
+      extractedPalette = null;
     }
     
     // Performance check: Validate image size and provide recommendations
@@ -166,6 +173,106 @@ export async function loadImage(
         rasterCtx.drawImage(img, 0, 0);
         const rasterImageData = rasterCtx.getImageData(0, 0, img.width, img.height);
         setProcessedImageData(rasterImageData);
+
+        // If we have an extracted palette, compute exact pixel counts per palette entry.
+        // Prefer exact RGB matches; if a raster pixel doesn't exactly match a palette
+        // entry (due to color-profile conversions), map it to the nearest palette color.
+        if (extractedPalette && extractedPalette.length > 0) {
+          try {
+            // If we have a worker-based imageProcessor, ask it to extract a
+            // histogram of colors (unique colors with counts). This is much
+            // faster and non-blocking for large images.
+            let histogram: Array<{ r: number; g: number; b: number; count?: number }> | null = null;
+            if (typeof (deps as any).imageProcessor?.extractColors === 'function') {
+              try {
+                histogram = (await (deps as any).imageProcessor.extractColors(rasterImageData)) as any;
+              } catch (e) {
+                console.warn('imageProcessor.extractColors failed, falling back to main-thread histogram', e);
+                histogram = null;
+              }
+            }
+
+            // Fallback: build a small histogram on the main thread if worker unavailable
+            if (!histogram) {
+              const tempMap = new Map<string, number>();
+              const data = rasterImageData.data;
+              for (let i = 0; i < data.length; i += 4) {
+                const a = data[i + 3];
+                if (a === 0) continue;
+                const key = `${data[i]},${data[i + 1]},${data[i + 2]}`;
+                tempMap.set(key, (tempMap.get(key) || 0) + 1);
+              }
+              histogram = Array.from(tempMap.entries()).map(([k, v]) => {
+                const [r, g, b] = k.split(',').map(n => Number(n));
+                return { r, g, b, count: v };
+              });
+            }
+
+            // Map histogram entries to palette indices (exact matches prefered,
+            // otherwise nearest RGB match). Then compute counts per palette entry.
+            const counts = new Array<number>(extractedPalette.length).fill(0);
+            const paletteMap = new Map<string, number>();
+            extractedPalette.forEach((c, idx) => paletteMap.set(`${c.r},${c.g},${c.b}`, idx));
+
+            for (const entry of histogram) {
+              const key = `${entry.r},${entry.g},${entry.b}`;
+              const exact = paletteMap.get(key);
+              if (exact !== undefined) {
+                counts[exact] += entry.count || 0;
+                continue;
+              }
+              // nearest
+              let bestIdx = -1;
+              let bestDist = Infinity;
+              for (let j = 0; j < extractedPalette.length; j++) {
+                const pc = extractedPalette[j];
+                const dr = entry.r - pc.r;
+                const dg = entry.g - pc.g;
+                const db = entry.b - pc.b;
+                const d = dr * dr + dg * dg + db * db;
+                if (d < bestDist) {
+                  bestDist = d;
+                  bestIdx = j;
+                }
+              }
+              if (bestIdx >= 0) counts[bestIdx] += entry.count || 0;
+            }
+
+            // Choose most-used palette color as background
+            let bgIdx = 0;
+            for (let k = 1; k < counts.length; k++) if (counts[k] > counts[bgIdx]) bgIdx = k;
+            const bg = extractedPalette[bgIdx];
+
+            // Choose foreground as palette color closest to inverse of background
+            const inverse = { r: 255 - bg.r, g: 255 - bg.g, b: 255 - bg.b } as Color;
+            let fgIdx = -1;
+            let bestDist = Infinity;
+            for (let k = 0; k < extractedPalette.length; k++) {
+              if (k === bgIdx) continue;
+              const c = extractedPalette[k];
+              const dr = c.r - inverse.r;
+              const dg = c.g - inverse.g;
+              const db = c.b - inverse.b;
+              const d = dr * dr + dg * dg + db * db;
+              if (d < bestDist) {
+                bestDist = d;
+                fgIdx = k;
+              }
+            }
+            const fg = fgIdx >= 0 ? extractedPalette[fgIdx] : extractedPalette[(bgIdx + 1) % extractedPalette.length];
+
+            if (editorActions.setColorBackground) editorActions.setColorBackground(bg);
+            if (editorActions.setColorForeground) editorActions.setColorForeground(fg);
+
+            // Log debug: FG/BG and top-5 palette colors with counts
+            const indexed = counts.map((cnt, idx) => ({ idx, count: cnt, color: extractedPalette[idx] }));
+            indexed.sort((a, b) => b.count - a.count);
+            const top5 = indexed.slice(0, 5).map(x => ({ r: x.color.r, g: x.color.g, b: x.color.b, count: x.count }));
+            console.debug('Indexed image detected — FG/BG chosen', { foreground: fg, background: bg, top5 });
+          } catch (e) {
+            console.warn('Failed to compute palette pixel counts:', e);
+          }
+        }
         // Do NOT trigger autofit - let user control zoom manually
         // setAutoFitKey was removed to prevent automatic zoom changes on load
       } else {

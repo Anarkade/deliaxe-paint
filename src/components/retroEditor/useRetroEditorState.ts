@@ -75,6 +75,9 @@ export function useRetroEditorState(initial?: Partial<EditorState>) {
   const [isOriginalPNG8Indexed, setIsOriginalPNG8Indexed] = useState<boolean>(false);
   const [paletteDepthOriginal, setPaletteDepthOriginal] = useState<Depth>({ r: 8, g: 8, b: 8 });
   const [paletteDepthProcessed, setPaletteDepthProcessed] = useState<Depth>({ r: 8, g: 8, b: 8 });
+  // Foreground / background colors used by drawing tools and toolbar swatches
+  const [colorForeground, setColorForeground] = useState<Color>({ r: 0, g: 0, b: 0 });
+  const [colorBackground, setColorBackground] = useState<Color>({ r: 255, g: 255, b: 255 });
 
   // Refs for cross-cutting flags and temporary buffers
   const manualPaletteOverrideRef = useRef<boolean>(false);
@@ -101,6 +104,8 @@ export function useRetroEditorState(initial?: Partial<EditorState>) {
     setIsOriginalPNG8Indexed,
     setPaletteDepthOriginal,
     setPaletteDepthProcessed,
+    setColorForeground,
+    setColorBackground,
   }), []);
 
   // Lightweight helpers
@@ -110,6 +115,14 @@ export function useRetroEditorState(initial?: Partial<EditorState>) {
     setZoom(1);
     setSelectedTool(null);
   }, []);
+
+  // Reset helper should also clear the FG/BG to defaults when invoked
+  const resetFull = useCallback(() => {
+    reset();
+    setColorForeground({ r: 0, g: 0, b: 0 });
+    setColorBackground({ r: 255, g: 255, b: 255 });
+  }, [reset]);
+
 
   /**
    * Returned shape description:
@@ -138,10 +151,11 @@ export function useRetroEditorState(initial?: Partial<EditorState>) {
 
   return {
     state: { palette, isProcessing, zoom, selectedTool,
-      originalPaletteColors, orderedPaletteColors, isOriginalPNG8Indexed, paletteDepthOriginal, paletteDepthProcessed },
+      originalPaletteColors, orderedPaletteColors, isOriginalPNG8Indexed, paletteDepthOriginal, paletteDepthProcessed,
+      colorForeground, colorBackground },
     actions: { ...actions, ...extendedActions },
     refs,
-    helpers: { reset },
+    helpers: { reset: resetFull },
   } as const;
 }
 
