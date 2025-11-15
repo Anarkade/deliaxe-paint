@@ -65,9 +65,61 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   const SWATCH_CONTAINER_WIDTH = SWATCH_BOX + SWATCH_OFFSET + 8; // room for borders/margin
   const SWATCH_CONTAINER_BASE_HEIGHT = SWATCH_BOX + SWATCH_OFFSET; // container height
 
+  // Live-picked color while dragging with the eyedropper. ImagePreview
+  // dispatches `deliaxe:eyedropper-move` events with { r,g,b } detail.
+  const [hoverPickedColor, setHoverPickedColor] = useState<Color | null>(null);
+
   // Determine whether to show swatches: only when an image is loaded,
-  // processedImageData is available and both colors are set, and import menu is closed
-  const showSwatches = !!(originalImage && processedImageData && colorForeground && colorBackground && activeTab !== 'load-image');
+  // processedImageData is available and both colors are set (or a live
+  // hover-picked color is available), and import menu is closed.
+  const showSwatches = !!(originalImage && processedImageData && (colorForeground || hoverPickedColor) && colorBackground && activeTab !== 'load-image');
+
+  useEffect(() => {
+    if (activeTab !== 'eyedropper') {
+      setHoverPickedColor(null);
+      return;
+    }
+    const onMove = (ev: Event) => {
+      try {
+        const detail = (ev as CustomEvent)?.detail;
+        try { console.debug && console.debug('[Toolbar] eyedropper-move', detail); } catch (e) { /* ignore */ }
+        if (detail && typeof detail.r === 'number') {
+          const c = { r: detail.r, g: detail.g, b: detail.b } as Color;
+          setHoverPickedColor(c);
+          // Also notify parent immediately so editor state (colorForeground)
+          // is updated continuously while dragging. This ensures the
+          // toolbar swatch and editor state stay in sync even if some
+          // components don't re-render rapidly enough.
+          try { onRequestPickColor?.(c); } catch (e) { /* ignore */ }
+        }
+      } catch { /* ignore */ }
+    };
+    const onPick = (ev: Event) => {
+      try {
+        const detail = (ev as CustomEvent)?.detail;
+        try { console.debug && console.debug('[Toolbar] eyedropper-pick', detail); } catch (e) { /* ignore */ }
+        if (detail && typeof detail.r === 'number') {
+          // keep hover color until user changes or toggles
+          setHoverPickedColor({ r: detail.r, g: detail.g, b: detail.b });
+          // also forward to toolbar pick handler (optional)
+        }
+      } catch { /* ignore */ }
+    };
+    window.addEventListener('deliaxe:eyedropper-move', onMove as EventListener);
+    window.addEventListener('deliaxe:eyedropper-pick', onPick as EventListener);
+    return () => {
+      window.removeEventListener('deliaxe:eyedropper-move', onMove as EventListener);
+      window.removeEventListener('deliaxe:eyedropper-pick', onPick as EventListener);
+      setHoverPickedColor(null);
+    };
+  }, [activeTab]);
+
+  // Diagnostic: log hoverPickedColor and incoming colorForeground prop
+  useEffect(() => {
+    try {
+      console.debug && console.debug('[Toolbar] render: prop colorForeground', colorForeground, 'hoverPickedColor', hoverPickedColor);
+    } catch (e) { /* ignore */ }
+  }, [colorForeground, hoverPickedColor]);
 
   // Refs kept for possible future use; we disable dynamic measurement
   const zoomRef = useRef<HTMLSpanElement | null>(null);
@@ -232,6 +284,11 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
       return { uri: '', hotspotX: 0, hotspotY: 0 };
     }
   };
+
+  // Precompute pipette cursor once so we don't call makeSvgDataUri repeatedly in render
+  const pipette = useMemo(() => {
+    try { return makeSvgDataUri(); } catch { return { uri: '', hotspotX: 0, hotspotY: 0 }; }
+  }, []);
 
   // Simple helper for button variants used throughout the toolbar. Keep
   // behavior conservative: language and load-image are always highlighted;
@@ -705,7 +762,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                     borderRadius: '2px',
                     border: '2px solid #7f7f7f',
                     backgroundColor: colorToHex(colorBackground),
-                    cursor: activeTab === 'eyedropper' ? `url("${makeSvgDataUri().uri}") ${makeSvgDataUri().hotspotX} ${makeSvgDataUri().hotspotY}, auto` : undefined,
+                    cursor: activeTab === 'eyedropper' && pipette?.uri ? `url("${pipette.uri}") ${pipette.hotspotX} ${pipette.hotspotY}, auto` : undefined,
                     boxSizing: 'border-box',
                   }}
                   
@@ -721,8 +778,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                     height: `${SWATCH_BOX}px`,
                     borderRadius: '2px',
                     border: '2px solid #7f7f7f',
-                    backgroundColor: colorToHex(colorForeground),
-                    cursor: activeTab === 'eyedropper' ? `url("${makeSvgDataUri().uri}") ${makeSvgDataUri().hotspotX} ${makeSvgDataUri().hotspotY}, auto` : undefined,
+                    backgroundColor: colorToHex(hoverPickedColor ?? colorForeground),
+                    cursor: activeTab === 'eyedropper' && pipette?.uri ? `url("${pipette.uri}") ${pipette.hotspotX} ${pipette.hotspotY}, auto` : undefined,
                     boxSizing: 'border-box',
                   }}
                   aria-hidden="true"

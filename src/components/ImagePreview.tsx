@@ -210,6 +210,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const onEyedropPickRef = useRef<typeof onEyedropPick | undefined>(onEyedropPick);
   const [showOriginal, setShowOriginal] = useState(false);
   // If parent provides a controlled prop, use it as the source of truth
   useEffect(() => {
@@ -217,6 +218,10 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       setShowOriginal(controlledShowOriginal);
     }
   }, [controlledShowOriginal]);
+
+  useEffect(() => {
+    onEyedropPickRef.current = onEyedropPick;
+  }, [onEyedropPick]);
   const [zoom, setZoom] = useState([100]);
   const [sliderValue, setSliderValue] = useState<number[]>([100]);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -1437,6 +1442,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
 
     let prevCursorCanvas: string | null = null;
     let prevCursorContainer: string | null = null;
+    const eyedropperHandlersRef = { current: { handlePointerDown: undefined as any, handlePointerMove: undefined as any, handlePointerUp: undefined as any } } as any;
 
     const makeSvg = () => {
       // Use Lucide 'Pipette' paths: shadow copy (translated 1,1) and white foreground
@@ -1496,34 +1502,106 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       } catch (e) { /* ignore */ }
     };
 
-    const handlePointerDown = (ev: PointerEvent) => {
+    const pointerDownRef = { current: false } as { current: boolean };
+    let lastMoveTime = 0;
+    const MOVE_THROTTLE_MS = 16; // ~60fps
+
+    const sampleAtEvent = (ev: PointerEvent | MouseEvent) => {
       try {
         const rect = canvas.getBoundingClientRect();
         const cw = canvas.width || 1;
         const ch = canvas.height || 1;
         const cssW = rect.width || 1;
         const cssH = rect.height || 1;
-        const cx = (ev.clientX - rect.left) * (cw / cssW);
-        const cy = (ev.clientY - rect.top) * (ch / cssH);
-        const x = Math.floor(Math.max(0, Math.min(cw - 1, cx)));
-        const y = Math.floor(Math.max(0, Math.min(ch - 1, cy)));
+        const cx = (('clientX' in ev) ? (ev as PointerEvent).clientX : (ev as MouseEvent).clientX) - rect.left;
+        const cy = (('clientY' in ev) ? (ev as PointerEvent).clientY : (ev as MouseEvent).clientY) - rect.top;
+        const sx = cx * (cw / cssW);
+        const sy = cy * (ch / cssH);
+        const x = Math.floor(Math.max(0, Math.min(cw - 1, sx)));
+        const y = Math.floor(Math.max(0, Math.min(ch - 1, sy)));
         const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-        const d = ctx.getImageData(x, y, 1, 1).data;
+        if (!ctx) return null;
+        const imageData = ctx.getImageData(x, y, 1, 1);
+        const d = imageData.data;
         const r = d[0] || 0;
         const g = d[1] || 0;
         const b = d[2] || 0;
-        try { onEyedropPick?.({ r, g, b }); } catch (e) { /* ignore */ }
-        // Do NOT remove the custom cursor or revoke object URLs here — keep
-        // the eyedropper active until the user explicitly cancels (ESC) or
-        // toggles the eyedropper off via the toolbar. This preserves the
-        // user's ability to pick multiple colors consecutively.
+        return { r, g, b };
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const handlePointerMove = (ev: PointerEvent) => {
+      try {
+        if (!pointerDownRef.current) return;
+        const now = Date.now();
+        if (now - lastMoveTime < MOVE_THROTTLE_MS) return;
+        lastMoveTime = now;
+        const color = sampleAtEvent(ev);
+        if (color) {
+          const colorCopy = { r: color.r, g: color.g, b: color.b };
+          try { onEyedropPickRef.current?.(colorCopy); } catch (e) { /* ignore */ }
+          try { window.dispatchEvent(new CustomEvent('deliaxe:eyedropper-move', { detail: colorCopy })); } catch { /* ignore */ }
+        }
+        ev.preventDefault();
+        ev.stopPropagation();
+      } catch (e) { /* ignore */ }
+    };
+
+    // Store stable refs to the handlers so we can reliably remove them
+    try { eyedropperHandlersRef.current.handlePointerMove = handlePointerMove; } catch { /* ignore */ }
+
+    const handlePointerUp = (ev: PointerEvent) => {
+      try {
+        if (pointerDownRef.current) {
+          // Final sample on release to ensure final color is picked
+          const color = sampleAtEvent(ev);
+          if (color) {
+            const colorCopy = { r: color.r, g: color.g, b: color.b };
+            try { onEyedropPickRef.current?.(colorCopy); } catch (e) { /* ignore */ }
+            try { window.dispatchEvent(new CustomEvent('deliaxe:eyedropper-pick', { detail: colorCopy })); } catch { /* ignore */ }
+          }
+        }
+        pointerDownRef.current = false;
+        try { canvas.releasePointerCapture((ev as PointerEvent).pointerId); } catch { /* ignore */ }
+        try {
+          window.removeEventListener('pointermove', handlePointerMove as any);
+          window.removeEventListener('pointerup', handlePointerUp as any);
+          window.removeEventListener('pointercancel', handlePointerUp as any);
+        } catch (e) { /* ignore */ }
+        ev.preventDefault();
+        ev.stopPropagation();
+      } catch (e) { /* ignore */ }
+    };
+
+    try { eyedropperHandlersRef.current.handlePointerUp = handlePointerUp; } catch { /* ignore */ }
+
+    const handlePointerDown = (ev: PointerEvent) => {
+      try {
+        pointerDownRef.current = true;
+        lastMoveTime = 0;
+        try { canvas.setPointerCapture(ev.pointerId); } catch { /* ignore */ }
+        // initial sample
+        const color = sampleAtEvent(ev);
+        if (color) {
+          const colorCopy = { r: color.r, g: color.g, b: color.b };
+          try { onEyedropPickRef.current?.(colorCopy); } catch (e) { /* ignore */ }
+          try { window.dispatchEvent(new CustomEvent('deliaxe:eyedropper-move', { detail: colorCopy })); } catch { /* ignore */ }
+        }
+        try {
+          window.addEventListener('pointermove', handlePointerMove as any, { passive: false });
+          window.addEventListener('pointerup', handlePointerUp as any);
+          window.addEventListener('pointercancel', handlePointerUp as any);
+        } catch (e) { /* ignore */ }
         ev.preventDefault();
         ev.stopPropagation();
       } catch (e) {
         // ignore sampling failures
       }
     };
+
+    try { eyedropperHandlersRef.current.handlePointerDown = handlePointerDown; } catch { /* ignore */ }
 
     const svgFallbackCursor = makeSvgDataUri();
 
@@ -1541,12 +1619,37 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         if (containerRef.current) {
           try { containerRef.current.style.cursor = prevCursorContainer || ''; } catch { /* ignore */ }
         }
+        try { document.body.style.cursor = ''; } catch { /* ignore */ }
       } catch (e) { /* ignore */ }
     };
 
     // Remove overlay in response to global toolbar toggles (safety-net)
     const onGlobalEyedropperOff = () => {
       try {
+        // Stop any active sampling and remove global listeners so the
+        // eyedropper truly deactivates when the toolbar toggles it off.
+        try {
+          pointerDownRef.current = false;
+        } catch (e) { /* ignore */ }
+        try {
+          const mv = eyedropperHandlersRef.current.handlePointerMove || handlePointerMove;
+          const up = eyedropperHandlersRef.current.handlePointerUp || handlePointerUp;
+          window.removeEventListener('pointermove', mv as any);
+          window.removeEventListener('pointerup', up as any);
+          window.removeEventListener('pointercancel', up as any);
+        } catch (e) { /* ignore */ }
+        try {
+          // Also remove canvas-level listeners immediately so sampling
+          // cannot continue due to a lingering canvas handler.
+          const dn = eyedropperHandlersRef.current.handlePointerDown || handlePointerDown;
+          const mv = eyedropperHandlersRef.current.handlePointerMove || handlePointerMove;
+          const up = eyedropperHandlersRef.current.handlePointerUp || handlePointerUp;
+          canvas.removeEventListener('pointerdown', dn);
+          canvas.removeEventListener('pointermove', mv);
+          canvas.removeEventListener('pointerup', up);
+          canvas.removeEventListener('pointercancel', up);
+          try { (canvas as HTMLCanvasElement).releasePointerCapture?.((window as any).event?.pointerId); } catch { /* ignore */ }
+        } catch (e) { /* ignore */ }
         removeOverlayCursor();
       } catch (e) { /* ignore */ }
     };
@@ -1559,15 +1662,16 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         try {
           canvas.style.cursor = svgFallbackCursor;
           if (containerRef.current) containerRef.current.style.cursor = svgFallbackCursor;
+          try { document.body.style.cursor = svgFallbackCursor; } catch { /* ignore */ }
         } catch (e) { /* ignore */ }
 
+        // Attach only pointerdown on the canvas. Window-level move/up
+        // listeners are added during pointerdown and removed on pointerup.
+        canvas.removeEventListener('pointerdown', handlePointerDown);
         canvas.addEventListener('pointerdown', handlePointerDown);
 
-            // We no longer create a pointer-follow overlay. Rely on native
-            // cursor applied to the canvas/container (and revoked when done).
-
-        
-
+        // We no longer create a pointer-follow overlay. Rely on native
+        // cursor applied to the canvas/container (and revoked when done).
         (async () => {
           try {
             const svg = makeSvg();
@@ -1620,6 +1724,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                   try { canvas.style.cursor = curCursor; } catch { /* ignore */ }
                   if (containerRef.current) {
                     try { containerRef.current.style.cursor = curCursor; } catch { /* ignore */ }
+                    try { document.body.style.cursor = curCursor; } catch { /* ignore */ }
                   }
                 } catch (e) {
                   // If CUR generation fails, fall back to PNG data-uri cursor
@@ -1627,6 +1732,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                   try { canvas.style.cursor = pngCursor; } catch { /* ignore */ }
                   if (containerRef.current) {
                     try { containerRef.current.style.cursor = pngCursor; } catch { /* ignore */ }
+                    try { document.body.style.cursor = pngCursor; } catch { /* ignore */ }
                   }
                 }
               } catch (e) { /* ignore */ }
@@ -1640,6 +1746,9 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       try {
         try { /* remove overlay cursor if present */ removeOverlayCursor(); } catch (e) { /* ignore */ }
         canvas.removeEventListener('pointerdown', handlePointerDown);
+        canvas.removeEventListener('pointermove', handlePointerMove);
+        canvas.removeEventListener('pointerup', handlePointerUp);
+        canvas.removeEventListener('pointercancel', handlePointerUp);
         if (canvas) canvas.style.cursor = prevCursorCanvas || '';
         if (containerRef.current) containerRef.current.style.cursor = prevCursorContainer || '';
         try {
@@ -1651,7 +1760,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       } catch (e) { /* ignore */ }
       try { window.removeEventListener('deliaxe:eyedropper-off', onGlobalEyedropperOff as EventListener); } catch (e) { /* ignore */ }
     };
-  }, [eyedropperActive, onEyedropPick, editorRefs]);
+  }, [eyedropperActive, editorRefs]);
 
   // Cleanup bitmap on unmount
   useEffect(() => {

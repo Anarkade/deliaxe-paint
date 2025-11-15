@@ -305,6 +305,38 @@ export const RetroImageEditor = () => {
     };
   }, [checkOrientation, isLanguageDropdownOpen, activeTab]);
 
+  // When the eyedropper is active, listen for global move/pick events
+  // emitted by ImagePreview and update the editor foreground color
+  // continuously as the user drags. This ensures `editorState.colorForeground`
+  // is updated even if parent callbacks were missed for some reason.
+  useEffect(() => {
+    if (activeTab !== 'eyedropper') return;
+    const onMove = (ev: Event) => {
+      try {
+        const detail = (ev as CustomEvent)?.detail;
+        try { console.debug && console.debug('[RetroImageEditor] eyedropper-move', detail); } catch (e) { /* ignore */ }
+        if (detail && typeof detail.r === 'number') {
+          editorActions.setColorForeground({ r: detail.r, g: detail.g, b: detail.b });
+        }
+      } catch (e) { /* ignore */ }
+    };
+    const onPick = (ev: Event) => {
+      try {
+        const detail = (ev as CustomEvent)?.detail;
+        try { console.debug && console.debug('[RetroImageEditor] eyedropper-pick', detail); } catch (e) { /* ignore */ }
+        if (detail && typeof detail.r === 'number') {
+          editorActions.setColorForeground({ r: detail.r, g: detail.g, b: detail.b });
+        }
+      } catch (e) { /* ignore */ }
+    };
+    window.addEventListener('deliaxe:eyedropper-move', onMove as EventListener);
+    window.addEventListener('deliaxe:eyedropper-pick', onPick as EventListener);
+    return () => {
+      window.removeEventListener('deliaxe:eyedropper-move', onMove as EventListener);
+      window.removeEventListener('deliaxe:eyedropper-pick', onPick as EventListener);
+    };
+  }, [activeTab, editorActions]);
+
   // Measure header height so floating dialogs can be positioned below it when toolbar is horizontal
   useEffect(() => {
     const measure = () => {
