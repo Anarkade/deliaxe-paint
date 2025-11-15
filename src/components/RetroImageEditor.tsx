@@ -3,6 +3,8 @@ import { ImportImage } from '@/components/tabMenus/ImportImage';
 import { CameraSelector } from '@/components/tabMenus/CameraSelector';
 import { ChangePalette, PaletteType } from '@/components/tabMenus/ChangePalette';
 import { ImagePreview, type ImagePreviewHandle } from '@/components/ImagePreview';
+import BrushTool from './tools/BrushTool';
+import EraserTool from './tools/EraserTool';
 import { ExportImage } from '@/components/tabMenus/ExportImage';
 import { ChangeLanguage } from '@/components/tabMenus/ChangeLanguage';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -276,11 +278,11 @@ export const RetroImageEditor = () => {
       
       // Handle floating sections (except load-image)
       if (activeTab && activeTab !== 'load-image') {
-        // If eyedropper is active, ignore clicks inside the image preview
-        // so the user can pick multiple colors without the global click
-        // handler closing the active tab.
-        if (activeTab === 'eyedropper') {
-          // target.closest may return null if not an Element, but `target` is typed as Element above
+        // If an interactive image tool is active (eyedropper, brush, eraser,
+        // paint-bucket) ignore clicks inside the image preview so the user
+        // can click-and-drag to paint or pick multiple pixels without the
+        // global click handler closing the active tab.
+        if (activeTab === 'eyedropper' || activeTab === 'brush' || activeTab === 'eraser' || activeTab === 'paint-bucket') {
           const clickedInPreview = !!(target.closest('[data-image-preview-container]') || target.closest('canvas'));
           if (clickedInPreview) return;
         }
@@ -1003,6 +1005,7 @@ export const RetroImageEditor = () => {
         {/* Left column: toolbar when vertical */}
   <div className="m-0 p-0 row-start-1 row-end-4 col-start-1 col-end-2" style={{ minWidth: 0 }}>
           {isVerticalLayout && (
+            <>
             <FloatingPanels
               showToolbar={true}
               showPalette={false}
@@ -1057,6 +1060,33 @@ export const RetroImageEditor = () => {
                 paletteDepth: editorState.paletteDepthProcessed,
               }}
             />
+
+            {/* Canvas tools: Brush and Eraser mount when their tab is active. They update processedImageData via onImageUpdate. */}
+            <BrushTool
+              active={activeTab === 'brush'}
+              canvasRef={editorRefs.canvasRef}
+              processedImageData={processedImageData}
+              color={editorState.colorForeground}
+              onImageUpdate={(img: ImageData) => {
+                setProcessedImageData(img);
+                editorRefs.lastManualProcessedRef.current = img;
+                previewToggleWasManualRef.current = true;
+                setPreviewShowingOriginal(false);
+              }}
+            />
+            <EraserTool
+              active={activeTab === 'eraser'}
+              canvasRef={editorRefs.canvasRef}
+              processedImageData={processedImageData}
+              colorBackground={editorState.colorBackground}
+              onImageUpdate={(img: ImageData) => {
+                setProcessedImageData(img);
+                editorRefs.lastManualProcessedRef.current = img;
+                previewToggleWasManualRef.current = true;
+                setPreviewShowingOriginal(false);
+              }}
+            />
+            </>
           )}
         </div>
 
