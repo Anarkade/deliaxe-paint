@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import useCanvasTool from './useCanvasTool';
 import type { Color } from '@/lib/colorQuantization';
 
@@ -73,9 +73,37 @@ export const BrushTool: React.FC<BrushToolProps> = ({ active, canvasRef, process
     }
   };
 
-  // Use a simple crosshair cursor for now. Could be replaced with custom png/.cur.
+  // Use a simple crosshair cursor. Persist it while the tool is active
+  // by injecting a forced stylesheet and adding a class to the canvas element.
   const cursor = 'crosshair';
   useCanvasTool(canvasRef, active, paint, cursor);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !active) return;
+
+    const STYLE_ID = 'deliaxe-brush-cursor-style';
+    const CLASS = 'deliaxe-brush-force';
+    const prevCanvasCursor = canvas.style.cursor || '';
+    const prevBodyCursor = document.body.style.cursor || '';
+
+    const rule = `.${CLASS}, .${CLASS} * { cursor: ${cursor} !important; }`;
+    const styleEl = document.createElement('style');
+    styleEl.id = STYLE_ID;
+    try { styleEl.appendChild(document.createTextNode(rule)); } catch { styleEl.textContent = rule; }
+    document.head.appendChild(styleEl);
+
+    try { canvas.classList.add(CLASS); } catch { /* ignore */ }
+    try { canvas.style.cursor = cursor; } catch { /* ignore */ }
+    try { document.body.style.cursor = cursor; } catch { /* ignore */ }
+
+    return () => {
+      try { const el = document.getElementById(STYLE_ID); if (el && el.parentElement) el.parentElement.removeChild(el); } catch { /* ignore */ }
+      try { canvas.classList.remove(CLASS); } catch { /* ignore */ }
+      try { canvas.style.cursor = prevCanvasCursor || ''; } catch { /* ignore */ }
+      try { document.body.style.cursor = prevBodyCursor || ''; } catch { /* ignore */ }
+    };
+  }, [active, canvasRef]);
 
   return null;
 };

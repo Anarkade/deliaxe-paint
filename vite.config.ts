@@ -86,14 +86,10 @@ const generateVersionFile = () => {
       const raw = execSync(`curl -s "${url}"`, { encoding: 'utf8' }).toString();
       if (raw && raw.length > 0) return raw;
     } catch (e) {
-      // try PowerShell Invoke-WebRequest on Windows
-      try {
-        const psCmd = `powershell -Command "(Invoke-WebRequest -UseBasicParsing -Uri '${url}').Content"`;
-        const raw = execSync(psCmd, { encoding: 'utf8' }).toString();
-        if (raw && raw.length > 0) return raw;
-      } catch (e2) {
-        // continue
-      }
+      // If curl is not available or fails, avoid invoking PowerShell (some
+      // CI or locked-down environments cause PowerShell to print errors
+      // which can make the build appear to fail). We'll simply return null
+      // and let the generateVersionFile fallback to local time.
     }
     return null;
   };
