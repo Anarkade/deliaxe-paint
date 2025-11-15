@@ -579,6 +579,27 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
     }
   }, [hasExternalPalette, externalPaletteKey]);
 
+  // Ensure pointerup on palette blocks will trigger pick when eyedropper is active.
+  // Use capture phase so this runs even if prior interactions changed event flow.
+  useEffect(() => {
+    const handler = (ev: PointerEvent) => {
+      try {
+        if (!eyedropperActive) return;
+        const tgt = ev.target as Element | null;
+        if (!tgt) return;
+        const el = tgt.closest('[data-palette-index]') as HTMLElement | null;
+        if (!el) return;
+        const idx = Number(el.getAttribute('data-palette-index'));
+        if (!Number.isFinite(idx)) return;
+        const c = paletteColors[idx];
+        if (!c) return;
+        try { if (typeof onRequestPickColor === 'function') onRequestPickColor({ r: c.r, g: c.g, b: c.b }); } catch (e) { /* ignore */ }
+      } catch (e) { /* ignore */ }
+    };
+    window.addEventListener('pointerup', handler, { capture: true });
+    return () => { try { window.removeEventListener('pointerup', handler as any, { capture: true } as any); } catch { try { window.removeEventListener('pointerup', handler as any); } catch { /* ignore */ } } };
+  }, [eyedropperActive, paletteColors, onRequestPickColor]);
+
   // Extract unique colors or initialize defaults when no external palette
   useEffect(() => {
     if (hasExternalPalette) return; // external palette is authoritative
@@ -827,11 +848,18 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                     setDraggedIndex(null);
                   }}
                   onClick={(e) => {
+                    try {
+                      if (eyedropperActive && typeof onRequestPickColor === 'function') {
+                        // When eyedropper is active, clicking a palette block should
+                        // pick the color. Do not stop propagation so other handlers
+                        // (capture-phase) can also observe the event.
+                        try { onRequestPickColor({ r: color.r, g: color.g, b: color.b }); } catch (err) { /* ignore */ }
+                        return;
+                      }
+                    } catch (err) { /* ignore */ }
+                    // Opening the color editor is an intentional UI action; prevent
+                    // bubbling only in that case so it doesn't interact with outer handlers.
                     try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
-                    if (eyedropperActive && typeof onRequestPickColor === 'function') {
-                      try { onRequestPickColor({ r: color.r, g: color.g, b: color.b }); } catch (err) { /* ignore */ }
-                      return;
-                    }
                     selectNewColor(index, selectedPalette);
                   }}
                   data-palette-index={index}

@@ -114,6 +114,29 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     };
   }, [activeTab]);
 
+  // Ensure pointerup on toolbar swatches triggers a pick when eyedropper is active.
+  // Use capture so it runs before other bubble-phase handlers and is robust
+  // even after interacting with the ImagePreview canvas.
+  useEffect(() => {
+    const handler = (ev: PointerEvent) => {
+      try {
+        if (activeTab !== 'eyedropper') return;
+        const tgt = ev.target as Element | null;
+        if (!tgt) return;
+        const sw = tgt.closest('[data-toolbar-swatch]') as HTMLElement | null;
+        if (!sw) return;
+        const kind = sw.getAttribute('data-toolbar-swatch');
+        if (kind === 'background') {
+          if (colorBackground) try { onRequestPickColor?.(colorBackground as Color); } catch { /* ignore */ }
+        } else if (kind === 'foreground') {
+          if (colorForeground) try { onRequestPickColor?.(colorForeground as Color); } catch { /* ignore */ }
+        }
+      } catch (e) { /* ignore */ }
+    };
+    window.addEventListener('pointerup', handler, { capture: true });
+    return () => { try { window.removeEventListener('pointerup', handler as any, { capture: true } as any); } catch { try { window.removeEventListener('pointerup', handler as any); } catch { /* ignore */ } } };
+  }, [activeTab, colorBackground, colorForeground, onRequestPickColor]);
+
   // Diagnostic: log hoverPickedColor and incoming colorForeground prop
   useEffect(() => {
     try {
@@ -745,15 +768,18 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                   className="absolute z-0 toolbar-swatch"
                   aria-hidden="true"
                   onClick={(e) => {
-                    // Prevent clicks from bubbling to any palette handlers
-                    // that would open the Color Editor. When eyedropper is active
-                    // clicking should only pick the color.
+                    try {
+                      if (activeTab === 'eyedropper') {
+                        // When eyedropper is active, pick the background color.
+                        try { onRequestPickColor?.(colorBackground as Color); } catch (e) { /* ignore */ }
+                        return;
+                      }
+                    } catch (err) { /* ignore */ }
+                    // Non-eyedropper clicks open editor/actions; prevent bubbling for those.
                     try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
-                    if (activeTab === 'eyedropper') {
-                      try { onRequestPickColor?.(colorBackground as Color); } catch (e) { /* ignore */ }
-                    }
                   }}
                   role={activeTab === 'eyedropper' ? 'button' : undefined}
+                  data-toolbar-swatch="background"
                   style={{
                     left: `${SWATCH_OFFSET}px`,
                     top: `${SWATCH_OFFSET}px`,
@@ -783,11 +809,15 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                     boxSizing: 'border-box',
                   }}
                   aria-hidden="true"
+                  data-toolbar-swatch="foreground"
                   onClick={(e) => {
+                    try {
+                      if (activeTab === 'eyedropper') {
+                        try { onRequestPickColor?.(colorForeground as Color); } catch (e) { /* ignore */ }
+                        return;
+                      }
+                    } catch (err) { /* ignore */ }
                     try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
-                    if (activeTab === 'eyedropper') {
-                      try { onRequestPickColor?.(colorForeground as Color); } catch (e) { /* ignore */ }
-                    }
                   }}
                   
                 />

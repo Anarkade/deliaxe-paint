@@ -1577,8 +1577,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
           try { onEyedropPickRef.current?.(colorCopy); } catch (e) { /* ignore */ }
           try { window.dispatchEvent(new CustomEvent('deliaxe:eyedropper-move', { detail: colorCopy })); } catch { /* ignore */ }
         }
-        ev.preventDefault();
-        ev.stopPropagation();
+        // allow pointer events to propagate so clicks outside the canvas
+        // (e.g. toolbar swatches) still receive their events
       } catch (e) { /* ignore */ }
     };
 
@@ -1597,14 +1597,14 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
           }
         }
         pointerDownRef.current = false;
-        try { canvas.releasePointerCapture((ev as PointerEvent).pointerId); } catch { /* ignore */ }
+        // No pointer capture was set; nothing to release here.
         try {
           window.removeEventListener('pointermove', handlePointerMove as any);
           window.removeEventListener('pointerup', handlePointerUp as any);
           window.removeEventListener('pointercancel', handlePointerUp as any);
         } catch (e) { /* ignore */ }
-        ev.preventDefault();
-        ev.stopPropagation();
+        // allow pointer events to propagate so clicks outside the canvas
+        // (e.g. toolbar swatches) still receive their events
       } catch (e) { /* ignore */ }
     };
 
@@ -1614,7 +1614,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       try {
         pointerDownRef.current = true;
         lastMoveTime = 0;
-        try { canvas.setPointerCapture(ev.pointerId); } catch { /* ignore */ }
+        // Do not call setPointerCapture; rely on window listeners for move/up
+        // so other elements (toolbar/swatches) can still receive pointer events.
         // initial sample
         const color = sampleAtEvent(ev);
         if (color) {
@@ -1627,8 +1628,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
           window.addEventListener('pointerup', handlePointerUp as any);
           window.addEventListener('pointercancel', handlePointerUp as any);
         } catch (e) { /* ignore */ }
-        ev.preventDefault();
-        ev.stopPropagation();
+        // allow pointer events to propagate so clicks outside the canvas
+        // (e.g. toolbar swatches) still receive their events
       } catch (e) {
         // ignore sampling failures
       }
@@ -1683,7 +1684,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
           canvas.removeEventListener('pointermove', mv);
           canvas.removeEventListener('pointerup', up);
           canvas.removeEventListener('pointercancel', up);
-          try { (canvas as HTMLCanvasElement).releasePointerCapture?.((window as any).event?.pointerId); } catch { /* ignore */ }
+          // No pointer capture to release here.
         } catch (e) { /* ignore */ }
         removeOverlayCursor();
       } catch (e) { /* ignore */ }
@@ -1704,6 +1705,29 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         // listeners are added during pointerdown and removed on pointerup.
         canvas.removeEventListener('pointerdown', handlePointerDown);
         canvas.addEventListener('pointerdown', handlePointerDown);
+
+        // If the user presses the pointer outside the canvas while the
+        // eyedropper is active, ensure we release any pointer capture so
+        // the click can reach the toolbar (e.g., swatches). This prevents
+        // the canvas from stealing pointer events after a previous click.
+        const onWindowPointerDownOutside = (ev: PointerEvent) => {
+          try {
+            const tgt = ev.target as Node | null;
+            if (!tgt) return;
+            if (canvas && !canvas.contains(tgt)) {
+              // No pointer capture to release here.
+              pointerDownRef.current = false;
+              try {
+                window.removeEventListener('pointermove', handlePointerMove as any);
+                window.removeEventListener('pointerup', handlePointerUp as any);
+                window.removeEventListener('pointercancel', handlePointerUp as any);
+              } catch (e) { /* ignore */ }
+            }
+          } catch (e) { /* ignore */ }
+        };
+        // Use capture phase so this runs before other bubble-phase handlers
+        // and can release pointer capture before the event reaches other elements.
+        window.addEventListener('pointerdown', onWindowPointerDownOutside as EventListener, { capture: true });
 
         // We no longer create a pointer-follow overlay. Rely on native
         // cursor applied to the canvas/container (and revoked when done).
@@ -1774,6 +1798,17 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
             }
           } catch (e) { /* ignore */ }
         })();
+        // Ensure the helper listener is removed when the eyedropper deactivates
+        const cleanupWindowPointerDownOutside = () => {
+          try { window.removeEventListener('pointerdown', onWindowPointerDownOutside as EventListener, { capture: true } as EventListenerOptions); } catch { /* ignore */ }
+        };
+
+        // Register cleanup on global off as well
+        try {
+          const prevOnGlobal = (window as any)._deliaxe_onWindowPointerDownOutsideCleanup as (() => void) | undefined;
+          if (prevOnGlobal) { try { prevOnGlobal(); } catch { /* ignore */ } }
+          (window as any)._deliaxe_onWindowPointerDownOutsideCleanup = cleanupWindowPointerDownOutside;
+        } catch { /* ignore */ }
       }
     }
 
@@ -1794,6 +1829,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         } catch (e) { /* ignore */ }
       } catch (e) { /* ignore */ }
       try { window.removeEventListener('deliaxe:eyedropper-off', onGlobalEyedropperOff as EventListener); } catch (e) { /* ignore */ }
+      try { const prev = (window as any)._deliaxe_onWindowPointerDownOutsideCleanup as (() => void) | undefined; if (prev) { try { prev(); } catch { /* ignore */ } (window as any)._deliaxe_onWindowPointerDownOutsideCleanup = undefined; } } catch { /* ignore */ }
     };
   }, [eyedropperActive, editorRefs]);
 
