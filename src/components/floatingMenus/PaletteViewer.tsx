@@ -785,8 +785,13 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
               return (
                   <div
                   key={index}
-                  draggable
+                  draggable={!eyedropperActive}
                   onDragStart={(e) => {
+                    if (eyedropperActive) {
+                      // When eyedropper is active, prevent reordering via drag
+                      e.preventDefault?.();
+                      return;
+                    }
                     handleDragStart(index);
                     // Improve mobile drag support
                     if (e.dataTransfer) {
@@ -794,17 +799,23 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                       e.dataTransfer.setData('text/plain', index.toString());
                     }
                   }}
-                  onDragOver={handleDragOver}
+                  onDragOver={eyedropperActive ? undefined : handleDragOver}
                   onDrop={(e) => {
+                    if (eyedropperActive) {
+                      e.preventDefault();
+                      return;
+                    }
                     e.preventDefault();
                     handleDrop(index);
                   }}
-                  onTouchStart={() => handleDragStart(index)}
+                  onTouchStart={() => { if (!eyedropperActive) handleDragStart(index); }}
                   onTouchMove={(e) => {
+                    if (eyedropperActive) return;
                     e.preventDefault();
                     // Handle touch drag for mobile
                   }}
                   onTouchEnd={(e) => {
+                    if (eyedropperActive) { setDraggedIndex(null); return; }
                     // Handle touch drop for mobile
                     const touch = e.changedTouches[0];
                     const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
