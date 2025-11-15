@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import useCanvasTool from './useCanvasTool';
 import type { Color } from '@/lib/colorQuantization';
 
@@ -11,6 +11,9 @@ interface EraserToolProps {
 }
 
 export const EraserTool: React.FC<EraserToolProps> = ({ active, canvasRef, processedImageData, colorBackground, onImageUpdate }) => {
+  // Keep track of last painted point to interpolate between samples
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+
   const paint = (_ev: PointerEvent | MouseEvent, x: number, y: number) => {
     try {
       if (!processedImageData) return;
@@ -19,12 +22,48 @@ export const EraserTool: React.FC<EraserToolProps> = ({ active, canvasRef, proce
       const h = processedImageData.height;
       if (x < 0 || x >= w || y < 0 || y >= h) return;
       const cloned = new ImageData(new Uint8ClampedArray(processedImageData.data), w, h);
-      const idx = (y * w + x) * 4;
-      cloned.data[idx] = colorBackground.r;
-      cloned.data[idx + 1] = colorBackground.g;
-      cloned.data[idx + 2] = colorBackground.b;
-      cloned.data[idx + 3] = 255; // eraser paints opaque background per spec
+
+      // Interpolate between last painted point and current for continuous strokes
+      try {
+        const last = lastPointRef.current;
+        if (!last || (_ev && (_ev as PointerEvent).type === 'pointerdown')) {
+          const idx = (y * w + x) * 4;
+          cloned.data[idx] = colorBackground.r;
+          cloned.data[idx + 1] = colorBackground.g;
+          cloned.data[idx + 2] = colorBackground.b;
+          cloned.data[idx + 3] = 255;
+        } else {
+          let x0 = last.x;
+          let y0 = last.y;
+          const x1 = x;
+          const y1 = y;
+          const dx = Math.abs(x1 - x0);
+          const sx = x0 < x1 ? 1 : -1;
+          const dy = -Math.abs(y1 - y0);
+          const sy = y0 < y1 ? 1 : -1;
+          let err = dx + dy;
+          while (true) {
+            const idx = (y0 * w + x0) * 4;
+            cloned.data[idx] = colorBackground.r;
+            cloned.data[idx + 1] = colorBackground.g;
+            cloned.data[idx + 2] = colorBackground.b;
+            cloned.data[idx + 3] = 255;
+            if (x0 === x1 && y0 === y1) break;
+            const e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+          }
+        }
+      } catch (e) {
+        const idx = (y * w + x) * 4;
+        cloned.data[idx] = colorBackground.r;
+        cloned.data[idx + 1] = colorBackground.g;
+        cloned.data[idx + 2] = colorBackground.b;
+        cloned.data[idx + 3] = 255;
+      }
+
       onImageUpdate(cloned);
+      lastPointRef.current = { x, y };
     } catch (e) {
       // ignore
     }
