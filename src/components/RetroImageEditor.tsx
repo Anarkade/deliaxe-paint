@@ -4,7 +4,7 @@ import { CameraSelector } from '@/components/tabMenus/CameraSelector';
 import { ChangePalette, PaletteType } from '@/components/tabMenus/ChangePalette';
 import { ImagePreview, type ImagePreviewHandle } from '@/components/ImagePreview';
 import BrushTool from './tools/BrushTool';
-import EraserTool from './tools/EraserToolClean';
+import EraserTool from './tools/EraserTool';
 import { ExportImage } from '@/components/tabMenus/ExportImage';
 import { ChangeLanguage } from '@/components/tabMenus/ChangeLanguage';
 import { useTranslation } from '@/hooks/useTranslation';
