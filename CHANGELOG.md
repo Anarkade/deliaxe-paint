@@ -42,6 +42,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `GADebugPanel` component (debug-only UI). Google Analytics implementation remains in `src/lib/ga.ts`.
 
 ## [v0.0.50-aspect-ratio-implemented] - 2025-11-11
+ 
+## [v0.0.52-eyedropper-feature-implemented] - 2025-11-15
+
+### Added
+- Eyedropper tool: live color sampling while dragging; updates the editor `colorForeground` in real time.
+- Clicking palette swatches or the FG/BG swatches in the `Toolbar` now always copies the selected color into `colorForeground`, including after interacting with the `ImagePreview` canvas.
+
+### Fixed
+- Ensure swatch clicks are honored after using the Eyedropper tool by hardening event handling (capture-phase fallback, avoid pointer capture on canvas) and preventing handlers from swallowing events.
+- Resolved cursor flicker for the pipette cursor across browsers.
+
+### Changed
+- Removed debug `console.debug` logs related to eyedropper and color selection from core modules.
+
 
 ## [v0.0.51-colorfg-and-colorbg-in-toolbar] - 2025-11-14
 

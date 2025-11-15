@@ -4,7 +4,7 @@
 
 Retro image editor focused on classic consoles/computers. Load an image, quantize to vintage palettes, preview on “retro displays”, and export.
 
-Current snapshot: v0.0.50-aspect-ratio-implemented (the app footer shows the runtime version via public/version.json).
+Current snapshot: v0.0.52-eyedropper-feature-implemented (the app footer shows the runtime version via public/version.json).
 
 ## Features
 - Import from file or clipboard; camera capture (when allowed)
@@ -127,8 +127,10 @@ See `CHANGELOG.md` for release history and the `Unreleased` section for pending 
 
 The project uses git tags for releases. The most recent tags are listed below (newest first):
 
-- v0.0.44-ui-tweaked — 2025-11-02
+- v0.0.52-eyedropper-feature-implemented — 2025-11-15
+- v0.0.51-colorfg-and-colorbg-in-toolbar — 2025-11-14
 - v0.0.50-aspect-ratio-implemented — 2025-11-11
+- v0.0.44-ui-tweaked — 2025-11-02
 - v0.0.44-ui-tweaked — 2025-11-02
 - v0.0.43-toolbars-tweaked — 2025-10-29
 - v0.0.42-new-zoom — 2025-10-26
