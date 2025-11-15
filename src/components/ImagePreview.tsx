@@ -1450,8 +1450,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         // hotspot approximate for SVG fallback (scaled from 24-space to 16px)
         const scale = 16 / 24;
         const hotspotX = Math.max(0, Math.round(2 * scale));
-        // Use same visual hotspot as Toolbar (anchored near painted pixel bottom-left)
-        const hotspotY = Math.max(0, Math.round(14 * scale));
+        // Anchor at the pipette tip located near (2,22) in the 24x24 viewBox
+        const hotspotY = Math.max(0, Math.round(22 * scale));
         return `url("data:image/svg+xml;base64,${b64}") ${hotspotX} ${hotspotY}, auto`;
       } catch (e) {
         return 'crosshair';
@@ -1576,11 +1576,11 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
             // Also attempt to generate PNG cursor for native cursor support.
             const png = await generateCursorPng(svg);
             if (png) {
-              // Hotspot scaled from 24-space to 32px PNG
               // Hotspot scaled from 24-space to 16px PNG to match toolbar
               const scale = 16 / 24;
               const hotspotX = Math.max(0, Math.round(2 * scale));
-              const hotspotY = Math.max(0, Math.round(14 * scale));
+              // Anchor at the pipette tip located near (2,22) in the 24x24 viewBox
+              const hotspotY = Math.max(0, Math.round(22 * scale));
               applyGlobalCursor(png, hotspotX, hotspotY);
               try {
                 // Try to create a native .cur (ICO/CUR) in-memory using the PNG

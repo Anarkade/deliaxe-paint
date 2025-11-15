@@ -225,7 +225,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
       const b64 = typeof window !== 'undefined' ? window.btoa(unescape(encodeURIComponent(svg))) : '';
       const scale = 16 / 24;
       const hotspotX = Math.max(0, Math.round(2 * scale));
-      const hotspotY = Math.max(0, Math.round(14 * scale));
+      // Anchor at the pipette tip located near (2,22) in the 24x24 viewBox
+      const hotspotY = Math.max(0, Math.round(22 * scale));
       return { uri: `data:image/svg+xml;base64,${b64}`, hotspotX, hotspotY };
     } catch (e) {
       return { uri: '', hotspotX: 0, hotspotY: 0 };
