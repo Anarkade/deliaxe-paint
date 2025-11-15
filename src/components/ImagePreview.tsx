@@ -1450,7 +1450,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         // hotspot approximate for SVG fallback (scaled from 24-space to 16px)
         const scale = 16 / 24;
         const hotspotX = Math.max(0, Math.round(2 * scale));
-        const hotspotY = Math.max(0, Math.round(20 * scale));
+        // Use same visual hotspot as Toolbar (anchored near painted pixel bottom-left)
+        const hotspotY = Math.max(0, Math.round(14 * scale));
         return `url("data:image/svg+xml;base64,${b64}") ${hotspotX} ${hotspotY}, auto`;
       } catch (e) {
         return 'crosshair';
@@ -1463,9 +1464,10 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
           const img = new Image();
           img.onload = () => {
             try {
-              // Use 32×32 PNG to improve cursor rendering on high-DPI/Windows
-              const cw = 32;
-              const ch = 32;
+              // Use 16×16 PNG to match toolbar SVG cursor size so preview cursor
+              // appears the same size as toolbar swatches.
+              const cw = 16;
+              const ch = 16;
               const canvasTmp = document.createElement('canvas');
               canvasTmp.width = cw;
               canvasTmp.height = ch;
@@ -1512,13 +1514,10 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
         const g = d[1] || 0;
         const b = d[2] || 0;
         try { onEyedropPick?.({ r, g, b }); } catch (e) { /* ignore */ }
-        // Immediately remove overlay/native cursor so UI returns to normal
-        try {
-          removeOverlayCursor();
-        } catch (e) { /* ignore */ }
-        try {
-          if (curObjectUrl) { URL.revokeObjectURL(curObjectUrl); curObjectUrl = null; }
-        } catch (e) { /* ignore */ }
+        // Do NOT remove the custom cursor or revoke object URLs here — keep
+        // the eyedropper active until the user explicitly cancels (ESC) or
+        // toggles the eyedropper off via the toolbar. This preserves the
+        // user's ability to pick multiple colors consecutively.
         ev.preventDefault();
         ev.stopPropagation();
       } catch (e) {
@@ -1578,9 +1577,10 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
             const png = await generateCursorPng(svg);
             if (png) {
               // Hotspot scaled from 24-space to 32px PNG
-              const scale = 32 / 24;
+              // Hotspot scaled from 24-space to 16px PNG to match toolbar
+              const scale = 16 / 24;
               const hotspotX = Math.max(0, Math.round(2 * scale));
-              const hotspotY = Math.max(0, Math.round(20 * scale));
+              const hotspotY = Math.max(0, Math.round(14 * scale));
               applyGlobalCursor(png, hotspotX, hotspotY);
               try {
                 // Try to create a native .cur (ICO/CUR) in-memory using the PNG
@@ -1600,8 +1600,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
                   dv.setUint16(2, 2, true); // type = CUR
                   dv.setUint16(4, 1, true); // count
                   // entry
-                  buf[6] = 32; // width (use 32 for clarity)
-                  buf[7] = 32; // height
+                  buf[6] = 16; // width (use 16 to match PNG)
+                  buf[7] = 16; // height
                   buf[8] = 0; // color count
                   buf[9] = 0; // reserved
                   dv.setUint16(10, hotspotX, true); // hotspot x

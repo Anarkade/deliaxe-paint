@@ -276,9 +276,18 @@ export const RetroImageEditor = () => {
       
       // Handle floating sections (except load-image)
       if (activeTab && activeTab !== 'load-image') {
+        // If eyedropper is active, ignore clicks inside the image preview
+        // so the user can pick multiple colors without the global click
+        // handler closing the active tab.
+        if (activeTab === 'eyedropper') {
+          // target.closest may return null if not an Element, but `target` is typed as Element above
+          const clickedInPreview = !!(target.closest('[data-image-preview-container]') || target.closest('canvas'));
+          if (clickedInPreview) return;
+        }
+
         const isOutsideSection = !target.closest('[data-section]');
         const isButton = target.closest('button') || target.closest('[role="button"]');
-        
+
         // Only close if clicking outside and NOT on any button
         if (isOutsideSection && !isButton) {
           setActiveTab(null);
@@ -911,7 +920,6 @@ export const RetroImageEditor = () => {
                 colorBackground: editorState.colorBackground,
                 onRequestPickColor: (c: any) => {
                   try { editorActions.setColorForeground(c); } catch (e) { /* ignore */ }
-                  setActiveTab('');
                 },
                 onToolbarPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
                 onToolbarImageUpdate: (img: ImageData) => {
@@ -972,7 +980,6 @@ export const RetroImageEditor = () => {
                 colorBackground: editorState.colorBackground,
                 onRequestPickColor: (c: any) => {
                   try { editorActions.setColorForeground(c); } catch (e) { /* ignore */ }
-                  setActiveTab('');
                 },
                 onToolbarPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
                 onToolbarImageUpdate: (img: ImageData) => {
@@ -1048,8 +1055,7 @@ export const RetroImageEditor = () => {
               eyedropperActive={activeTab === 'eyedropper'}
               onEyedropPick={(c) => {
                 try { editorActions.setColorForeground({ r: c.r, g: c.g, b: c.b }); } catch (e) { /* ignore */ }
-                // Close eyedropper mode
-                setActiveTab('');
+                // Keep eyedropper active so the user can pick multiple colors.
               }}
               editorRefs={editor.refs}
               onShowOriginalChange={(show) => {
