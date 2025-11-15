@@ -1494,11 +1494,44 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       }
     };
 
+    // Force a consistent pipette cursor for the preview container by
+    // injecting a scoped CSS rule and toggling a class on the container.
+    // This avoids cursor flicker when moving across nested elements.
+    const CURSOR_STYLE_ID = 'deliaxe-eyedropper-cursor-style';
+    const CONTAINER_CLASS = 'deliaxe-eyedropper-force';
+
+    const injectCursorStyle = (cursorValue: string) => {
+      try {
+        // Remove any existing style first
+        const existing = document.getElementById(CURSOR_STYLE_ID) as HTMLStyleElement | null;
+        if (existing && existing.parentElement) existing.parentElement.removeChild(existing);
+        const st = document.createElement('style');
+        st.id = CURSOR_STYLE_ID;
+        // Scope to the container class and its descendants; use !important
+        const rule = `.${CONTAINER_CLASS}, .${CONTAINER_CLASS} * { cursor: ${cursorValue} !important; }`;
+        try { st.appendChild(document.createTextNode(rule)); } catch { st.textContent = rule; }
+        document.head.appendChild(st);
+      } catch (e) { /* ignore */ }
+    };
+
+    const removeCursorStyle = () => {
+      try {
+        const st = document.getElementById(CURSOR_STYLE_ID) as HTMLStyleElement | null;
+        if (st && st.parentElement) st.parentElement.removeChild(st);
+      } catch (e) { /* ignore */ }
+    };
+
     const applyGlobalCursor = (png: string, hotspotX: number, hotspotY: number) => {
       const pngCursor = `url("${png}") ${hotspotX} ${hotspotY}, auto`;
       try {
-        canvas.style.cursor = pngCursor;
-        if (containerRef.current) containerRef.current.style.cursor = pngCursor;
+        // Inject a scoped stylesheet that forces the cursor on the container
+        injectCursorStyle(`url("${png}") ${hotspotX} ${hotspotY}, auto`);
+        // Ensure the container has the force class so descendants pick up the rule
+        if (containerRef.current && !containerRef.current.classList.contains(CONTAINER_CLASS)) {
+          containerRef.current.classList.add(CONTAINER_CLASS);
+        }
+        // As a fallback also set canvas style directly
+        try { canvas.style.cursor = pngCursor; } catch { /* ignore */ }
       } catch (e) { /* ignore */ }
     };
 
@@ -1620,6 +1653,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
           try { containerRef.current.style.cursor = prevCursorContainer || ''; } catch { /* ignore */ }
         }
         try { document.body.style.cursor = ''; } catch { /* ignore */ }
+        try { removeCursorStyle(); } catch { /* ignore */ }
+        try { if (containerRef.current && containerRef.current.classList.contains('deliaxe-eyedropper-force')) containerRef.current.classList.remove('deliaxe-eyedropper-force'); } catch { /* ignore */ }
       } catch (e) { /* ignore */ }
     };
 
