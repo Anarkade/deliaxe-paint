@@ -909,6 +909,10 @@ export const RetroImageEditor = () => {
                 processedPaletteColors: editorState.orderedPaletteColors,
                 colorForeground: editorState.colorForeground,
                 colorBackground: editorState.colorBackground,
+                onRequestPickColor: (c: any) => {
+                  try { editorActions.setColorForeground(c); } catch (e) { /* ignore */ }
+                  setActiveTab('');
+                },
                 onToolbarPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
                 onToolbarImageUpdate: (img: ImageData) => {
                   setProcessedImageData(img);
@@ -966,6 +970,10 @@ export const RetroImageEditor = () => {
                 processedPaletteColors: editorState.orderedPaletteColors,
                 colorForeground: editorState.colorForeground,
                 colorBackground: editorState.colorBackground,
+                onRequestPickColor: (c: any) => {
+                  try { editorActions.setColorForeground(c); } catch (e) { /* ignore */ }
+                  setActiveTab('');
+                },
                 onToolbarPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
                 onToolbarImageUpdate: (img: ImageData) => {
                   setProcessedImageData(img);
@@ -1035,6 +1043,15 @@ export const RetroImageEditor = () => {
               onZoomChange={handlePreviewZoomChange}
               controlledZoom={currentZoom}
               isVerticalLayout={isVerticalLayout}
+              // Eyedropper integration: allow ImagePreview to show custom cursor
+              // and report sampled colors back to the editor when active.
+              eyedropperActive={activeTab === 'eyedropper'}
+              onEyedropPick={(c) => {
+                try { editorActions.setColorForeground({ r: c.r, g: c.g, b: c.b }); } catch (e) { /* ignore */ }
+                // Close eyedropper mode
+                setActiveTab('');
+              }}
+              editorRefs={editor.refs}
               onShowOriginalChange={(show) => {
                         previewToggleWasManualRef.current = true;
                         setPreviewShowingOriginal(show);

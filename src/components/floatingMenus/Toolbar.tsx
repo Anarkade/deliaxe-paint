@@ -28,6 +28,9 @@ export interface ToolbarProps {
   paletteDepthProcessed?: { r: number; g: number; b: number };
   colorForeground?: Color | null;
   colorBackground?: Color | null;
+  // Called when the toolbar is in eyedropper mode and the user clicks
+  // one of the FG/BG swatches to pick that color.
+  onRequestPickColor?: (c: Color) => void;
 }
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 // Build the logo URL from Vite's BASE_URL so it resolves correctly on GitHub Pages
@@ -39,8 +42,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { PaletteViewer } from './PaletteViewer';
 import { Footer } from './Footer';
 
-
-export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, zoomPercent = 100, onZoomPercentChange, onFitToWindowRequest, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed, colorForeground = null, colorBackground = null }: ToolbarProps) => {
+export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveTab, resetEditor, loadFromClipboard, toast, t, zoomPercent = 100, onZoomPercentChange, onFitToWindowRequest, selectedPalette = 'original', processedImageData = null, originalImageSource = null, originalPaletteColors = [], processedPaletteColors = [], onToolbarPaletteUpdate, onToolbarImageUpdate, showOriginalPreview = true, paletteDepthOriginal, paletteDepthProcessed, colorForeground = null, colorBackground = null, onRequestPickColor }: ToolbarProps) => {
   // Local input state to allow free typing (even invalid) and validate live
   const inputRef = useRef<HTMLInputElement | null>(null);
   const fmtZoom = (z: number) => (Number.isFinite(z) ? `${(z as number).toFixed(2)}%` : '100.00%');
@@ -93,6 +95,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
       }
       if (key === 'escape') {
         setActiveTab('');
+        try { window.dispatchEvent(new CustomEvent('deliaxe:eyedropper-off')); } catch (e) { /* ignore */ }
         return;
       }
       switch (key) {
@@ -213,12 +216,31 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   // zoom changes. Spacing is kept symmetric by using the same vertical
   // margin as the zoom control row (my-[7px]).
 
+  // Build a small SVG data-URI for the Lucide Pipette to use as cursor
+  const makeSvg = () => `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'>\n  <!-- Shadow: black, offset by 1,1 -->\n  <g fill='none' stroke='#000' stroke-width='1.6' transform='translate(1 1)'>\n    <path d='m2 22 1-1h3l9-9'/>\n    <path d='M3 21v-3l9-9'/>\n    <path d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/>\n  </g>\n  <!-- Foreground: white pipette (Lucide) -->\n  <g fill='none' stroke='#fff' stroke-width='1.2'>\n    <path d='m2 22 1-1h3l9-9'/>\n    <path d='M3 21v-3l9-9'/>\n    <path d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/>\n  </g>\n</svg>`;
+
+  const makeSvgDataUri = () => {
+    try {
+      const svg = makeSvg();
+      const b64 = typeof window !== 'undefined' ? window.btoa(unescape(encodeURIComponent(svg))) : '';
+      const scale = 16 / 24;
+      const hotspotX = Math.max(0, Math.round(2 * scale));
+      const hotspotY = Math.max(0, Math.round(14 * scale));
+      return { uri: `data:image/svg+xml;base64,${b64}`, hotspotX, hotspotY };
+    } catch (e) {
+      return { uri: '', hotspotX: 0, hotspotY: 0 };
+    }
+  };
+
+  // Simple helper for button variants used throughout the toolbar. Keep
+  // behavior conservative: language and load-image are always highlighted;
+  // when no image is loaded, buttons are "blocked"; otherwise highlight
+  // the active tab.
   const getButtonVariant = (tabId: string) => {
-    if (tabId === 'language') return 'highlighted';
-    if (tabId === 'load-image') return 'highlighted';
+    if (tabId === 'language' || tabId === 'load-image') return 'highlighted';
     if (!originalImage) return 'blocked';
-    if (originalImage) return 'highlighted';
-    return 'blocked';
+    if (activeTab === tabId) return 'highlighted';
+    return 'default';
   };
 
   const handleTabClick = (tabId: string) => {
@@ -227,17 +249,52 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
       resetEditor();
       return;
     }
-    setActiveTab(tabId);
+    // Toggle off if clicking the already-active tab (convenient UX)
+    if (activeTab === tabId) {
+      setActiveTab('');
+      // Notify global listeners (e.g., ImagePreview) to immediately
+      // remove any overlay cursors or native cursor overrides.
+      try { window.dispatchEvent(new CustomEvent('deliaxe:eyedropper-off')); } catch (e) { /* ignore */ }
+    } else {
+      setActiveTab(tabId);
+    }
     if (tabId) window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // When eyedropper is toggled on/off, inject/remove a scoped CSS rule
+  // so that palette swatches and toolbar swatches show the pipette cursor
+  // instead of the default pointer/hand.
+  useEffect(() => {
+    const styleId = 'eyedropper-toolbar-cursor';
+    const existing = document.getElementById(styleId) as HTMLStyleElement | null;
+    try {
+      if (activeTab === 'eyedropper') {
+        if (!existing) {
+          const { uri, hotspotX, hotspotY } = makeSvgDataUri();
+          const st = document.createElement('style');
+          st.id = styleId;
+          // Target PaletteViewer blocks and the toolbar's swatch container
+          const rule = `.palette-viewer-root [data-palette-index], .palette-viewer-root [data-palette-index] * , [data-toolbar-swatches] > div { cursor: url("${uri}") ${hotspotX} ${hotspotY} , auto !important; }`;
+          try { st.appendChild(document.createTextNode(rule)); } catch { st.textContent = rule; }
+          document.head.appendChild(st);
+        }
+      } else {
+        if (existing && existing.parentElement) existing.parentElement.removeChild(existing);
+      }
+    } catch (e) {
+      try { if (existing && existing.parentElement) existing.parentElement.removeChild(existing); } catch { /* ignore */ }
+    }
+    return () => {
+      try { const st = document.getElementById(styleId); if (st && st.parentElement) st.parentElement.removeChild(st); } catch { /* ignore */ }
+    };
+  }, [activeTab]);
 
   if (!isVerticalLayout) {
     return (
   // height set to 1.5x the button height (h-10 -> 2.5rem * 1.5 = 3.75rem)
   // Add horizontal padding equal to gap-2 so logo and buttons sit inset from edges
   <>
-  <header className="border-b border-elegant-border w-full flex-shrink-0 m-0 px-2 py-0 min-h-[3.75rem] flex flex-col color-bg-highlight rounded-md overflow-visible">
-    {/* Top row: buttons + zoom */}
+    <header className="flex items-center h-[3.75rem] w-full px-2">
     <div className="w-full max-w-none flex items-center justify-between m-0 p-0">
           {/* Left: App icon - hidden in horizontal toolbar (reserve space to keep layout centered) */}
           <div className="w-8 h-full m-0 p-0" aria-hidden="true" />
@@ -321,7 +378,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
               title={t('loadImage')}
             >
-                <Upload className="h-4 w-4 m-0 p-0" />
+              <Upload className="h-4 w-4 m-0 p-0" />
             </Button>
             <Button
               variant={getButtonVariant('resolution') as import('@/components/ui/button').ButtonProps['variant']}
@@ -410,6 +467,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                   showOriginal={showOriginalPreview}
                   paletteDepth={showOriginalPreview ? paletteDepthOriginal : paletteDepthProcessed}
                   toolbarRowsMode
+                  eyedropperActive={activeTab === 'eyedropper'}
+                  onRequestPickColor={onRequestPickColor}
                 />
               )}
             </div>
@@ -622,10 +681,21 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           {/* FG/BG swatches — placed between zoom control and palette viewer */}
           <div ref={swatchesCellRef} className="col-span-2 w-full min-w-0 justify-self-stretch mt-[7px] mb-0 flex items-center justify-center">
             {showSwatches ? (
-              <div className="relative" style={{ width: `${SWATCH_CONTAINER_WIDTH}px`, height: `${SWATCH_CONTAINER_BASE_HEIGHT}px` }}>
+              <div data-toolbar-swatches="true" className="relative" style={{ width: `${SWATCH_CONTAINER_WIDTH}px`, height: `${SWATCH_CONTAINER_BASE_HEIGHT}px` }}>
                 {/* background square (slightly offset to the right/down) - positioned inside the container so it stays in flow */}
                 <div
-                  className="absolute z-0"
+                  className="absolute z-0 toolbar-swatch"
+                  aria-hidden="true"
+                  onClick={(e) => {
+                    // Prevent clicks from bubbling to any palette handlers
+                    // that would open the Color Editor. When eyedropper is active
+                    // clicking should only pick the color.
+                    try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
+                    if (activeTab === 'eyedropper') {
+                      try { onRequestPickColor?.(colorBackground as Color); } catch (e) { /* ignore */ }
+                    }
+                  }}
+                  role={activeTab === 'eyedropper' ? 'button' : undefined}
                   style={{
                     left: `${SWATCH_OFFSET}px`,
                     top: `${SWATCH_OFFSET}px`,
@@ -634,14 +704,15 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                     borderRadius: '2px',
                     border: '2px solid #7f7f7f',
                     backgroundColor: colorToHex(colorBackground),
+                    cursor: activeTab === 'eyedropper' ? `url("${makeSvgDataUri().uri}") ${makeSvgDataUri().hotspotX} ${makeSvgDataUri().hotspotY}, auto` : undefined,
                     boxSizing: 'border-box',
                   }}
-                  aria-hidden="true"
+                  
                 />
                 {/* foreground square (on top, left) - overlaps the background */}
                 <div
                   ref={fgRef}
-                  className="absolute z-10"
+                  className="absolute z-10 toolbar-swatch"
                   style={{
                     left: '0px',
                     top: '0px',
@@ -650,9 +721,17 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                     borderRadius: '2px',
                     border: '2px solid #7f7f7f',
                     backgroundColor: colorToHex(colorForeground),
+                    cursor: activeTab === 'eyedropper' ? `url("${makeSvgDataUri().uri}") ${makeSvgDataUri().hotspotX} ${makeSvgDataUri().hotspotY}, auto` : undefined,
                     boxSizing: 'border-box',
                   }}
                   aria-hidden="true"
+                  onClick={(e) => {
+                    try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
+                    if (activeTab === 'eyedropper') {
+                      try { onRequestPickColor?.(colorForeground as Color); } catch (e) { /* ignore */ }
+                    }
+                  }}
+                  
                 />
               </div>
             ) : null}
@@ -677,6 +756,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                   showOriginal={showOriginalPreview}
                   paletteDepth={showOriginalPreview ? paletteDepthOriginal : paletteDepthProcessed}
                   toolbarMode
+                  eyedropperActive={activeTab === 'eyedropper'}
+                  onRequestPickColor={onRequestPickColor}
                 />
               ) : null;
             })()}

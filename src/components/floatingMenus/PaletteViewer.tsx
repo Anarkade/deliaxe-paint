@@ -29,13 +29,32 @@ interface PaletteColor {
   onImageUpdate?: (imageData: ImageData) => void;
   // When true, the ImagePreview is showing the original image
   showOriginal?: boolean;
+  // Eyedropper integration: when active, clicks on palette blocks
+  // should pick the color instead of opening the Color Editor.
+  eyedropperActive?: boolean;
+  onRequestPickColor?: (c: Color) => void;
 }
 
 // default palettes now live in src/lib/defaultPalettes.ts
 
-export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal, paletteDepth, toolbarMode, toolbarRowsMode }: PaletteViewerProps & { paletteDepth?: { r: number; g: number; b: number }, toolbarMode?: boolean, toolbarRowsMode?: boolean }) => {
+export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, originalImageSource, externalPalette, onImageUpdate, showOriginal, paletteDepth, toolbarMode, toolbarRowsMode, eyedropperActive, onRequestPickColor }: PaletteViewerProps & { paletteDepth?: { r: number; g: number; b: number }, toolbarMode?: boolean, toolbarRowsMode?: boolean }) => {
   const { t } = useTranslation();
   const lastSentPaletteRef = useRef<string | null>(null);
+
+  // Build a small SVG data-URI for the Lucide Pipette to use as cursor when eyedropper is active
+  const makeSvg = () => `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'>\n  <g fill='none' stroke='#000' stroke-width='1.6' transform='translate(1 1)'>\n    <path d='m2 22 1-1h3l9-9'/>\n    <path d='M3 21v-3l9-9'/>\n    <path d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/>\n  </g>\n  <g fill='none' stroke='#fff' stroke-width='1.2'>\n    <path d='m2 22 1-1h3l9-9'/>\n    <path d='M3 21v-3l9-9'/>\n    <path d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/>\n  </g>\n</svg>`;
+  const makeSvgDataUri = () => {
+    try {
+      const svg = makeSvg();
+      const b64 = typeof window !== 'undefined' ? window.btoa(unescape(encodeURIComponent(svg))) : '';
+      const scale = 16 / 24;
+      const hotspotX = Math.max(0, Math.round(2 * scale));
+      const hotspotY = Math.max(0, Math.round(20 * scale));
+      return { uri: `data:image/svg+xml;base64,${b64}`, hotspotX, hotspotY };
+    } catch (e) {
+      return { uri: '', hotspotX: 0, hotspotY: 0 };
+    }
+  };
 
   // Canonical fixed palettes — imported from shared `fixedPalettes` module.
   // Palette colors state must be declared before any effects that read its length
@@ -795,7 +814,14 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                     }
                     setDraggedIndex(null);
                   }}
-                  onClick={() => selectNewColor(index, selectedPalette)}
+                  onClick={(e) => {
+                    try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
+                    if (eyedropperActive && typeof onRequestPickColor === 'function') {
+                      try { onRequestPickColor({ r: color.r, g: color.g, b: color.b }); } catch (err) { /* ignore */ }
+                      return;
+                    }
+                    selectNewColor(index, selectedPalette);
+                  }}
                   data-palette-index={index}
                   className={(toolbarMode || toolbarRowsMode) ? "relative group cursor-pointer rounded p-0 transition-all touch-manipulation" : "relative group cursor-pointer border border-elegant-border rounded-lg p-0.5 hover:shadow-lg transition-all touch-manipulation color-bg-highlight"}
                 >
@@ -806,10 +832,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                         <TooltipTrigger asChild>
                           <div className="relative">
                             <div
-                              className={(toolbarMode || toolbarRowsMode) ? "rounded cursor-pointer transition-all" : "w-full aspect-square border border-elegant-border rounded cursor-pointer transition-all hover:scale-105"}
+                              className={(toolbarMode || toolbarRowsMode) ? "rounded" : "w-full aspect-square border border-elegant-border rounded hover:scale-105"}
                               style={{
                                 backgroundColor: `rgb(${color.r}, ${color.g}, ${color.b})`,
                                 opacity: color.transparent ? 0.5 : 1,
+                                cursor: eyedropperActive ? `url("${makeSvgDataUri().uri}") ${makeSvgDataUri().hotspotX} ${makeSvgDataUri().hotspotY}, auto` : undefined,
                                 ...(
                                   toolbarRowsMode
                                     ? { width: `100%`, height: `32px` }

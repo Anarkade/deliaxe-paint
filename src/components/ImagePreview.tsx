@@ -149,6 +149,15 @@ interface ImagePreviewProps {
   paletteDepthProcessed?: { r: number; g: number; b: number };
   // Optional: allow parent to force container styles (height/width constraints)
   containerStyle?: React.CSSProperties;
+  // Eyedropper integration: when active, ImagePreview will show a custom
+  // cursor and allow sampling colors from the canvas. Parent receives the
+  // picked color via `onEyedropPick`.
+  eyedropperActive?: boolean;
+  onEyedropPick?: (color: { r: number; g: number; b: number }) => void;
+  // Optional editor refs so ImagePreview can expose its internal canvas
+  // element for other editor utilities (like sampling from outside the
+  // component). The hook's `canvasRef` will be kept in sync.
+  editorRefs?: import('./retroEditor/useRetroEditorState').EditorRefs;
 }
 export type ImagePreviewHandle = {
   fitToWidthButtonAction: () => void;
@@ -190,7 +199,11 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   isVerticalLayout,
   containerStyle,
   controlledShowOriginal,
-  controlledZoom
+  controlledZoom,
+  // Eyedropper props (ensure these are destructured so runtime references are defined)
+  editorRefs,
+  eyedropperActive,
+  onEyedropPick
 }: ImagePreviewProps, ref) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1401,6 +1414,244 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       drawImageIfReady(originalImage);
     }
   }, [originalImage, processedImageData, showOriginal, processedBitmapVersion, processedAspectRatio]);
+
+  // Expose the internal canvas element to the editor hook (if provided)
+  useEffect(() => {
+    try {
+      if (editorRefs && editorRefs.canvasRef) {
+        editorRefs.canvasRef.current = canvasRef.current;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [editorRefs]);
+
+  // Eyedropper behavior: when active show a custom cursor over the preview
+  // and sample pixels from the canvas on pointerdown. The parent receives
+  // the sampled color via `onEyedropPick` and is expected to deactivate the
+  // eyedropper (clear the active flag) after handling the pick.
+  useEffect(() => {
+    if (!editorRefs && !canvasRef.current) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    let prevCursorCanvas: string | null = null;
+    let prevCursorContainer: string | null = null;
+
+    const makeSvg = () => {
+      // Use Lucide 'Pipette' paths: shadow copy (translated 1,1) and white foreground
+      return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24'>\n  <!-- Shadow: black, offset by 1,1 -->\n  <g fill='none' stroke='#000' stroke-width='1.6' transform='translate(1 1)'>\n    <path d='m2 22 1-1h3l9-9'/>\n    <path d='M3 21v-3l9-9'/>\n    <path d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/>\n  </g>\n  <!-- Foreground: white pipette (Lucide) -->\n  <g fill='none' stroke='#fff' stroke-width='1.2'>\n    <path d='m2 22 1-1h3l9-9'/>\n    <path d='M3 21v-3l9-9'/>\n    <path d='m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z'/>\n  </g>\n</svg>`;
+    };
+
+    const makeSvgDataUri = () => {
+      try {
+        const svg = makeSvg();
+        const b64 = typeof window !== 'undefined' ? window.btoa(unescape(encodeURIComponent(svg))) : '';
+        // hotspot approximate for SVG fallback (scaled from 24-space to 16px)
+        const scale = 16 / 24;
+        const hotspotX = Math.max(0, Math.round(2 * scale));
+        const hotspotY = Math.max(0, Math.round(20 * scale));
+        return `url("data:image/svg+xml;base64,${b64}") ${hotspotX} ${hotspotY}, auto`;
+      } catch (e) {
+        return 'crosshair';
+      }
+    };
+
+    const generateCursorPng = async (svgStr: string): Promise<string | null> => {
+      try {
+        return await new Promise<string>((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            try {
+              // Use 32×32 PNG to improve cursor rendering on high-DPI/Windows
+              const cw = 32;
+              const ch = 32;
+              const canvasTmp = document.createElement('canvas');
+              canvasTmp.width = cw;
+              canvasTmp.height = ch;
+              const ctx = canvasTmp.getContext('2d');
+              if (!ctx) return resolve(null);
+              ctx.clearRect(0, 0, cw, ch);
+              // Draw the SVG onto the 32×32 canvas
+              ctx.drawImage(img, 0, 0, cw, ch);
+              const png = canvasTmp.toDataURL('image/png');
+              resolve(png);
+            } catch (e) { resolve(null); }
+          };
+          img.onerror = () => resolve(null);
+          img.src = 'data:image/svg+xml;charset=utf8,' + encodeURIComponent(svgStr);
+        });
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const applyGlobalCursor = (png: string, hotspotX: number, hotspotY: number) => {
+      const pngCursor = `url("${png}") ${hotspotX} ${hotspotY}, auto`;
+      try {
+        canvas.style.cursor = pngCursor;
+        if (containerRef.current) containerRef.current.style.cursor = pngCursor;
+      } catch (e) { /* ignore */ }
+    };
+
+    const handlePointerDown = (ev: PointerEvent) => {
+      try {
+        const rect = canvas.getBoundingClientRect();
+        const cw = canvas.width || 1;
+        const ch = canvas.height || 1;
+        const cssW = rect.width || 1;
+        const cssH = rect.height || 1;
+        const cx = (ev.clientX - rect.left) * (cw / cssW);
+        const cy = (ev.clientY - rect.top) * (ch / cssH);
+        const x = Math.floor(Math.max(0, Math.min(cw - 1, cx)));
+        const y = Math.floor(Math.max(0, Math.min(ch - 1, cy)));
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        const d = ctx.getImageData(x, y, 1, 1).data;
+        const r = d[0] || 0;
+        const g = d[1] || 0;
+        const b = d[2] || 0;
+        try { onEyedropPick?.({ r, g, b }); } catch (e) { /* ignore */ }
+        // Immediately remove overlay/native cursor so UI returns to normal
+        try {
+          removeOverlayCursor();
+        } catch (e) { /* ignore */ }
+        try {
+          if (curObjectUrl) { URL.revokeObjectURL(curObjectUrl); curObjectUrl = null; }
+        } catch (e) { /* ignore */ }
+        ev.preventDefault();
+        ev.stopPropagation();
+      } catch (e) {
+        // ignore sampling failures
+      }
+    };
+
+    const svgFallbackCursor = makeSvgDataUri();
+
+    // Keep track of any generated native cursor object URL so we can revoke it.
+    let curObjectUrl: string | null = null;
+    const removeOverlayCursor = () => {
+      try {
+        // Revoke any created .cur/object URL
+        if (curObjectUrl) {
+          try { URL.revokeObjectURL(curObjectUrl); } catch { /* ignore */ }
+          curObjectUrl = null;
+        }
+        // Restore element-level cursors
+        try { canvas.style.cursor = prevCursorCanvas || ''; } catch { /* ignore */ }
+        if (containerRef.current) {
+          try { containerRef.current.style.cursor = prevCursorContainer || ''; } catch { /* ignore */ }
+        }
+      } catch (e) { /* ignore */ }
+    };
+
+    // Remove overlay in response to global toolbar toggles (safety-net)
+    const onGlobalEyedropperOff = () => {
+      try {
+        removeOverlayCursor();
+      } catch (e) { /* ignore */ }
+    };
+    window.addEventListener('deliaxe:eyedropper-off', onGlobalEyedropperOff as EventListener);
+
+    if (typeof (window) !== 'undefined') {
+      if (eyedropperActive) {
+        prevCursorCanvas = canvas.style.cursor || '';
+        prevCursorContainer = containerRef.current ? containerRef.current.style.cursor || '' : '';
+        try {
+          canvas.style.cursor = svgFallbackCursor;
+          if (containerRef.current) containerRef.current.style.cursor = svgFallbackCursor;
+        } catch (e) { /* ignore */ }
+
+        canvas.addEventListener('pointerdown', handlePointerDown);
+
+            // We no longer create a pointer-follow overlay. Rely on native
+            // cursor applied to the canvas/container (and revoked when done).
+
+        
+
+        (async () => {
+          try {
+            const svg = makeSvg();
+            // Rely on native cursor rendering; no pointer-follow overlay.
+
+            // Also attempt to generate PNG cursor for native cursor support.
+            const png = await generateCursorPng(svg);
+            if (png) {
+              // Hotspot scaled from 24-space to 32px PNG
+              const scale = 32 / 24;
+              const hotspotX = Math.max(0, Math.round(2 * scale));
+              const hotspotY = Math.max(0, Math.round(20 * scale));
+              applyGlobalCursor(png, hotspotX, hotspotY);
+              try {
+                // Try to create a native .cur (ICO/CUR) in-memory using the PNG
+                // to get robust native cursor support on Windows browsers.
+                try {
+                  const resp = await fetch(png);
+                  const pngBuf = await resp.arrayBuffer();
+                  const pngLen = pngBuf.byteLength;
+                  // CUR header: reserved(2) = 0, type(2) = 2, count(2) = 1
+                  const headerSize = 6;
+                  const entrySize = 16;
+                  const totalSize = headerSize + entrySize + pngLen;
+                  const buf = new Uint8Array(totalSize);
+                  const dv = new DataView(buf.buffer);
+                  // header
+                  dv.setUint16(0, 0, true); // reserved
+                  dv.setUint16(2, 2, true); // type = CUR
+                  dv.setUint16(4, 1, true); // count
+                  // entry
+                  buf[6] = 32; // width (use 32 for clarity)
+                  buf[7] = 32; // height
+                  buf[8] = 0; // color count
+                  buf[9] = 0; // reserved
+                  dv.setUint16(10, hotspotX, true); // hotspot x
+                  dv.setUint16(12, hotspotY, true); // hotspot y
+                  dv.setUint32(14, pngLen, true); // size of image data
+                  dv.setUint32(18, headerSize + entrySize, true); // offset to image data
+                  // copy png bytes after header+entry
+                  buf.set(new Uint8Array(pngBuf), headerSize + entrySize);
+                  const blob = new Blob([buf], { type: 'image/x-icon' });
+                  if (curObjectUrl) {
+                    try { URL.revokeObjectURL(curObjectUrl); } catch { /* ignore */ }
+                    curObjectUrl = null;
+                  }
+                  curObjectUrl = URL.createObjectURL(blob);
+                  const curCursor = `url("${curObjectUrl}") ${hotspotX} ${hotspotY}, auto`;
+                  try { canvas.style.cursor = curCursor; } catch { /* ignore */ }
+                  if (containerRef.current) {
+                    try { containerRef.current.style.cursor = curCursor; } catch { /* ignore */ }
+                  }
+                } catch (e) {
+                  // If CUR generation fails, fall back to PNG data-uri cursor
+                  const pngCursor = `url("${png}") ${hotspotX} ${hotspotY}, auto`;
+                  try { canvas.style.cursor = pngCursor; } catch { /* ignore */ }
+                  if (containerRef.current) {
+                    try { containerRef.current.style.cursor = pngCursor; } catch { /* ignore */ }
+                  }
+                }
+              } catch (e) { /* ignore */ }
+            }
+          } catch (e) { /* ignore */ }
+        })();
+      }
+    }
+
+    return () => {
+      try {
+        try { /* remove overlay cursor if present */ removeOverlayCursor(); } catch (e) { /* ignore */ }
+        canvas.removeEventListener('pointerdown', handlePointerDown);
+        if (canvas) canvas.style.cursor = prevCursorCanvas || '';
+        if (containerRef.current) containerRef.current.style.cursor = prevCursorContainer || '';
+        try {
+          if (curObjectUrl) {
+            try { URL.revokeObjectURL(curObjectUrl); } catch { /* ignore */ }
+            curObjectUrl = null;
+          }
+        } catch (e) { /* ignore */ }
+      } catch (e) { /* ignore */ }
+      try { window.removeEventListener('deliaxe:eyedropper-off', onGlobalEyedropperOff as EventListener); } catch (e) { /* ignore */ }
+    };
+  }, [eyedropperActive, onEyedropPick, editorRefs]);
 
   // Cleanup bitmap on unmount
   useEffect(() => {
