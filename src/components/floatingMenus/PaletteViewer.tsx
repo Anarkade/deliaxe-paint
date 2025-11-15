@@ -849,11 +849,13 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
                   }}
                   onClick={(e) => {
                     try {
-                      if (eyedropperActive && typeof onRequestPickColor === 'function') {
-                        // When eyedropper is active, clicking a palette block should
-                        // pick the color. Do not stop propagation so other handlers
-                        // (capture-phase) can also observe the event.
+                      // Always attempt pick first to avoid races where active state
+                      // was cleared by another handler between interactions.
+                      if (typeof onRequestPickColor === 'function') {
                         try { onRequestPickColor({ r: color.r, g: color.g, b: color.b }); } catch (err) { /* ignore */ }
+                      }
+                      if (eyedropperActive) {
+                        try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
                         return;
                       }
                     } catch (err) { /* ignore */ }

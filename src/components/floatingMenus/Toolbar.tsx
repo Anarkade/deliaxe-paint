@@ -133,8 +133,34 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
         }
       } catch (e) { /* ignore */ }
     };
+    // Also listen to pointerdown and click in capture phase as defensive
+    // fallbacks because some browsers/events ordering may cause pointerup
+    // handlers to be removed by other listeners added during canvas
+    // interactions. Capture-phase ensures our handler runs first.
+    const handlerClick = (ev: MouseEvent) => {
+      try {
+        if (activeTab !== 'eyedropper') return;
+        const tgt = ev.target as Element | null;
+        if (!tgt) return;
+        const sw = tgt.closest('[data-toolbar-swatch]') as HTMLElement | null;
+        if (!sw) return;
+        const kind = sw.getAttribute('data-toolbar-swatch');
+        if (kind === 'background') {
+          if (colorBackground) try { onRequestPickColor?.(colorBackground as Color); } catch { /* ignore */ }
+        } else if (kind === 'foreground') {
+          if (colorForeground) try { onRequestPickColor?.(colorForeground as Color); } catch { /* ignore */ }
+        }
+      } catch (e) { /* ignore */ }
+    };
+
     window.addEventListener('pointerup', handler, { capture: true });
-    return () => { try { window.removeEventListener('pointerup', handler as any, { capture: true } as any); } catch { try { window.removeEventListener('pointerup', handler as any); } catch { /* ignore */ } } };
+    window.addEventListener('pointerdown', handler, { capture: true });
+    window.addEventListener('click', handlerClick, { capture: true });
+    return () => {
+      try { window.removeEventListener('pointerup', handler as any, { capture: true } as any); } catch { try { window.removeEventListener('pointerup', handler as any); } catch { /* ignore */ } }
+      try { window.removeEventListener('pointerdown', handler as any, { capture: true } as any); } catch { try { window.removeEventListener('pointerdown', handler as any); } catch { /* ignore */ } }
+      try { window.removeEventListener('click', handlerClick as any, { capture: true } as any); } catch { try { window.removeEventListener('click', handlerClick as any); } catch { /* ignore */ } }
+    };
   }, [activeTab, colorBackground, colorForeground, onRequestPickColor]);
 
   // Diagnostic: log hoverPickedColor and incoming colorForeground prop
@@ -769,9 +795,12 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                   aria-hidden="true"
                   onClick={(e) => {
                     try {
+                      // Always attempt to pick the color first so that picks
+                      // succeed even if activeTab was cleared by other handlers
+                      // between the user's interactions (race conditions).
+                      try { onRequestPickColor?.(colorBackground as Color); } catch (e) { /* ignore */ }
                       if (activeTab === 'eyedropper') {
-                        // When eyedropper is active, pick the background color.
-                        try { onRequestPickColor?.(colorBackground as Color); } catch (e) { /* ignore */ }
+                        try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
                         return;
                       }
                     } catch (err) { /* ignore */ }
@@ -812,8 +841,10 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                   data-toolbar-swatch="foreground"
                   onClick={(e) => {
                     try {
+                      // Ensure pick happens regardless of transient activeTab state
+                      try { onRequestPickColor?.(colorForeground as Color); } catch (e) { /* ignore */ }
                       if (activeTab === 'eyedropper') {
-                        try { onRequestPickColor?.(colorForeground as Color); } catch (e) { /* ignore */ }
+                        try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
                         return;
                       }
                     } catch (err) { /* ignore */ }

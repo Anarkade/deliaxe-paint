@@ -286,9 +286,18 @@ export const RetroImageEditor = () => {
         }
 
         const isOutsideSection = !target.closest('[data-section]');
-        const isButton = target.closest('button') || target.closest('[role="button"]');
+        // Treat explicit buttons and toolbar/palette swatches as interactive
+        // controls that should NOT cause the active floating tab to close.
+        const isButton = !!(
+          target.closest('button') ||
+          target.closest('[role="button"]') ||
+          target.closest('[data-toolbar-swatch]') ||
+          target.closest('[data-toolbar-swatches]') ||
+          target.closest('[data-palette-index]') ||
+          target.closest('.palette-viewer-root')
+        );
 
-        // Only close if clicking outside and NOT on any button
+        // Only close if clicking outside and NOT on any recognized interactive control
         if (isOutsideSection && !isButton) {
           setActiveTab(null);
         }
@@ -336,6 +345,72 @@ export const RetroImageEditor = () => {
       window.removeEventListener('deliaxe:eyedropper-pick', onPick as EventListener);
     };
   }, [activeTab, editorActions]);
+
+  // Defensive: ensure clicks on toolbar/palette swatches always dispatch
+  // an eyedropper-pick event while eyedropper is active. Use capture-phase
+  // listeners so this runs before any bubble-phase handlers that might
+  // clear state or prevent the pick from reaching the editor.
+  useEffect(() => {
+    if (activeTab !== 'eyedropper') return;
+
+    const parseRgb = (s: string | null) => {
+      try {
+        if (!s) return null;
+        // handle formats: rgb(r,g,b) or rgba(r,g,b,a)
+        const m = s.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+        if (!m) return null;
+        return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
+      } catch (e) {
+        return null;
+      }
+    };
+
+    const handler = (ev: Event) => {
+      try {
+        const e = ev as PointerEvent | MouseEvent;
+        const tgt = (e.target as Element) || null;
+        if (!tgt) return;
+
+        // Toolbar swatches
+        const sw = tgt.closest('[data-toolbar-swatch]') as HTMLElement | null;
+        if (sw) {
+          // Try to read inline/background color from the swatch element
+          const cs = window.getComputedStyle(sw).backgroundColor || '';
+          const color = parseRgb(cs);
+          if (color) {
+            try { window.dispatchEvent(new CustomEvent('deliaxe:eyedropper-pick', { detail: color })); } catch (e) { /* ignore */ }
+            try { e.stopPropagation(); e.preventDefault(); } catch { /* ignore */ }
+            return;
+          }
+        }
+
+        // Palette blocks (they render an inner element with background color)
+        const pal = tgt.closest('[data-palette-index]') as HTMLElement | null;
+        if (pal) {
+          // try to find the color-containing element inside the palette block
+          const inner = pal.querySelector('[style]') as HTMLElement | null;
+          const el = inner || pal;
+          const cs = window.getComputedStyle(el).backgroundColor || '';
+          const color = parseRgb(cs);
+          if (color) {
+            try { window.dispatchEvent(new CustomEvent('deliaxe:eyedropper-pick', { detail: color })); } catch (e) { /* ignore */ }
+            try { e.stopPropagation(); e.preventDefault(); } catch { /* ignore */ }
+            return;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    // Capture-phase on pointerdown and click to be robust across browsers
+    window.addEventListener('pointerdown', handler, { capture: true });
+    window.addEventListener('click', handler, { capture: true });
+    return () => {
+      try { window.removeEventListener('pointerdown', handler as any, { capture: true } as any); } catch { try { window.removeEventListener('pointerdown', handler as any); } catch { /* ignore */ } }
+      try { window.removeEventListener('click', handler as any, { capture: true } as any); } catch { try { window.removeEventListener('click', handler as any); } catch { /* ignore */ } }
+    };
+  }, [activeTab]);
 
   // Measure header height so floating dialogs can be positioned below it when toolbar is horizontal
   useEffect(() => {
