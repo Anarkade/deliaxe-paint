@@ -124,6 +124,23 @@ export const RetroImageEditor = () => {
     });
   }, [editorRefs, editorActions]);
 
+  // Centralized handler for toolbar/palette pick requests.
+  // Copies picked color to foreground for Brush/Eyedropper, to background for Eraser,
+  // and ignores picks for other active tabs.
+  const handleToolbarPickColor = useCallback((c: any) => {
+    try {
+      if (activeTab === 'brush' || activeTab === 'eyedropper') {
+        editorActions.setColorForeground(c);
+      } else if (activeTab === 'eraser') {
+        editorActions.setColorBackground(c);
+      } else {
+        // No-op for other tools
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [activeTab, editorActions]);
+
   // Processing guards to prevent re-entrant or duplicate work
   const processingRef = useRef<boolean>(false);
   const lastProcessKeyRef = useRef<string | null>(null);
@@ -1028,9 +1045,7 @@ export const RetroImageEditor = () => {
                 processedPaletteColors: editorState.orderedPaletteColors,
                 colorForeground: editorState.colorForeground,
                 colorBackground: editorState.colorBackground,
-                onRequestPickColor: (c: any) => {
-                  try { editorActions.setColorForeground(c); } catch (e) { /* ignore */ }
-                },
+                onRequestPickColor: handleToolbarPickColor,
                 onToolbarPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
                 onToolbarImageUpdate: (img: ImageData) => {
                   setProcessedImageData(img);
@@ -1115,9 +1130,7 @@ export const RetroImageEditor = () => {
                 processedPaletteColors: editorState.orderedPaletteColors,
                 colorForeground: editorState.colorForeground,
                 colorBackground: editorState.colorBackground,
-                onRequestPickColor: (c: any) => {
-                  try { editorActions.setColorForeground(c); } catch (e) { /* ignore */ }
-                },
+                onRequestPickColor: handleToolbarPickColor,
                 onToolbarPaletteUpdate: (colors: any, meta?: any) => handlePaletteUpdateFromViewer(colors, meta),
                 onToolbarImageUpdate: (img: ImageData) => {
                   setProcessedImageData(img);
