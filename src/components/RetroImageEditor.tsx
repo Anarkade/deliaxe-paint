@@ -323,7 +323,7 @@ export const RetroImageEditor = () => {
     const onMove = (ev: Event) => {
       try {
         const detail = (ev as CustomEvent)?.detail;
-        try { console.debug && console.debug('[RetroImageEditor] eyedropper-move', detail); } catch (e) { /* ignore */ }
+        
         if (detail && typeof detail.r === 'number') {
           editorActions.setColorForeground({ r: detail.r, g: detail.g, b: detail.b });
         }
@@ -332,7 +332,7 @@ export const RetroImageEditor = () => {
     const onPick = (ev: Event) => {
       try {
         const detail = (ev as CustomEvent)?.detail;
-        try { console.debug && console.debug('[RetroImageEditor] eyedropper-pick', detail); } catch (e) { /* ignore */ }
+        
         if (detail && typeof detail.r === 'number') {
           editorActions.setColorForeground({ r: detail.r, g: detail.g, b: detail.b });
         }

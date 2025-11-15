@@ -82,7 +82,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     const onMove = (ev: Event) => {
       try {
         const detail = (ev as CustomEvent)?.detail;
-        try { console.debug && console.debug('[Toolbar] eyedropper-move', detail); } catch (e) { /* ignore */ }
+        
         if (detail && typeof detail.r === 'number') {
           const c = { r: detail.r, g: detail.g, b: detail.b } as Color;
           setHoverPickedColor(c);
@@ -97,7 +97,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
     const onPick = (ev: Event) => {
       try {
         const detail = (ev as CustomEvent)?.detail;
-        try { console.debug && console.debug('[Toolbar] eyedropper-pick', detail); } catch (e) { /* ignore */ }
+        
         if (detail && typeof detail.r === 'number') {
           // keep hover color until user changes or toggles
           setHoverPickedColor({ r: detail.r, g: detail.g, b: detail.b });
@@ -166,7 +166,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   // Diagnostic: log hoverPickedColor and incoming colorForeground prop
   useEffect(() => {
     try {
-      console.debug && console.debug('[Toolbar] render: prop colorForeground', colorForeground, 'hoverPickedColor', hoverPickedColor);
+      
     } catch (e) { /* ignore */ }
   }, [colorForeground, hoverPickedColor]);
 

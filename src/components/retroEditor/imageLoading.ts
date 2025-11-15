@@ -268,7 +268,7 @@ export async function loadImage(
             const indexed = counts.map((cnt, idx) => ({ idx, count: cnt, color: extractedPalette[idx] }));
             indexed.sort((a, b) => b.count - a.count);
             const top5 = indexed.slice(0, 5).map(x => ({ r: x.color.r, g: x.color.g, b: x.color.b, count: x.count }));
-            console.debug('Indexed image detected — FG/BG chosen', { foreground: fg, background: bg, top5 });
+            
           } catch (e) {
             console.warn('Failed to compute palette pixel counts:', e);
           }
