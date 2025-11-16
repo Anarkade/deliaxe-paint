@@ -177,6 +177,10 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
   const paletteCellRef = useRef<HTMLDivElement | null>(null);
   const fgRef = useRef<HTMLDivElement | null>(null);
 
+  // No inline style computation here — prefer a CSS class that forces the
+  // hover appearance. This avoids inline-style specificity issues and keeps
+  // theming centralized in CSS.
+
   // Sync local text with external zoom when not focused (avoid fighting typing)
   useEffect(() => {
     const el = inputRef.current as HTMLElement | null;
@@ -625,7 +629,14 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('brush') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('brush')}
-            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className={
+              `flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 ` +
+              (activeTab === 'brush'
+                // When brush is active, keep the normal blood-red appearance
+                // but add helper classes that disable :hover and show pressed state
+                ? 'bg-blood-red border-blood-red toolbar-disable-hover toolbar-pressed'
+                : 'bg-blood-red border-blood-red')
+            }
             disabled={!originalImage}
             title={t('brush')}
           >
@@ -634,7 +645,10 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('eyedropper') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('eyedropper')}
-            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className={
+              `flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 ` +
+              (activeTab === 'eyedropper' ? 'bg-blood-red border-blood-red toolbar-pressed' : 'bg-blood-red border-blood-red')
+            }
             disabled={!originalImage}
             title={t('eyedropper')}
           >
@@ -644,7 +658,10 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('eraser') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('eraser')}
-            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className={
+              `flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 ` +
+              (activeTab === 'eraser' ? 'bg-blood-red border-blood-red toolbar-pressed' : 'bg-blood-red border-blood-red')
+            }
             disabled={!originalImage}
             title={t('eraser')}
           >
