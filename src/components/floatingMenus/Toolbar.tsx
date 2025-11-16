@@ -85,12 +85,9 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
         
         if (detail && typeof detail.r === 'number') {
           const c = { r: detail.r, g: detail.g, b: detail.b } as Color;
+          // Keep hover-only: do not forward to parent. Only ColorEditor Confirm
+          // should persistently change editor foreground/background.
           setHoverPickedColor(c);
-          // Also notify parent immediately so editor state (colorForeground)
-          // is updated continuously while dragging. This ensures the
-          // toolbar swatch and editor state stay in sync even if some
-          // components don't re-render rapidly enough.
-          try { onRequestPickColor?.(c); } catch (e) { /* ignore */ }
         }
       } catch { /* ignore */ }
     };
@@ -126,10 +123,12 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
         const sw = tgt.closest('[data-toolbar-swatch]') as HTMLElement | null;
         if (!sw) return;
         const kind = sw.getAttribute('data-toolbar-swatch');
+        // Do not forward swatch clicks to parent as persistent picks.
+        // The user must Confirm inside ColorEditor to copy colors into FG/BG.
         if (kind === 'background') {
-          if (colorBackground) try { onRequestPickColor?.(colorBackground as Color); } catch { /* ignore */ }
+          // noop
         } else if (kind === 'foreground') {
-          if (colorForeground) try { onRequestPickColor?.(colorForeground as Color); } catch { /* ignore */ }
+          // noop
         }
       } catch (e) { /* ignore */ }
     };
@@ -145,10 +144,12 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
         const sw = tgt.closest('[data-toolbar-swatch]') as HTMLElement | null;
         if (!sw) return;
         const kind = sw.getAttribute('data-toolbar-swatch');
+        // Do not forward swatch clicks to parent as persistent picks.
+        // The user must Confirm inside ColorEditor to copy colors into FG/BG.
         if (kind === 'background') {
-          if (colorBackground) try { onRequestPickColor?.(colorBackground as Color); } catch { /* ignore */ }
+          // noop
         } else if (kind === 'foreground') {
-          if (colorForeground) try { onRequestPickColor?.(colorForeground as Color); } catch { /* ignore */ }
+          // noop
         }
       } catch (e) { /* ignore */ }
     };
@@ -793,12 +794,8 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                 <div
                   className="absolute z-0 toolbar-swatch"
                   aria-hidden="true"
-                  onClick={(e) => {
+                    onClick={(e) => {
                     try {
-                      // Always attempt to pick the color first so that picks
-                      // succeed even if activeTab was cleared by other handlers
-                      // between the user's interactions (race conditions).
-                      try { onRequestPickColor?.(colorBackground as Color); } catch (e) { /* ignore */ }
                       if (activeTab === 'eyedropper') {
                         try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
                         return;
@@ -841,8 +838,6 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                   data-toolbar-swatch="foreground"
                   onClick={(e) => {
                     try {
-                      // Ensure pick happens regardless of transient activeTab state
-                      try { onRequestPickColor?.(colorForeground as Color); } catch (e) { /* ignore */ }
                       if (activeTab === 'eyedropper') {
                         try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
                         return;

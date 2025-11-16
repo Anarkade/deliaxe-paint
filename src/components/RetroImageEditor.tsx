@@ -333,103 +333,15 @@ export const RetroImageEditor = () => {
     };
   }, [checkOrientation, isLanguageDropdownOpen, activeTab]);
 
-  // When the eyedropper is active, listen for global move/pick events
-  // emitted by ImagePreview and update the editor foreground color
-  // continuously as the user drags. This ensures `editorState.colorForeground`
-  // is updated even if parent callbacks were missed for some reason.
-  useEffect(() => {
-    if (activeTab !== 'eyedropper') return;
-    const onMove = (ev: Event) => {
-      try {
-        const detail = (ev as CustomEvent)?.detail;
-        
-        if (detail && typeof detail.r === 'number') {
-          editorActions.setColorForeground({ r: detail.r, g: detail.g, b: detail.b });
-        }
-      } catch (e) { /* ignore */ }
-    };
-    const onPick = (ev: Event) => {
-      try {
-        const detail = (ev as CustomEvent)?.detail;
-        
-        if (detail && typeof detail.r === 'number') {
-          editorActions.setColorForeground({ r: detail.r, g: detail.g, b: detail.b });
-        }
-      } catch (e) { /* ignore */ }
-    };
-    window.addEventListener('deliaxe:eyedropper-move', onMove as EventListener);
-    window.addEventListener('deliaxe:eyedropper-pick', onPick as EventListener);
-    return () => {
-      window.removeEventListener('deliaxe:eyedropper-move', onMove as EventListener);
-      window.removeEventListener('deliaxe:eyedropper-pick', onPick as EventListener);
-    };
-  }, [activeTab, editorActions]);
+  // NOTE: Do NOT persistently update editor foreground/background on
+  // eyedropper move/pick events. Those should only update a transient
+  // hover color in the toolbar. Persisting to `editorState.colorForeground`
+  // must only happen when the user confirms in ColorEditor.
 
-  // Defensive: ensure clicks on toolbar/palette swatches always dispatch
-  // an eyedropper-pick event while eyedropper is active. Use capture-phase
-  // listeners so this runs before any bubble-phase handlers that might
-  // clear state or prevent the pick from reaching the editor.
-  useEffect(() => {
-    if (activeTab !== 'eyedropper') return;
-
-    const parseRgb = (s: string | null) => {
-      try {
-        if (!s) return null;
-        // handle formats: rgb(r,g,b) or rgba(r,g,b,a)
-        const m = s.match(/rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
-        if (!m) return null;
-        return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
-      } catch (e) {
-        return null;
-      }
-    };
-
-    const handler = (ev: Event) => {
-      try {
-        const e = ev as PointerEvent | MouseEvent;
-        const tgt = (e.target as Element) || null;
-        if (!tgt) return;
-
-        // Toolbar swatches
-        const sw = tgt.closest('[data-toolbar-swatch]') as HTMLElement | null;
-        if (sw) {
-          // Try to read inline/background color from the swatch element
-          const cs = window.getComputedStyle(sw).backgroundColor || '';
-          const color = parseRgb(cs);
-          if (color) {
-            try { window.dispatchEvent(new CustomEvent('deliaxe:eyedropper-pick', { detail: color })); } catch (e) { /* ignore */ }
-            try { e.stopPropagation(); e.preventDefault(); } catch { /* ignore */ }
-            return;
-          }
-        }
-
-        // Palette blocks (they render an inner element with background color)
-        const pal = tgt.closest('[data-palette-index]') as HTMLElement | null;
-        if (pal) {
-          // try to find the color-containing element inside the palette block
-          const inner = pal.querySelector('[style]') as HTMLElement | null;
-          const el = inner || pal;
-          const cs = window.getComputedStyle(el).backgroundColor || '';
-          const color = parseRgb(cs);
-          if (color) {
-            try { window.dispatchEvent(new CustomEvent('deliaxe:eyedropper-pick', { detail: color })); } catch (e) { /* ignore */ }
-            try { e.stopPropagation(); e.preventDefault(); } catch { /* ignore */ }
-            return;
-          }
-        }
-      } catch (e) {
-        // ignore
-      }
-    };
-
-    // Capture-phase on pointerdown and click to be robust across browsers
-    window.addEventListener('pointerdown', handler, { capture: true });
-    window.addEventListener('click', handler, { capture: true });
-    return () => {
-      try { window.removeEventListener('pointerdown', handler as any, { capture: true } as any); } catch { try { window.removeEventListener('pointerdown', handler as any); } catch { /* ignore */ } }
-      try { window.removeEventListener('click', handler as any, { capture: true } as any); } catch { try { window.removeEventListener('click', handler as any); } catch { /* ignore */ } }
-    };
-  }, [activeTab]);
+  // NOTE: Previously we dispatched synthetic eyedropper-pick events when the
+  // user clicked toolbar/palette swatches. That forwarded picks into
+  // components that could persistently set FG/BG. Remove that behavior so
+  // only ColorEditor Confirm drives persistent changes.
 
   // Measure header height so floating dialogs can be positioned below it when toolbar is horizontal
   useEffect(() => {
@@ -1073,6 +985,7 @@ export const RetroImageEditor = () => {
                 },
                 showOriginal: previewShowingOriginal,
                 paletteDepth: editorState.paletteDepthProcessed,
+                onRequestPickColor: handleToolbarPickColor,
               }}
             />
 
@@ -1158,6 +1071,7 @@ export const RetroImageEditor = () => {
                 },
                 showOriginal: previewShowingOriginal,
                 paletteDepth: editorState.paletteDepthProcessed,
+                onRequestPickColor: handleToolbarPickColor,
               }}
             />
           )}
@@ -1203,10 +1117,10 @@ export const RetroImageEditor = () => {
               // Eyedropper integration: allow ImagePreview to show custom cursor
               // and report sampled colors back to the editor when active.
               eyedropperActive={activeTab === 'eyedropper'}
-              onEyedropPick={(c) => {
-                try { editorActions.setColorForeground({ r: c.r, g: c.g, b: c.b }); } catch (e) { /* ignore */ }
-                // Keep eyedropper active so the user can pick multiple colors.
-              }}
+              // Note: do not persistently write sampled colors into editor state here.
+              // ImagePreview will still emit hover/pick events for transient UI,
+              // but only ColorEditor Confirm should call into editorActions to
+              // persistently update foreground/background colors.
               editorRefs={editor.refs}
               onShowOriginalChange={(show) => {
                         previewToggleWasManualRef.current = true;
