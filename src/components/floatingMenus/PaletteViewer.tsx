@@ -481,6 +481,11 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
           newColor: { r: nr, g: ng, b: nb },
           imageData: cloned
         });
+        // Also notify parent that a color was picked/confirmed so the
+        // toolbar/editor can update foreground/background depending on
+        // the active tool. The parent will decide (based on activeTab)
+        // whether to copy into colorForeground or colorBackground.
+        try { if (typeof onRequestPickColor === 'function') onRequestPickColor({ r: nr, g: ng, b: nb }); } catch (e) { /* ignore */ }
         // Close editor after notifications
         closeEditor();
         return;
@@ -491,6 +496,12 @@ export const PaletteViewer = ({ selectedPalette, imageData, onPaletteUpdate, ori
 
     // Default behavior: emit palette update (no raster available)
     emitPaletteUpdate(newColors);
+
+    // If parent provided a pick handler, notify it so the toolbar swatch
+    // and editor colors update according to the active tool (brush/eyedropper -> FG,
+    // eraser -> BG). The parent (RetroImageEditor) will gate the assignment
+    // based on the current activeTab.
+    try { if (typeof onRequestPickColor === 'function') onRequestPickColor({ r: c.r, g: c.g, b: c.b }); } catch (e) { /* ignore */ }
 
     // Then update the processed image pixels (if available) and notify parent
     // Let the parent handle applying the palette to the processed raster
