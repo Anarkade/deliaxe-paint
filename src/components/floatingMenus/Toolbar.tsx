@@ -800,6 +800,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                         onClick={(e) => {
                           try {
                             if (activeTab === 'eyedropper') {
+                              try { onRequestPickColor?.(colorBackground as Color); } catch (err) { /* ignore */ }
                               try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
                               return;
                             }
