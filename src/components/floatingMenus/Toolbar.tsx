@@ -791,62 +791,86 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             {showSwatches ? (
               <div data-toolbar-swatches="true" className="relative" style={{ width: `${SWATCH_CONTAINER_WIDTH}px`, height: `${SWATCH_CONTAINER_BASE_HEIGHT}px` }}>
                 {/* background square (slightly offset to the right/down) - positioned inside the container so it stays in flow */}
-                <div
-                  className="absolute z-0 toolbar-swatch"
-                  aria-hidden="true"
-                    onClick={(e) => {
-                    try {
-                      if (activeTab === 'eyedropper') {
-                        try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
-                        return;
-                      }
-                    } catch (err) { /* ignore */ }
-                    // Non-eyedropper clicks open editor/actions; prevent bubbling for those.
-                    try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
-                  }}
-                  role={activeTab === 'eyedropper' ? 'button' : undefined}
-                  data-toolbar-swatch="background"
-                  style={{
-                    left: `${SWATCH_OFFSET}px`,
-                    top: `${SWATCH_OFFSET}px`,
-                    width: `${SWATCH_BOX}px`,
-                    height: `${SWATCH_BOX}px`,
-                    borderRadius: '2px',
-                    border: '2px solid #7f7f7f',
-                    backgroundColor: colorToHex(colorBackground),
-                    cursor: activeTab === 'eyedropper' && pipette?.uri ? `url("${pipette.uri}") ${pipette.hotspotX} ${pipette.hotspotY}, auto` : undefined,
-                    boxSizing: 'border-box',
-                  }}
-                  
-                />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        className="absolute z-0 toolbar-swatch"
+                        aria-hidden="true"
+                        onClick={(e) => {
+                          try {
+                            if (activeTab === 'eyedropper') {
+                              try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
+                              return;
+                            }
+                          } catch (err) { /* ignore */ }
+                          // Non-eyedropper clicks open editor/actions; prevent bubbling for those.
+                          try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
+                        }}
+                        role={activeTab === 'eyedropper' ? 'button' : undefined}
+                        data-toolbar-swatch="background"
+                        style={{
+                          left: `${SWATCH_OFFSET}px`,
+                          top: `${SWATCH_OFFSET}px`,
+                          width: `${SWATCH_BOX}px`,
+                          height: `${SWATCH_BOX}px`,
+                          borderRadius: '2px',
+                          border: '2px solid #7f7f7f',
+                          backgroundColor: colorToHex(colorBackground),
+                          cursor: activeTab === 'eyedropper' && pipette?.uri ? `url("${pipette.uri}") ${pipette.hotspotX} ${pipette.hotspotY}, auto` : undefined,
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-mono text-xs text-muted-foreground text-left">
+                      <div>{t('colorBackground')}</div>
+                      <div className="font-semibold text-foreground">{colorToHex(colorBackground)}</div>
+                      <div>R {colorBackground ? colorBackground.r : 0}</div>
+                      <div>G {colorBackground ? colorBackground.g : 0}</div>
+                      <div>B {colorBackground ? colorBackground.b : 0}</div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
                 {/* foreground square (on top, left) - overlaps the background */}
-                <div
-                  ref={fgRef}
-                  className="absolute z-10 toolbar-swatch"
-                  style={{
-                    left: '0px',
-                    top: '0px',
-                    width: `${SWATCH_BOX}px`,
-                    height: `${SWATCH_BOX}px`,
-                    borderRadius: '2px',
-                    border: '2px solid #7f7f7f',
-                    backgroundColor: colorToHex(hoverPickedColor ?? colorForeground),
-                    cursor: activeTab === 'eyedropper' && pipette?.uri ? `url("${pipette.uri}") ${pipette.hotspotX} ${pipette.hotspotY}, auto` : undefined,
-                    boxSizing: 'border-box',
-                  }}
-                  aria-hidden="true"
-                  data-toolbar-swatch="foreground"
-                  onClick={(e) => {
-                    try {
-                      if (activeTab === 'eyedropper') {
-                        try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
-                        return;
-                      }
-                    } catch (err) { /* ignore */ }
-                    try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
-                  }}
-                  
-                />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div
+                        ref={fgRef}
+                        className="absolute z-10 toolbar-swatch"
+                        style={{
+                          left: '0px',
+                          top: '0px',
+                          width: `${SWATCH_BOX}px`,
+                          height: `${SWATCH_BOX}px`,
+                          borderRadius: '2px',
+                          border: '2px solid #7f7f7f',
+                          backgroundColor: colorToHex(hoverPickedColor ?? colorForeground),
+                          cursor: activeTab === 'eyedropper' && pipette?.uri ? `url("${pipette.uri}") ${pipette.hotspotX} ${pipette.hotspotY}, auto` : undefined,
+                          boxSizing: 'border-box',
+                        }}
+                        aria-hidden="true"
+                        data-toolbar-swatch="foreground"
+                        onClick={(e) => {
+                          try {
+                            if (activeTab === 'eyedropper') {
+                              try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
+                              return;
+                            }
+                          } catch (err) { /* ignore */ }
+                          try { e.stopPropagation(); e.preventDefault(); } catch (err) { /* ignore */ }
+                        }}
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-mono text-xs text-muted-foreground text-left">
+                      <div>{t('colorForeground')}</div>
+                      <div className="font-semibold text-foreground">{colorToHex(hoverPickedColor ?? colorForeground)}</div>
+                      <div>R {(hoverPickedColor ?? colorForeground) ? (hoverPickedColor ?? colorForeground)!.r : 0}</div>
+                      <div>G {(hoverPickedColor ?? colorForeground) ? (hoverPickedColor ?? colorForeground)!.g : 0}</div>
+                      <div>B {(hoverPickedColor ?? colorForeground) ? (hoverPickedColor ?? colorForeground)!.b : 0}</div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             ) : null}
           </div>
