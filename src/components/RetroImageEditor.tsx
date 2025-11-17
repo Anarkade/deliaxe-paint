@@ -320,7 +320,8 @@ export const RetroImageEditor = () => {
           target.closest('[data-toolbar-swatch]') ||
           target.closest('[data-toolbar-swatches]') ||
           target.closest('[data-palette-index]') ||
-          target.closest('.palette-viewer-root')
+          target.closest('.palette-viewer-root') ||
+          target.closest('[data-toolbar-interactive]')
         );
 
         // Only close if clicking outside and NOT on any recognized interactive control

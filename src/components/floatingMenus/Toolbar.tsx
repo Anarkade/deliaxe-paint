@@ -437,6 +437,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
                   </div>
                   <div className="relative px-0 mx-0">
                     <Input
+                      data-toolbar-interactive="true"
                       ref={inputRef}
                       type="text"
                       inputMode="decimal"
@@ -761,6 +762,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
               </TooltipProvider>
               <div className="relative w-full px-0 mx-0">
                 <Input
+                  data-toolbar-interactive="true"
                   ref={inputRef}
                   type="text"
                   inputMode="decimal"
