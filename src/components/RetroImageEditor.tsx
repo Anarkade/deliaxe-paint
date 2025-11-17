@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import React from 'react';
 import { ImportImage } from '@/components/tabMenus/ImportImage';
 import { CameraSelector } from '@/components/tabMenus/CameraSelector';
 import { ChangePalette, PaletteType } from '@/components/tabMenus/ChangePalette';
@@ -67,10 +68,15 @@ export const RetroImageEditor = () => {
   const [selectedResolution, setSelectedResolution] = useState<ResolutionType>('original');
   const [scalingMode, setScalingMode] = useState<CombinedScalingMode>('scale-to-fit-width');
   const [autoFitKey, setAutoFitKey] = useState<string | undefined>(undefined);
+  // Painting state: true while a tool (brush/eraser) is actively drawing
+  const [isPainting, setIsPainting] = useState<boolean>(false);
   // Track whether the preview is currently showing the original image or the processed one
   const [previewShowingOriginal, setPreviewShowingOriginal] = useState<boolean>(true);
   const previewToggleWasManualRef = useRef(false);
   const ignoreNextCloseRef = useRef(false);
+  // If image updates arrive while painting, defer toggling the preview
+  // until painting completes to avoid mid-stroke view/zoom changes.
+  const previewTogglePendingRef = useRef<boolean>(false);
   // Force the next processing run to use the ORIGINAL image as source.
   // This is set when the user explicitly selects a new palette so we avoid
   // applying the new palette on top of an already-processed raster.
@@ -163,6 +169,7 @@ export const RetroImageEditor = () => {
   const [frameWidth, setFrameWidth] = useState(16);
   const [frameHeight, setFrameHeight] = useState(16);
   const [tileGridColor, setTileGridColor] = useState('#808080');
+    // (autoFitKey already declared earlier)
   const [frameGridColor, setFrameGridColor] = useState('#96629d');
   const [tileLineThickness, setTileLineThickness] = useState(1);
   const [frameLineThickness, setFrameLineThickness] = useState(3);
@@ -445,6 +452,7 @@ export const RetroImageEditor = () => {
       returnCanvas,
       applyPaletteConversion,
       writeOrderedPalette,
+      isPainting,
       saveToHistory,
       setIsProcessing,
       setProcessingProgress,
@@ -745,7 +753,11 @@ export const RetroImageEditor = () => {
             // preview back to processed restores the exact edited image.
             editorRefs.lastManualProcessedRef.current = newProcessed;
             previewToggleWasManualRef.current = true;
-            setPreviewShowingOriginal(false);
+            if (isPainting) {
+              previewTogglePendingRef.current = true;
+            } else {
+              setPreviewShowingOriginal(false);
+            }
             saveToHistory({ imageData: newProcessed, palette: selectedPalette });
           } else {
             // Even if the image didn't change, persist the ordered palette.
@@ -758,7 +770,11 @@ export const RetroImageEditor = () => {
           setProcessedImageData(newProcessed);
           editorRefs.lastManualProcessedRef.current = newProcessed;
           previewToggleWasManualRef.current = true;
-          setPreviewShowingOriginal(false);
+          if (isPainting) {
+            previewTogglePendingRef.current = true;
+          } else {
+            setPreviewShowingOriginal(false);
+          }
           saveToHistory({ imageData: newProcessed, palette: selectedPalette });
         }
       } else {
@@ -791,6 +807,22 @@ export const RetroImageEditor = () => {
       }
     }
   }, [previewShowingOriginal]);
+
+  // When painting ends, apply any preview toggle that was deferred while painting
+  const [preserveZoomOnNextSwitch, setPreserveZoomOnNextSwitch] = useState(false);
+  useEffect(() => {
+    if (!isPainting && previewTogglePendingRef.current) {
+      try {
+        // Ask ImagePreview to preserve current zoom when applying this deferred switch
+        setPreserveZoomOnNextSwitch(true);
+        setPreviewShowingOriginal(false);
+        // Clear the preserve flag shortly after to avoid affecting unrelated switches
+        window.setTimeout(() => setPreserveZoomOnNextSwitch(false), 250);
+      } finally {
+        previewTogglePendingRef.current = false;
+      }
+    }
+  }, [isPainting]);
 
 
   // Wrapper for downloadImage
@@ -963,7 +995,11 @@ export const RetroImageEditor = () => {
                   setProcessedImageData(img);
                   editorRefs.lastManualProcessedRef.current = img;
                   previewToggleWasManualRef.current = true;
-                  setPreviewShowingOriginal(false);
+                  if (isPainting) {
+                    previewTogglePendingRef.current = true;
+                  } else {
+                    setPreviewShowingOriginal(false);
+                  }
                 },
                 showOriginalPreview: previewShowingOriginal,
                 paletteDepthOriginal: editorState.paletteDepthOriginal,
@@ -981,7 +1017,11 @@ export const RetroImageEditor = () => {
                   setProcessedImageData(img);
                   editorRefs.lastManualProcessedRef.current = img;
                   previewToggleWasManualRef.current = true;
-                  setPreviewShowingOriginal(false);
+                  if (isPainting) {
+                    previewTogglePendingRef.current = true;
+                  } else {
+                    setPreviewShowingOriginal(false);
+                  }
                 },
                 showOriginal: previewShowingOriginal,
                 paletteDepth: editorState.paletteDepthProcessed,
@@ -999,8 +1039,13 @@ export const RetroImageEditor = () => {
                 setProcessedImageData(img);
                 editorRefs.lastManualProcessedRef.current = img;
                 previewToggleWasManualRef.current = true;
-                setPreviewShowingOriginal(false);
+                if (isPainting) {
+                  previewTogglePendingRef.current = true;
+                } else {
+                  setPreviewShowingOriginal(false);
+                }
               }}
+              onPaintingChange={(v: boolean) => setIsPainting(v)}
             />
             <EraserTool
               active={activeTab === 'eraser'}
@@ -1011,8 +1056,13 @@ export const RetroImageEditor = () => {
                 setProcessedImageData(img);
                 editorRefs.lastManualProcessedRef.current = img;
                 previewToggleWasManualRef.current = true;
-                setPreviewShowingOriginal(false);
+                if (isPainting) {
+                  previewTogglePendingRef.current = true;
+                } else {
+                  setPreviewShowingOriginal(false);
+                }
               }}
+              onPaintingChange={(v: boolean) => setIsPainting(v)}
             />
             </>
           )}
@@ -1049,7 +1099,11 @@ export const RetroImageEditor = () => {
                   setProcessedImageData(img);
                   editorRefs.lastManualProcessedRef.current = img;
                   previewToggleWasManualRef.current = true;
-                  setPreviewShowingOriginal(false);
+                  if (isPainting) {
+                    previewTogglePendingRef.current = true;
+                  } else {
+                    setPreviewShowingOriginal(false);
+                  }
                 },
                 showOriginalPreview: previewShowingOriginal,
                 paletteDepthOriginal: editorState.paletteDepthOriginal,
@@ -1067,7 +1121,11 @@ export const RetroImageEditor = () => {
                   setProcessedImageData(img);
                   editorRefs.lastManualProcessedRef.current = img;
                   previewToggleWasManualRef.current = true;
-                  setPreviewShowingOriginal(false);
+                  if (isPainting) {
+                    previewTogglePendingRef.current = true;
+                  } else {
+                    setPreviewShowingOriginal(false);
+                  }
                 },
                 showOriginal: previewShowingOriginal,
                 paletteDepth: editorState.paletteDepthProcessed,
@@ -1114,6 +1172,8 @@ export const RetroImageEditor = () => {
               onZoomChange={handlePreviewZoomChange}
               controlledZoom={currentZoom}
               isVerticalLayout={isVerticalLayout}
+              isPainting={isPainting}
+              preserveZoomOnSwitch={preserveZoomOnNextSwitch}
               // Eyedropper integration: allow ImagePreview to show custom cursor
               // and report sampled colors back to the editor when active.
               eyedropperActive={activeTab === 'eyedropper'}
@@ -1137,7 +1197,11 @@ export const RetroImageEditor = () => {
                 // Ensure preview shows processed image and mark toggle as manual so
                 // we don't auto-revert
                 previewToggleWasManualRef.current = true;
-                setPreviewShowingOriginal(false);
+                if (isPainting) {
+                  previewTogglePendingRef.current = true;
+                } else {
+                  setPreviewShowingOriginal(false);
+                }
               }}
               paletteDepthOriginal={editorState.paletteDepthOriginal}
               paletteDepthProcessed={editorState.paletteDepthProcessed}
@@ -1206,7 +1270,11 @@ export const RetroImageEditor = () => {
                     // processed preview/palette in the UI (opposite of previous behavior).
                     // We still mark the toggle as manual to avoid auto-reverting.
                     previewToggleWasManualRef.current = true;
-                    setPreviewShowingOriginal(false);
+                    if (isPainting) {
+                      previewTogglePendingRef.current = true;
+                    } else {
+                      setPreviewShowingOriginal(false);
+                    }
                     // Selecting a new palette is an explicit user action that
                     // clears any manual palette edits so automatic processing
                     // may run again.

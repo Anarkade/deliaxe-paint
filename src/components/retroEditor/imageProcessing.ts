@@ -65,6 +65,9 @@ export type ProcessImageDependencies = {
   setProcessedImageData: (value: ImageData) => void;
   setPreviewShowingOriginal: (value: boolean) => void;
   setAutoFitKey: (value: string) => void;
+  // Optional: whether a painting tool is actively drawing. When true,
+  // processing should avoid toggling the preview to prevent mid-stroke zooms.
+  isPainting?: boolean;
   
   // Toast & translation
   toast: any;
@@ -388,7 +391,11 @@ export async function processImage(deps: ProcessImageDependencies): Promise<void
     setProcessedImageData(imageData);
     if (!previewToggleWasManualRef.current) {
       try {
-        setPreviewShowingOriginal(false);
+        // If the user is actively painting, avoid toggling the preview
+        // mid-stroke; the parent editor will apply any deferred toggles.
+        if (!deps.isPainting) {
+          setPreviewShowingOriginal(false);
+        }
       } catch (e) {
         /* ignore */
       }

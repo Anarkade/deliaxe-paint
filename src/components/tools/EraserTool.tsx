@@ -10,9 +10,10 @@ interface EraserToolProps {
   processedImageData: ImageData | null;
   colorBackground: Color | null;
   onImageUpdate: (img: ImageData) => void;
+  onPaintingChange?: (isPainting: boolean) => void;
 }
 
-const EraserTool: React.FC<EraserToolProps> = ({ active, canvasRef, processedImageData, colorBackground, onImageUpdate }) => {
+const EraserTool: React.FC<EraserToolProps> = ({ active, canvasRef, processedImageData, colorBackground, onImageUpdate, onPaintingChange }) => {
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
   const paint = (_ev: PointerEvent | MouseEvent, x: number, y: number) => {
@@ -168,7 +169,7 @@ const EraserTool: React.FC<EraserToolProps> = ({ active, canvasRef, processedIma
   }, [active, canvasRef]);
 
   // ensure pointer plumbing attached (default while async cursor builds)
-  useCanvasTool(canvasRef, active, paint, 'crosshair');
+  useCanvasTool(canvasRef, active, paint, 'crosshair', onPaintingChange);
   return null;
 };
 

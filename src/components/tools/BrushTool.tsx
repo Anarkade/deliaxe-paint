@@ -8,9 +8,10 @@ interface BrushToolProps {
   processedImageData: ImageData | null;
   color: Color | null;
   onImageUpdate: (img: ImageData) => void;
+  onPaintingChange?: (isPainting: boolean) => void;
 }
 
-export const BrushTool: React.FC<BrushToolProps> = ({ active, canvasRef, processedImageData, color, onImageUpdate }) => {
+export const BrushTool: React.FC<BrushToolProps> = ({ active, canvasRef, processedImageData, color, onImageUpdate, onPaintingChange }) => {
   // Keep track of last painted point to interpolate between samples
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -76,7 +77,7 @@ export const BrushTool: React.FC<BrushToolProps> = ({ active, canvasRef, process
   // Use a simple crosshair cursor. Persist it while the tool is active
   // by injecting a forced stylesheet and adding a class to the canvas element.
   const cursor = 'crosshair';
-  useCanvasTool(canvasRef, active, paint, cursor);
+  useCanvasTool(canvasRef, active, paint, cursor, onPaintingChange);
 
   useEffect(() => {
     const canvas = canvasRef.current;

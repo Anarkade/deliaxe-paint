@@ -131,6 +131,10 @@ interface ImagePreviewProps {
   onShowOriginalChange?: (showOriginal: boolean) => void; // Notify parent when preview toggles between original/processed
   controlledShowOriginal?: boolean; // Optional controlled prop to force which image is shown
   controlledZoom?: number; // Optional controlled zoom (percent) to sync with external UI
+  // When true, preserve current zoom instead of running fit/clamp logic when
+  // the parent changes `controlledShowOriginal`. Used to avoid programmatic
+  // zoom/fits immediately after interactive painting ends.
+  preserveZoomOnSwitch?: boolean;
   onRequestOpenCameraSelector?: () => void;
   showTileGrid?: boolean;
   showFrameGrid?: boolean;
@@ -158,6 +162,9 @@ interface ImagePreviewProps {
   // element for other editor utilities (like sampling from outside the
   // component). The hook's `canvasRef` will be kept in sync.
   editorRefs?: import('./retroEditor/useRetroEditorState').EditorRefs;
+  // True while a painting tool (brush/eraser) is actively drawing.
+  // When true, ImagePreview should avoid programmatic zoom/fit adjustments.
+  isPainting?: boolean;
 }
 export type ImagePreviewHandle = {
   fitToWidthButtonAction: () => void;
@@ -191,6 +198,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   frameWidth = 16, 
   frameHeight = 16, 
   tileGridColor = '#808080', 
+  // painting guard from parent
+  isPainting = false,
   frameGridColor = '#96629d', 
   tileLineThickness = 1,
   frameLineThickness = 3,
@@ -200,6 +209,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   containerStyle,
   controlledShowOriginal,
   controlledZoom,
+  // preserve zoom flag from parent
+  preserveZoomOnSwitch = false,
   // Eyedropper props (ensure these are destructured so runtime references are defined)
   editorRefs,
   eyedropperActive,
@@ -222,6 +233,15 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   useEffect(() => {
     onEyedropPickRef.current = onEyedropPick;
   }, [onEyedropPick]);
+  // Track painting end time when parent signals painting finished so we can
+  // preserve zoom on immediate follow-up switches.
+  useEffect(() => {
+    try {
+      if (!isPainting) {
+        paintingEndAtRef.current = Date.now();
+      }
+    } catch (e) { /* ignore */ }
+  }, [isPainting]);
   const [zoom, setZoom] = useState([100]);
   const [sliderValue, setSliderValue] = useState<number[]>([100]);
   const [containerWidth, setContainerWidth] = useState(0);
@@ -301,6 +321,8 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   // Prevent brief wrong-zoom flashes when switching Original/Processed
   const [isSwitchingView, setIsSwitchingView] = useState(false);
   const pendingSwitchRef = useRef<{ targetShowOriginal: boolean; zoom: number } | null>(null);
+  const paintingEndAtRef = useRef<number | null>(null);
+  const PAINT_END_PRESERVE_MS = 350; // time window after painting ends to preserve zoom on switches
 
   // (moved) useImperativeHandle is defined after fitToWidth to avoid TDZ issues
 
@@ -609,6 +631,12 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   }, []);
   // Fit to window function (max zoom that fits width and available height)
   const fitToWidth = useCallback((force = false) => {
+  // Debug trace: log when fitToWidth is invoked so we can see callers
+  try {
+    // Use non-blocking trace to help reproduce pointerup-triggered fits
+    // eslint-disable-next-line no-console
+    console.trace('[ImagePreview] fitToWidth called', { force, isPainting });
+  } catch (e) { /* ignore */ }
   // If caller requested a forced fit, require a one-time permit so only
   // authorized flows (camera preview and manual button) can execute it.
     if (force) {
@@ -1181,6 +1209,86 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   // When parent controls showOriginal, apply pending zoom/height once prop updates
   useEffect(() => {
     if (controlledShowOriginal === undefined) return;
+    // When the user is actively painting, avoid programmatic zoom/height
+    // adjustments driven by parent-controlled view changes. Defer until
+    // painting completes so the user's viewport isn't disrupted mid-stroke.
+    if (isPainting) return;
+    // If painting just ended within the preserve window, preserve zoom even
+    // if the parent didn't explicitly set the preserve flag. This guards
+    // against races where the editor flushes toggles but doesn't set the
+    // preserve flag in time for controlled prop updates.
+    if (paintingEndAtRef.current && (Date.now() - paintingEndAtRef.current) < PAINT_END_PRESERVE_MS) {
+      try {
+        // treat as preserve path
+        const target = controlledShowOriginal;
+        setShowOriginal(target);
+        const currentZoom = Array.isArray(zoom) && typeof zoom[0] === 'number' ? zoom[0] : 100;
+        const img = target ? originalImage : (processedImageData || originalImage);
+        if (img) {
+          let visualHeight = (img as any).height;
+          if (!target && processedImageData) {
+            try {
+              const pid = processedImageData;
+              const originalAspect = pid.width / pid.height;
+              const targetAspect = processedAspectRatio === 'original'
+                ? originalAspect
+                : (typeof DISPLAY_ASPECT_RATIOS[processedAspectRatio] === 'number'
+                    ? DISPLAY_ASPECT_RATIOS[processedAspectRatio]
+                    : originalAspect);
+              visualHeight = targetAspect !== originalAspect ? Math.round(pid.width / targetAspect) : pid.height;
+            } catch (e) { visualHeight = (img as any).height; }
+          }
+          const displayHeight = visualHeight * (currentZoom / 100);
+          const minHeight = 150;
+          const calculatedHeight = Math.max(minHeight, displayHeight);
+          setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
+        }
+        try { onShowOriginalChange?.(controlledShowOriginal); } catch (e) { /* ignore */ }
+      } finally {
+        // clear marker so subsequent controlled changes behave normally
+        paintingEndAtRef.current = null;
+      }
+      return;
+    }
+    // If parent requests we preserve the current zoom when switching views,
+    // apply only the view change and adjust preview height to match the
+    // existing zoom without performing any fit/clamping that could change
+    // the user's zoom level.
+    if (preserveZoomOnSwitch) {
+      const target = controlledShowOriginal;
+      setShowOriginal(target);
+      // Keep the current zoom; recompute previewHeight based on current zoom
+      const currentZoom = Array.isArray(zoom) && typeof zoom[0] === 'number' ? zoom[0] : 100;
+      const img = target ? originalImage : (processedImageData || originalImage);
+      if (img) {
+        // Compute visualHeight similar to other paths
+        let visualHeight = (img as any).height;
+        if (!target && processedImageData) {
+          try {
+            const pid = processedImageData;
+            const originalAspect = pid.width / pid.height;
+            const targetAspect = processedAspectRatio === 'original'
+              ? originalAspect
+              : (typeof DISPLAY_ASPECT_RATIOS[processedAspectRatio] === 'number'
+                  ? DISPLAY_ASPECT_RATIOS[processedAspectRatio]
+                  : originalAspect);
+            visualHeight = targetAspect !== originalAspect ? Math.round(pid.width / targetAspect) : pid.height;
+          } catch (e) { visualHeight = (img as any).height; }
+        }
+        const displayHeight = visualHeight * (currentZoom / 100);
+        const minHeight = 150;
+        const calculatedHeight = Math.max(minHeight, displayHeight);
+        setPreviewHeight(Math.max(minHeight, Math.floor(calculatedHeight) - 1));
+      }
+      try { onShowOriginalChange?.(controlledShowOriginal); } catch (e) { /* ignore */ }
+      return;
+    }
+    // Debug: log when controlledShowOriginal handling is about to perform
+    // its usual fit/clamp path so we can see whether this runs at pointerup.
+    try {
+      // eslint-disable-next-line no-console
+      console.trace('[ImagePreview] controlledShowOriginal effect - applying fit/clamp', { controlledShowOriginal, preserveZoomOnSwitch, isPainting });
+    } catch (e) { /* ignore */ }
     const pending = pendingSwitchRef.current;
     const target = controlledShowOriginal;
     const apply = (zoomValue: number) => {
@@ -1286,7 +1394,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       apply(z);
       // Do not toggle visibility in this path; assume external changes are settled
     }
-  }, [controlledShowOriginal, originalImage, processedImageData, onZoomChange]);
+  }, [controlledShowOriginal, originalImage, processedImageData, onZoomChange, isPainting]);
 
   // Reset zoom to 100% when a new image is loaded (image identity change, not just props update)
   const originalImageIdRef = useRef<string | null>(null);
