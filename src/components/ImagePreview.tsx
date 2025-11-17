@@ -631,12 +631,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
   }, []);
   // Fit to window function (max zoom that fits width and available height)
   const fitToWidth = useCallback((force = false) => {
-  // Debug trace: log when fitToWidth is invoked so we can see callers
-  try {
-    // Use non-blocking trace to help reproduce pointerup-triggered fits
-    // eslint-disable-next-line no-console
-    console.trace('[ImagePreview] fitToWidth called', { force, isPainting });
-  } catch (e) { /* ignore */ }
+  // (debug trace removed)
   // If caller requested a forced fit, require a one-time permit so only
   // authorized flows (camera preview and manual button) can execute it.
     if (force) {
@@ -1283,12 +1278,7 @@ export const ImagePreview = forwardRef<ImagePreviewHandle, ImagePreviewProps>(({
       try { onShowOriginalChange?.(controlledShowOriginal); } catch (e) { /* ignore */ }
       return;
     }
-    // Debug: log when controlledShowOriginal handling is about to perform
-    // its usual fit/clamp path so we can see whether this runs at pointerup.
-    try {
-      // eslint-disable-next-line no-console
-      console.trace('[ImagePreview] controlledShowOriginal effect - applying fit/clamp', { controlledShowOriginal, preserveZoomOnSwitch, isPainting });
-    } catch (e) { /* ignore */ }
+    // (debug trace removed)
     const pending = pendingSwitchRef.current;
     const target = controlledShowOriginal;
     const apply = (zoomValue: number) => {
