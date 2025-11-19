@@ -6,6 +6,7 @@ import { ChangePalette, PaletteType } from '@/components/tabMenus/ChangePalette'
 import { ImagePreview, type ImagePreviewHandle } from '@/components/ImagePreview';
 import BrushTool from './tools/BrushTool';
 import EraserTool from './tools/EraserTool';
+import PaintBucketTool from './tools/PaintBucketTool';
 import { ExportImage } from '@/components/tabMenus/ExportImage';
 import { ChangeLanguage } from '@/components/tabMenus/ChangeLanguage';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -350,6 +351,25 @@ export const RetroImageEditor = () => {
   // user clicked toolbar/palette swatches. That forwarded picks into
   // components that could persistently set FG/BG. Remove that behavior so
   // only ColorEditor Confirm drives persistent changes.
+
+  // Listen for ColorEditor confirm events and persist the color into the
+  // editor state when the eyedropper tool is active. ColorEditor dispatches
+  // `deliaxe:color-editor-confirm` on accept so we can centralize the
+  // persistence behavior here without coupling the editor to the dialog.
+  useEffect(() => {
+    const handler = (ev: Event) => {
+      try {
+        const detail = (ev as CustomEvent)?.detail;
+        if (!detail || typeof detail.r !== 'number') return;
+        // Persist to foreground when eyedropper OR paint-bucket is active.
+        if (activeTab === 'eyedropper' || activeTab === 'paint-bucket') {
+          editorActions.setColorForeground({ r: detail.r, g: detail.g, b: detail.b });
+        }
+      } catch (e) { /* ignore */ }
+    };
+    window.addEventListener('deliaxe:color-editor-confirm', handler as EventListener);
+    return () => window.removeEventListener('deliaxe:color-editor-confirm', handler as EventListener);
+  }, [activeTab, editorActions]);
 
   // Measure header height so floating dialogs can be positioned below it when toolbar is horizontal
   useEffect(() => {
@@ -1048,6 +1068,25 @@ export const RetroImageEditor = () => {
               }}
               onPaintingChange={(v: boolean) => setIsPainting(v)}
             />
+            <PaintBucketTool
+              active={activeTab === 'paint-bucket'}
+              canvasRef={editorRefs.canvasRef}
+              processedImageData={processedImageData}
+              color={editorState.colorForeground}
+              showOriginal={previewShowingOriginal}
+              originalImage={originalImage}
+              onImageUpdate={(img: ImageData) => {
+                setProcessedImageData(img);
+                editorRefs.lastManualProcessedRef.current = img;
+                previewToggleWasManualRef.current = true;
+                if (isPainting) {
+                  previewTogglePendingRef.current = true;
+                } else {
+                  setPreviewShowingOriginal(false);
+                }
+              }}
+              onPaintingChange={(v: boolean) => setIsPainting(v)}
+            />
             <EraserTool
               active={activeTab === 'eraser'}
               canvasRef={editorRefs.canvasRef}
@@ -1207,6 +1246,68 @@ export const RetroImageEditor = () => {
               paletteDepthOriginal={editorState.paletteDepthOriginal}
               paletteDepthProcessed={editorState.paletteDepthProcessed}
             />
+
+            {/* When toolbar is horizontal, mount canvas tools here so they are
+                available regardless of toolbar layout. Vertical layout mounts
+                the tools in the left column above; avoid duplication because
+                only one branch renders at a time. */}
+            {!isVerticalLayout && (
+              <>
+                <BrushTool
+                  active={activeTab === 'brush'}
+                  canvasRef={editorRefs.canvasRef}
+                  processedImageData={processedImageData}
+                  color={editorState.colorForeground}
+                  onImageUpdate={(img: ImageData) => {
+                    setProcessedImageData(img);
+                    editorRefs.lastManualProcessedRef.current = img;
+                    previewToggleWasManualRef.current = true;
+                    if (isPainting) {
+                      previewTogglePendingRef.current = true;
+                    } else {
+                      setPreviewShowingOriginal(false);
+                    }
+                  }}
+                  onPaintingChange={(v: boolean) => setIsPainting(v)}
+                />
+                <PaintBucketTool
+                  active={activeTab === 'paint-bucket'}
+                  canvasRef={editorRefs.canvasRef}
+                  processedImageData={processedImageData}
+                  color={editorState.colorForeground}
+                  showOriginal={previewShowingOriginal}
+                  originalImage={originalImage}
+                  onImageUpdate={(img: ImageData) => {
+                    setProcessedImageData(img);
+                    editorRefs.lastManualProcessedRef.current = img;
+                    previewToggleWasManualRef.current = true;
+                    if (isPainting) {
+                      previewTogglePendingRef.current = true;
+                    } else {
+                      setPreviewShowingOriginal(false);
+                    }
+                  }}
+                  onPaintingChange={(v: boolean) => setIsPainting(v)}
+                />
+                <EraserTool
+                  active={activeTab === 'eraser'}
+                  canvasRef={editorRefs.canvasRef}
+                  processedImageData={processedImageData}
+                  colorBackground={editorState.colorBackground}
+                  onImageUpdate={(img: ImageData) => {
+                    setProcessedImageData(img);
+                    editorRefs.lastManualProcessedRef.current = img;
+                    previewToggleWasManualRef.current = true;
+                    if (isPainting) {
+                      previewTogglePendingRef.current = true;
+                    } else {
+                      setPreviewShowingOriginal(false);
+                    }
+                  }}
+                  onPaintingChange={(v: boolean) => setIsPainting(v)}
+                />
+              </>
+            )}
 
             {/* Floating Content Sections - now constrained inside preview cell (absolute inset) */}
             {activeTab === 'load-image' && (

@@ -483,7 +483,11 @@ export const ColorEditor: React.FC<ColorEditorProps> = ({ initial, depth = { r: 
     const qr = quantizeChannel(color.r, depth.r);
     const qg = quantizeChannel(color.g, depth.g);
     const qb = quantizeChannel(color.b, depth.b);
-    onAccept({ r: qr, g: qg, b: qb });
+    const accepted = { r: qr, g: qg, b: qb } as Color;
+    // Dispatch a global event so callers (e.g., RetroImageEditor) can
+    // persistently apply the chosen color when appropriate (eyedropper mode).
+    try { window.dispatchEvent(new CustomEvent('deliaxe:color-editor-confirm', { detail: accepted })); } catch { /* ignore */ }
+    onAccept(accepted);
   };
 
   const editor = (

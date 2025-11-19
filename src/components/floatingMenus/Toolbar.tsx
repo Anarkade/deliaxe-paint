@@ -671,7 +671,10 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
           <Button
             variant={getButtonVariant('paint-bucket') as import('@/components/ui/button').ButtonProps['variant']}
             onClick={() => handleTabClick('paint-bucket')}
-            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
+            className={
+              `flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 ` +
+              (activeTab === 'paint-bucket' ? 'bg-blood-red border-blood-red toolbar-pressed' : 'bg-blood-red border-blood-red')
+            }
             disabled={!originalImage}
             title={t('paintBucket')}
           >
