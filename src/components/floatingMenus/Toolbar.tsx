@@ -626,6 +626,25 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Download className="h-4 w-4 m-0 p-0" />
           </Button>
 
+          {/* Move ChangeGrids and Language here (below first row) */}
+          <Button
+            variant={getButtonVariant('change-grids') as import('@/components/ui/button').ButtonProps['variant']}
+            onClick={() => handleTabClick('change-grids')}
+            className={"flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"}
+            disabled={!originalImage}
+            title={t('changeGrids')}
+          >
+            <Grid3X3 className="h-4 w-4 m-0 p-0" />
+          </Button>
+          <Button
+            variant={getButtonVariant('language') as import('@/components/ui/button').ButtonProps['variant']}
+            onClick={() => handleTabClick('language')}
+            className={"flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"}
+            title={t('changeLanguage')}
+          >
+            <Globe className="h-4 w-4 m-0 p-0" />
+          </Button>
+
           {/* NEW Row: Brush (left) / Eyedropper (right) - placeholders, disabled until image loaded */}
           <Button
             variant={getButtonVariant('brush') as import('@/components/ui/button').ButtonProps['variant']}
@@ -721,25 +740,7 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <Tv className="h-4 w-4 m-0 p-0" />
           </Button>
 
-          {/* Row 4: Change grids (left) / Language (right) */}
-          <Button
-            variant={getButtonVariant('change-grids') as import('@/components/ui/button').ButtonProps['variant']}
-            onClick={() => handleTabClick('change-grids')}
-            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
-            disabled={!originalImage}
-            title={t('changeGrids')}
-          >
-            <Grid3X3 className="h-4 w-4 m-0 p-0" />
-          </Button>
-          {/* DevQuantization button removed */}
-          <Button
-            variant={getButtonVariant('language') as import('@/components/ui/button').ButtonProps['variant']}
-            onClick={() => handleTabClick('language')}
-            className="flex-none flex items-center justify-center h-8 w-8 min-w-[32px] min-h-[32px] px-0.75 py-0.25 focus:outline-none focus-visible:ring-0 bg-blood-red border-blood-red"
-            title={t('changeLanguage')}
-          >
-            <Globe className="h-4 w-4 m-0 p-0" />
-          </Button>
+          {/* Row 4 removed: Change grids and language buttons moved to row 2 */}
 
           {/* Row 5: Zoom control (spans 2 columns) - render only when an image is loaded */}
           {originalImage ? (
