@@ -88,6 +88,14 @@ Notes
 - `src/hooks/` — reusable React hooks
 - `src/workers/` — Web Workers for CPU-intensive image processing
 
+## Recent changes (2025-11-19)
+
+- Added `PaintBucket` tool (iterative flood-fill) and integrated it with the editor. The tool performs a 4-connected, stack-based flood-fill on the processed raster and remains active after painting until the user deactivates it.
+- `ColorEditor` Confirm now persists the accepted color into `colorForeground` when the active tool is `Eyedropper` or `PaintBucket` (uses an event `deliaxe:color-editor-confirm`).
+- Cursor persistence fix for `PaintBucket`: crosshair cursor now remains steady while the tool is active.
+- Toolbar cleanup: moved `ChangeGrids` and `ChangeLanguage` into the second toolbar row and removed duplicate buttons from the bottom row.
+
+
 Invariant
 
 - Keep a single canonical implementation of shared UI components in `src/components/floatingMenus/` (Toolbar, Footer, PaletteViewer). Avoid duplicate wrappers in `src/components/`.

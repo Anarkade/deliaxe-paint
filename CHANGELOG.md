@@ -5,7 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+-## [Unreleased]
+
+### Added
+- (2025-11-19) Added `PaintBucket` tool (iterative flood-fill) and editor integration:
+	- `PaintBucketTool`: iterative 4-connected flood-fill (default tolerance 0%). Only active when viewing `Processed` raster.
+	- `ColorEditor` Confirm now dispatches `deliaxe:color-editor-confirm`; `RetroImageEditor` persists the accepted color to `colorForeground` when the active tool is `eyedropper` or `paint-bucket`.
+
+### Fixed
+- (2025-11-19) Cursor persistence: ensured crosshair cursor remains while `PaintBucket` is active (scoped style injection to override intermittent cursor resets).
+
+### Changed
+- (2025-11-19) Toolbar adjustments: `PaintBucket` toolbar button now shows pressed/active styling while the tool is active; duplicated `ChangeGrids` and `ChangeLanguage` entries removed from the bottom row and relocated to the second row for clarity.
 
 ### Added
 - Automated documentation updates in CI/CD pipeline
