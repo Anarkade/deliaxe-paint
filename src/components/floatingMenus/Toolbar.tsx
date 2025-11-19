@@ -36,7 +36,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 // Build the logo URL from Vite's BASE_URL so it resolves correctly on GitHub Pages
 const logoGif = `${import.meta.env.BASE_URL}logo.gif`;
 import { Button } from '../ui/button';
-import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch, Ratio, Tv, Wrench, Brush, Pipette, Eraser, PaintBucket, ZoomIn, ZoomOut, Hand } from 'lucide-react';
+import { Upload, Palette, Proportions, Grid3X3, Download, Globe, ScanSearch, Search, Ratio, Tv, Wrench, Brush, Pipette, Eraser, PaintBucket, ZoomIn, ZoomOut, Hand } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { PaletteViewer } from './PaletteViewer';
@@ -840,23 +840,9 @@ export const Toolbar = ({ isVerticalLayout, originalImage, activeTab, setActiveT
             <>
               
               <div className="col-span-2 w-full min-w-0 flex items-center gap-1 py-0 mt-[7px] mb-0 px-0 mx-0 justify-self-stretch">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span ref={zoomRef}>
-                      <ScanSearch
-                        className="h-4 w-4 m-0 p-0 text-muted-foreground hover:text-foreground cursor-pointer"
-                        role="button"
-                        aria-label={t('fitToWindow')}
-                        onClick={() => { onFitToWindowRequest?.(); }}
-                      />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    <span>{t('fitToWindow')}</span>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <span ref={zoomRef} className="h-8 w-8 flex items-center justify-center" aria-hidden>
+                <Search className="h-4 w-4 m-0 p-0 text-muted-foreground" />
+              </span>
               <div className="relative w-full px-0 mx-0">
                 <Input
                   data-toolbar-interactive="true"
